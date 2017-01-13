@@ -32,8 +32,10 @@ make
 
 
 #Eigenharp PICO
-currently the pico implementation is 'stubbed' out, i.e. non-operational, as the decoder is not open source,
-this will be 'addressed' in a future release
+the decoder for the pico is not open source, so a dummy implementation is supplied as source.
+this will obviously not work though.
+however you will find in eigenharp/resources binary versions of the decoder library for various platforms, these should be used in place of the dummy version, built by the make process
+
 
 
 
