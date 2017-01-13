@@ -5,4 +5,5 @@ profile
 */*.bbprojectd
 */*.sublime-workspace
 
-*/build/
+*/build/*
+build

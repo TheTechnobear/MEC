@@ -16,7 +16,6 @@ set(EIGENHARP_SRC
     lib_alpha2/src/alpha2_active.cpp
     lib_pico/src/pico_passive.cpp 
     lib_pico/src/pico_active.cpp
-    lib_picodecoder/pico_decoder.c
     eigenfreed/src/eigenfreed.cpp
     eigenfreed/src/ef_harp.cpp
     eigenfreed/src/ef_alpha.cpp
@@ -49,4 +48,5 @@ include_directories ( . ./picross ./eigenfreed ./eigenfreed/src ./lib_alpha2 ./l
 add_library(eigenharplib ${EIGENHARP_SRC} ${EIGENHARP_HDRS} )
 
 add_subdirectory(tests)
+add_subdirectory(lib_picodecoder)
 

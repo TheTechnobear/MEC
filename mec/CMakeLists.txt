@@ -50,7 +50,7 @@ include_directories (
 
 add_executable(mec ${MEC_SRC})
 
-target_link_libraries (mec eigenharplib soundplanelite push2lib oscpack portaudio cjson rtmidi)
+target_link_libraries (mec eigenharplib picodecoder soundplanelite push2lib oscpack portaudio cjson rtmidi)
 #target_link_libraries (mec eigenharplib soundplanelib touchtrackerlib madronalib oscpack)
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
@@ -64,3 +64,4 @@ elseif(UNIX)
     target_link_libraries(mec  "libusb" "dl" "pthread" "asound")
     target_link_libraries (mec ${ALSA_LIBRARIES})
 endif(APPLE)
+
