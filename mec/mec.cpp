@@ -5,16 +5,13 @@
 
 #include <pthread.h>
 
-#include <osc/OscOutboundPacketStream.h>
-#include <osc/OscReceivedElements.h>
-#include <osc/OscPacketListener.h>
-#include <ip/UdpSocket.h>
-
+// #include <osc/OscOutboundPacketStream.h>
+// #include <osc/OscReceivedElements.h>
+// #include <osc/OscPacketListener.h>
+// #include <ip/UdpSocket.h>
 
 #include "mec.h"
-
-#include "mec_prefs.h"
-
+#include <mec_prefs.h>
 
 pthread_cond_t  waitCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t waitMtx = PTHREAD_MUTEX_INITIALIZER;

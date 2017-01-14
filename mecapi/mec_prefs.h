@@ -1,4 +1,4 @@
-#ifndef  MECPREFS_H
+#ifndef MECPREFS_H
 #define MECPREFS_H
 
 #include <cstring>

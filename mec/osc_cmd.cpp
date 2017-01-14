@@ -10,7 +10,7 @@
 #include <ip/UdpSocket.h>
 
 #include "mec.h"
-#include "mec_prefs.h"
+#include <mec_prefs.h>
 
 
 #define IN_PORT 9000

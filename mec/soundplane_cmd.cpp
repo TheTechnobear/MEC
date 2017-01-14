@@ -29,10 +29,10 @@
 #include <MLAppState.h>
 
 #include "mec.h"
-#include "mec_prefs.h"
-
 #include "midi_output.h"
-#include "voice.h"
+
+#include <mec_prefs.h>
+#include <mec_voice.h>
 
 #define GLOBAL_CH 0
 #define BASE_CC 0
@@ -65,11 +65,11 @@ public:
         // TODO - send MPE init, including PB range
     }
 
-    virtual void touch(const char* dev, unsigned long long t, bool a, int touch, float n, float x, float y, float z)     
+    virtual void touch(const char* dev, unsigned long long t, bool a, int touch, float n, float x, float y, float z)
     {
         static const unsigned int NOTE_CH_OFFSET = 1;
 
-        Voices::Voice* voice = voices_.voiceId(touch);
+        MecVoices::Voice* voice = voices_.voiceId(touch);
         if (a)
         {
             float fn = n;
@@ -125,12 +125,12 @@ public:
 
 
 private:
-    int     note(float n) { return n; }
+    int  note(float n) { return n; }
 
     SoundplaneModel* pModel_;
     MecPreferences prefs_;
     MidiOutput output_;
-    Voices voices_;
+    MecVoices voices_;
 };
 
 
@@ -156,8 +156,8 @@ void *soundplane_proc(void * arg)
         std::unique_ptr<MLAppState> pModelState = std::unique_ptr<MLAppState>(new MLAppState(pModel, "", "MadronaLabs", "Soundplane", 1));
         pModelState->loadStateFromAppStateFile();
         pModel->updateAllProperties();  //??
-        pModel->setPropertyImmediate("osc_active",0.0f);
-        pModel->setPropertyImmediate("mec_active",1.0f);
+        pModel->setPropertyImmediate("osc_active", 0.0f);
+        pModel->setPropertyImmediate("mec_active", 1.0f);
 
         // if (oscEnabled) {
         //     MecPreferences oscprefs(outprefs.getSubTree("osc"));
@@ -173,7 +173,7 @@ void *soundplane_proc(void * arg)
             SoundplaneMidiCallback *pCb = new SoundplaneMidiCallback(pModel, midiprefs);
             if (pCb->isValid()) {
                 pModel->mecOutput().connect(pCb);
-                pModel->setPropertyImmediate("data_freq_mec",500.0f);
+                pModel->setPropertyImmediate("data_freq_mec", 500.0f);
             } else {
                 delete pCb;
             }

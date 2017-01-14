@@ -11,11 +11,11 @@
 #include <ip/UdpSocket.h>
 
 #include "mec.h"
-#include "mec_prefs.h"
 #include "midi_output.h"
-#include "surfacemapper.h"
 
-#include "voice.h"
+#include <mec_prefs.h>
+#include <mec_surfacemapper.h>
+#include <mec_voice.h>
 
 #define OUTPUT_BUFFER_SIZE 1024
 
@@ -99,7 +99,7 @@ private:
     int     note(unsigned key) { return mapper_.noteFromKey(key); }
 
     MecPreferences prefs_;
-    SurfaceMapper mapper_;
+    MecSurfaceMapper mapper_;
     UdpTransmitSocket transmitSocket_;
     char buffer_[OUTPUT_BUFFER_SIZE];
     bool valid_;
@@ -159,7 +159,7 @@ public:
     {
         static const unsigned int NOTE_CH_OFFSET = 1;
 
-        Voices::Voice* voice = voices_.voiceId(key);
+        MecVoices::Voice* voice = voices_.voiceId(key);
         if (a)
         {
             int     mn = note(key);
@@ -180,9 +180,9 @@ public:
                 voices_.addPressure(voice, mz);
             }
             else {
-                if (voice->state_ == Voices::Voice::PENDING) {
+                if (voice->state_ == MecVoices::Voice::PENDING) {
                     voices_.addPressure(voice, mz);
-                    if (voice->state_ == Voices::Voice::ACTIVE) {
+                    if (voice->state_ == MecVoices::Voice::ACTIVE) {
                         output_.startTouch(voice->i_ + NOTE_CH_OFFSET, mn, pb, my, voice->v_);
                     }
                     //else ignore, till we have min number of pressures
@@ -235,8 +235,8 @@ private:
 
     MecPreferences prefs_;
     MidiOutput output_;
-    Voices voices_;
-    SurfaceMapper mapper_;
+    MecVoices voices_;
+    MecSurfaceMapper mapper_;
 };
 
 

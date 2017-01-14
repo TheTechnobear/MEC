@@ -1,4 +1,5 @@
 #include "midi_output.h"
+
 #include "mec.h"
 
 
@@ -139,7 +140,7 @@ bool MidiOutput::startTouch(int id, int note, float x, float y, float z) {
 
     // TODO, this  voice is a duplcation, of voices elsewhere
     // the issue is, we want to track the x/y/z values, so we only send when necessary
-    Voices::Voice* voice = voices_.voiceId(id);
+    MecVoices::Voice* voice = voices_.voiceId(id);
     if (!voice) {
         voice = voices_.startVoice(id);
     }
@@ -175,7 +176,7 @@ bool MidiOutput::continueTouch(int id, int note, float x, float y, float z) {
     if (!isOpen()) return false;
 
     unsigned ch = id;
-    Voices::Voice* voice = voices_.voiceId(id);
+    MecVoices::Voice* voice = voices_.voiceId(id);
     unsigned mx = bipolar14bit(x);
     int my = bipolar7bit(y);
     int mz = unipolar7bit(z);
@@ -207,7 +208,7 @@ bool MidiOutput::continueTouch(int id, int note, float x, float y, float z) {
 bool MidiOutput::stopTouch(int id) {
     if (!isOpen()) return false;
 
-    Voices::Voice* voice = voices_.voiceId(id);
+    MecVoices::Voice* voice = voices_.voiceId(id);
     if (!voice) return false;
 
 

@@ -3,7 +3,8 @@
 
 #include <memory>
 #include <RtMidi.h>
-#include "voice.h"
+
+#include <mec_voice.h>
 
 class MidiOutput {
 public:
@@ -36,7 +37,7 @@ public:
 private:
 
     std::unique_ptr<RtMidiOut> output_;
-    Voices voices_;
+    MecVoices voices_;
     float global_[127];
 };
 

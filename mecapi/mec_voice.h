@@ -1,13 +1,13 @@
-#ifndef VOICES_H_
-#define VOICES_H_
+#ifndef MEC_VOICES_H_
+#define MEC_VOICES_H_
 
 #define MAX_VOICES 16
 
 #define VELOCITY_COUNT 3
 
-class Voices {
+class MecVoices {
 public:
-    Voices() {
+    MecVoices() {
         for (int i = 0; i < MAX_VOICES; i++) {
             voices_[i].i_=i;
             voices_[i].state_ = Voice::INACTIVE;
@@ -15,7 +15,7 @@ public:
         }
 
     };
-    virtual ~Voices() {};
+    virtual ~MecVoices() {};
 
 
     struct Voice {
@@ -88,4 +88,4 @@ private:
     Voice voices_[MAX_VOICES];
 };
 
-#endif //VOICES_H_
+#endif //MEC_VOICES_H_

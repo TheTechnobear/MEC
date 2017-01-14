@@ -30,21 +30,11 @@ add_subdirectory(external/portaudio portaudio)
 add_subdirectory(external/cJSON cjson)
 add_subdirectory(external/rtmidi rtmidi)
 
-add_subdirectory(mec)
 
-###############################
-# Eigenharp  Build
 add_subdirectory (eigenharp) 
-
-
-###############################
-# Soundplane  Build
-#add_subdirectory (soundplane) 
 add_subdirectory (soundplanelite) 
-
-###############################
-# Push 2 Build
-
 add_subdirectory (push2) 
+add_subdirectory (mecapi) 
+add_subdirectory (mec)
 
 

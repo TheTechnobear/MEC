@@ -8,7 +8,7 @@
 #include <RtMidi.h>
 
 #include "mec.h"
-#include "mec_prefs.h"
+#include <mec_prefs.h>
 
 
 void mycallback( double deltatime, std::vector< unsigned char > *message, void *userData )

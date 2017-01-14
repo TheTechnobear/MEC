@@ -2,8 +2,8 @@
 
 
 #include "mec.h"
-#include "mec_prefs.h"
 // #include "midi_output.h"
+#include <mec_prefs.h>
 
 #include <iostream>
 

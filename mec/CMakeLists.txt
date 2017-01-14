@@ -1,5 +1,4 @@
-###############################
-# MEC app
+cmake_minimum_required(VERSION 2.8.11)
 
 if(APPLE)
     #add_definitions(-D ML_USE_SSE)
@@ -31,18 +30,17 @@ set(MEC_SRC
     midi_cmd.cpp
     midi_output.cpp
     midi_output.h
-    mec_prefs.cpp
-    mec_prefs.h
-    surfacemapper.cpp
 )
 include_directories (
+    "${PROJECT_SOURCE_DIR}/mecapi" 
     "${PROJECT_SOURCE_DIR}/push2" 
+    "${PROJECT_SOURCE_DIR}/soundplanelite"
     "${PROJECT_SOURCE_DIR}/eigenharp" 
     "${PROJECT_SOURCE_DIR}/external/oscpack"
     "${PROJECT_SOURCE_DIR}/external/portaudio"
     "${PROJECT_SOURCE_DIR}/external/cJSON"
-    "${PROJECT_SOURCE_DIR}/soundplanelite"
-    # "${PROJECT_SOURCE_DIR}/external/rtmidi"
+
+#    "${PROJECT_SOURCE_DIR}/external/rtmidi"
 #    "${PROJECT_SOURCE_DIR}/soundplane/SoundplaneLib"
 #    "${PROJECT_SOURCE_DIR}/soundplane/madronalib"
 #    "${PROJECT_SOURCE_DIR}/soundplane/touchtrackerlib"
@@ -50,11 +48,10 @@ include_directories (
 
 add_executable(mec ${MEC_SRC})
 
-target_link_libraries (mec eigenharplib picodecoder soundplanelite push2lib oscpack portaudio cjson rtmidi)
+target_link_libraries (mec eigenharplib picodecoder soundplanelite push2lib mecapi oscpack portaudio cjson rtmidi)
 #target_link_libraries (mec eigenharplib soundplanelib touchtrackerlib madronalib oscpack)
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-#  target_link_libraries(soundplanelib  "${PROJECT_SOURCE_DIR}/external/libatomic_gcc7/libatomic.a")
   target_link_libraries(mec atomic)
 endif()
 

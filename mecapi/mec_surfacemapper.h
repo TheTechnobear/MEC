@@ -1,5 +1,5 @@
-#ifndef SURFACE_MAPPER_H
-#define SURFACE_MAPPER_H
+#ifndef MEC_SURFACE_MAPPER_H
+#define MEC_SURFACE_MAPPER_H
 
 #include "mec_prefs.h"
 
@@ -14,9 +14,9 @@ a couple of configurations are supported so far in a preferences file
 an array of note values, one for each key -  "notes" : [1,2,3]
 */
 
-class SurfaceMapper {
+class MecSurfaceMapper {
 public:
-	SurfaceMapper();
+	MecSurfaceMapper();
 	int noteFromKey(int key);
 	void load(MecPreferences& prefs);
 private:
@@ -40,4 +40,4 @@ private:
     int noteOffset_; 
 };
 
-#endif //SURFACE_MAPPER_H
+#endif //MEC_SURFACE_MAPPER_H

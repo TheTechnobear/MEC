@@ -1,9 +1,9 @@
 #include "mec_prefs.h"
 
-#include "mec.h"
-
 #include <fstream>
 #include <iostream>
+
+#include "mec_log.h"
 
 MecPreferences::MecPreferences() : jsonData_(nullptr), owned_(true) {
     valid_ = loadPreferences();

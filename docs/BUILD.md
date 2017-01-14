@@ -37,6 +37,12 @@ there is an example config in mec/resources
 Eigenharps need access to the firmware files (ihx), in firmware directory
 Soundplane need access to the SoundplaneAppState.txt, in resources directory 
 
+#Eigenharp PICO
+the decoder for the pico is not open source, so a dummy implementation is supplied as source.
+this will obviously not work though.
+however you will find in eigenharp/resources binary versions of the decoder library for various platforms, these should be used in place of the dummy version, built by the make process
+
+
 
 #Important notes
 Mac OSX 10.11 (only, macOS Sierra ok) - Stopping apps
