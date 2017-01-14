@@ -28,21 +28,27 @@ endif(APPLE)
 
 
 set(MECAPI_SRC 
+    mec_api.cpp
+    mec_api.h
     mec_prefs.cpp
     mec_prefs.h
     mec_surfacemapper.cpp
+    mec_device.h
+    mec_eigenharp.cpp
+    mec_eigenharp.h
 )
+
 include_directories (
-    "${PROJECT_SOURCE_DIR}/push2" 
-    "${PROJECT_SOURCE_DIR}/eigenharp" 
-    "${PROJECT_SOURCE_DIR}/soundplanelite"
-    "${PROJECT_SOURCE_DIR}/external/oscpack"
-    "${PROJECT_SOURCE_DIR}/external/portaudio"
-    "${PROJECT_SOURCE_DIR}/external/cJSON"
-    # "${PROJECT_SOURCE_DIR}/external/rtmidi"
-    # "${PROJECT_SOURCE_DIR}/soundplane/SoundplaneLib"
-    # "${PROJECT_SOURCE_DIR}/soundplane/madronalib"
-    # "${PROJECT_SOURCE_DIR}/soundplane/touchtrackerlib"
+    "${PROJECT_SOURCE_DIR}/../push2" 
+    "${PROJECT_SOURCE_DIR}/../eigenharp" 
+    "${PROJECT_SOURCE_DIR}/../soundplanelite"
+    "${PROJECT_SOURCE_DIR}/../external/oscpack"
+    "${PROJECT_SOURCE_DIR}/../external/portaudio"
+    "${PROJECT_SOURCE_DIR}/../external/cJSON"
+    # "${PROJECT_SOURCE_DIR}/../external/rtmidi"
+    # "${PROJECT_SOURCE_DIR}/../soundplane/SoundplaneLib"
+    # "${PROJECT_SOURCE_DIR}/../soundplane/madronalib"
+    # "${PROJECT_SOURCE_DIR}/../soundplane/touchtrackerlib"
     )
 
 add_library(mecapi SHARED ${MECAPI_SRC})
@@ -51,7 +57,6 @@ target_link_libraries (mecapi eigenharplib picodecoder soundplanelite push2lib o
 #target_link_libraries (mec eigenharplib soundplanelib touchtrackerlib madronalib oscpack)
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-#  target_link_libraries(soundplanelib  "${PROJECT_SOURCE_DIR}/external/libatomic_gcc7/libatomic.a")
   target_link_libraries(mecapi atomic)
 endif()
 

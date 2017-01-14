@@ -7,8 +7,8 @@
 
 #include "mec_log.h"
 
-MecPreferences::MecPreferences() : jsonData_(nullptr), owned_(true) {
-    valid_ = loadPreferences();
+MecPreferences::MecPreferences(const std::string& file) : jsonData_(nullptr), owned_(true) {
+    valid_ = loadPreferences(file);
 }
 
 MecPreferences::MecPreferences(void* p) : jsonData_(static_cast<cJSON*> (p)), owned_(false) {
@@ -20,13 +20,13 @@ MecPreferences::~MecPreferences() {
     if (jsonData_ && owned_ ) cJSON_Delete((cJSON*) jsonData_);
 }
 
-bool MecPreferences::loadPreferences() {
+bool MecPreferences::loadPreferences(const std::string& file) {
     if (jsonData_ && owned_) {
         cJSON_Delete((cJSON*) jsonData_);
         jsonData_ = nullptr;
     }
 
-    std::string file = "./mec.json";
+    // std::string file = "./mec.json";
     std::ifstream t(file);
     if (t.good())
     {

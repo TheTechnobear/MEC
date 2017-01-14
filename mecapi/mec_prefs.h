@@ -6,7 +6,7 @@
 
 class MecPreferences {
 public:
-    MecPreferences();
+    MecPreferences(const std::string& file = "./mec.json");
     virtual ~MecPreferences();
     MecPreferences(void* subtree);
 
@@ -23,10 +23,10 @@ public:
     bool        valid() {return valid_;}
 
 private:
-    bool        loadPreferences();
+    bool        loadPreferences(const std::string& file);
 
     // dont use unique_ptr, as need to use json delete
-    void*  jsonData_;
+    void*   jsonData_;
     bool    owned_;
     bool    valid_;
 };

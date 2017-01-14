@@ -40,3 +40,10 @@ basics are in eigenharp, but I will probably adopt T3D
 *BELA*
 output to the bela platform ... or this may be just an api that bela can integrate with
 
+
+##Mec API (WIP - not working yet!)
+this is the new way forward, the mec app will use this in the mid term
+the api provides a way for applications to initalise mec devices, and then process their messages, and get callbacks for events handling on the devices
+intially there is a touch interface (callback) but other interfaces types coudld be added.
+
+
