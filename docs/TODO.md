@@ -3,4 +3,3 @@
 - use soundplanemodel, check it still works ;)
 - eigenharp -> midi - velocity detection
 - note mapping
-- pico, removed decoder for licensing reasons, apply 'loophole'

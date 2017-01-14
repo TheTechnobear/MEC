@@ -11,6 +11,7 @@ homebrew (mac), or you need to install cmake manually
     cd build
     cmake .. 
 
+
 #Building Mac (with xcode)
 
     brew install cmake
@@ -19,6 +20,15 @@ homebrew (mac), or you need to install cmake manually
     cd build
     cmake .. -GXcode 
     xcodebuild -project mec.xcodeproj -target ALL_BUILD -configuration MinSizeRel
+
+#Building within Sublime
+
+you can also building within sublime
+
+    mkdir build
+    cd build
+    cmake -G "Sublime Text 2 - Unix Makefiles" .. 
+
 
 #Running
 there is a preferences file, called mec.json which needs to be in the current directory when run.
