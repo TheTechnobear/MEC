@@ -1,3 +1,25 @@
+project (eigenharplib)
+
+set(CMAKE_MACOSX_RPATH 1)
+
+if(APPLE)
+    #add_definitions(-D ML_USE_SSE)
+    add_definitions(-D __MACOSX_CORE__)
+elseif(UNIX)
+    add_definitions(-D __LINUX_ALSA__)
+
+    if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
+        add_definitions(-D ML_USE_NEON)
+    else()
+        add_definitions(-D ML_USE_SSE)
+    endif ()
+
+    find_package (ALSA REQUIRED)
+    if (ALSA_FOUND)
+      include_directories(${ALSA_INCLUDE_DIRS})
+    endif (ALSA_FOUND)
+
+endif(APPLE)
 
 file (GLOB_RECURSE EIGENHARP_HDRS "*/*.h" )
 
@@ -45,7 +67,22 @@ endif(APPLE)
 
 
 include_directories ( . ./picross ./eigenfreed ./eigenfreed/src ./lib_alpha2 ./lib_pico ./lib_picodecoder )
-add_library(eigenharplib ${EIGENHARP_SRC} ${EIGENHARP_HDRS} )
+
+add_library(eigenharplib SHARED ${EIGENHARP_SRC} ${EIGENHARP_HDRS} )
+
+target_link_libraries (eigenharplib picodecoder)
+
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  target_link_libraries(eigenharplib atomic)
+endif()
+
+if(APPLE)
+    target_link_libraries(eigenharplib  "-framework Cocoa  -framework IOKit -framework CoreAudio")
+elseif(UNIX) 
+    target_link_libraries(eigenharplib  "libusb" "dl" "pthread" "asound")
+    target_link_libraries(eigenharplib ${ALSA_LIBRARIES})
+endif(APPLE)
+
 
 add_subdirectory(tests)
 add_subdirectory(lib_picodecoder)

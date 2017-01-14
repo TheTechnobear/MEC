@@ -39,24 +39,18 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/external/oscpack"
     "${PROJECT_SOURCE_DIR}/external/portaudio"
     "${PROJECT_SOURCE_DIR}/external/cJSON"
-
-#    "${PROJECT_SOURCE_DIR}/external/rtmidi"
-#    "${PROJECT_SOURCE_DIR}/soundplane/SoundplaneLib"
-#    "${PROJECT_SOURCE_DIR}/soundplane/madronalib"
-#    "${PROJECT_SOURCE_DIR}/soundplane/touchtrackerlib"
-    )
+)
 
 add_executable(mec ${MEC_SRC})
 
-target_link_libraries (mec eigenharplib picodecoder soundplanelite push2lib mecapi oscpack portaudio cjson rtmidi)
-#target_link_libraries (mec eigenharplib soundplanelib touchtrackerlib madronalib oscpack)
+target_link_libraries (mec eigenharplib soundplanelite push2lib mecapi cjson rtmidi)
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   target_link_libraries(mec atomic)
 endif()
 
 if(APPLE)
-    target_link_libraries(mec  "-framework CoreServices -framework CoreFoundation -framework IOKit -framework CoreAudio -framework CoreMIDI")
+    target_link_libraries(mec  "-framework CoreMIDI")
 elseif(UNIX) 
     target_link_libraries(mec  "libusb" "dl" "pthread" "asound")
     target_link_libraries (mec ${ALSA_LIBRARIES})

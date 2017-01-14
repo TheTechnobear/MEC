@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 2.8.11)
-#project(soundplanelite)
+project(soundplanelite)
 
 include_directories (
-    "${PROJECT_SOURCE_DIR}/external/libusb"
-    "${PROJECT_SOURCE_DIR}/external/portaudio"
-    "${PROJECT_SOURCE_DIR}/external/cJSON"
-    "${PROJECT_SOURCE_DIR}/external/oscpack"
+    "${PROJECT_SOURCE_DIR}/../external/libusb"
+    "${PROJECT_SOURCE_DIR}/../external/portaudio"
+    "${PROJECT_SOURCE_DIR}/../external/cJSON"
+    "${PROJECT_SOURCE_DIR}/../external/oscpack"
 )
 
 set(SPLite_H
@@ -124,7 +124,20 @@ elseif(UNIX)
     endif ()
 endif(APPLE) 
 
-add_library(soundplanelite ${SPLite_Src} ${SPLite_H})
+add_library(soundplanelite SHARED ${SPLite_Src} ${SPLite_H})
+
+target_link_libraries (soundplanelite oscpack portaudio cjson)
+
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  target_link_libraries(soundplanelite atomic)
+endif()
+
+if(APPLE)
+    target_link_libraries(soundplanelite  "-framework Cocoa  -framework IOKit -framework CoreAudio")
+elseif(UNIX) 
+    target_link_libraries(soundplanelite  "libusb" "dl" "pthread" "asound")
+    target_link_libraries(soundplanelite ${ALSA_LIBRARIES})
+endif(APPLE)
 
 target_include_directories(soundplanelite PUBLIC .)
 

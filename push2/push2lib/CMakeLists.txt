@@ -1,3 +1,7 @@
+project (push2lib)
+
+set(CMAKE_MACOSX_RPATH 1)
+
 set(PUSH_DRIVER_SOURCES
     push2lib.cpp
   )
@@ -8,21 +12,7 @@ if(PUSH_LIBUSB_DIR OR NOT APPLE)
   set(PUSH_USE_LIBUSB yes)
 endif()
 
-if(PUSH_USE_LIBUSB)
-#  set(PUSH_DRIVER_SOURCES
-#    ${PUSH_DRIVER_SOURCES}
-#    LibusbPush2Driver.cpp
-#    LibusbPush2Driver.h
-#    )
-else(PUSH_USE_LIBUSB)
-#  set(PUSH_DRIVER_SOURCES
-#    ${PUSH_DRIVER_SOURCES}
-#    MacPush2Driver.cpp
-#    MacPush2Driver.h
-#    )
-endif()
-
-add_library(push2lib ${PUSH_DRIVER_SOURCES})
+add_library(push2lib SHARED ${PUSH_DRIVER_SOURCES})
 
 if(PUSH_USE_LIBUSB)
 #  add_subdirectory(../../external/libusb libusb)

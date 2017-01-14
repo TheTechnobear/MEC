@@ -4,6 +4,7 @@
 #include "mec_device.h"
 
 #include <eigenfreed/eigenfreed.h>
+#include <memory>
 
 class MecEigenharp : public MecDevice {
 
