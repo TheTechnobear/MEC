@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(cJSON)
 
-add_library(cjson
+add_library(cjson SHARED
   cJSON.c
   cJSON.h
   )
