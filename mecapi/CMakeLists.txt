@@ -4,8 +4,6 @@ cmake_minimum_required(VERSION 2.8.11)
 
 project (mecapi)
 
-set(CMAKE_MACOSX_RPATH 1)
-
 set(MECAPI_SRC 
     mec_api.cpp
     mec_api.h

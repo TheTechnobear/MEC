@@ -13,7 +13,7 @@ elseif(UNIX)
     endif (ALSA_FOUND)
 endif(APPLE)
 
-add_library(rtmidi
+add_library(rtmidi 
     RtMidi.cpp
     RtMidi.h
   )

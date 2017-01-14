@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(MEC)
 
+set(CMAKE_MACOSX_RPATH 1)
+
 set(PROJECT_NAME MEC)
 set(MEC_VERSION_MAJOR 0)
 set(MEC_VERSION_MINOR 1)

@@ -1,7 +1,5 @@
 project (eigenharplib)
 
-set(CMAKE_MACOSX_RPATH 1)
-
 if(APPLE)
     #add_definitions(-D ML_USE_SSE)
     add_definitions(-D __MACOSX_CORE__)

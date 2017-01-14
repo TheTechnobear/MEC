@@ -1,7 +1,5 @@
 project (push2lib)
 
-set(CMAKE_MACOSX_RPATH 1)
-
 set(PUSH_DRIVER_SOURCES
     push2lib.cpp
   )

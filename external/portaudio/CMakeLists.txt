@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(portaudio)
 
-add_library(portaudio
+add_library(portaudio SHARED 
   pa_memorybarrier.h
   pa_ringbuffer.cpp
   pa_ringbuffer.h
