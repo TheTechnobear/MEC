@@ -3,7 +3,6 @@
 
 #include <cstring>
 #include <string>
-#include <cJSON.h>
 
 class MecPreferences {
 public:
@@ -27,7 +26,7 @@ private:
     bool        loadPreferences();
 
     // dont use unique_ptr, as need to use json delete
-    cJSON*  jsonData_;
+    void*  jsonData_;
     bool    owned_;
     bool    valid_;
 };
