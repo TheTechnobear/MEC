@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.11)
-#project(oscpack)
+project(oscpack)
 
 # separate versions of NetworkingUtils.cpp and UdpSocket.cpp are provided for Win32 and POSIX
 # the IpSystemTypePath selects the correct ones based on the current platform
@@ -11,7 +11,7 @@ else(WIN32)
  set(IpSystemTypePath ip/posix)
 endif(WIN32)
 
-add_library(oscpack
+add_library(oscpack SHARED
 
 ip/IpEndpointName.h
 ip/IpEndpointName.cpp
