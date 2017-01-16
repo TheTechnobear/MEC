@@ -183,12 +183,12 @@ public:
                 if (voice->state_ == MecVoices::Voice::PENDING) {
                     voices_.addPressure(voice, mz);
                     if (voice->state_ == MecVoices::Voice::ACTIVE) {
-                        output_.startTouch(voice->i_ + NOTE_CH_OFFSET, mn, pb, my, voice->v_);
+                        output_.touchOn(voice->i_ + NOTE_CH_OFFSET, mn, pb, my, voice->v_);
                     }
                     //else ignore, till we have min number of pressures
                 }
                 else {
-                    output_.continueTouch(voice->i_ + NOTE_CH_OFFSET, mn, pb, my, mz);
+                    output_.touchContinue(voice->i_ + NOTE_CH_OFFSET, mn, pb, my, mz);
                 }
             }
             voice->note_ = mn;
@@ -201,7 +201,7 @@ public:
         {
             if (voice) {
                 // LOG_2(std::cout << "stop voice for " << key << " ch " << (voice->i_ + NOTE_CH_OFFSET) << std::endl;)
-                output_.stopTouch(voice->i_ + NOTE_CH_OFFSET);
+                output_.touchOff(voice->i_ + NOTE_CH_OFFSET);
                 voice->note_ = 0;
                 voice->x_ = 0;
                 voice->y_ = 0;
@@ -214,17 +214,17 @@ public:
 
     virtual void breath(const char* dev, unsigned long long t, unsigned val)
     {
-        output_.global(GLOBAL_CH, BREATH_CC, unipolar(val), false);
+        output_.control(GLOBAL_CH, BREATH_CC, unipolar(val), false);
     }
 
     virtual void strip(const char* dev, unsigned long long t, unsigned strip, unsigned val)
     {
-        output_.global(GLOBAL_CH, STRIP_BASE_CC + strip, unipolar(val), false);
+        output_.control(GLOBAL_CH, STRIP_BASE_CC + strip, unipolar(val), false);
     }
 
     virtual void pedal(const char* dev, unsigned long long t, unsigned pedal, unsigned val)
     {
-        output_.global(GLOBAL_CH, PEDAL_BASE_CC + pedal, unipolar(val), false);
+        output_.control(GLOBAL_CH, PEDAL_BASE_CC + pedal, unipolar(val), false);
     }
 
 private:

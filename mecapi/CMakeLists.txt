@@ -13,6 +13,8 @@ set(MECAPI_SRC
     mec_device.h
     mec_eigenharp.cpp
     mec_eigenharp.h
+    mec_soundplane.cpp
+    mec_soundplane.h
 )
 
 include_directories (
@@ -20,6 +22,8 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/../eigenharp" 
     "${PROJECT_SOURCE_DIR}/../soundplanelite"
     "${PROJECT_SOURCE_DIR}/../external/cJSON"
+    "${PROJECT_SOURCE_DIR}/../external/oscpack"
+    "${PROJECT_SOURCE_DIR}/../external/portaudio"
     )
 
 add_library(mecapi SHARED ${MECAPI_SRC})

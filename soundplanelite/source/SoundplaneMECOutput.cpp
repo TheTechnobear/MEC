@@ -131,11 +131,11 @@ void SoundplaneMECOutput::processSoundplaneMessage(const SoundplaneDataMessage* 
         int zoneID = msg->mData[0];
         if (subtype == xSym)
         {
-            callback_->global(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x);
+            callback_->control(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x);
         }
         else if (subtype == ySym)
         {
-            callback_->global(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, y);
+            callback_->control(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, y);
         }
         else if (subtype == zSym)
         {
@@ -143,13 +143,13 @@ void SoundplaneMECOutput::processSoundplaneMessage(const SoundplaneDataMessage* 
         }
         else if (subtype == xyzSym)
         {
-            callback_->global(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x);
-//               callback_->global(serialNumber_.c_str(),mCurrFrameStartTime, zoneID, y);
-//               callback_->global(serialNumber_.c_str(),mCurrFrameStartTime, zoneID, z);
+            callback_->control(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x);
+//               callback_->control(serialNumber_.c_str(),mCurrFrameStartTime, zoneID, y);
+//               callback_->control(serialNumber_.c_str(),mCurrFrameStartTime, zoneID, z);
         }
         else if (subtype == toggleSym)
         {
-            callback_->global(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x > 0.5 ? 1 : 0);
+            callback_->control(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x > 0.5 ? 1 : 0);
         }
         else if(type == endFrameSym) 
         {

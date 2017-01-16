@@ -123,7 +123,7 @@ bool MidiOutput::pitchbend(unsigned ch, unsigned v) {
 }
 
 
-bool MidiOutput::global(int id, int attr, float v, bool isBipolar) {
+bool MidiOutput::control(int id, int attr, float v, bool isBipolar) {
     if (!isOpen()) return false;
 
     if (global_[id] != v ) {
@@ -135,7 +135,7 @@ bool MidiOutput::global(int id, int attr, float v, bool isBipolar) {
     return true;
 }
 
-bool MidiOutput::startTouch(int id, int note, float x, float y, float z) {
+bool MidiOutput::touchOn(int id, int note, float x, float y, float z) {
     if (!isOpen()) return false;
 
     // TODO, this  voice is a duplcation, of voices elsewhere
@@ -172,7 +172,7 @@ bool MidiOutput::startTouch(int id, int note, float x, float y, float z) {
     return true;
 }
 
-bool MidiOutput::continueTouch(int id, int note, float x, float y, float z) {
+bool MidiOutput::touchContinue(int id, int note, float x, float y, float z) {
     if (!isOpen()) return false;
 
     unsigned ch = id;
@@ -205,7 +205,7 @@ bool MidiOutput::continueTouch(int id, int note, float x, float y, float z) {
     return true;
 }
 
-bool MidiOutput::stopTouch(int id) {
+bool MidiOutput::touchOff(int id) {
     if (!isOpen()) return false;
 
     MecVoices::Voice* voice = voices_.voiceId(id);

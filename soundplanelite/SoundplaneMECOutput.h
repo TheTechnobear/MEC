@@ -18,7 +18,7 @@ public:
 	virtual ~MECCallback() {};
     virtual void device(const char* dev, int rows, int cols) {};
     virtual void touch(const char* dev, unsigned long long t, bool a, int touch, float note, float x, float y, float z) {};
-    virtual void global(const char* dev, unsigned long long t, int id, float val) {};
+    virtual void control(const char* dev, unsigned long long t, int id, float val) {};
 };
 
 

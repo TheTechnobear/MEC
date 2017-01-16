@@ -1,9 +1,6 @@
 #include "mec_api.h"
 /////////////////////////////////////////////////////////
 
-
-
-
 #include "mec_prefs.h"
 #include "mec_device.h"
 #include "mec_log.h"
@@ -13,7 +10,8 @@
 #include <iostream>
 
 
-class MecApi_Impl {
+/////////////////////////////////////////////////////////
+class MecApi_Impl : public MecCallback {
 public:
     MecApi_Impl(const std::string& configFile);
     ~MecApi_Impl();
@@ -24,6 +22,11 @@ public:
     void subscribe(MecCallback*);
     void unsubscribe(MecCallback*);
 
+    //MecCallback
+    virtual void touchOn(int touchId, int note, float x, float y, float z);
+    virtual void touchContinue(int touchId, int note, float x, float y, float z);
+    virtual void touchOff(int touchId, int note, float x, float y, float z);
+    virtual void control(int ctrlId, float v);
 
 private:
     void initDevices();
@@ -93,6 +96,26 @@ void MecApi_Impl::unsubscribe(MecCallback* p) {
     }
 }
 
+void MecApi_Impl::touchOn(int touchId, int note, float x, float y, float z) {
+    callback_->touchOn(touchId,note,x,y,z);
+}
+
+void MecApi_Impl::touchContinue(int touchId, int note, float x, float y, float z) {
+    callback_->touchContinue(touchId,note,x,y,z);
+
+}
+
+void MecApi_Impl::touchOff(int touchId, int note, float x, float y, float z) {
+    callback_->touchOff(touchId,note,x,y,z);
+}
+
+void MecApi_Impl::control(int ctrlId, float v) {
+    callback_->control(ctrlId,v);
+}
+
+
+/////////////////////////////////////////////////////////
+
 #include "mec_eigenharp.h"
 
 void MecApi_Impl::initDevices() {
@@ -104,7 +127,7 @@ void MecApi_Impl::initDevices() {
     if (prefs_->exists("eigenharp")) {
         LOG_1(std::cout   << "eigenharp initialise " << std::endl;)
         std::shared_ptr<MecDevice> device;
-        device.reset(new MecEigenharp());
+        device.reset(new MecEigenharp(*this));
         if(device->init(prefs_->getSubTree("eigenharp")) && device->isActive()) {
             devices_.push_back(device);
         } else {

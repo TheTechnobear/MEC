@@ -19,10 +19,10 @@ public:
     bool sendMsg(std::vector<unsigned char>& msg);
 
     // touch interface, check open
-    bool global(int id, int attr, float value, bool isBipolar = false);
-    bool startTouch(int id, int note, float x, float y, float z);
-    bool continueTouch(int id, int note, float x, float y, float z);
-    bool stopTouch(int id);
+    bool control(int id, int attr, float value, bool isBipolar = false);
+    bool touchOn(int id, int note, float x, float y, float z);
+    bool touchContinue(int id, int note, float x, float y, float z);
+    bool touchOff(int id);
 
     // low level midi, open unchecked
     bool noteOn(unsigned ch, unsigned note, unsigned vel);

@@ -11,6 +11,7 @@ public:
     virtual void touchOn(int touchId, int note, float x, float y, float z) = 0;
     virtual void touchContinue(int touchId, int note, float x, float y, float z) = 0;
     virtual void touchOff(int touchId, int note, float x, float y, float z) = 0;
+    virtual void control(int ctrlId, float v) = 0;
 };
 
 class MecApi {

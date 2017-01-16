@@ -91,12 +91,12 @@ public:
                 voice->note_ = mn;
                 LOG_2(std::cout << "start voice for " << touch << " ch " << (voice->i_ + NOTE_CH_OFFSET) << std::endl;)
                 float pb = (fn - voice->note_) / MPE_PB_RANGE;
-                output_.startTouch(voice->i_ + NOTE_CH_OFFSET, voice->note_, pb, my, mz);
+                output_.touchOn(voice->i_ + NOTE_CH_OFFSET, voice->note_, pb, my, mz);
             }
             else {
                 float pb = (fn - voice->note_) / MPE_PB_RANGE;
                 // LOG_2(std::cout     << "soundplane midi touch continue pb1: " << (fn - voice->note_)  << " rpb: " << pb << std::endl;)
-                output_.continueTouch(voice->i_ + NOTE_CH_OFFSET, voice->note_, pb, my, mz);
+                output_.touchContinue(voice->i_ + NOTE_CH_OFFSET, voice->note_, pb, my, mz);
             }
             voice->x_ = mx;
             voice->y_ = my;
@@ -107,7 +107,7 @@ public:
         {
             if (voice) {
                 LOG_2(std::cout << "stop voice for " << key << " ch " << (voice->i_ + NOTE_CH_OFFSET) << std::endl;)
-                output_.stopTouch(voice->i_ + NOTE_CH_OFFSET);
+                output_.touchOff(voice->i_ + NOTE_CH_OFFSET);
                 voice->note_ = 0;
                 voice->x_ = 0;
                 voice->y_ = 0;
@@ -118,9 +118,9 @@ public:
         }
     }
 
-    virtual void global(const char* dev, unsigned long long t, int id, float val)
+    virtual void control(const char* dev, unsigned long long t, int id, float val)
     {
-        output_.global(GLOBAL_CH, BASE_CC + id, val, false);
+        output_.control(GLOBAL_CH, BASE_CC + id, val, false);
     }
 
 
