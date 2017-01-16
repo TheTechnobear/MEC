@@ -117,6 +117,7 @@ void MecApi_Impl::control(int ctrlId, float v) {
 /////////////////////////////////////////////////////////
 
 #include "mec_eigenharp.h"
+#include "mec_soundplane.h"
 
 void MecApi_Impl::initDevices() {
 
@@ -128,16 +129,35 @@ void MecApi_Impl::initDevices() {
         LOG_1(std::cout   << "eigenharp initialise " << std::endl;)
         std::shared_ptr<MecDevice> device;
         device.reset(new MecEigenharp(*this));
-        if(device->init(prefs_->getSubTree("eigenharp")) && device->isActive()) {
-            devices_.push_back(device);
+        if(device->init(prefs_->getSubTree("eigenharp"))) {
+            if(device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1(std::cout   << "eigenharp init inactive " << std::endl;)
+                device->deinit();
+            }
         } else {
+            LOG_1(std::cout   << "eigenharp init failed " << std::endl;)
             device->deinit();
         }
     }
 
-    // if (prefs_->exists("soundplane")) {
-    //     LOG_1(std::cout   << "soundplane initialise " << std::endl;)
-    // }
+    if (prefs_->exists("soundplane")) {
+        LOG_1(std::cout   << "soundplane initialise " << std::endl;)
+        std::shared_ptr<MecDevice> device;
+        device.reset(new MecSoundplane(*this));
+        if(device->init(prefs_->getSubTree("soundplane"))) {
+            if(device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1(std::cout   << "soundplane init inactive " << std::endl;)
+                device->deinit();
+            }
+        } else {
+            LOG_1(std::cout   << "soundplane init failed " << std::endl;)
+            device->deinit();
+        }
+    }
 
     // if (prefs_->exists("push2")) {
     //     LOG_1(std::cout   << "push2 initialise " << std::endl;)

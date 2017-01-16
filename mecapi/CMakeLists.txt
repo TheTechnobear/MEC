@@ -23,9 +23,8 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/../soundplanelite"
     "${PROJECT_SOURCE_DIR}/../external/cJSON"
     "${PROJECT_SOURCE_DIR}/../external/oscpack"
-    "${PROJECT_SOURCE_DIR}/../external/portaudio"
     )
 
 add_library(mecapi SHARED ${MECAPI_SRC})
 
-target_link_libraries (mecapi eigenharplib soundplanelite push2lib cjson)
+target_link_libraries (mecapi eigenharplib soundplanelite push2lib cjson oscpack)

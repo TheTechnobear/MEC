@@ -143,6 +143,7 @@ bool MecEigenharp::init(void* arg) {
    MecPreferences prefs(arg);
 
    if (active_) {
+        LOG_2(std::cout   << "MecEigenharp::init - already active deinit" << std::endl;)
         deinit();
     }
     active_ = false;
@@ -154,12 +155,17 @@ bool MecEigenharp::init(void* arg) {
         if (eigenD_->create()) {
             if (eigenD_->start()) {
                 active_ = true;
+                LOG_1(std::cout   << "MecEigenharp::init - started" << std::endl;)
+            } else {
+                LOG_2(std::cout   << "MecEigenharp::init - failed to start" << std::endl;)
             }
+        } else {
+             LOG_2(std::cout   << "MecEigenharp::init - create failed" << std::endl;)
         }
     } else {
+        LOG_2(std::cout   << "MecEigenharp::init - invalid callback" << std::endl;)
         delete pCb;
     }
-
     return active_;
 }
 

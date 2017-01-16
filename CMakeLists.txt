@@ -37,6 +37,7 @@ add_subdirectory (eigenharp)
 add_subdirectory (soundplanelite) 
 add_subdirectory (push2) 
 add_subdirectory (mecapi) 
+add_subdirectory (mecdemo)
 add_subdirectory (mec)
 
 
