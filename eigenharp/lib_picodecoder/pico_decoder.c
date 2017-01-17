@@ -1,9 +1,12 @@
 #include "pico_decoder.h"
 // NULL implementaton!
 
+#include <stdio.h>
+
 void pico_decoder_create(pico_decoder_t *decoder, int tp)
 {
-    ;
+	fprintf(stderr, "WARNING: using a dummy pico decoder, pico will not function correctly\n");
+	fprintf(stderr, "WARNING: use official decode implementation for correct behaviour,\n");
 }
 void pico_decoder_destroy(pico_decoder_t *decoder)
 {
