@@ -12,9 +12,16 @@ elseif(UNIX)
     endif (ALSA_FOUND)
 endif(APPLE)
 
-add_library(rtmidi 
+add_library(rtmidi SHARED 
     RtMidi.cpp
     RtMidi.h
   )
+
+
+if(APPLE)
+    target_link_libraries(rtmidi  "-framework CoreMIDI -framework CoreAudio")
+elseif(UNIX) 
+    target_link_libraries(rtmidi ${ALSA_LIBRARIES})
+endif(APPLE)
 
 target_include_directories(rtmidi PUBLIC .)

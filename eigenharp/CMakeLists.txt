@@ -4,19 +4,11 @@ if(APPLE)
     #add_definitions(-D ML_USE_SSE)
     add_definitions(-D __MACOSX_CORE__)
 elseif(UNIX)
-    add_definitions(-D __LINUX_ALSA__)
-
     if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
         add_definitions(-D ML_USE_NEON)
     else()
         add_definitions(-D ML_USE_SSE)
     endif ()
-
-    find_package (ALSA REQUIRED)
-    if (ALSA_FOUND)
-      include_directories(${ALSA_INCLUDE_DIRS})
-    endif (ALSA_FOUND)
-
 endif(APPLE)
 
 file (GLOB_RECURSE EIGENHARP_HDRS "*/*.h" )
@@ -77,8 +69,7 @@ endif()
 if(APPLE)
     target_link_libraries(eigenharplib  "-framework Cocoa  -framework IOKit -framework CoreAudio")
 elseif(UNIX) 
-    target_link_libraries(eigenharplib  "libusb" "dl" "pthread" "asound")
-    target_link_libraries(eigenharplib ${ALSA_LIBRARIES})
+    target_link_libraries(eigenharplib  "libusb" "pthread")
 endif(APPLE)
 
 

@@ -70,27 +70,27 @@ if(APPLE)
     source/MacSoundplaneDriver.h
     )
 
-if(1)
-    # NOFPU
-    list(APPEND SPLite_H
-        source/nofpu/MLVector.h
-    ) 
-    list(APPEND SPLite_Src 
-            source/nofpu/MLVector.cpp
-            #source/nofpu/MLSignal.cpp
-    )
-else()
-    # SSE
-    add_definitions(-D ML_USE_SSE) 
-    list(APPEND SPLite_H
-        source/sse/MLVector.h
-        source/sse/MLDSP.h
-    ) 
-    list(APPEND SPLite_Src 
-            source/sse/MLVector.cpp
-            #source/sse/MLSignal.cpp
-    )
-endif()
+    if(1)
+        # NOFPU
+        list(APPEND SPLite_H
+            source/nofpu/MLVector.h
+        ) 
+        list(APPEND SPLite_Src 
+                source/nofpu/MLVector.cpp
+                #source/nofpu/MLSignal.cpp
+        )
+    else()
+        # SSE
+        add_definitions(-D ML_USE_SSE) 
+        list(APPEND SPLite_H
+            source/sse/MLVector.h
+            source/sse/MLDSP.h
+        ) 
+        list(APPEND SPLite_Src 
+                source/sse/MLVector.cpp
+                #source/sse/MLSignal.cpp
+        )
+    endif()
 
 elseif(UNIX) 
   list(APPEND SPLite_Src 
@@ -132,10 +132,11 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 if(APPLE)
-    target_link_libraries(soundplanelite  "-framework Cocoa  -framework IOKit -framework CoreAudio")
+    target_link_libraries(soundplanelite  "-framework Cocoa -framework IOKit")
+#    target_link_libraries(soundplanelite -framework CoreAudio")
 elseif(UNIX) 
-    target_link_libraries(soundplanelite  "libusb" "dl" "pthread" "asound")
-    target_link_libraries(soundplanelite ${ALSA_LIBRARIES})
+    target_link_libraries(soundplanelite  "libusb" "dl" "pthread")
+#    target_link_libraries(soundplanelite ${ALSA_LIBRARIES})
 endif(APPLE)
 
 target_include_directories(soundplanelite PUBLIC .)

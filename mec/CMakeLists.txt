@@ -1,25 +1,5 @@
 project(mec)
 
-if(APPLE)
-    #add_definitions(-D ML_USE_SSE)
-    add_definitions(-D __MACOSX_CORE__)
-elseif(UNIX)
-    add_definitions(-D __LINUX_ALSA__)
-
-    if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
-        add_definitions(-D ML_USE_NEON)
-    else()
-        add_definitions(-D ML_USE_SSE)
-    endif ()
-
-    find_package (ALSA REQUIRED)
-    if (ALSA_FOUND)
-      include_directories(${ALSA_INCLUDE_DIRS})
-    endif (ALSA_FOUND)
-
-endif(APPLE)
-
-
 set(MEC_SRC 
     mec.h
     mec.cpp
@@ -44,14 +24,7 @@ add_executable(mec ${MEC_SRC})
 
 target_link_libraries (mec eigenharplib soundplanelite push2lib mecapi cjson rtmidi)
 
-if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  target_link_libraries(mec atomic)
-endif()
-
 if(APPLE)
-    target_link_libraries(mec  "-framework CoreMIDI")
-elseif(UNIX) 
-    target_link_libraries(mec  "libusb" "dl" "pthread" "asound")
-    target_link_libraries (mec ${ALSA_LIBRARIES})
+    target_link_libraries(mec "-framework CoreMIDI")
 endif(APPLE)
 

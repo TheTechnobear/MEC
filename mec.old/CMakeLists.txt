@@ -1,24 +1,5 @@
 project(mecold)
 
-if(APPLE)
-    #add_definitions(-D ML_USE_SSE)
-    add_definitions(-D __MACOSX_CORE__)
-elseif(UNIX)
-    add_definitions(-D __LINUX_ALSA__)
-
-    if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
-        add_definitions(-D ML_USE_NEON)
-    else()
-        add_definitions(-D ML_USE_SSE)
-    endif ()
-
-    find_package (ALSA REQUIRED)
-    if (ALSA_FOUND)
-      include_directories(${ALSA_INCLUDE_DIRS})
-    endif (ALSA_FOUND)
-
-endif(APPLE)
-
 set(MEC_SRC 
     mec.h
     mec.cpp
