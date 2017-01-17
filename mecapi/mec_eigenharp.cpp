@@ -148,8 +148,8 @@ bool MecEigenharp::init(void* arg) {
         deinit();
     }
     active_ = false;
-
-    eigenD_.reset(new EigenApi::Eigenharp("../eigenharp/resources/"));
+	std::string fwDir = prefs.getString("firmware dir","../eigenharp/resources/");
+    eigenD_.reset(new EigenApi::Eigenharp(fwDir.c_str()));
     MecEigenharpHandler *pCb = new MecEigenharpHandler(prefs,callback_);
     if (pCb->isValid()) {
         eigenD_->addCallback(pCb);
