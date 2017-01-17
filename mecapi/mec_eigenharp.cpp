@@ -16,7 +16,8 @@ public:
     MecEigenharpHandler(MecPreferences& p, MecCallback& cb)
         :   prefs_(p),
             callback_(cb),
-            valid_(true)
+            valid_(true),
+            voices_(p.getInt("voices",15), p.getInt("velocity count",5))
     {
         if (valid_) {
             LOG_0(std::cout  << "MecEigenharpHandler enabling for mecapi" <<  std::endl;)

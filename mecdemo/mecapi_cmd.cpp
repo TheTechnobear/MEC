@@ -94,7 +94,7 @@ class MecMidiCallback: public  MecCallback
 {
 public:
     MecMidiCallback(MecPreferences& p)
-        :   prefs_(p)
+        :   prefs_(p), output_(p.getInt("voices", 15))
     {
         std::string device = prefs_.getString("device");
 		int virt = prefs_.getInt("virtual",0);
@@ -102,6 +102,9 @@ public:
             LOG_1(std::cout << "MecMidiCallback enabling for midi to " << device << std::endl;)
             LOG_1(std::cout << "TODO (MecMidiCallback) :" << std::endl;)
             LOG_1(std::cout << "- MPE init, including PB range" << std::endl;)
+        }
+        if(!output_.isOpen()) {
+            LOG_0(std::cout << "MecMidiCallback not open, so invalid for" << device << std::endl;)
         }
     }
 

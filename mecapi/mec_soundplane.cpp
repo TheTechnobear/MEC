@@ -16,6 +16,7 @@
 ////////////////////////////////////////////////
 // TODO
 // 1. callback should be on the same thread as process is called on
+// 2. voices not needed? as soundplane already does touch alloction, just need to detemine on and off
 
 ////////////////////////////////////////////////
 class MecSoundplaneHandler: public  MECCallback
@@ -24,7 +25,8 @@ public:
     MecSoundplaneHandler(MecPreferences& p, MecCallback& cb)
         :   prefs_(p),
             callback_(cb),
-            valid_(true)
+            valid_(true),
+            voices_(p.getInt("voices",15))
     {
         if (valid_) {
             LOG_0(std::cout  << "MecSoundplaneHandler enabling for mecapi" <<  std::endl;)

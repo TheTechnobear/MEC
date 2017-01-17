@@ -97,20 +97,20 @@ void MecApi_Impl::unsubscribe(MecCallback* p) {
 }
 
 void MecApi_Impl::touchOn(int touchId, int note, float x, float y, float z) {
-    callback_->touchOn(touchId,note,x,y,z);
+    if(callback_) callback_->touchOn(touchId,note,x,y,z);
 }
 
 void MecApi_Impl::touchContinue(int touchId, int note, float x, float y, float z) {
-    callback_->touchContinue(touchId,note,x,y,z);
+    if(callback_) callback_->touchContinue(touchId,note,x,y,z);
 
 }
 
 void MecApi_Impl::touchOff(int touchId, int note, float x, float y, float z) {
-    callback_->touchOff(touchId,note,x,y,z);
+    if(callback_) callback_->touchOff(touchId,note,x,y,z);
 }
 
 void MecApi_Impl::control(int ctrlId, float v) {
-    callback_->control(ctrlId,v);
+    if(callback_) callback_->control(ctrlId,v);
 }
 
 

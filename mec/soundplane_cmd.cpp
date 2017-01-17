@@ -44,7 +44,7 @@ class SoundplaneMidiCallback: public  MECCallback
 {
 public:
     SoundplaneMidiCallback(SoundplaneModel* pModel, MecPreferences& p)
-        : pModel_(pModel), prefs_(p)
+        : pModel_(pModel), prefs_(p), voices_(p.getInt("voices",15))
     {
         std::string device = prefs_.getString("device");
         if (output_.create(device)) {

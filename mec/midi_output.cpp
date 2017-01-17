@@ -3,7 +3,7 @@
 #include "mec.h"
 
 
-MidiOutput::MidiOutput() {
+MidiOutput::MidiOutput() : voices_(15) {
     for (int i = 0; i < 127; i++) {
         global_[i] = 0;
     }

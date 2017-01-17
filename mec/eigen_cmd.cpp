@@ -114,7 +114,7 @@ class EigenharpMidiCallback: public  EigenApi::Callback
 {
 public:
     EigenharpMidiCallback(EigenApi::Eigenharp& eh, MecPreferences& p)
-        :   prefs_(p)
+        :   prefs_(p), voices_(15)
     {
         std::string device = prefs_.getString("device");
 		int virt = prefs_.getInt("virtual",0);

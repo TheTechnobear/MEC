@@ -1,14 +1,14 @@
 #ifndef MEC_VOICES_H_
 #define MEC_VOICES_H_
 
-#define MAX_VOICES 16
-
-#define VELOCITY_COUNT 3
+#include <vector>
 
 class MecVoices {
 public:
-    MecVoices() {
-        for (int i = 0; i < MAX_VOICES; i++) {
+    MecVoices(unsigned voiceCount = 15, unsigned velocityCount = 5) 
+     : maxVoices_(voiceCount), velocityCount_(velocityCount){
+        voices_.resize(maxVoices_);
+        for (int i = 0; i < maxVoices_; i++) {
             voices_[i].i_=i;
             voices_[i].state_ = Voice::INACTIVE;
             voices_[i].id_ = -1;
@@ -39,7 +39,7 @@ public:
     };
 
     Voice*     voiceId(unsigned id) {
-        for (int i = 0; i < MAX_VOICES; i++) {
+        for (int i = 0; i < maxVoices_; i++) {
             if (voices_[i].id_ == id)
                 return &voices_[i];
         }
@@ -47,7 +47,7 @@ public:
     }
 
     Voice*    startVoice(unsigned id) {
-        for (int i = 0; i < MAX_VOICES; i++) {
+        for (int i = 0; i < maxVoices_; i++) {
             if (voices_[i].state_ == Voice::INACTIVE) {
                 voices_[i].id_ = id;
                 voices_[i].state_ = Voice::PENDING;
@@ -65,7 +65,7 @@ public:
         if(voice->state_ == Voice::PENDING) {
             voice->velSum_ += p;
             voice->velCount_++;
-            if(voice->velCount_ == VELOCITY_COUNT) {
+            if(voice->velCount_ == velocityCount_) {
                 voice->state_ = Voice::ACTIVE;
                 voice->v_ = voice->velSum_ / voice->velCount_; // refine!
             }
@@ -74,7 +74,7 @@ public:
 
     void   stopVoice(Voice* voice) {
         if (!voice) return;
-        for (int i = 0; i < MAX_VOICES; i++) {
+        for (int i = 0; i < maxVoices_; i++) {
             if (voices_[i].id_ == voice->id_) {
                 voices_[i].id_ = -1;
                 voices_[i].state_ = Voice::INACTIVE;
@@ -85,7 +85,9 @@ public:
 
 
 private:
-    Voice voices_[MAX_VOICES];
+    std::vector<Voice> voices_;
+    unsigned maxVoices_;
+    unsigned velocityCount_;
 };
 
 #endif //MEC_VOICES_H_
