@@ -2,93 +2,63 @@
     "osc"  :  {
     },
 
-    "eigenharp"  :  {
+
+    "mec"  :  {
         "outputs" : {
             "osc" : {
                 "host" : "127.0.0.1",
-                "port" : 9001,
-                "mapping" : { 
-                    "pico" : {
-                        "_notes" : [ 2 , 5, 12],
-                        "calculated" : {
-                            "keys in col"    : 9,
-                            "row multiplier" : 1,  
-                            "col multipler"  : 9,
-                            "note offset"    : 60
-                        }
-                    },
-                    "tau" : {
-                        "calculated-wrong" : {
-                            "keys in col"    : 16,
-                            "row multiplier" : 1,  
-                            "col multipler"  : 4,
-                            "note offset"    : 20
-                        }
-                    },
-                    "alpha" : {
-                        "calculated" : {
-                            "keys in col"    : 24,
-                            "row multiplier" : 4,  
-                            "col multipler"  : -1,
-                            "note offset"    : 20
-                        },
-                        "calculated-factory" : {
-                            "keys in col"    : 24,
-                            "row multiplier" : 1,  
-                            "col multipler"  : 4,
-                            "note offset"    : 20
-                        }
-                   }
-                }
+                "port" : 9001
             },
 
             "_midi" : {
+                "virtual" : 0,
+                "voices" : 15,
                 "device" : "Axoloti Core",
                 "_device" : "IAC Driver Bus 1",
-                "mapping" : { 
-                    "pico" : {
-                        "_notes" : [ 2 , 5, 12],
-                        "calculated" : {
-                            "keys in col"    : 9,
-                            "row multiplier" : 1,  
-                            "col multipler"  : 9,
-                            "note offset"    : 60
-                        }
-                    },
-                    "tau" : {
-                        "calculated-wrong" : {
-                            "keys in col"    : 16,
-                            "row multiplier" : 1,  
-                            "col multipler"  : 4,
-                            "note offset"    : 20
-                        }
-                    },
-                    "alpha" : {
-                        "calculated" : {
-                            "keys in col"    : 24,
-                            "row multiplier" : 4,  
-                            "col multipler"  : -1,
-                            "note offset"    : 20
-                        },
-                        "calculated-factory" : {
-                            "keys in col"    : 24,
-                            "row multiplier" : 1,  
-                            "col multipler"  : 4,
-                            "note offset"    : 20
-                        }
-                   }
-                }
+                "_device" : "Axoloti Core 20:0"
             }
         }
     },
 
-    "_soundplane"  :  {
-        "outputs" : {
-            "midi" : {
-                "device" : "Axoloti Core",
-                "_device" : "IAC Driver Bus 1"
-            }
+    "eigenharp" : {
+        "voices" : 8,
+        "velocity count" : 5,
+        "mapping" : { 
+            "pico" : {
+                "_notes" : [ 2 , 5, 12],
+                "calculated" : {
+                    "keys in col"    : 9,
+                    "row multiplier" : 1,  
+                    "col multipler"  : 9,
+                    "note offset"    : 60
+                }
+            },
+            "tau" : {
+                "calculated-wrong" : {
+                    "keys in col"    : 16,
+                    "row multiplier" : 1,  
+                    "col multipler"  : 4,
+                    "note offset"    : 20
+                }
+            },
+            "alpha" : {
+                "calculated" : {
+                    "keys in col"    : 24,
+                    "row multiplier" : 4,  
+                    "col multipler"  : -1,
+                    "note offset"    : 20
+                },
+                "calculated-factory" : {
+                    "keys in col"    : 24,
+                    "row multiplier" : 1,  
+                    "col multipler"  : 4,
+                    "note offset"    : 20
+                }
+           }
         }
+    },
+
+    "_soundplane"  :  {
     },
 
     "_push2"  :  {

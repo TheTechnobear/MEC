@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 2.8.11)
 project(oscpack)
 
 # separate versions of NetworkingUtils.cpp and UdpSocket.cpp are provided for Win32 and POSIX

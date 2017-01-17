@@ -93,28 +93,6 @@ int main(int ac, char **av)
         usleep(1000);
     }
 
-    if (prefs.exists("eigenharp")) {
-        LOG_1(std::cout   << "eigenharp initialise " << std::endl;)
-        pthread_t eigen_thread;
-        rc = pthread_create(&eigen_thread, NULL, eigenharp_proc, prefs.getSubTree("eigenharp"));
-        if (rc) {
-            LOG_1(std::cerr << "unabled to create eigen thread" << rc << std::endl;)
-            exit(-1);
-        }
-        usleep(1000);
-    }
-
-    if (prefs.exists("soundplane")) {
-        LOG_1(std::cout   << "soundplane initialise " << std::endl;)
-        pthread_t soundplane_thread;
-        rc = pthread_create(&soundplane_thread, NULL, soundplane_proc, prefs.getSubTree("soundplane"));
-        if (rc) {
-            LOG_1(std::cerr << "unabled to create soundplane thread" << rc << std::endl;)
-            exit(-1);
-        }
-        usleep(1000);
-    }
-
     if (prefs.exists("push2")) {
         LOG_1(std::cout   << "push2 initialise " << std::endl;)
         pthread_t push2_thread;
@@ -132,6 +110,18 @@ int main(int ac, char **av)
         rc = pthread_create(&midi_thread, NULL, midi_proc, prefs.getSubTree("midi"));
         if (rc) {
             LOG_1(std::cerr << "unabled to create midi thread" << rc << std::endl;)
+            exit(-1);
+        }
+        usleep(1000);
+    }
+
+    // MEC api , handling soundplane and eigenharp, evenything will move here!
+    if (prefs.exists("mec")) {
+        LOG_1(std::cout   << "mec api initialise " << std::endl;)
+        pthread_t mec_thread;
+        rc = pthread_create(&mec_thread, NULL, mecapi_proc, prefs.getSubTree("mec"));
+        if (rc) {
+            LOG_1(std::cerr << "unabled to create mecapi thread" << rc << std::endl;)
             exit(-1);
         }
         usleep(1000);

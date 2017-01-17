@@ -8,7 +8,7 @@
 
 class MidiOutput {
 public:
-    MidiOutput(int maxVoices);
+    MidiOutput();
     virtual ~MidiOutput();
 
     bool create(const std::string& portname,bool virt=false);
@@ -34,10 +34,10 @@ public:
     int bipolar14bit(float v) {return ((v * 0x2000) + 0x2000);}
     int bipolar7bit(float v) {return ((v / 2) + 0.5)  * 127; }
     int unipolar7bit(float v) {return v * 127;}
-
 private:
+
     std::unique_ptr<RtMidiOut> output_;
-    MecVoices::Voice voices_[16];
+    MecVoices voices_;
     float global_[127];
 };
 

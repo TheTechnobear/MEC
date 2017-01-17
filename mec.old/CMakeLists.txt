@@ -1,6 +1,4 @@
-cmake_minimum_required(VERSION 2.8.11)
-
-project(mecdemo)
+project(mecold)
 
 if(APPLE)
     #add_definitions(-D ML_USE_SSE)
@@ -21,12 +19,12 @@ elseif(UNIX)
 
 endif(APPLE)
 
-
 set(MEC_SRC 
     mec.h
     mec.cpp
     osc_cmd.cpp
-    mecapi_cmd.cpp
+    eigen_cmd.cpp
+    soundplane_cmd.cpp
     push2_cmd.cpp
     midi_cmd.cpp
     midi_output.cpp
@@ -42,18 +40,17 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/../external/cJSON"
 )
 
-add_executable(mecdemo ${MEC_SRC})
-
-target_link_libraries (mecdemo eigenharplib soundplanelite push2lib mecapi cjson rtmidi)
+add_executable(mecold ${MEC_SRC})
+target_link_libraries (mecold eigenharplib soundplanelite push2lib mecapi cjson rtmidi)
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  target_link_libraries(mecdemo atomic)
+  target_link_libraries(mecold atomic)
 endif()
 
 if(APPLE)
-    target_link_libraries(mecdemo  "-framework CoreMIDI")
+    target_link_libraries(mecold  "-framework CoreMIDI")
 elseif(UNIX) 
-    target_link_libraries(mecdemo  "libusb" "dl" "pthread" "asound")
-    target_link_libraries (mecdemo ${ALSA_LIBRARIES})
+    target_link_libraries(mecold  "libusb" "dl" "pthread" "asound")
+    target_link_libraries (mecold ${ALSA_LIBRARIES})
 endif(APPLE)
 

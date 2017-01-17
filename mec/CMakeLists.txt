@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.11)
+project(mec)
 
 if(APPLE)
     #add_definitions(-D ML_USE_SSE)
@@ -24,21 +24,20 @@ set(MEC_SRC
     mec.h
     mec.cpp
     osc_cmd.cpp
-    eigen_cmd.cpp
-    soundplane_cmd.cpp
+    mecapi_cmd.cpp
     push2_cmd.cpp
     midi_cmd.cpp
     midi_output.cpp
     midi_output.h
 )
 include_directories (
-    "${PROJECT_SOURCE_DIR}/mecapi" 
-    "${PROJECT_SOURCE_DIR}/push2" 
-    "${PROJECT_SOURCE_DIR}/soundplanelite"
-    "${PROJECT_SOURCE_DIR}/eigenharp" 
-    "${PROJECT_SOURCE_DIR}/external/oscpack"
-    "${PROJECT_SOURCE_DIR}/external/portaudio"
-    "${PROJECT_SOURCE_DIR}/external/cJSON"
+    "${PROJECT_SOURCE_DIR}/../mecapi" 
+    "${PROJECT_SOURCE_DIR}/../push2" 
+    "${PROJECT_SOURCE_DIR}/../soundplanelite"
+    "${PROJECT_SOURCE_DIR}/../eigenharp" 
+    "${PROJECT_SOURCE_DIR}/../external/oscpack"
+    "${PROJECT_SOURCE_DIR}/../external/portaudio"
+    "${PROJECT_SOURCE_DIR}/../external/cJSON"
 )
 
 add_executable(mec ${MEC_SRC})

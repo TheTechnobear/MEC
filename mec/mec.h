@@ -4,9 +4,8 @@
 #include <pthread.h>
 #include <mec_log.h>
 
-void *eigenharp_proc(void *);
 void *osc_command_proc(void *);
-void *soundplane_proc(void *);
+void *mecapi_proc(void *);
 void *midi_proc(void *);
 void *push2_proc(void *);
 

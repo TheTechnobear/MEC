@@ -3,7 +3,7 @@
 #include "mec.h"
 
 
-MidiOutput::MidiOutput() : voices_(15) {
+MidiOutput::MidiOutput(int maxVoices) {
     for (int i = 0; i < 127; i++) {
         global_[i] = 0;
     }
@@ -138,15 +138,10 @@ bool MidiOutput::control(int id, int attr, float v, bool isBipolar) {
 bool MidiOutput::touchOn(int id, int note, float x, float y, float z) {
     if (!isOpen()) return false;
 
-    // TODO, this  voice is a duplcation, of voices elsewhere
-    // the issue is, we want to track the x/y/z values, so we only send when necessary
-    MecVoices::Voice* voice = voices_.voiceId(id);
-    if (!voice) {
-        voice = voices_.startVoice(id);
-    }
+    MecVoices::Voice& voice = voices_[id];
 
     unsigned ch = id;
-    voice->note_ = note;
+    voice.note_ = note;
 
     unsigned mx = bipolar14bit(x);
     int my = bipolar7bit(y);
@@ -162,12 +157,12 @@ bool MidiOutput::touchOn(int id, int note, float x, float y, float z) {
     cc(ch, 74,  my);
     noteOn(ch, note, mz);
 
-    voice->x_ = mx;
-    voice->y_ = my;
+    voice.x_ = mx;
+    voice.y_ = my;
 
     // start with zero z, as we use intial z of velocity
     pressure(ch, 0);
-    voice->z_ = 0;
+    voice.z_ = 0;
 
     return true;
 }
@@ -175,8 +170,8 @@ bool MidiOutput::touchOn(int id, int note, float x, float y, float z) {
 bool MidiOutput::touchContinue(int id, int note, float x, float y, float z) {
     if (!isOpen()) return false;
 
+    MecVoices::Voice& voice = voices_[id];
     unsigned ch = id;
-    MecVoices::Voice* voice = voices_.voiceId(id);
     unsigned mx = bipolar14bit(x);
     int my = bipolar7bit(y);
     int mz = unipolar7bit(z);
@@ -187,19 +182,17 @@ bool MidiOutput::touchContinue(int id, int note, float x, float y, float z) {
     // LOG_2(           << " z :" << z << " mz: " << mz)
     // LOG_2(           << std::endl;)
 
-    if (voice) {
-        if (voice->x_ != mx) {
-            voice->x_ = mx;
-            pitchbend(ch, mx) ;
-        }
-        if (voice->y_ != my) {
-            voice->y_ = my;
-            cc(ch, 74, my);
-        }
-        if (voice->z_ != mz) {
-            voice->z_ = mz;
-            pressure(ch, mz);
-        }
+    if (voice.x_ != mx) {
+        voice.x_ = mx;
+        pitchbend(ch, mx) ;
+    }
+    if (voice.y_ != my) {
+        voice.y_ = my;
+        cc(ch, 74, my);
+    }
+    if (voice.z_ != mz) {
+        voice.z_ = mz;
+        pressure(ch, mz);
     }
 
     return true;
@@ -208,22 +201,19 @@ bool MidiOutput::touchContinue(int id, int note, float x, float y, float z) {
 bool MidiOutput::touchOff(int id) {
     if (!isOpen()) return false;
 
-    MecVoices::Voice* voice = voices_.voiceId(id);
-    if (!voice) return false;
-
+    MecVoices::Voice& voice = voices_[id];
 
     unsigned ch = id;
-    unsigned note = voice->note_;
+    unsigned note = voice.note_;
     unsigned vel = 0; // last vel = release velocity
     noteOff(ch, note, vel);
     pressure(ch, 0);
 
-    voice->note_ = 0;
-    voice->x_ = 0;
-    voice->y_ = 0;
-    voice->z_ = 0;//
+    voice.note_ = 0;
+    voice.x_ = 0;
+    voice.y_ = 0;
+    voice.z_ = 0;//
 
-    voices_.stopVoice(voice);
 
     return true;
 }
