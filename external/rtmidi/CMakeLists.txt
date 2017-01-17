@@ -19,7 +19,7 @@ add_library(rtmidi SHARED
 
 
 if(APPLE)
-    target_link_libraries(rtmidi  "-framework CoreMIDI -framework CoreAudio")
+    target_link_libraries(rtmidi  "-framework Cocoa -framework CoreMIDI -framework CoreAudio")
 elseif(UNIX) 
     target_link_libraries(rtmidi ${ALSA_LIBRARIES})
 endif(APPLE)

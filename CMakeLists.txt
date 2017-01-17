@@ -37,6 +37,5 @@ add_subdirectory (soundplanelite)
 add_subdirectory (push2) 
 add_subdirectory (mecapi) 
 add_subdirectory (mec)
-add_subdirectory (mec.old)
 
 

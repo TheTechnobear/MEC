@@ -120,7 +120,7 @@ public:
 
 private:
     inline  float clamp(float v,float mn, float mx) {return (std::max(std::min(v,mx),mn));}
-    float   unipolar(int val) { std::min( float(val) / 4096.0f, 1.0f); }
+    float   unipolar(int val) { return std::min( float(val) / 4096.0f, 1.0f); }
     float   bipolar(int val) { return clamp(float(val) / 4096.0f, -1.0f, 1.0f);}
     int     note(unsigned key) { return mapper_.noteFromKey(key); }
 
