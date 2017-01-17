@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.11)
 
-set(CMAKE_MACOSX_RPATH 1)
+project(mec)
 
 set(PROJECT_NAME MEC)
 set(MEC_VERSION_MAJOR 0)
@@ -23,6 +23,12 @@ elseif(UNIX)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     endif ()
 endif(APPLE) 
+
+set(CMAKE_MACOSX_RPATH 1)
+
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release/bin)
 
 ############
 add_subdirectory(external/libusb libusb)
