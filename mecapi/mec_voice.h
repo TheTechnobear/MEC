@@ -23,7 +23,7 @@ public:
     struct Voice {
         int i_;
         int id_;
-        int note_;
+        float note_;
         float x_;
         float y_;
         float z_;
