@@ -80,8 +80,9 @@ namespace EigenApi
         
  		// logging
 		void logmsg(const char* msg);
+        bool stopping() { return stopping_;}
 
-       class IHXException
+        class IHXException
         {
         public:
             IHXException(const std::string& reason) : reason_(reason) {}
@@ -96,6 +97,7 @@ namespace EigenApi
         unsigned lastBreath_;
         unsigned lastStrip_[2];
         unsigned lastPedal_[4];
+        bool stopping_;
     };
     
     class EF_Alpha : public EF_Harp
@@ -121,7 +123,7 @@ namespace EigenApi
 		static bool isAvailable();
 		
     protected:
-        
+
     private:
         std::string findDevice();
         bool loadBaseStation();

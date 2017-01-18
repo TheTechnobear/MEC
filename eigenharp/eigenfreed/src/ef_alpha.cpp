@@ -66,6 +66,7 @@ bool EF_Alpha::create()
 bool EF_Alpha::destroy()
 {
     logmsg("destroy alpha....");
+    stopping_ = true;
     if(pLoop_)
     {
 //        pLoop_->stop();
@@ -227,7 +228,7 @@ bool EF_Alpha::isAvailable()
 
 void EF_Alpha::Delegate::kbd_dead(unsigned reason)
 {
-	parent_.restartKeyboard();
+	if(!parent_.stopping()) parent_.restartKeyboard();
 }
 
 void EF_Alpha::Delegate::kbd_key(unsigned long long t, unsigned key, unsigned p, int r, int y)

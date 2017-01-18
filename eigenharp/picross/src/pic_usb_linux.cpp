@@ -824,7 +824,7 @@ libusb_device_handle* pic::usbdevice_t::impl_t::open_usb_device(const char* name
         	addr=libusb_get_device_address(dev);
        	    buildUsbName(buffer,vendor,product,addr,busNum);
             name_ = name;
-    		pic::logmsg() << "pic::usbdevice_t::impl_t::open_usb_device: trying device " << buffer;
+    		// pic::logmsg() << "pic::usbdevice_t::impl_t::open_usb_device: trying device " << buffer;
        	    if(strcmp(name,buffer)==0)
        	    {
         		pic::logmsg() << "pic::usbdevice_t::impl_t::open_usb_device: found device " << name;
@@ -1171,7 +1171,7 @@ pic::usbenumerator_t::impl_t::~impl_t()
 
 void pic::usbenumerator_t::impl_t::thread_pass()
 {
-	pic::logmsg() << "pic::usbenumerator_t::thread_pass : seaerching V " << vendor_ << " P " << product_;
+	pic::logmsg() << "pic::usbenumerator_t::thread_pass : searching V " << vendor_ << " P " << product_;
 
 	std::set<std::string> working;
 	working.clear();
@@ -1198,17 +1198,17 @@ void pic::usbenumerator_t::impl_t::thread_pass()
         	
         	unsigned busNum= libusb_get_bus_number(dev);
         	unsigned addr= libusb_get_device_address(dev);
-        	pic::logmsg() << "pic::usbenumerator_t::enumerate details : "
-        				<< " V " << desc.idVendor
-        				<< " P " << desc.idProduct
-        				<< " B " << busNum
-        				<< " A " << addr;
+        	// pic::logmsg() << "pic::usbenumerator_t::enumerate details : "
+        	// 			<< " V " << desc.idVendor
+        	// 			<< " P " << desc.idProduct
+        	// 			<< " B " << busNum
+        	// 			<< " A " << addr;
         	
         	if (desc.idVendor==vendor_ &&  desc.idProduct==product_)
         	{
         	    char buffer[21];
         	    buildUsbName(buffer,desc.idVendor,desc.idProduct,addr,busNum);
-            	pic::logmsg() << "pic::usbenumerator_t::enumerate found : " << buffer;
+            	pic::logmsg() << "pic::usbenumerator_t::enumerate device found : " << buffer;
                 working.insert(buffer);
         	}
         }

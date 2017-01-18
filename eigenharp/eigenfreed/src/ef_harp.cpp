@@ -40,7 +40,7 @@ namespace EigenApi
 {
 
 EF_Harp::EF_Harp(EigenFreeD& efd, const char* fw) 
-	: pDevice_(NULL),fwDir_(fw),efd_(efd)
+	: pDevice_(NULL),fwDir_(fw),efd_(efd), stopping_(false)
 {
 	;
 }
@@ -97,6 +97,7 @@ bool EF_Harp::create()
 bool EF_Harp::destroy()
 {
     logmsg("destroy Eigenharp....");
+  	stopping_ = true;
     if(pDevice_)
     {
         //pDevice_->detach();
@@ -110,11 +111,13 @@ bool EF_Harp::destroy()
 
 bool EF_Harp::start()
 {
+	stopping_ = false;
     return true;
 }
 
 bool EF_Harp::stop()
 {
+	stopping_ = true;
     return true;
 }
 

@@ -60,7 +60,7 @@ static pic::ilist_t<pico::active_t::impl_t> *kbds__;
 static void __shutdown()
 {
     //shutdown no longer used, as agent closes correctly
-    fprintf(stderr,"shutdown handler\n");
+    fprintf(stderr,"pico::active shutdown handler\n");
 
     pico::active_t::impl_t *i = kbds__->head();
 
@@ -70,7 +70,7 @@ static void __shutdown()
         {
             for(unsigned k=0; k<22; ++k)
                 i->set_led(k,0);
-            i->control_out(TYPE_VENDOR,BCTPICO_USBCOMMAND_STOP,0,0,0,0);
+            i->detach();
             i->stop();
             i->close();
         }
@@ -105,14 +105,8 @@ pico::active_t::impl_t::impl_t(const char *name, pico::active_t::delegate_t *del
 
 pico::active_t::impl_t::~impl_t()
 {  
-    try
-    {
-        control_out(TYPE_VENDOR,BCTPICO_USBCOMMAND_STOP,0,0,0,0);
-    }
-    catch(...)
-    {
-    }
-    stop(); 
+    detach();
+    stop();
     close();
 }
 
@@ -124,7 +118,7 @@ void pico::active_t::impl_t::start()
 void pico::active_t::impl_t::pipe_started()
 {
     control_out(TYPE_VENDOR,BCTPICO_USBCOMMAND_START,0,0,0,0);
-    pic::logmsg() << "restoring led mask:" << ledmask_;
+    pic::logmsg() << "pico::active restoring led mask:" << ledmask_;
     pic_microsleep(5000);
     control(TYPE_VENDOR,BCTPICO_USBCOMMAND_SETMODELED,ledmask_,0);
 }
@@ -138,11 +132,12 @@ void pico::active_t::impl_t::pipe_stopped()
 {
     try
     {
+        pic::logmsg() << "pico::active pipe_stopped";
         control_out(TYPE_VENDOR,BCTPICO_USBCOMMAND_STOP,0,0,0,0);
     }
     catch(...)
     {
-        pic::logmsg() << "device shutdown failed";
+        pic::logmsg() << "pico::active device shutdown failed";
     }
 }
 
@@ -292,7 +287,7 @@ void pico::active_t::impl_t::pipe_died(unsigned reason)
 
 void pico::active_t::load_calibration_from_device()
 {
-    pic::logmsg() << "loading calibration from device";
+    pic::logmsg() << "pico::active loading calibration from device";
 
     unsigned short min,max,row[BCTPICO_CALTABLE_POINTS+2];
     row[0] = 0;
@@ -310,16 +305,16 @@ void pico::active_t::load_calibration_from_device()
                 }
                 else
                 {
-                    pic::logmsg() << "warning: no data for key " << k << " corner " << c;
+                    pic::logmsg() << "pico::active warning: no data for key " << k << " corner " << c;
                 }
             }
         }
 
-        pic::logmsg() << "loading calibration done";
+        pic::logmsg() << "pico::active loading calibration done";
     }
     catch(pic::error &e)
     {
-        pic::logmsg() << "error reading calibration data: " << e.what();
+        pic::logmsg() << "pico::active error reading calibration data: " << e.what();
     }
 }
 

@@ -62,6 +62,7 @@ bool EF_Pico::create()
 bool EF_Pico::destroy()
 {
     logmsg("destroy pico....");
+    stopping_ = true;
     if(pLoop_)
     {
 //        pLoop_->stop();
@@ -96,6 +97,7 @@ void EF_Pico::restartKeyboard()
 {
     if(pLoop_!=NULL)
     {
+        logmsg("restarting pico keyboard....");
         pLoop_->stop();
         pLoop_->start();
     }
@@ -204,7 +206,7 @@ bool EF_Pico::isAvailable()
 //PicoDelegate
 void EF_Pico::Delegate::kbd_dead(unsigned reason)
 {
-    parent_.restartKeyboard();
+    if(!parent_.stopping()) parent_.restartKeyboard();
 }
     
 void EF_Pico::Delegate::kbd_key(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y)
