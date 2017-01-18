@@ -18,7 +18,7 @@ public:
             callback_(cb),
             valid_(true),
             voices_(p.getInt("voices",15), p.getInt("velocity count",5)),
-            pitchbendRange_((float) p.getDouble("pitchbend range", 48.0))
+            pitchbendRange_((float) p.getDouble("pitchbend range", 2.0))
     {
         if (valid_) {
             LOG_0(std::cout  << "MecEigenharpHandler enabling for mecapi" <<  std::endl;)
