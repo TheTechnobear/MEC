@@ -84,15 +84,6 @@ public:
         voice->id_ = -1;
         voice->state_ = Voice::INACTIVE;
         freeVoices_.push_back(voice);
-        /*for (int i = 0; i < maxVoices_; i++) {
-            if (voices_[i].id_ == voice->id_) {
-                usedVoices_.remove(&voices_[i]);
-                voices_[i].id_ = -1;
-                voices_[i].state_ = Voice::INACTIVE;
-                freeVoices_.push_back(&voices_[i]);
-                return;
-            }
-        }*/
     }
 
 
