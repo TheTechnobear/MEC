@@ -13,11 +13,12 @@
 class MecEigenharpHandler: public  EigenApi::Callback
 {
 public:
-    MecEigenharpHandler(MecPreferences& p, MecCallback& cb)
+    MecEigenharpHandler(MecPreferences& p, IMecCallback& cb)
         :   prefs_(p),
             callback_(cb),
             valid_(true),
-            voices_(p.getInt("voices",15), p.getInt("velocity count",5))
+            voices_(p.getInt("voices",15), p.getInt("velocity count",5)),
+            pitchbendRange_((float) p.getDouble("pitchbend range", 48.0))
     {
         if (valid_) {
             LOG_0(std::cout  << "MecEigenharpHandler enabling for mecapi" <<  std::endl;)
@@ -52,17 +53,17 @@ public:
     virtual void key(const char* dev, unsigned long long t, unsigned course, unsigned key, bool a, unsigned p, int r, int y)
     {
         MecVoices::Voice* voice = voices_.voiceId(key);
-        int     mn = note(key);
         float   mx = bipolar(r);
         float   my = bipolar(y);
         float   mz = unipolar(p);
+        float   mn = note(key,mx);
         if (a)
         {
 
             LOG_2(std::cout     << "MecEigenharpHandler key device d: "  << dev  << " a: "  << a)
             LOG_2(              << " c: "   << course   << " k: "   << key)
             LOG_2(              << " r: "   << r        << " y: "   << y    << " p: "  << p)
-            LOG_2(              << " mx: "  << mx       << " my: "  << my   << " mz: " << mz)
+            LOG_2(              << " mn: " << mn << " mx: "  << mx       << " my: "  << my   << " mz: " << mz)
             LOG_2(              << std::endl;)
 
             if (!voice) {
@@ -115,25 +116,26 @@ public:
 
     virtual void pedal(const char* dev, unsigned long long t, unsigned pedal, unsigned val)
     {
-        callback_.control(0x10 + pedal,unipolar(val));
+        callback_.control(0x20 + pedal,unipolar(val));
     }
 
 private:
     inline  float clamp(float v,float mn, float mx) {return (std::max(std::min(v,mx),mn));}
     float   unipolar(int val) { return std::min( float(val) / 4096.0f, 1.0f); }
     float   bipolar(int val) { return clamp(float(val) / 4096.0f, -1.0f, 1.0f);}
-    int     note(unsigned key) { return mapper_.noteFromKey(key); }
+    float   note(unsigned key,float mx) { return mapper_.noteFromKey(key) + (mx * pitchbendRange_) ; }
 
     MecPreferences prefs_;
-    MecCallback& callback_;
+    IMecCallback& callback_;
     MecSurfaceMapper mapper_;
     MecVoices voices_;
     bool valid_;
+    float pitchbendRange_;
 };
 
 
 ////////////////////////////////////////////////
-MecEigenharp::MecEigenharp(MecCallback& cb) : active_(false), callback_(cb) {
+MecEigenharp::MecEigenharp(IMecCallback& cb) : active_(false), callback_(cb) {
 }
 
 MecEigenharp::~MecEigenharp() {

@@ -5,14 +5,24 @@
 
 class MecApi_Impl;
 
-class MecCallback {
+class IMecCallback {
 public:
-    virtual ~MecCallback() {};
-    virtual void touchOn(int touchId, int note, float x, float y, float z) = 0;
-    virtual void touchContinue(int touchId, int note, float x, float y, float z) = 0;
-    virtual void touchOff(int touchId, int note, float x, float y, float z) = 0;
+    virtual ~IMecCallback() {};
+    virtual void touchOn(int touchId, float note, float x, float y, float z) = 0;
+    virtual void touchContinue(int touchId, float note, float x, float y, float z) = 0;
+    virtual void touchOff(int touchId, float note, float x, float y, float z) = 0;
     virtual void control(int ctrlId, float v) = 0;
 };
+
+class MecCallback : public IMecCallback {
+public:
+    virtual ~MecCallback() {};
+    virtual void touchOn(int touchId, float note, float x, float y, float z) {};
+    virtual void touchContinue(int touchId, float note, float x, float y, float z){};
+    virtual void touchOff(int touchId, float note, float x, float y, float z) {};
+    virtual void control(int ctrlId, float v) = 0;
+};
+
 
 class MecApi {
 public:
@@ -21,8 +31,8 @@ public:
     void init();
     void process();  // periodically call to process messages
 
-    void subscribe(MecCallback*);
-    void unsubscribe(MecCallback*);
+    void subscribe(IMecCallback*);
+    void unsubscribe(IMecCallback*);
 private:
     MecApi_Impl* impl_;
 };

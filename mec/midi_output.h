@@ -6,9 +6,19 @@
 
 #include <mec_voice.h>
 
+struct MidiVoiceData {
+        unsigned startNote_;
+        unsigned note_;      //0
+        int pitchbend_; //1
+        int timbre_;    //2
+        unsigned pressure_;  //3
+        int changeMask_; // not used currently
+};
+
+
 class MidiOutput {
 public:
-    MidiOutput(int maxVoices);
+    MidiOutput(int maxVoices, float pbr = 48.0);
     virtual ~MidiOutput();
 
     bool create(const std::string& portname,bool virt=false);
@@ -20,8 +30,8 @@ public:
 
     // touch interface, check open
     bool control(int id, int attr, float value, bool isBipolar = false);
-    bool touchOn(int id, int note, float x, float y, float z);
-    bool touchContinue(int id, int note, float x, float y, float z);
+    bool touchOn(int id, float note, float x, float y, float z);
+    bool touchContinue(int id, float note, float x, float y, float z);
     bool touchOff(int id);
 
     // low level midi, open unchecked
@@ -34,11 +44,13 @@ public:
     int bipolar14bit(float v) {return ((v * 0x2000) + 0x2000);}
     int bipolar7bit(float v) {return ((v / 2) + 0.5)  * 127; }
     int unipolar7bit(float v) {return v * 127;}
+    void setPitchbendRange(float v) { pitchbendRange_ = v;}
 
 private:
     std::unique_ptr<RtMidiOut> output_;
-    MecVoices::Voice voices_[16];
+    MidiVoiceData voices_[16];
     float global_[127];
+    float pitchbendRange_;
 };
 
 #endif //MEC_MIDI_OUTPUT_H

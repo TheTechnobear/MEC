@@ -12,7 +12,7 @@ class MLAppState;
 class MecSoundplane : public MecDevice {
 
 public:
-    MecSoundplane(MecCallback&);
+    MecSoundplane(IMecCallback&);
     virtual ~MecSoundplane();
     virtual bool init(void*);
     virtual bool process();
@@ -20,7 +20,7 @@ public:
     virtual bool isActive();
 
 private:
-	MecCallback& callback_;
+	IMecCallback& callback_;
     std::unique_ptr<SoundplaneModel> model_;
     std::unique_ptr<MLAppState> modelState_;
     bool active_;

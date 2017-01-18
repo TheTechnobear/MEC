@@ -22,7 +22,7 @@
 class MecSoundplaneHandler: public  MECCallback
 {
 public:
-    MecSoundplaneHandler(MecPreferences& p, MecCallback& cb)
+    MecSoundplaneHandler(MecPreferences& p, IMecCallback& cb)
         :   prefs_(p),
             callback_(cb),
             valid_(true),
@@ -48,7 +48,7 @@ public:
 
         MecVoices::Voice* voice = voices_.voiceId(touch);
         float fn = n;
-        int   mn = note(fn);
+        float mn = note(fn);
         float mx = clamp(x,-1.0f,1.0f);
         float my = clamp(y,-1.0f,1.0f);
         float mz = clamp(z, 0.0f,1.0f);
@@ -97,17 +97,18 @@ public:
 
 private:
     inline  float clamp(float v,float mn, float mx) {return (std::max(std::min(v,mx),mn));}
-    int     note(float n) { return n; }
+    float   note(float n) { return n; }
 
     MecPreferences prefs_;
-    MecCallback& callback_;
+    IMecCallback& callback_;
     MecVoices voices_;
     bool valid_;
 };
 
 
 ////////////////////////////////////////////////
-MecSoundplane::MecSoundplane(MecCallback& cb) : active_(false), callback_(cb) {
+MecSoundplane::MecSoundplane(IMecCallback& cb) : 
+    active_(false), callback_(cb) {
 }
 
 MecSoundplane::~MecSoundplane() {

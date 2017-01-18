@@ -13,6 +13,7 @@
             "_midi" : {
                 "virtual" : 0,
                 "voices" : 15,
+                "pitchbend range" : 48.0,
                 "device" : "Axoloti Core",
                 "_device" : "IAC Driver Bus 1",
                 "_device" : "Axoloti Core 20:0"
@@ -23,6 +24,7 @@
     "eigenharp" : {
         "voices" : 8,
         "velocity count" : 5,
+        "pitchbend range" : 2.0,
         "mapping" : { 
             "pico" : {
                 "_notes" : [ 2 , 5, 12],

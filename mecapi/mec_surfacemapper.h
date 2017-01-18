@@ -17,7 +17,7 @@ an array of note values, one for each key -  "notes" : [1,2,3]
 class MecSurfaceMapper {
 public:
 	MecSurfaceMapper();
-	int noteFromKey(int key);
+	int  noteFromKey(int key);
 	void load(MecPreferences& prefs);
 private:
     void loadNoteArray(MecPreferences& prefs);

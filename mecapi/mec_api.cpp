@@ -11,7 +11,7 @@
 
 
 /////////////////////////////////////////////////////////
-class MecApi_Impl : public MecCallback {
+class MecApi_Impl : public IMecCallback {
 public:
     MecApi_Impl(const std::string& configFile);
     ~MecApi_Impl();
@@ -19,13 +19,13 @@ public:
     void init();
     void process();  // periodically call to process messages
 
-    void subscribe(MecCallback*);
-    void unsubscribe(MecCallback*);
+    void subscribe(IMecCallback*);
+    void unsubscribe(IMecCallback*);
 
-    //MecCallback
-    virtual void touchOn(int touchId, int note, float x, float y, float z);
-    virtual void touchContinue(int touchId, int note, float x, float y, float z);
-    virtual void touchOff(int touchId, int note, float x, float y, float z);
+    //IMecCallback
+    virtual void touchOn(int touchId, float note, float x, float y, float z);
+    virtual void touchContinue(int touchId, float note, float x, float y, float z);
+    virtual void touchOff(int touchId, float note, float x, float y, float z);
     virtual void control(int ctrlId, float v);
 
 private:
@@ -33,7 +33,7 @@ private:
 
     std::vector<std::shared_ptr<MecDevice>> devices_;
     std::unique_ptr<MecPreferences> prefs_;
-    MecCallback* callback_;
+    std::vector<IMecCallback*> callbacks_;
 };
 
 
@@ -54,11 +54,11 @@ void MecApi::process() {
     impl_->process();
 }
 
-void MecApi::subscribe(MecCallback* p) {
+void MecApi::subscribe(IMecCallback* p) {
     impl_->subscribe(p);
 
 }
-void MecApi::unsubscribe(MecCallback* p) {
+void MecApi::unsubscribe(IMecCallback* p) {
     impl_->unsubscribe(p);
 }
 
@@ -86,31 +86,41 @@ void MecApi_Impl::process() {
     }
 }
 
-void MecApi_Impl::subscribe(MecCallback* p) {
-    callback_ = p;
+void MecApi_Impl::subscribe(IMecCallback* p) {
+    callbacks_.push_back(p);
 }
 
-void MecApi_Impl::unsubscribe(MecCallback* p) {
-    if(callback_ == p ) {
-        callback_ = NULL;
+void MecApi_Impl::unsubscribe(IMecCallback* p) {
+    for (std::vector<IMecCallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
+        if(p==(*it)) {
+            callbacks_.erase(it);
+            return;
+        }
     }
 }
 
-void MecApi_Impl::touchOn(int touchId, int note, float x, float y, float z) {
-    if(callback_) callback_->touchOn(touchId,note,x,y,z);
+void MecApi_Impl::touchOn(int touchId, float note, float x, float y, float z) {
+    for (std::vector<IMecCallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
+        (*it)->touchOn(touchId,note,x,y,z);
+    }
 }
 
-void MecApi_Impl::touchContinue(int touchId, int note, float x, float y, float z) {
-    if(callback_) callback_->touchContinue(touchId,note,x,y,z);
-
+void MecApi_Impl::touchContinue(int touchId, float note, float x, float y, float z) {
+    for (std::vector<IMecCallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
+        (*it)->touchContinue(touchId,note,x,y,z);
+    }
 }
 
-void MecApi_Impl::touchOff(int touchId, int note, float x, float y, float z) {
-    if(callback_) callback_->touchOff(touchId,note,x,y,z);
+void MecApi_Impl::touchOff(int touchId, float note, float x, float y, float z) {
+    for (std::vector<IMecCallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
+        (*it)->touchOff(touchId,note,x,y,z);
+    }
 }
 
 void MecApi_Impl::control(int ctrlId, float v) {
-    if(callback_) callback_->control(ctrlId,v);
+    for (std::vector<IMecCallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
+        (*it)->control(ctrlId,v);
+    }
 }
 
 

@@ -10,7 +10,7 @@
 class MecEigenharp : public MecDevice {
 
 public:
-    MecEigenharp(MecCallback&);
+    MecEigenharp(IMecCallback&);
     virtual ~MecEigenharp();
     virtual bool init(void*);
     virtual bool process();
@@ -18,7 +18,7 @@ public:
     virtual bool isActive();
 
 private:
-	MecCallback& callback_;
+	IMecCallback& callback_;
     std::unique_ptr<EigenApi::Eigenharp> eigenD_;
     bool active_;
 };

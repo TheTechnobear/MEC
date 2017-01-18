@@ -1298,7 +1298,7 @@ void pic::usbenumerator_t::stop()
 
 unsigned pic::usbenumerator_t::enumerate(unsigned short vendor, unsigned short product, const f_string_t &callback)
 {
-	pic::logmsg() << "pic::usbenumerator_t::enumerate : seaerching V " << vendor << " P " << product;
+	pic::logmsg() << "pic::usbenumerator_t::enumerate : searching V " << vendor << " P " << product;
 	libusb_context* context;
 	libusb_init(&context);
     int count = 0;
@@ -1324,11 +1324,11 @@ unsigned pic::usbenumerator_t::enumerate(unsigned short vendor, unsigned short p
         	
         	unsigned busNum= libusb_get_bus_number(dev);
         	unsigned addr= libusb_get_device_address(dev);
-        	pic::logmsg() << "pic::usbenumerator_t::enumerate details : "
-        				<< " V " << desc.idVendor
-        				<< " P " << desc.idProduct
-        				<< " B " << busNum
-        				<< " A " << addr;
+        	// pic::logmsg() << "pic::usbenumerator_t::enumerate details : "
+        	// 			<< " V " << desc.idVendor
+        	// 			<< " P " << desc.idProduct
+        	// 			<< " B " << busNum
+        	// 			<< " A " << addr;
         	
 //            uint8_t path[8];
 //        	r = libusb_get_port_numbers(dev, path, sizeof(path));

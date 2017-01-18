@@ -21,7 +21,7 @@
 #define PB_RANGE 2.0f
 #define MPE_PB_RANGE 48.0f
 
-class MecOSCCallback: public  MecCallback
+class MecOSCCallback: public  IMecCallback
 {
 public:
     MecOSCCallback(MecPreferences& p)
@@ -36,19 +36,19 @@ public:
 
     bool isValid() { return valid_;}
 
-    void touchOn(int touchId, int note, float x, float y, float z)
+    void touchOn(int touchId, float note, float x, float y, float z)
     {
         static std::string topic = "touchOn";
         sendMsg(topic,touchId,note,x,y,z);
     }
 
-    void touchContinue(int touchId, int note, float x, float y, float z)
+    void touchContinue(int touchId, float note, float x, float y, float z)
     {
         static std::string topic = "touchContinue";
         sendMsg(topic,touchId,note,x,y,z);
     }    
 
-    void touchOff(int touchId, int note, float x, float y, float z)
+    void touchOff(int touchId, float note, float x, float y, float z)
     {
         static std::string topic = "touchOff";
         sendMsg(topic,touchId,note,x,y,z);
@@ -66,7 +66,7 @@ public:
         transmitSocket_.Send( op.Data(), op.Size() );
     }
 
-    void sendMsg(std::string topic, int touchId, int note, float x, float y, float z) 
+    void sendMsg(std::string topic, int touchId, float note, float x, float y, float z) 
     {
         osc::OutboundPacketStream op( buffer_, OUTPUT_BUFFER_SIZE );
         op << osc::BeginBundleImmediate
@@ -90,11 +90,11 @@ private:
 #define STRIP_BASE_CC 0
 #define PEDAL_BASE_CC 11
 
-class MecMidiCallback: public  MecCallback
+class MecMidiCallback: public  IMecCallback
 {
 public:
     MecMidiCallback(MecPreferences& p)
-        :   prefs_(p), output_(p.getInt("voices", 15))
+        :   prefs_(p), output_(p.getInt("voices", 15), (float) p.getDouble("pitchbend range", 48.0))
     {
         std::string device = prefs_.getString("device");
 		int virt = prefs_.getInt("virtual",0);
@@ -110,19 +110,17 @@ public:
 
     bool isValid() { return output_.isOpen();}
 
-    void touchOn(int touchId, int note, float x, float y, float z)
+    void touchOn(int touchId, float note, float x, float y, float z)
     {
-       float pb = (x * PB_RANGE) / MPE_PB_RANGE;
-       output_.touchOn(touchId + NOTE_CH_OFFSET, note, pb, y , z);
+       output_.touchOn(touchId + NOTE_CH_OFFSET, note, x, y , z);
     }
 
-    void touchContinue(int touchId, int note, float x, float y, float z)
+    void touchContinue(int touchId, float note, float x, float y, float z)
     {
-       float pb = (x * PB_RANGE) / MPE_PB_RANGE;
-       output_.touchContinue(touchId + NOTE_CH_OFFSET, note, pb, y , z);
+       output_.touchContinue(touchId + NOTE_CH_OFFSET, note, x, y , z);
     }    
 
-    void touchOff(int touchId, int note, float x, float y, float z)
+    void touchOff(int touchId, float note, float x, float y, float z)
     {
         output_.touchOff(touchId + NOTE_CH_OFFSET);
     }    
