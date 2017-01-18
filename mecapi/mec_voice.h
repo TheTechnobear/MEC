@@ -2,6 +2,7 @@
 #define MEC_VOICES_H_
 
 #include <vector>
+#include <list>
 
 class MecVoices {
 public:
@@ -12,6 +13,7 @@ public:
             voices_[i].i_=i;
             voices_[i].state_ = Voice::INACTIVE;
             voices_[i].id_ = -1;
+			freeVoices_.push_back(&voices_[i]);
         }
 
     };
@@ -47,18 +49,22 @@ public:
     }
 
     Voice*    startVoice(unsigned id) {
-        for (int i = 0; i < maxVoices_; i++) {
-            if (voices_[i].state_ == Voice::INACTIVE) {
-                voices_[i].id_ = id;
-                voices_[i].state_ = Voice::PENDING;
-                voices_[i].v_=0;
-                voices_[i].velSum_ = 0;
-                voices_[i].velCount_ = 0;
-
-                return &voices_[i];
-            }
+        Voice* voice;
+        if(freeVoices_.size() > 0) {
+           voice = freeVoices_.back();
+           freeVoices_.pop_back();
+        } else { // all voices used, so we have to steal the oldest one
+           voice = usedVoices_.front();
+           usedVoices_.pop_front();
         }
-        return NULL;
+        voice->id_ = id;
+        voice->state_ = Voice::PENDING;
+        voice->v_=0;
+        voice->velSum_ = 0;
+        voice->velCount_ = 0;
+        usedVoices_.push_back(voice);
+
+        return voice;
     }
 
     void   addPressure(Voice* voice, float p) {
@@ -74,18 +80,17 @@ public:
 
     void   stopVoice(Voice* voice) {
         if (!voice) return;
-        for (int i = 0; i < maxVoices_; i++) {
-            if (voices_[i].id_ == voice->id_) {
-                voices_[i].id_ = -1;
-                voices_[i].state_ = Voice::INACTIVE;
-                return;
-            }
-        }
+        usedVoices_.remove(voice);
+        voice->id_ = -1;
+        voice->state_ = Voice::INACTIVE;
+        freeVoices_.push_back(voice);
     }
 
 
 private:
     std::vector<Voice> voices_;
+    std::list<Voice*> freeVoices_;
+    std::list<Voice*> usedVoices_;
     unsigned maxVoices_;
     unsigned velocityCount_;
 };
