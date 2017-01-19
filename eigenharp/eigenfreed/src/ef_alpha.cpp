@@ -98,10 +98,9 @@ bool EF_Alpha::stop()
     return EF_Harp::stop();
 }
 
-bool EF_Alpha::poll(long uSleepTime)
+bool EF_Alpha::poll(long long t)
 {
-    if (!EF_Harp::poll(uSleepTime)) return false;
-    long long t=pic_microtime();
+    if (!EF_Harp::poll(t)) return false;
     pLoop_->poll(t);
     pLoop_->msg_flush();
     return true;

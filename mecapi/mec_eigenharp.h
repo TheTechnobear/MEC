@@ -21,6 +21,7 @@ private:
 	IMecCallback& callback_;
     std::unique_ptr<EigenApi::Eigenharp> eigenD_;
     bool active_;
+    long minPollTime_;
 };
 
 #endif // MecEigenharp

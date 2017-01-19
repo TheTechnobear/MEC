@@ -37,9 +37,9 @@ namespace EigenApi
         return static_cast<EigenFreeD*>(impl)->stop();
     }
     
-    bool Eigenharp::poll(long uSleep)
+    bool Eigenharp::poll(long uSleep,long minPollTime)
     {
-        return static_cast<EigenFreeD*>(impl)->poll(uSleep);
+        return static_cast<EigenFreeD*>(impl)->poll(uSleep,minPollTime);
     }
     
     void Eigenharp::addCallback(Callback* api)

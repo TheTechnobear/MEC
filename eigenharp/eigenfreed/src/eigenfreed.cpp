@@ -11,8 +11,6 @@
 #include <picross/pic_resources.h>
 #include <string.h>
 
-// max poll in uS (1000=1ms)
-#define MIN_POLL_TIME 100
 
 namespace EigenApi
 {
@@ -136,7 +134,7 @@ bool EigenFreeD::stop()
     return true;
 }
 
-bool EigenFreeD::poll(long uSleepTime)
+bool EigenFreeD::poll(long uSleepTime,long minPollTime)
 {
     long long t=pic_microtime();
     long long diff = t-lastPollTime;
@@ -145,7 +143,7 @@ bool EigenFreeD::poll(long uSleepTime)
             pic_microsleep(diff);
         }
     }
-    if(diff>MIN_POLL_TIME)
+    if(diff>minPollTime)
     {
         lastPollTime = t;
     	bool ret=true;
