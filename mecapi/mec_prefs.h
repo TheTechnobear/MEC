@@ -10,6 +10,7 @@ public:
     virtual ~MecPreferences();
     MecPreferences(void* subtree);
 
+    bool        getBool(const std::string& v, bool def = false);
     int         getInt(const std::string& v, int def = 0);
     double      getDouble(const std::string& v, double def = 0.0);
     std::string getString(const std::string& v, const std::string def = "");

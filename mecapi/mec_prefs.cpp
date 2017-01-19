@@ -59,6 +59,17 @@ bool MecPreferences::loadPreferences(const std::string& file) {
     return false;
 }
 
+bool MecPreferences::getBool(const std::string& v, bool def) {
+    if (! jsonData_) return def;
+    cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
+    if (node!=nullptr) {
+        if(node->type == cJSON_True) return true;
+        else if (node->type == cJSON_False) return false;
+    }
+    return def;
+}
+
+
 int MecPreferences::getInt(const std::string& v, int def) {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());

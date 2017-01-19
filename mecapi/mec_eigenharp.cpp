@@ -18,7 +18,8 @@ public:
             callback_(cb),
             valid_(true),
             voices_(p.getInt("voices",15), p.getInt("velocity count",5)),
-            pitchbendRange_((float) p.getDouble("pitchbend range", 2.0))
+            pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
+            stealVoices_(p.getBool("steal voices",true))
     {
         if (valid_) {
             LOG_0(std::cout  << "MecEigenharpHandler enabling for mecapi" <<  std::endl;)
@@ -69,15 +70,25 @@ public:
             if (!voice) {
                 voice = voices_.startVoice(key);
                 // LOG_2(std::cout << "start voice for " << key << " ch " << voice->i_ << std::endl;)
-                voices_.addPressure(voice, mz);
+
+                if(!voice && stealVoices_) {
+                    // no available voices, steal?
+                    if(stealVoices_) {
+                        MecVoices::Voice* stolen = voices_.oldestActiveVoice();
+                        callback_.touchOff(stolen->i_,stolen->note_,stolen->x_,stolen->y_,stolen->z_);
+                        voices_.stopVoice(voice);
+                        voice = voices_.startVoice(key);
+                    }
+                }
+                if(!voice) voices_.addPressure(voice, mz);
             }
             else {
                 if (voice->state_ == MecVoices::Voice::PENDING) {
                     voices_.addPressure(voice, mz);
                     if (voice->state_ == MecVoices::Voice::ACTIVE) {
-                        callback_.touchOn(voice->i_, mn, mx, my, voice->v_);
+                        callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
                     }
-                    //else ignore, till we have min number of pressures
+                    // dont send to callbacks until we have the minimum pressures for velocity
                 }
                 else {
                     callback_.touchContinue(voice->i_, mn, mx, my, mz);
@@ -94,11 +105,6 @@ public:
             if (voice) {
                 // LOG_2(std::cout << "stop voice for " << key << " ch " << voice->i_ << std::endl;)
                 callback_.touchOff(voice->i_,mn,mx,my,mz);
-                voice->note_ = 0;
-                voice->x_ = 0;
-                voice->y_ = 0;
-                voice->z_ = 0;
-                voice->t_ = 0;
                 voices_.stopVoice(voice);
             }
         }
@@ -131,11 +137,13 @@ private:
     MecVoices voices_;
     bool valid_;
     float pitchbendRange_;
+    bool stealVoices_;
 };
 
 
 ////////////////////////////////////////////////
-MecEigenharp::MecEigenharp(IMecCallback& cb) : active_(false), callback_(cb) {
+MecEigenharp::MecEigenharp(IMecCallback& cb) : 
+    active_(false), callback_(cb) {
 }
 
 MecEigenharp::~MecEigenharp() {

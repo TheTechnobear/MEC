@@ -26,7 +26,8 @@ public:
         :   prefs_(p),
             callback_(cb),
             valid_(true),
-            voices_(p.getInt("voices",15))
+            voices_(p.getInt("voices",15)),
+            stealVoices_(p.getBool("steal voices",true))
     {
         if (valid_) {
             LOG_0(std::cout  << "MecSoundplaneHandler enabling for mecapi" <<  std::endl;)
@@ -63,13 +64,23 @@ public:
 
             if (!voice) {
                 voice = voices_.startVoice(touch);
-                voice->note_ = mn;
-                LOG_2(std::cout << "start voice for " << touch << " ch " << voice->i_ << std::endl;)
-                callback_.touchOn(voice->i_, voice->note_, mx, my, mz);
+                // LOG_2(std::cout << "start voice for " << key << " ch " << voice->i_ << std::endl;)
+
+                if(!voice && stealVoices_) {
+                    // no available voices, steal?
+                    if(stealVoices_) {
+                        MecVoices::Voice* stolen = voices_.oldestActiveVoice();
+                        callback_.touchOff(stolen->i_,stolen->note_,stolen->x_,stolen->y_,stolen->z_);
+                        voices_.stopVoice(voice);
+                        voice = voices_.startVoice(touch);
+                    }
+                }
+                if(!voice) callback_.touchOn(voice->i_, mn, mx, my, mz);
             }
             else {
-                callback_.touchContinue(voice->i_, voice->note_, mx, my, mz);
+                callback_.touchContinue(voice->i_, mn, mx, my, mz);
             }
+            voice->note_ = mn;
             voice->x_ = mx;
             voice->y_ = my;
             voice->z_ = mz;
@@ -80,11 +91,6 @@ public:
             if (voice) {
                 LOG_2(std::cout << "stop voice for " << key << " ch " << voice->i_ << std::endl;)
                 callback_.touchOff(voice->i_,mn,mx,my,mz);
-                voice->note_ = 0;
-                voice->x_ = 0;
-                voice->y_ = 0;
-                voice->z_ = 0;
-                voice->t_ = 0;
                 voices_.stopVoice(voice);
             }
         }
@@ -103,6 +109,7 @@ private:
     IMecCallback& callback_;
     MecVoices voices_;
     bool valid_;
+    bool stealVoices_;
 };
 
 
