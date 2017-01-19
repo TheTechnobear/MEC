@@ -22,7 +22,7 @@ namespace EigenApi
         virtual bool destroy();
         virtual bool start();
         virtual bool stop();
-        virtual bool poll(long uSleep);
+        virtual bool poll(long uSleep,long minPollTime);
 
         void setLED(const char* dev, unsigned int keynum,unsigned int colour);
 
@@ -54,7 +54,7 @@ namespace EigenApi
         virtual bool destroy();
         virtual bool start();
         virtual bool stop();
-        virtual bool poll(long uSleep);
+        virtual bool poll(long long t);
         
 		virtual void fireKeyEvent(unsigned long long t, unsigned course, unsigned key, bool a, unsigned p, int r, int y);
         virtual void fireBreathEvent(unsigned long long t, unsigned val);
@@ -110,7 +110,7 @@ namespace EigenApi
         virtual bool destroy();
         virtual bool start();
         virtual bool stop();
-        virtual bool poll(long uSleep);
+        virtual bool poll(long long t);
         
         virtual void restartKeyboard();
         virtual void setLED(unsigned int keynum,unsigned int colour);
@@ -159,7 +159,7 @@ namespace EigenApi
         virtual bool destroy();
         virtual bool start();
         virtual bool stop();
-        virtual bool poll(long uSleep);
+        virtual bool poll(long long t);
         
         virtual void restartKeyboard();
 

@@ -141,7 +141,7 @@ private:
 
 ////////////////////////////////////////////////
 MecEigenharp::MecEigenharp(IMecCallback& cb) : 
-    active_(false), callback_(cb) {
+    active_(false), callback_(cb), minPollTime_(100)  {
 }
 
 MecEigenharp::~MecEigenharp() {
@@ -157,6 +157,7 @@ bool MecEigenharp::init(void* arg) {
     }
     active_ = false;
 	std::string fwDir = prefs.getString("firmware dir","../eigenharp/resources/");
+	minPollTime_ = prefs.getInt("min poll time",100);
     eigenD_.reset(new EigenApi::Eigenharp(fwDir.c_str()));
     MecEigenharpHandler *pCb = new MecEigenharpHandler(prefs,callback_);
     if (pCb->isValid()) {
@@ -179,7 +180,8 @@ bool MecEigenharp::init(void* arg) {
 }
 
 bool MecEigenharp::process() {
-    if (active_) eigenD_->poll(0);
+    const int sleepTime = 0;
+    if (active_) eigenD_->poll(sleepTime,minPollTime_);
     return true;
 }
 

@@ -121,7 +121,7 @@ bool EF_Harp::stop()
     return true;
 }
 
-bool EF_Harp::poll(long uSleep)
+bool EF_Harp::poll(long long t)
 {
     return true;
 }

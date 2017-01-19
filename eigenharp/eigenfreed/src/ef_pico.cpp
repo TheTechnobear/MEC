@@ -114,10 +114,9 @@ void  EF_Pico::fireKeyEvent(unsigned long long t, unsigned course, unsigned key,
 }
     
 
-bool EF_Pico::poll(long uSleepTime)
+bool EF_Pico::poll(long long t)
 {
-    if (!EF_Harp::poll(uSleepTime)) return false;
-    long long t=pic_microtime();
+    if (!EF_Harp::poll(t)) return false;
     pLoop_->poll(t);
     // pLoop_->msg_flush();
     return true;

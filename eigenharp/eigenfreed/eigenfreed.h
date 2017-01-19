@@ -32,7 +32,8 @@ namespace EigenApi
         bool start();
         bool stop();
 
-        bool poll(long uSleep);
+        // min time betwen polling in uS (1000=1ms)
+        bool poll(long uSleep,long minPollTime=100);
         
         // note: callback ownership is retained by caller
         void addCallback(Callback* api);
