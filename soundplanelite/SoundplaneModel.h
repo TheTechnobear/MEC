@@ -123,7 +123,7 @@ public:
 	Vec2 getTrackerCalibrateDims() { return Vec2(kCalibrateWidth, kCalibrateHeight); }
 	Vec2 xyToKeyGrid(Vec2 xy);
 
-	SoundplaneMECOutput& mecOutput() { return mMECOutput;}
+	SoundplaneMECOutput& mecOutput();
 
 private:
 	void addListener(SoundplaneDataListener* pL) { mListeners.push_back(pL); }

@@ -78,7 +78,7 @@ public:
                     voices_.stopVoice(voice);
                     voice = voices_.startVoice(key);
                 }
-                if(!voice) voices_.addPressure(voice, mz);
+                if(voice) voices_.addPressure(voice, mz);
             }
             else {
                 if (voice->state_ == MecVoices::Voice::PENDING) {

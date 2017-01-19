@@ -19,7 +19,7 @@
 // 2. voices not needed? as soundplane already does touch alloction, just need to detemine on and off
 
 ////////////////////////////////////////////////
-class MecSoundplaneHandler: public  MECCallback
+class MecSoundplaneHandler: public  SoundplaneMECCallback
 {
 public:
     MecSoundplaneHandler(MecPreferences& p, IMecCallback& cb)
@@ -38,7 +38,7 @@ public:
 
     virtual void device(const char* dev, int rows, int cols)
     {
-        LOG_1(std::cout     << "MecSoundplaneHandler  device d: ")
+        LOG_1(std::cout     << "MecSoundplaneHandler  device d: " << dev)
         LOG_1(              << " r: " << rows << " c: " << cols)
         LOG_1(              << std::endl;)
     }
@@ -51,16 +51,16 @@ public:
         float fn = n;
         float mn = note(fn);
         float mx = clamp(x,-1.0f,1.0f);
-        float my = clamp(y,-1.0f,1.0f);
+        float my = clamp((y - 0.5 ) * 2.0 ,-1.0f,1.0f);
         float mz = clamp(z, 0.0f,1.0f);
         if (a)
         {
-            // LOG_2(std::cout     << "MecSoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
-            // LOG_2(              << " touch: " <<  touch)
-            // LOG_2(              << " note: " <<  n  << " mn: "   << mn << " fn: " << fn)
-            // LOG_2(              << " x: " << x      << " y: "   << y    << " z: "   << z)
-            // LOG_2(              << " mx: " << mx    << " my: "  << my   << " mz: "  << mz)
-            // LOG_2(              << std::endl;)
+            // LOG_1(std::cout     << "MecSoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
+            // LOG_1(              << " touch: " <<  touch)
+            // LOG_1(              << " note: " <<  n  << " mn: "   << mn << " fn: " << fn)
+            // LOG_1(              << " x: " << x      << " y: "   << y    << " z: "   << z)
+            // LOG_1(              << " mx: " << mx    << " my: "  << my   << " mz: "  << mz)
+            // LOG_1(              << std::endl;)
 
             if (!voice) {
                 voice = voices_.startVoice(touch);
@@ -73,7 +73,7 @@ public:
                     voices_.stopVoice(voice);
                     voice = voices_.startVoice(touch);
                 }
-                if(!voice) callback_.touchOn(voice->i_, mn, mx, my, mz);
+                if(voice) callback_.touchOn(voice->i_, mn, mx, my, mz);
             }
             else {
                 callback_.touchContinue(voice->i_, mn, mx, my, mz);
@@ -128,21 +128,25 @@ bool MecSoundplane::init(void* arg) {
     }
     active_ = false;
     model_.reset(new SoundplaneModel());
-    model_->initialize();
 
     // generate a persistent state for the Model
     std::unique_ptr<MLAppState> pModelState = std::unique_ptr<MLAppState>(new MLAppState(model_.get(), "", "MadronaLabs", "Soundplane", 1));
     pModelState->loadStateFromAppStateFile();
     model_->updateAllProperties();  //??
-    model_->setPropertyImmediate("osc_active", 0.0f);
-    model_->setPropertyImmediate("mec_active", 1.0f);
+    model_->setPropertyImmediate("midi_active", 0.0f);
+    model_->setPropertyImmediate("osc_active",  0.0f);
+    model_->setPropertyImmediate("mec_active",  1.0f);
+    model_->setPropertyImmediate("data_freq_mec", 500.0f);
 
     MecSoundplaneHandler *pCb = new MecSoundplaneHandler(prefs,callback_);
     if (pCb->isValid()) {
         model_->mecOutput().connect(pCb);
-        model_->setPropertyImmediate("data_freq_mec", 500.0f);
+        LOG_0(std::cout  << "MecSoundplane::init - model init" <<  std::endl;)
+        model_->initialize();
         active_ = true;
+        LOG_0(std::cout  << "MecSoundplane::init - complete" <<  std::endl;)
     } else {
+        LOG_0(std::cout  << "MecSoundplane::init - delete callback" <<  std::endl;)
         delete pCb;
     }
 

@@ -221,7 +221,7 @@ void SoundplaneModel::doPropertyChangeAction(MLSymbol p, const MLProperty & newV
             else if (p == "mec_active")
             {
                 bool b = v;
-                mMECOutput.setActive(v);
+                mMECOutput.setActive(b);
             }
             else if (p == "osc_send_matrix")
             {
@@ -1311,6 +1311,10 @@ void SoundplaneModel::setDefaultNormalize()
 		mTracker.setDefaultNormalizeMap();
 	}
 }
+
+
+SoundplaneMECOutput& SoundplaneModel::mecOutput() { return mMECOutput;}
+
 
 // JSON utilities
 

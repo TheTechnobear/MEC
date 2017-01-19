@@ -12,15 +12,15 @@
 #include "TouchTracker.h"
 
 
-class MECCallback {
+class SoundplaneMECCallback {
 public:
-	MECCallback() {};
-	virtual ~MECCallback() {};
-    virtual void device(const char* dev, int rows, int cols) {};
-    virtual void touch(const char* dev, unsigned long long t, bool a, int touch, float note, float x, float y, float z) {};
-    virtual void control(const char* dev, unsigned long long t, int id, float val) {};
+	virtual ~SoundplaneMECCallback() {};
+    virtual void device(const char* dev, int rows, int cols) = 0;
+    virtual void touch(const char* dev, unsigned long long t, bool a, int touch, float note, float x, float y, float z) = 0;
+    virtual void control(const char* dev, unsigned long long t, int id, float val) = 0;
 };
 
+class SoundplaneMECOutput_Impl;
 
 class SoundplaneMECOutput :
 	public SoundplaneDataListener
@@ -29,30 +29,20 @@ public:
 	SoundplaneMECOutput();
 	~SoundplaneMECOutput();
 
-	void connect(MECCallback* cb);
+	void connect(SoundplaneMECCallback* cb);
     void deviceInit();
 	
     // SoundplaneDataListener
     void processSoundplaneMessage(const SoundplaneDataMessage* msg);
-    
-    
     void setActive(bool v);
-	void setSerialNumber(int s) { serialNumber_ = std::to_string(s); deviceInit();}
-
-    void setDataFreq(float v) {mDataFreq = v;}
-    void setMaxTouches(int) {};
-
+	void setSerialNumber(int s);
+    void setDataFreq(float v);
+    void setMaxTouches(int);
 	void notify(int connected);
-	
 	void doInfrequentTasks();
 
 private:	
-	MECCallback	*callback_;
-	std::string serialNumber_;
-	float	 mDataFreq;
-	uint64_t mCurrFrameStartTime;
-	uint64_t mLastFrameStartTime;
-    bool 	 mTimeToSendNewFrame;
+	SoundplaneMECOutput_Impl *impl_;
 };
 
 

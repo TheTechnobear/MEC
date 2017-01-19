@@ -6,41 +6,98 @@
 #include "SoundplaneMECOutput.h"
 #include "SoundplaneModelA.h"
 
-
-SoundplaneMECOutput::SoundplaneMECOutput() : 
-callback_(NULL)
-,mCurrFrameStartTime(0)
-,mLastFrameStartTime(0)
-,mTimeToSendNewFrame(false)
-,mDataFreq(500.0f)
+class SoundplaneMECOutput_Impl
 {
+public:
+    SoundplaneMECOutput_Impl() :     
+        callback_(NULL)
+        ,mCurrFrameStartTime(0)
+        ,mLastFrameStartTime(0)
+        ,mTimeToSendNewFrame(false)
+        ,mDataFreq(500.0f)
+    {
+    }
+    void connect(SoundplaneMECCallback* cb);
+    void deviceInit();
+    
+    // SoundplaneDataListener
+    void processSoundplaneMessage(const SoundplaneDataMessage* msg);
+    void setSerialNumber(int s);
+    void setDataFreq(float v);
+    void setMaxTouches(int v);
+    void notify(int connected);      
+    void doInfrequentTasks();
+private:
+    SoundplaneMECCallback *callback_;
+    std::string mSerialNumber;
+    float    mDataFreq;
+    uint64_t mCurrFrameStartTime;
+    uint64_t mLastFrameStartTime;
+    bool     mTimeToSendNewFrame;
+};
+
+
+
+SoundplaneMECOutput::SoundplaneMECOutput() 
+{
+    MLConsole() << "create SoundplaneMECOutput: \n";
+    impl_= new SoundplaneMECOutput_Impl();
 }
 
 SoundplaneMECOutput::~SoundplaneMECOutput()
 {
+    MLConsole() << "destroy SoundplaneMECOutput: \n";
+    delete impl_;
 }
 
-void SoundplaneMECOutput::deviceInit()
+void SoundplaneMECOutput::setActive(bool v) { mActive=v;} // mActive is on SoundplaneDataListener
+
+void SoundplaneMECOutput::connect(SoundplaneMECCallback* cb) { impl_->connect(cb);}
+void SoundplaneMECOutput::deviceInit() { impl_->deviceInit();}
+void SoundplaneMECOutput::processSoundplaneMessage(const SoundplaneDataMessage* msg) { if(mActive) impl_->processSoundplaneMessage(msg);}
+void SoundplaneMECOutput::setSerialNumber(int s) { impl_->setSerialNumber(s);}
+void SoundplaneMECOutput::setDataFreq(float v) { impl_->setDataFreq(v);}
+void SoundplaneMECOutput::setMaxTouches(int v) {impl_->setMaxTouches(v);}
+void SoundplaneMECOutput::notify(int connected) {impl_->notify(connected);}
+void SoundplaneMECOutput::doInfrequentTasks() {impl_->doInfrequentTasks();}
+
+void SoundplaneMECOutput_Impl::setSerialNumber(int s) 
+{
+    mSerialNumber = std::to_string(s); 
+    deviceInit();
+}
+
+void SoundplaneMECOutput_Impl::setDataFreq(float v)
+{
+    mDataFreq = v;
+}
+
+
+void SoundplaneMECOutput_Impl::deviceInit()
 {
     if (callback_)
     {
-        callback_->device(serialNumber_.c_str(), kSoundplaneHeight, kSoundplaneWidth);
+        callback_->device(mSerialNumber.c_str(), kSoundplaneHeight, kSoundplaneWidth);
     }
 }
 
 
-void SoundplaneMECOutput::connect(MECCallback* cb)
+void SoundplaneMECOutput_Impl::connect(SoundplaneMECCallback* cb)
 {
     callback_ = cb;
 }
 
-void SoundplaneMECOutput::setActive(bool v)
+void SoundplaneMECOutput_Impl::doInfrequentTasks()
 {
-    mActive = v;
 }
 
-void SoundplaneMECOutput::doInfrequentTasks()
+void SoundplaneMECOutput_Impl::notify(int connected)
 {
+}
+
+void SoundplaneMECOutput_Impl::setMaxTouches(int v) 
+{
+
 }
 
 
@@ -54,7 +111,7 @@ unsigned long getMilliseconds2()
     return msec;
 }
 
-void SoundplaneMECOutput::processSoundplaneMessage(const SoundplaneDataMessage* msg)
+void SoundplaneMECOutput_Impl::processSoundplaneMessage(const SoundplaneDataMessage* msg)
 {
     static const MLSymbol startFrameSym("start_frame");
     static const MLSymbol touchSym("touch");
@@ -72,7 +129,7 @@ void SoundplaneMECOutput::processSoundplaneMessage(const SoundplaneDataMessage* 
     static const MLSymbol matrixSym("matrix");
     static const MLSymbol nullSym;
 
-    if (!mActive || !callback_) return;
+    if (!callback_) return;
 
     MLSymbol type = msg->mType;
     MLSymbol subtype = msg->mSubtype;
@@ -109,47 +166,47 @@ void SoundplaneMECOutput::processSoundplaneMessage(const SoundplaneDataMessage* 
         vibrato = msg->mData[6];
         offset = msg->mOffset;
 
-        // float fNote =  note + vibrato;
+        float fNote =  note + vibrato;
 
         if (subtype == onSym)
         {
-            callback_-> touch(serialNumber_.c_str(), mCurrFrameStartTime, true, voiceIdx, note, x, y, z);
+            callback_-> touch(mSerialNumber.c_str(), mCurrFrameStartTime, true, voiceIdx, fNote, x, y, z);
         }
         if (subtype == continueSym)
         {
             if(mTimeToSendNewFrame) 
             {
-                callback_-> touch(serialNumber_.c_str(), mCurrFrameStartTime, true, voiceIdx, note, x, y, z);
+                callback_-> touch(mSerialNumber.c_str(), mCurrFrameStartTime, true, voiceIdx, fNote, x, y, z);
             }
         }
         if (subtype == offSym)
         {
-            callback_-> touch(serialNumber_.c_str(), mCurrFrameStartTime, false, voiceIdx, note, x, y, z);
+            callback_-> touch(mSerialNumber.c_str(), mCurrFrameStartTime, false, voiceIdx, fNote, x, y, z);
         }
     }
     else if (type == controllerSym) {
         int zoneID = msg->mData[0];
         if (subtype == xSym)
         {
-            callback_->control(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x);
+            callback_->control(mSerialNumber.c_str(), mCurrFrameStartTime, zoneID, x);
         }
         else if (subtype == ySym)
         {
-            callback_->control(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, y);
+            callback_->control(mSerialNumber.c_str(), mCurrFrameStartTime, zoneID, y);
         }
         else if (subtype == zSym)
         {
-//               callback_->global(serialNumber_.c_str(),mCurrFrameStartTime, zoneID, z);
+//               callback_->global(mSerialNumber.c_str(),mCurrFrameStartTime, zoneID, z);
         }
         else if (subtype == xyzSym)
         {
-            callback_->control(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x);
-//               callback_->control(serialNumber_.c_str(),mCurrFrameStartTime, zoneID, y);
-//               callback_->control(serialNumber_.c_str(),mCurrFrameStartTime, zoneID, z);
+            callback_->control(mSerialNumber.c_str(), mCurrFrameStartTime, zoneID, x);
+//               callback_->control(mSerialNumber.c_str(),mCurrFrameStartTime, zoneID, y);
+//               callback_->control(mSerialNumber.c_str(),mCurrFrameStartTime, zoneID, z);
         }
         else if (subtype == toggleSym)
         {
-            callback_->control(serialNumber_.c_str(), mCurrFrameStartTime, zoneID, x > 0.5 ? 1 : 0);
+            callback_->control(mSerialNumber.c_str(), mCurrFrameStartTime, zoneID, x > 0.5 ? 1 : 0);
         }
         else if(type == endFrameSym) 
         {
