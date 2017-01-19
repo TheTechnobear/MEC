@@ -53,9 +53,10 @@ public:
         if(freeVoices_.size() > 0) {
            voice = freeVoices_.back();
            freeVoices_.pop_back();
-        } else { // all voices used, so we have to steal the oldest one
-           voice = usedVoices_.front();
-           usedVoices_.pop_front();
+        } else { 
+            // all voices used, use oldestActiveVoice
+            // if you wish to steal it
+            return NULL;
         }
         voice->id_ = id;
         voice->state_ = Voice::PENDING;
@@ -82,8 +83,17 @@ public:
         if (!voice) return;
         usedVoices_.remove(voice);
         voice->id_ = -1;
+        voice->note_ = 0;
+        voice->x_ = 0;
+        voice->y_ = 0;
+        voice->z_ = 0;
+        voice->t_ = 0;
         voice->state_ = Voice::INACTIVE;
         freeVoices_.push_back(voice);
+    }
+
+    Voice* oldestActiveVoice() {
+        return usedVoices_.front();
     }
 
 
