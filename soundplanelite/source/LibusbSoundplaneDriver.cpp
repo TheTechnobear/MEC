@@ -10,10 +10,13 @@
 // can be read by clients.
 
 #include "LibusbSoundplaneDriver.h"
+#include "ThreadUtility.h"
 
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
+
+#define PROCESS_THREAD_PRIORITY 85
 
 namespace
 {
@@ -125,6 +128,7 @@ void LibusbSoundplaneDriver::init()
 
 	// create device grab thread
 	mProcessThread = std::thread(&LibusbSoundplaneDriver::processThread, this);
+	setThreadPriority(mProcessThread.native_handle(), PROCESS_THREAD_PRIORITY, true);
 }
 
 MLSoundplaneState LibusbSoundplaneDriver::getDeviceState() const
