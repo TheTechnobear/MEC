@@ -7,13 +7,14 @@
 
 #include <fstream>
 
-MLAppState::MLAppState(MLPropertySet* pM, const std::string& name, const std::string& makerName, const std::string& appName, int version) :
+MLAppState::MLAppState(MLPropertySet* pM, const std::string& name, const std::string& makerName, const std::string& appName, int version,const std::string& dirName) :
     MLPropertyListener(pM),
 	mExtraName(name),
 	mMakerName(makerName),
 	mAppName(appName),
 	mAppVersion(version),
-	mpTarget(pM)
+	mpTarget(pM),
+	mDirName(dirName)
 {
 	// default extra name
 	if(mExtraName.length() == 0)
@@ -50,7 +51,7 @@ void MLAppState::doPropertyChangeAction(MLSymbol p, const MLProperty & val)
 bool MLAppState::loadStateFromAppStateFile()
 {
 	bool r = false;
-    std::string file = "./" + mAppName + "AppState.txt";
+    std::string file = mDirName + "/" + mAppName + "AppState.txt";
     std::ifstream t(file);
     if(t.good())
     {
@@ -65,6 +66,7 @@ bool MLAppState::loadStateFromAppStateFile()
     else
     {
         debug() << "MLAppState::loadStateFromAppStateFile: couldn't open file!\n";
+        debug() << "expected: " << file << "\n";
     }
     return r;
 }

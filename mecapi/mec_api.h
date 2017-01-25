@@ -20,7 +20,7 @@ public:
     virtual void touchOn(int touchId, float note, float x, float y, float z) {};
     virtual void touchContinue(int touchId, float note, float x, float y, float z){};
     virtual void touchOff(int touchId, float note, float x, float y, float z) {};
-    virtual void control(int ctrlId, float v) = 0;
+    virtual void control(int ctrlId, float v) {};
 };
 
 

@@ -22,9 +22,11 @@
     },
 
     "eigenharp" : {
-        "voices" : 8,
+        "steal voices" : true,
+        "voices" : 15,
         "velocity count" : 5,
         "pitchbend range" : 2.0,
+        "firmware dir" : "../eigenharp/resources/",
         "mapping" : { 
             "pico" : {
                 "_notes" : [ 2 , 5, 12],
@@ -61,6 +63,9 @@
     },
 
     "_soundplane"  :  {
+        "app state dir" : ".",
+        "steal voices" : true,
+        "voices " : 15
     },
 
     "_push2"  :  {

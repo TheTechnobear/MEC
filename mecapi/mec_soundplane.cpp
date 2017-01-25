@@ -155,9 +155,10 @@ bool MecSoundplane::init(void* arg) {
     }
     active_ = false;
     model_.reset(new SoundplaneModel());
+    std::string appDir = prefs.getString("app state dir", ".");
 
     // generate a persistent state for the Model
-    std::unique_ptr<MLAppState> pModelState = std::unique_ptr<MLAppState>(new MLAppState(model_.get(), "", "MadronaLabs", "Soundplane", 1));
+    std::unique_ptr<MLAppState> pModelState = std::unique_ptr<MLAppState>(new MLAppState(model_.get(), "", "MadronaLabs", "Soundplane", 1, appDir));
     pModelState->loadStateFromAppStateFile();
     model_->updateAllProperties();  //??
     model_->setPropertyImmediate("midi_active", 0.0f);

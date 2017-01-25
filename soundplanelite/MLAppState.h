@@ -19,7 +19,7 @@ class MLAppState :
 {
 public:
 	MLAppState(MLPropertySet*, const std::string& name, const std::string& makerName, 
-	   const std::string& appName, int version);
+	   const std::string& appName, int version, const std::string& dirName = ".");
 
     ~MLAppState();
 	
@@ -45,6 +45,7 @@ protected:
 	std::string mMakerName;
 	std::string mAppName;
 	int mAppVersion;
+	std::string mDirName;
 	
 private:
 	MLPropertySet* mpTarget;
