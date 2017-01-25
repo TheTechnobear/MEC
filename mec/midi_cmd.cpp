@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 #include <string.h>
 
@@ -15,16 +14,16 @@ void mycallback( double deltatime, std::vector< unsigned char > *message, void *
 {
     unsigned int nBytes = message->size();
     for ( unsigned int i = 0; i < nBytes; i++ )
-        LOG_1(std::cout << "Byte " << i << " = " << (int)message->at(i) << ", ";)
+        LOG_1( "Byte " << i << " = " << (int)message->at(i) << ", ");
     if ( nBytes > 0 )
-        LOG_1(std::cout << "stamp = " << deltatime << std::endl;)
+        LOG_1( "stamp = " << deltatime );
 }
 
 
 
 void *midi_proc(void *arg)
 {
-    LOG_0(std::cout  << "midi_command_proc start" << std::endl;)
+    LOG_1("midi_command_proc start");
 
     MecPreferences prefs(arg);
     RtMidiIn *midiin = new RtMidiIn();
@@ -37,18 +36,18 @@ void *midi_proc(void *arg)
             try {
                 midiin->openPort(i);
                 found = true;
-                LOG_0(std::cout << "Midi input opened :" << portname << std::endl;)
+                LOG_1("Midi input opened :" << portname);
             } catch (RtMidiError  &error) {
-                error.printMessage();
+                LOG_1("Midi input open error:" << error.what());
                 goto end;
             }
         }
     }
     if (!found) {
-        std::cerr   << "input port not found : [" << portname << "]" << std::endl
-                    << "available ports : " << std::endl;
+        LOG_0("input port not found : [" << portname << "]");
+        LOG_0("available ports:");
         for (int i = 0; i < midiin->getPortCount(); i++) {
-            std::cerr << "[" << midiin->getPortName(i) << "]" << std::endl;
+           LOG_0("[" << midiin->getPortName(i) << "]");
         }
         goto end;
     }
@@ -61,7 +60,7 @@ void *midi_proc(void *arg)
     midiin->setCallback( &mycallback );
     // ignore sysex, timing, or active sensing messages.
     midiin->ignoreTypes( true, true, true );
-    LOG_1(std::cout << "\nReading MIDI input ...for 60 seconds\n";)
+    LOG_1( "\nReading MIDI input ...for 60 seconds");
     // Clean up
 
     pthread_mutex_lock(&waitMtx);
@@ -77,7 +76,7 @@ void *midi_proc(void *arg)
     return 0;
 
 end:
-    LOG_0(std::cout  << "midi_command_proc stop" << std::endl;)
+    LOG_1("midi_command_proc stop" );
     pthread_exit(NULL);
 }
 

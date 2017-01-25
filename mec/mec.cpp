@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
@@ -48,13 +47,13 @@ void getWaitTime(struct timespec& ts, int t) {
 volatile int keepRunning = 1;
 
 void exitHandler() {
-    LOG_1(std::cerr  << "exit handler called" << std::endl;)
+    LOG_0("exit handler called" );
 }
 
 void intHandler(int sig) {
     // only called in main thread
     if (sig == SIGINT) {
-        LOG_1(std::cerr  << "int handler called" << std::endl;)
+        LOG_0("int handler called" );
         keepRunning = 0;
         pthread_cond_broadcast(&waitCond);
     }
@@ -75,7 +74,7 @@ int main(int ac, char **av)
 
     int rc = 0;
 
-    LOG_0(std::cout   << "mec initialise " << std::endl;)
+    LOG_0("mec initialise ");
 
 
     MecPreferences prefs;
@@ -83,33 +82,33 @@ int main(int ac, char **av)
 
 
     if (prefs.exists("osc")) {
-        LOG_1(std::cout   << "osc initialise " << std::endl;)
+        LOG_1("osc initialise " );
         pthread_t command_thread;
         rc = pthread_create(&command_thread, NULL, osc_command_proc, prefs.getSubTree("osc"));
         if (rc) {
-            LOG_1(std::cerr << "unabled to create osc thread" << rc << std::endl;)
+            LOG_1("unabled to create osc thread" << rc );
             exit(-1);
         }
         usleep(1000);
     }
 
     if (prefs.exists("push2")) {
-        LOG_1(std::cout   << "push2 initialise " << std::endl;)
+        LOG_1("push2 initialise ");
         pthread_t push2_thread;
         rc = pthread_create(&push2_thread, NULL, push2_proc, prefs.getSubTree("push2"));
         if (rc) {
-            LOG_1(std::cerr << "unabled to create push2 thread" << rc << std::endl;)
+            LOG_1("unabled to create push2 thread" << rc );
             exit(-1);
         }
         usleep(1000);
     }
 
     if (prefs.exists("midi")) {
-        LOG_1(std::cout   << "midi initialise " << std::endl;)
+        LOG_1("midi initialise ");
         pthread_t midi_thread;
         rc = pthread_create(&midi_thread, NULL, midi_proc, prefs.getSubTree("midi"));
         if (rc) {
-            LOG_1(std::cerr << "unabled to create midi thread" << rc << std::endl;)
+            LOG_1("unabled to create midi thread" << rc );
             exit(-1);
         }
         usleep(1000);
@@ -117,11 +116,11 @@ int main(int ac, char **av)
 
     // MEC api , handling soundplane and eigenharp, evenything will move here!
     if (prefs.exists("mec")) {
-        LOG_1(std::cout   << "mec api initialise " << std::endl;)
+        LOG_1("mec api initialise ");
         pthread_t mec_thread;
         rc = pthread_create(&mec_thread, NULL, mecapi_proc, prefs.getSubTree("mec"));
         if (rc) {
-            LOG_1(std::cerr << "unabled to create mecapi thread" << rc << std::endl;)
+            LOG_0("unabled to create mecapi thread" << rc );
             exit(-1);
         }
         usleep(1000);
@@ -140,16 +139,16 @@ int main(int ac, char **av)
 
     pthread_mutex_lock(&waitMtx);
 
-    LOG_0(std::cout   << "mec running " << std::endl;)
+    LOG_0("mec running ");
     while (keepRunning) {
         pthread_cond_wait(&waitCond, &waitMtx);
     }
     pthread_mutex_unlock(&waitMtx);
 
     // really we should join threads where to do a nice exit
-    LOG_0(std::cout   << "mec stopping " << std::endl;)
+    LOG_1("mec stopping ");
     sleep(5);
-    LOG_0(std::cout   << "mec exit " << std::endl;)
+    LOG_0("mec exit ");
 
 
     pthread_cond_destroy(&waitCond);

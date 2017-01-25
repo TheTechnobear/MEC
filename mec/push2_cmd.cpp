@@ -5,12 +5,9 @@
 // #include "midi_output.h"
 #include <mec_prefs.h>
 
-#include <iostream>
-
-
 void *push2_proc(void * arg)
 {
-    LOG_0(std::cout  << "push2_proc start" << std::endl;)
+    LOG_0("push2_proc start" );
 
     MecPreferences prefs(arg);
 
@@ -55,7 +52,7 @@ void *push2_proc(void * arg)
 
     push2.deinit();
 
-    LOG_0(std::cout  << "push2_proc stop" << std::endl;)
+    LOG_0("push2_proc stop" );
     pthread_exit(NULL);
 }
 

@@ -5,14 +5,19 @@ project (mecapi)
 set(MECAPI_SRC 
     mec_api.cpp
     mec_api.h
-    mec_prefs.cpp
-    mec_prefs.h
-    mec_surfacemapper.cpp
     mec_device.h
     mec_eigenharp.cpp
     mec_eigenharp.h
+    mec_log.h
+    mec_msg_queue.cpp
+    mec_msg_queue.h
+    mec_prefs.cpp
+    mec_prefs.h
     mec_soundplane.cpp
     mec_soundplane.h
+    mec_surfacemapper.cpp
+    mec_surfacemapper.h
+    mec_voice.h
 )
 
 include_directories (

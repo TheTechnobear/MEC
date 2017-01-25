@@ -3,8 +3,6 @@
 ** This is the really just a test
 **/
 
-
-#include <iostream>
 #include <unistd.h>
 #include <string.h>
 
@@ -16,7 +14,6 @@
 #include <ip/UdpSocket.h>
 
 
-#include <iostream>
 #include <chrono>
 #include <thread>
 #include <unistd.h>
@@ -90,7 +87,7 @@ public:
     }
 
     virtual void deviceStateChanged(SoundplaneDriver& driver, MLSoundplaneState s) override {
-        LOG_0(std::cout << "Device state changed: " << s << std::endl;)
+        LOG_0( "Device state changed: " << s )
     }
 
     //start: SoundplaneModel
@@ -287,7 +284,7 @@ private:
 void *soundplane_tt_proc(void *)
 {
     pthread_mutex_lock(&waitMtx);
-    LOG_0(std::cout  << "soundplane_tt_proc start" << std::endl;)
+    LOG_0("soundplane_tt_proc start" );
     TouchProcesssor listener;
     auto pDriver = SoundplaneDriver::create(&listener);
     int searchCount = 5;
@@ -305,7 +302,7 @@ void *soundplane_tt_proc(void *)
     }
     delete pDriver.release();
 
-    LOG_0(std::cout  << "soundplane_tt_proc stop" << std::endl;)
+    LOG_0("soundplane_tt_proc stop" );
     pthread_mutex_unlock(&waitMtx);
     pthread_exit(NULL);
 }

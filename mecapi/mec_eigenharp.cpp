@@ -1,7 +1,5 @@
 #include "mec_eigenharp.h"
 
-#include <iostream>
-
 #include "mec_api.h"
 #include "mec_log.h"
 #include "mec_prefs.h"
@@ -22,7 +20,7 @@ public:
             stealVoices_(p.getBool("steal voices",true))
     {
         if (valid_) {
-            LOG_0(std::cout  << "MecEigenharpHandler enabling for mecapi" <<  std::endl;)
+            LOG_0("MecEigenharpHandler enabling for mecapi");
         }
     }
 
@@ -30,10 +28,9 @@ public:
 
     virtual void device(const char* dev, DeviceType dt, int rows, int cols, int ribbons, int pedals)
     {
-        LOG_1(std::cout   << "MecEigenharpHandler device d: "  << dev << " dt: " <<  (int) dt)
-        LOG_1(            << " r: " << rows     << " c: " << cols)
-        LOG_1(            << " s: " << ribbons  << " p: " << pedals)
-        LOG_1(            << std::endl;)
+        LOG_1("MecEigenharpHandler device d: "  << dev << " dt: " <<  (int) dt);
+        LOG_1(" r: " << rows     << " c: " << cols);
+        LOG_1(" s: " << ribbons  << " p: " << pedals);
         const char* dk = "defaut";
         switch (dt) {
         case EigenApi::Callback::PICO:  dk = "pico";    break;
@@ -61,15 +58,14 @@ public:
         if (a)
         {
 
-            LOG_2(std::cout     << "MecEigenharpHandler key device d: "  << dev  << " a: "  << a)
-            LOG_2(              << " c: "   << course   << " k: "   << key)
-            LOG_2(              << " r: "   << r        << " y: "   << y    << " p: "  << p)
-            LOG_2(              << " mn: " << mn << " mx: "  << mx       << " my: "  << my   << " mz: " << mz)
-            LOG_2(              << std::endl;)
+            LOG_2("MecEigenharpHandler key device d: "  << dev  << " a: "  << a);
+            LOG_2(" c: "   << course   << " k: "   << key);
+            LOG_2(" r: "   << r        << " y: "   << y    << " p: "  << p);
+            LOG_2(" mn: " << mn << " mx: "  << mx       << " my: "  << my   << " mz: " << mz);
 
             if (!voice) {
                 voice = voices_.startVoice(key);
-                // LOG_2(std::cout << "start voice for " << key << " ch " << voice->i_ << std::endl;)
+                // LOG_2("start voice for " << key << " ch " << voice->i_);
 
                 if(!voice && stealVoices_) {
                     // no available voices, steal?
@@ -101,7 +97,7 @@ public:
         else
         {
             if (voice) {
-                // LOG_2(std::cout << "stop voice for " << key << " ch " << voice->i_ << std::endl;)
+                // LOG_2("stop voice for " << key << " ch " << voice->i_);
                 callback_.touchOff(voice->i_,mn,mx,my,mz);
                 voices_.stopVoice(voice);
             }
@@ -152,7 +148,7 @@ bool MecEigenharp::init(void* arg) {
    MecPreferences prefs(arg);
 
    if (active_) {
-        LOG_2(std::cout   << "MecEigenharp::init - already active deinit" << std::endl;)
+        LOG_2("MecEigenharp::init - already active deinit");
         deinit();
     }
     active_ = false;
@@ -165,15 +161,15 @@ bool MecEigenharp::init(void* arg) {
         if (eigenD_->create()) {
             if (eigenD_->start()) {
                 active_ = true;
-                LOG_1(std::cout   << "MecEigenharp::init - started" << std::endl;)
+                LOG_1("MecEigenharp::init - started");
             } else {
-                LOG_2(std::cout   << "MecEigenharp::init - failed to start" << std::endl;)
+                LOG_2("MecEigenharp::init - failed to start");
             }
         } else {
-             LOG_2(std::cout   << "MecEigenharp::init - create failed" << std::endl;)
+             LOG_2("MecEigenharp::init - create failed");
         }
     } else {
-        LOG_2(std::cout   << "MecEigenharp::init - invalid callback" << std::endl;)
+        LOG_2("MecEigenharp::init - invalid callback");
         delete pCb;
     }
     return active_;

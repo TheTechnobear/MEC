@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
@@ -30,7 +29,7 @@ public:
             valid_(true)
     {
         if (valid_) {
-            LOG_0(std::cout  << "mecapi_proc enabling for osc" <<  std::endl;)
+            LOG_0( "mecapi_proc enabling for osc");
         }
     }
 
@@ -99,12 +98,12 @@ public:
         std::string device = prefs_.getString("device");
 		int virt = prefs_.getInt("virtual",0);
         if (output_.create(device,virt>0)) {
-            LOG_1(std::cout << "MecMidiCallback enabling for midi to " << device << std::endl;)
-            LOG_1(std::cout << "TODO (MecMidiCallback) :" << std::endl;)
-            LOG_1(std::cout << "- MPE init, including PB range" << std::endl;)
+            LOG_1( "MecMidiCallback enabling for midi to " << device );
+            LOG_1( "TODO (MecMidiCallback) :" );
+            LOG_1( "- MPE init, including PB range" );
         }
         if(!output_.isOpen()) {
-            LOG_0(std::cout << "MecMidiCallback not open, so invalid for" << device << std::endl;)
+            LOG_0( "MecMidiCallback not open, so invalid for" << device );
         }
     }
 
@@ -137,7 +136,7 @@ private:
 
 void *mecapi_proc(void * arg)
 {
-    LOG_0(std::cout  << "mecapi_proc start" << std::endl;)
+    LOG_0( "mecapi_proc start");
 
     MecPreferences prefs(arg);
 
@@ -180,7 +179,7 @@ void *mecapi_proc(void * arg)
         }
         pthread_mutex_unlock(&waitMtx);
     }
-    LOG_0(std::cout  << "mecapi_proc stop" << std::endl;)
+    LOG_0( "mecapi_proc stop");
     pthread_exit(NULL);
 }
 

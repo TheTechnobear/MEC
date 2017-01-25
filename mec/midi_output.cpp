@@ -2,7 +2,6 @@
 
 #include "mec.h"
 
-
 MidiOutput::MidiOutput(int maxVoices, float pbr) : pitchbendRange_(pbr) {
     for (int i = 0; i < 127; i++) {
         global_[i] = 0;
@@ -10,7 +9,7 @@ MidiOutput::MidiOutput(int maxVoices, float pbr) : pitchbendRange_(pbr) {
     try {
         output_.reset(new RtMidiOut( RtMidi::Api::UNSPECIFIED, "MEC MIDI"));
     } catch (RtMidiError  &error) {
-        error.printMessage();
+        LOG_0("Midi output ctor error:" << error.what());
     }
 }
 
@@ -28,7 +27,7 @@ bool MidiOutput::create(const std::string& portname,bool virt) {
 	if(virt) {
 		try {
 			output_->openVirtualPort(portname);
-			LOG_0(std::cout << "Midi virtual output created :" << portname << std::endl;)
+			LOG_0( "Midi virtual output created :" << portname );
 		} catch (RtMidiError  &error) {
 			error.printMessage();
 			return false;
@@ -40,18 +39,18 @@ bool MidiOutput::create(const std::string& portname,bool virt) {
         if (portname.compare(output_->getPortName(i)) == 0) {
             try {
                 output_->openPort(i);
-                LOG_0(std::cout << "Midi output opened :" << portname << std::endl;)
+                LOG_0( "Midi output opened :" << portname );
             } catch (RtMidiError  &error) {
-                error.printMessage();
+                LOG_0("Midi output create error:" << error.what());
                 return false;
             }
             return true;
         }
     }
-    std::cerr << "Port not found : [" << portname << "]" << std::endl
-              << "available ports : " << std::endl;
+    LOG_0("Port not found : [" << portname << "]");
+    LOG_0("available ports : ");
     for (int i = 0; i < output_->getPortCount(); i++) {
-        std::cerr << "[" << output_->getPortName(i) << "]" << std::endl;
+        LOG_0("[" << output_->getPortName(i) << "]"); 
     }
 
     return false;
@@ -60,15 +59,19 @@ bool MidiOutput::create(const std::string& portname,bool virt) {
 bool MidiOutput::sendMsg(std::vector<unsigned char>& msg) {
     if (!isOpen()) return false;
 
-    output_->sendMessage( &msg );
-
+    try {
+        output_->sendMessage( &msg );
+    } catch (RtMidiError  &error) {
+        LOG_0("Midi output write error:" << error.what());
+        return false;
+    }
     return true;
 }
 
 bool MidiOutput::noteOn(unsigned ch, unsigned note, unsigned vel) {
     std::vector<unsigned char> msg;
 
-    // LOG_2(std::cout << "midi output note on ch " << ch << " note " << note  << " vel " << vel << std::endl;)
+    // LOG_2( "midi output note on ch " << ch << " note " << note  << " vel " << vel )
     msg.push_back(0x90 + ch);
     msg.push_back(note);
     msg.push_back(vel);
@@ -81,7 +84,7 @@ bool MidiOutput::noteOn(unsigned ch, unsigned note, unsigned vel) {
 bool MidiOutput::noteOff(unsigned ch, unsigned note, unsigned vel) {
     std::vector<unsigned char> msg;
 
-    // LOG_2(std::cout << "midi output note off ch " << ch << " note " << note  << " vel " << vel << std::endl;)
+    // LOG_2( "midi output note off ch " << ch << " note " << note  << " vel " << vel )
     msg.push_back(0x80 + ch);
     msg.push_back(note);
     msg.push_back(vel);
@@ -114,7 +117,7 @@ bool MidiOutput::pressure(unsigned ch, unsigned v) {
 bool MidiOutput::pitchbend(unsigned ch, unsigned v) {
     std::vector<unsigned char> msg;
 
-    // LOG_2(std::cout << "midi output pb" << ch << " pb " << v <<  std::endl;)
+    // LOG_2( "midi output pb" << ch << " pb " << v <<  std::endl;)
     msg.push_back( 0xE0 + ch );
     msg.push_back( v & 0x7f);
     msg.push_back( (v & 0x3F80) >> 7);
@@ -151,11 +154,11 @@ bool MidiOutput::touchOn(int id, float note, float x, float y, float z) {
     int my = bipolar7bit(y);
     int mz = unipolar7bit(z);
 
-    // LOG_2(std::cout << "midi output on note: " << note)
+    // LOG_2( "midi output on note: " << note)
     // LOG_2(          << " x :" << x << " mx: " << mx)
     // LOG_2(          << " y :" << y << " my: " << my)
     // LOG_2(          << " z :" << z << " mz: " << mz)
-    // LOG_2(          << std::endl;)
+    // LOG_2(          )
 
     pitchbend(ch, pb);
     cc(ch, 74,  my);
@@ -189,7 +192,7 @@ bool MidiOutput::touchContinue(int id, float note, float x, float y, float z) {
     // LOG_2(           << " y :" << y << " my: " << my)
     // LOG_2(           << " z :" << z << " mz: " << mz)
     // LOG_2(           << " startnote :" << voice.startNote_ << " pbr: " << pitchbendRange_)
-    // LOG_2(           << std::endl;)
+    // LOG_2(           )
 
     voice.note_ = note;
 

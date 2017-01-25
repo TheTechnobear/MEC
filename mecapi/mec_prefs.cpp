@@ -1,7 +1,6 @@
 #include "mec_prefs.h"
 
 #include <fstream>
-#include <iostream>
 
 #include <cJSON.h>
 
@@ -41,7 +40,7 @@ bool MecPreferences::loadPreferences(const std::string& file) {
 
 
         if (jsonData_) {
-            LOG_0(std::cout << "loaded preferences" << std::endl;)
+            LOG_0("loaded preferences");
             char* p = cJSON_Print( (cJSON*) jsonData_);
             std::cout << p << std::endl;
             delete p;
@@ -49,12 +48,12 @@ bool MecPreferences::loadPreferences(const std::string& file) {
         }
         else
         {
-            LOG_0(std::cerr << "unable to parse preferences file" << std::endl;)
+            LOG_0( "unable to parse preferences file");
         }
     }
     else
     {
-        LOG_0(std::cerr << "unable to load preferences file" << std::endl;)
+        LOG_0("unable to load preferences file");
     }
     return false;
 }
@@ -142,11 +141,11 @@ bool MecPreferences::exists(const std::string v) {
 
 void MecPreferences::print() {
     if (! jsonData_)  {
-        LOG_0(std::cout << "invalid json data" << std::endl;)
+        LOG_0("invalid json data");
 
     } else {
         char* p = cJSON_Print((cJSON*) jsonData_);
-        LOG_0(std::cout << p << std::endl;)
+        LOG_0(p);
         delete p;
     }
 }

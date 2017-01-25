@@ -1,13 +1,12 @@
 #include "mec_surfacemapper.h"
 
-#include <iostream>
 #include "mec_log.h"
 
 MecSurfaceMapper::MecSurfaceMapper() : mode_(SM_NoMapping) {
 }
 
 void MecSurfaceMapper::load(MecPreferences& prefs){
-	LOG_2(std::cout << "load surface mapping" << std::endl;)
+	LOG_2("load surface mapping");
 
 	mode_ = SM_NoMapping;
 	if(prefs.exists("notes")) { loadNoteArray(prefs); return ;}
@@ -34,7 +33,7 @@ void MecSurfaceMapper::loadNoteArray(MecPreferences& prefs) {
 		notes_[i] = i;
 	}
 
-	LOG_2(std::cout << "loaded surface mapping (notes) # keys : " << sz << std::endl;)
+	LOG_2("loaded surface mapping (notes) # keys : " << sz);
 }
 
 void MecSurfaceMapper::loadCalcDefinition(MecPreferences& p) {
@@ -45,7 +44,7 @@ void MecSurfaceMapper::loadCalcDefinition(MecPreferences& p) {
     colMult_ 	= prefs.getInt("col multipler", keyInCol_ );
     noteOffset_	= prefs.getInt("note offset", 0); 
 
-    LOG_2(std::cout  << "loaded surface mapping (calc) " <<  keyInCol_ << " , " << rowMult_ << " , " << colMult_ << " , " << noteOffset_ << std::endl;)
+    LOG_2("loaded surface mapping (calc) " <<  keyInCol_ << " , " << rowMult_ << " , " << colMult_ << " , " << noteOffset_);
 
 }
 

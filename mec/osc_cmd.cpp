@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 #include <string.h>
 
@@ -37,10 +36,10 @@ protected:
                 const char* cmd;
                 args >> cmd >> osc::EndMessage;
 
-                LOG_2(std::cout   << "received /tb/mec/command message with argument: " << cmd << std::endl;)
+                LOG_2("received /tb/mec/command message with argument: " << cmd );
                 if (strcmp(cmd, "stop") == 0) {
                     pthread_mutex_lock(&waitMtx);
-                    LOG_1(std::cout << " OscCommandListener stopping " << std::endl;)
+                    LOG_1( " OscCommandListener stopping " );
                     keepRunning = 0;
                     pthread_cond_broadcast(&waitCond);
                     pthread_mutex_unlock(&waitMtx);
@@ -53,7 +52,7 @@ protected:
         } catch ( osc::Exception& e ) {
             // any parsing errors such as unexpected argument types, or
             // missing arguments get thrown as exceptions.
-            LOG_1(std::cerr << "error while parsing message: " << m.AddressPattern() << ": " << e.what() << std::endl;)
+            LOG_0("error while parsing message: " << m.AddressPattern() << ": " << e.what() );
         }
     }
 private:
@@ -63,7 +62,7 @@ private:
 
 void *osc_command_proc(void *arg)
 {
-    LOG_0(std::cout  << "osc_command_proc start" << std::endl;)
+    LOG_0("osc_command_proc start" );
 
     MecPreferences prefs(arg);
 
@@ -74,7 +73,7 @@ void *osc_command_proc(void *arg)
     listener.setSocket(&s);
     s.RunUntilSigInt();
     listener.setSocket(NULL);
-    LOG_0(std::cout  << "osc_command_proc stop" << std::endl;)
+    LOG_0("osc_command_proc stop" );
     pthread_exit(NULL);
 }
 

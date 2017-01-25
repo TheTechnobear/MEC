@@ -1,7 +1,5 @@
 #include "mec_soundplane.h"
 
-#include <iostream>
-
 #include <SoundplaneModel.h>
 #include <MLAppState.h>
 
@@ -30,7 +28,7 @@ public:
             stealVoices_(p.getBool("steal voices",true))
     {
         if (valid_) {
-            LOG_0(std::cout  << "MecSoundplaneHandler enabling for mecapi" <<  std::endl;)
+            LOG_0("MecSoundplaneHandler enabling for mecapi");
         }
     }
 
@@ -38,9 +36,8 @@ public:
 
     virtual void device(const char* dev, int rows, int cols)
     {
-        LOG_1(std::cout     << "MecSoundplaneHandler  device d: " << dev)
-        LOG_1(              << " r: " << rows << " c: " << cols)
-        LOG_1(              << std::endl;)
+        LOG_1("MecSoundplaneHandler  device d: " << dev);
+        LOG_1(" r: " << rows << " c: " << cols);
     }
 
     virtual void touch(const char* dev, unsigned long long t, bool a, int touch, float n, float x, float y, float z)
@@ -54,13 +51,12 @@ public:
         float my = clamp((y - 0.5 ) * 2.0 ,-1.0f,1.0f);
         float mz = clamp(z, 0.0f,1.0f);
         if (a)
-        {
-            // LOG_1(std::cout     << "MecSoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
-            // LOG_1(              << " touch: " <<  touch)
-            // LOG_1(              << " note: " <<  n  << " mn: "   << mn << " fn: " << fn)
-            // LOG_1(              << " x: " << x      << " y: "   << y    << " z: "   << z)
-            // LOG_1(              << " mx: " << mx    << " my: "  << my   << " mz: "  << mz)
-            // LOG_1(              << std::endl;)
+        {;
+            // LOG_1("MecSoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
+            // LOG_1(" touch: " <<  touch);
+            // LOG_1(" note: " <<  n  << " mn: "   << mn << " fn: " << fn);
+            // LOG_1(" x: " << x      << " y: "   << y    << " z: "   << z);
+            // LOG_1(" mx: " << mx    << " my: "  << my   << " mz: "  << mz);
 
             if (!voice) {
                 voice = voices_.startVoice(touch);
@@ -87,7 +83,7 @@ public:
         else
         {
             if (voice) {
-                LOG_2(std::cout << "stop voice for " << key << " ch " << voice->i_ << std::endl;)
+                // LOG_2("stop voice for " << touch << " ch " << voice->i_ );
                 callback_.touchOff(voice->i_,mn,mx,my,mz);
                 voices_.stopVoice(voice);
             }
@@ -141,12 +137,12 @@ bool MecSoundplane::init(void* arg) {
     MecSoundplaneHandler *pCb = new MecSoundplaneHandler(prefs,callback_);
     if (pCb->isValid()) {
         model_->mecOutput().connect(pCb);
-        LOG_0(std::cout  << "MecSoundplane::init - model init" <<  std::endl;)
+        LOG_0("MecSoundplane::init - model init");
         model_->initialize();
         active_ = true;
-        LOG_0(std::cout  << "MecSoundplane::init - complete" <<  std::endl;)
+        LOG_0("MecSoundplane::init - complete");
     } else {
-        LOG_0(std::cout  << "MecSoundplane::init - delete callback" <<  std::endl;)
+        LOG_0("MecSoundplane::init - delete callback");
         delete pCb;
     }
 

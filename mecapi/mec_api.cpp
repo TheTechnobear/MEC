@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <memory>
-#include <iostream>
 
 
 /////////////////////////////////////////////////////////
@@ -136,45 +135,45 @@ void MecApi_Impl::initDevices() {
     // }
 
     if (prefs_->exists("eigenharp")) {
-        LOG_1(std::cout   << "eigenharp initialise " << std::endl;)
+        LOG_1("eigenharp initialise ");
         std::shared_ptr<MecDevice> device;
         device.reset(new MecEigenharp(*this));
         if(device->init(prefs_->getSubTree("eigenharp"))) {
             if(device->isActive()) {
                 devices_.push_back(device);
             } else {
-                LOG_1(std::cout   << "eigenharp init inactive " << std::endl;)
+                LOG_1("eigenharp init inactive ");
                 device->deinit();
             }
         } else {
-            LOG_1(std::cout   << "eigenharp init failed " << std::endl;)
+            LOG_1("eigenharp init failed ");
             device->deinit();
         }
     }
 
     if (prefs_->exists("soundplane")) {
-        LOG_1(std::cout   << "soundplane initialise " << std::endl;)
+        LOG_1("soundplane initialise");
         std::shared_ptr<MecDevice> device;
         device.reset(new MecSoundplane(*this));
         if(device->init(prefs_->getSubTree("soundplane"))) {
             if(device->isActive()) {
                 devices_.push_back(device);
             } else {
-                LOG_1(std::cout   << "soundplane init inactive " << std::endl;)
+                LOG_1("soundplane init inactive ");
                 device->deinit();
             }
         } else {
-            LOG_1(std::cout   << "soundplane init failed " << std::endl;)
+            LOG_1("soundplane init failed ");
             device->deinit();
         }
     }
 
     // if (prefs_->exists("push2")) {
-    //     LOG_1(std::cout   << "push2 initialise " << std::endl;)
+    //     LOG_1("push2 initialise ");
     // }
 
     // if (prefs_->exists("midi")) {
-    //     LOG_1(std::cout   << "midi initialise " << std::endl;)
+    //     LOG_1("midi initialise ");
     // }
 }
 
