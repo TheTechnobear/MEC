@@ -39,9 +39,11 @@ private:
 //////////////////////////////////////////////////////////
 //MecApi
 MecApi::MecApi(const std::string& configFile) {
+    LOG_1("MecApi::MecApi");
     impl_ = new MecApi_Impl(configFile);
 } 
 MecApi::~MecApi() {
+    LOG_1("MecApi::~MecApi");
     delete impl_;
 }
 
@@ -67,15 +69,18 @@ MecApi_Impl::MecApi_Impl(const std::string& configFile) {
     prefs_.reset(new MecPreferences(configFile));
 } 
 MecApi_Impl::~MecApi_Impl() {
+    LOG_1("MecApi_Impl::~MecApi_Impl");
     for (std::vector<std::shared_ptr<MecDevice>>::iterator it = devices_.begin() ; it != devices_.end(); ++it) {
+        LOG_1("device deinit ");
         (*it)->deinit();
     }
     devices_.clear();
+    LOG_1("devices cleared");
     prefs_.reset();
 }
 
 void MecApi_Impl::init() {
-
+    LOG_1("MecApi_Impl::init");
     initDevices();
 }
 
@@ -158,6 +163,7 @@ void MecApi_Impl::initDevices() {
         if(device->init(prefs_->getSubTree("soundplane"))) {
             if(device->isActive()) {
                 devices_.push_back(device);
+                LOG_1("soundplane init active ");
             } else {
                 LOG_1("soundplane init inactive ");
                 device->deinit();

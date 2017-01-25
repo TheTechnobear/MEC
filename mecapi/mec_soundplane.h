@@ -3,6 +3,7 @@
 
 #include "mec_api.h"
 #include "mec_device.h"
+#include "mec_msg_queue.h"
 
 class SoundplaneModel;
 class MLAppState;
@@ -24,6 +25,7 @@ private:
     std::unique_ptr<SoundplaneModel> model_;
     std::unique_ptr<MLAppState> modelState_;
     bool active_;
+    MecMsgQueue queue_;
 };
 
 #endif // MecSoundplane_H

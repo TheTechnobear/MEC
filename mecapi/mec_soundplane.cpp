@@ -5,7 +5,6 @@
 
 #include <SoundplaneMECOutput.h>
 
-
 #include "mec_api.h"
 #include "mec_log.h"
 #include "mec_prefs.h"
@@ -20,12 +19,12 @@
 class MecSoundplaneHandler: public  SoundplaneMECCallback
 {
 public:
-    MecSoundplaneHandler(MecPreferences& p, IMecCallback& cb)
+    MecSoundplaneHandler(MecPreferences& p, MecMsgQueue& q)
         :   prefs_(p),
-            callback_(cb),
+            queue_(q),
             valid_(true),
-            voices_(p.getInt("voices",15)),
-            stealVoices_(p.getBool("steal voices",true))
+            voices_(p.getInt("voices", 15)),
+            stealVoices_(p.getBool("steal voices", true))
     {
         if (valid_) {
             LOG_0("MecSoundplaneHandler enabling for mecapi");
@@ -47,11 +46,19 @@ public:
         MecVoices::Voice* voice = voices_.voiceId(touch);
         float fn = n;
         float mn = note(fn);
-        float mx = clamp(x,-1.0f,1.0f);
-        float my = clamp((y - 0.5 ) * 2.0 ,-1.0f,1.0f);
-        float mz = clamp(z, 0.0f,1.0f);
+        float mx = clamp(x, -1.0f, 1.0f);
+        float my = clamp((y - 0.5 ) * 2.0 , -1.0f, 1.0f);
+        float mz = clamp(z, 0.0f, 1.0f);
+
+        MecMsg msg;
+        msg.type_ = MecMsg::TOUCH_OFF;
+        msg.data_.touch_.touchId_ = -1;
+        msg.data_.touch_.note_ = mn;
+        msg.data_.touch_.x_ = mx;
+        msg.data_.touch_.y_ = my;
+        msg.data_.touch_.z_ = mz;
         if (a)
-        {;
+        {
             // LOG_1("MecSoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
             // LOG_1(" touch: " <<  touch);
             // LOG_1(" note: " <<  n  << " mn: "   << mn << " fn: " << fn);
@@ -62,17 +69,34 @@ public:
                 voice = voices_.startVoice(touch);
                 // LOG_2(std::cout << "start voice for " << key << " ch " << voice->i_ << std::endl;)
 
-                if(!voice && stealVoices_) {
+                if (!voice && stealVoices_) {
                     // no available voices, steal?
                     MecVoices::Voice* stolen = voices_.oldestActiveVoice();
-                    callback_.touchOff(stolen->i_,stolen->note_,stolen->x_,stolen->y_,stolen->z_);
+                    
+                    MecMsg stolenMsg;
+                    stolenMsg.type_ = MecMsg::TOUCH_OFF;
+                    stolenMsg.data_.touch_.touchId_ = stolen->i_;
+                    stolenMsg.data_.touch_.note_ = stolen->note_;
+                    stolenMsg.data_.touch_.x_ = stolen->x_;
+                    stolenMsg.data_.touch_.y_ = stolen->y_;
+                    stolenMsg.data_.touch_.z_ = stolen->z_;
+
+                    queue_.addToQueue(stolenMsg);
+
                     voices_.stopVoice(voice);
                     voice = voices_.startVoice(touch);
                 }
-                if(voice) callback_.touchOn(voice->i_, mn, mx, my, mz);
+
+                if (voice)  {
+                    msg.type_ = MecMsg::TOUCH_ON;
+                    msg.data_.touch_.touchId_ = voice->i_;
+                    queue_.addToQueue(msg);
+                }
             }
             else {
-                callback_.touchContinue(voice->i_, mn, mx, my, mz);
+                msg.type_ = MecMsg::TOUCH_CONTINUE;
+                msg.data_.touch_.touchId_ = voice->i_;
+                queue_.addToQueue(msg);
             }
             voice->note_ = mn;
             voice->x_ = mx;
@@ -84,7 +108,10 @@ public:
         {
             if (voice) {
                 // LOG_2("stop voice for " << touch << " ch " << voice->i_ );
-                callback_.touchOff(voice->i_,mn,mx,my,mz);
+                msg.type_ = MecMsg::TOUCH_OFF;
+                msg.data_.touch_.touchId_ = voice->i_;
+                queue_.addToQueue(msg);
+
                 voices_.stopVoice(voice);
             }
         }
@@ -92,15 +119,19 @@ public:
 
     virtual void control(const char* dev, unsigned long long t, int id, float val)
     {
-        callback_.control(id, clamp(val,-1.0f,1.0f));
+        MecMsg msg;
+        msg.type_ = MecMsg::CONTROL;
+        msg.data_.control_.controlId_ = id;
+        msg.data_.control_.value_ = clamp(val, -1.0f, 1.0f);
+        queue_.addToQueue(msg);
     }
 
 private:
-    inline  float clamp(float v,float mn, float mx) {return (std::max(std::min(v,mx),mn));}
+    inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
     float   note(float n) { return n; }
 
     MecPreferences prefs_;
-    IMecCallback& callback_;
+    MecMsgQueue& queue_;
     MecVoices voices_;
     bool valid_;
     bool stealVoices_;
@@ -108,7 +139,7 @@ private:
 
 
 ////////////////////////////////////////////////
-MecSoundplane::MecSoundplane(IMecCallback& cb) : 
+MecSoundplane::MecSoundplane(IMecCallback& cb) :
     active_(false), callback_(cb) {
 }
 
@@ -117,9 +148,9 @@ MecSoundplane::~MecSoundplane() {
 }
 
 bool MecSoundplane::init(void* arg) {
-   MecPreferences prefs(arg);
+    MecPreferences prefs(arg);
 
-   if (active_) {
+    if (active_) {
         deinit();
     }
     active_ = false;
@@ -134,7 +165,7 @@ bool MecSoundplane::init(void* arg) {
     model_->setPropertyImmediate("mec_active",  1.0f);
     model_->setPropertyImmediate("data_freq_mec", 500.0f);
 
-    MecSoundplaneHandler *pCb = new MecSoundplaneHandler(prefs,callback_);
+    MecSoundplaneHandler *pCb = new MecSoundplaneHandler(prefs, queue_);
     if (pCb->isValid()) {
         model_->mecOutput().connect(pCb);
         LOG_0("MecSoundplane::init - model init");
@@ -150,16 +181,49 @@ bool MecSoundplane::init(void* arg) {
 }
 
 bool MecSoundplane::process() {
-    //TODO
-    //soundplane model callsback on it own threads
-    //we need to therefore put the call backs in a 'queue' and then only call
-    //the Mec callback when process is called.
-    // if (active_) model_->poll(0);
+    MecMsg msg;
+    while (queue_.nextMsg(msg)) {
+        switch (msg.type_) {
+        case MecMsg::TOUCH_ON:
+            callback_.touchOn(
+                msg.data_.touch_.touchId_,
+                msg.data_.touch_.note_,
+                msg.data_.touch_.x_,
+                msg.data_.touch_.y_,
+                msg.data_.touch_.z_);
+            break;
+        case MecMsg::TOUCH_CONTINUE:
+            callback_.touchContinue(
+                msg.data_.touch_.touchId_,
+                msg.data_.touch_.note_,
+                msg.data_.touch_.x_,
+                msg.data_.touch_.y_,
+                msg.data_.touch_.z_);
+            break;
+        case MecMsg::TOUCH_OFF:
+            callback_.touchOff(
+                msg.data_.touch_.touchId_,
+                msg.data_.touch_.note_,
+                msg.data_.touch_.x_,
+                msg.data_.touch_.y_,
+                msg.data_.touch_.z_);
+            break;
+        case MecMsg::CONTROL :
+            callback_.control(
+                msg.data_.control_.controlId_,
+                msg.data_.control_.value_);
+            break;
+        default:
+            LOG_0("MecSoundplane::process unhandled message type");
+        }
+    }
     return true;
 }
 
 void MecSoundplane::deinit() {
+    LOG_0("MecSoundplane::deinit");
     if (!model_) return;
+    LOG_0("MecSoundplane::reset model");
     model_.reset();
     active_ = false;
 }

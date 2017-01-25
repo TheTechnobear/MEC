@@ -59,11 +59,11 @@ void intHandler(int sig) {
     }
 }
 
+#include <mec_msg_queue.h>
+#include <mec_log.h>
 
 
-int main(int ac, char **av)
-{
-
+int main(int ac, char **av) {
     atexit(exitHandler);
 
     // block sigint from other threads

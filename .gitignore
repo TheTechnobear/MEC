@@ -3,7 +3,6 @@
 *.lock
 profile
 */*.bbprojectd
-*/*.sublime-workspace
+**/*.sublime-workspace
 
-*/build/*
-build
+**/build/*

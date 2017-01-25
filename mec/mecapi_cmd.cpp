@@ -37,19 +37,19 @@ public:
 
     void touchOn(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "touchOn";
+        static std::string topic = "mec/touchOn";
         sendMsg(topic,touchId,note,x,y,z);
     }
 
     void touchContinue(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "touchContinue";
+        static std::string topic = "mec/touchContinue";
         sendMsg(topic,touchId,note,x,y,z);
     }    
 
     void touchOff(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "touchOff";
+        static std::string topic = "mec/touchOff";
         sendMsg(topic,touchId,note,x,y,z);
 
     }    
@@ -58,7 +58,7 @@ public:
     {
         osc::OutboundPacketStream op( buffer_, OUTPUT_BUFFER_SIZE );
         op << osc::BeginBundleImmediate
-           << osc::BeginMessage( "tb/control")
+           << osc::BeginMessage( "mec/control")
            << ctrlId << v 
            << osc::EndMessage
            << osc::EndBundle;
@@ -144,9 +144,9 @@ void *mecapi_proc(void * arg)
     bool midiEnabled = outprefs.exists("midi");
     bool oscEnabled = outprefs.exists("osc");
 
-    MecApi mecapi;
 
     if (midiEnabled || oscEnabled) {
+        MecApi mecapi;
         // currently either midi or osc
         // need to add subscripton list to mec api
         if (midiEnabled) {
@@ -180,6 +180,7 @@ void *mecapi_proc(void * arg)
         pthread_mutex_unlock(&waitMtx);
     }
     LOG_0( "mecapi_proc stop");
+    sleep(1);
     pthread_exit(NULL);
 }
 

@@ -14,12 +14,12 @@ struct MecMsg {
 
     union {
         struct {
-            int touchId;
-            float note, x, y, z;
+            int     touchId_;
+            float   note_, x_, y_, z_;
         } touch_;
         struct {
-            int controlId;
-            float value;
+            int     controlId_;
+            float   value_;
         } control_;
     } data_;
 };
@@ -34,7 +34,7 @@ public:
     bool nextMsg(MecMsg&);
     bool isEmpty();
     bool isFull();
-    int  availableSpace();
+    int  available();
     int  pending();
 
 private:
