@@ -63,7 +63,7 @@ add_library(mec-eigenharp SHARED ${EIGENHARP_SRC} ${EIGENHARP_HDRS} )
 target_link_libraries (mec-eigenharp picodecoder)
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  target_link_libraries(eigenharplib atomic)
+  target_link_libraries(mec-eigenharp atomic)
 endif()
 
 if(APPLE)
