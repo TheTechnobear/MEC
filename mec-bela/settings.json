@@ -13,7 +13,7 @@
     "--pga-gain-left": "10",
     "--pga-gain-right": "10",
     "user": "",
-    "make": "AT=;CPPFLAGS=-I/root/dev/MEC/mecapi;LDFLAGS=-L/root/dev/MEC/build/release/lib;LDLIBS=-lmecapi -Wl,-rpath,/root/dev/MEC/build/release/lib",
+    "make": "AT=;CPPFLAGS=-I/root/projects/MEC/mec-api;LDFLAGS=-L/root/projects/MEC/build/release/lib;LDLIBS=-lmec-api -Wl,-rpath,/root/projects/MEC/build/release/lib",
     "-X": "0",
     "audioExpander": "0",
     "-Y": "",

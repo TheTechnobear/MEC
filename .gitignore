@@ -3,5 +3,5 @@
 *.lock
 profile
 **/*.sublime-workspace
-
-**/build/
+**/build/*
+build
