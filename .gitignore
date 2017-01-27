@@ -26,7 +26,5 @@ Podfile.lock
 !default.perspectivev3
 *.xccheckout
 
-#experimental projects - not ready for commit ;)
-mec-max
 
 
