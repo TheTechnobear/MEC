@@ -28,7 +28,7 @@
 #include <TouchTracker.h>
 #include <Filters2D.h>
 
-#include "mec.h"
+#include "mec_app.h"
 
 #define OUT_ADDRESS "127.0.0.1"
 #define OUT_PORT 9002

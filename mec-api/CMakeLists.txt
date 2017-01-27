@@ -1,6 +1,10 @@
 ###############################
 # MEC library
-project (mecapi)
+project (mec-api)
+
+add_subdirectory (devices/eigenharp) 
+add_subdirectory (devices/soundplanelite) 
+add_subdirectory (devices/push2) 
 
 set(MECAPI_SRC 
     mec_api.cpp
@@ -21,13 +25,13 @@ set(MECAPI_SRC
 )
 
 include_directories (
-    "${PROJECT_SOURCE_DIR}/../push2" 
-    "${PROJECT_SOURCE_DIR}/../eigenharp" 
-    "${PROJECT_SOURCE_DIR}/../soundplanelite"
+    "devices/push2" 
+    "devices/eigenharp" 
+    "devices/soundplanelite"
     "${PROJECT_SOURCE_DIR}/../external/cJSON"
     "${PROJECT_SOURCE_DIR}/../external/oscpack"
     )
 
-add_library(mecapi SHARED ${MECAPI_SRC})
+add_library(mec-api SHARED ${MECAPI_SRC})
 
-target_link_libraries (mecapi eigenharplib soundplanelite push2lib cjson oscpack)
+target_link_libraries (mec-api mec-eigenharp mec-soundplane mec-push2 cjson oscpack)

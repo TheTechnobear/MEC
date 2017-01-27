@@ -30,14 +30,14 @@ See BUILD.md in docs folders , but basically its:
     cd build
     cmake ..
     make 
-    mec/mec
+    mec-app/mec-app
 
 Note: you will need a configuration file, and possibly resources see BUILD.md for more details.
 
 
 #MEC important note
 
-Mac OSX 10.11 (only, macOS Sierra ok) - Stopping apps
+Mac OSX 10.11+ - Stopping apps
 be careful when stopping under Mac OS post 10.11 , abrutly stopping usb drivers will cause kernel panic, due to a bug in macOS
 for mec use osc to terminate EVEN inside Xcode!
 

@@ -8,7 +8,7 @@
 #include <osc/OscPacketListener.h>
 #include <ip/UdpSocket.h>
 
-#include "mec.h"
+#include "mec_app.h"
 #include <mec_prefs.h>
 
 

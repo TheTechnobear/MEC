@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <RtMidi.h>
 
-#include "mec.h"
+#include "mec_app.h"
 #include <mec_prefs.h>
 
 

@@ -1,10 +1,10 @@
-project(soundplanelite)
+project(mec-soundplane)
 
 include_directories (
-    "${PROJECT_SOURCE_DIR}/../external/libusb"
-    "${PROJECT_SOURCE_DIR}/../external/portaudio"
-    "${PROJECT_SOURCE_DIR}/../external/cJSON"
-    "${PROJECT_SOURCE_DIR}/../external/oscpack"
+    "${PROJECT_SOURCE_DIR}/../../../external/libusb"
+    "${PROJECT_SOURCE_DIR}/../../../external/portaudio"
+    "${PROJECT_SOURCE_DIR}/../../../external/cJSON"
+    "${PROJECT_SOURCE_DIR}/../../../external/oscpack"
 )
 
 set(SPLite_H
@@ -123,24 +123,22 @@ elseif(UNIX)
     endif ()
 endif(APPLE) 
 
-add_library(soundplanelite SHARED ${SPLite_Src} ${SPLite_H})
+add_library(mec-soundplane SHARED ${SPLite_Src} ${SPLite_H})
 
-target_link_libraries (soundplanelite oscpack portaudio cjson)
+target_link_libraries (mec-soundplane oscpack portaudio cjson)
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  target_link_libraries(soundplanelite atomic)
+  target_link_libraries(mec-soundplane atomic)
 endif()
 
 if(APPLE)
-    target_link_libraries(soundplanelite  "-framework Cocoa -framework IOKit")
-#    target_link_libraries(soundplanelite -framework CoreAudio")
+    target_link_libraries(mec-soundplane  "-framework Cocoa -framework IOKit")
 elseif(UNIX) 
-    target_link_libraries(soundplanelite  "libusb" "dl" "pthread")
-#    target_link_libraries(soundplanelite ${ALSA_LIBRARIES})
+    target_link_libraries(mec-soundplane  "libusb" "dl" "pthread")
 endif(APPLE)
 
-target_include_directories(soundplanelite PUBLIC .)
+target_include_directories(mec-soundplane PUBLIC .)
 
-add_subdirectory(tests)
+#add_subdirectory(tests)
 
 

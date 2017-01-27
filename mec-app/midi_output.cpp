@@ -1,6 +1,7 @@
 #include "midi_output.h"
 
-#include "mec.h"
+#include "mec_app.h"
+
 
 MidiOutput::MidiOutput(int maxVoices, float pbr) : pitchbendRange_(pbr) {
     for (int i = 0; i < 127; i++) {

@@ -152,7 +152,7 @@ bool MecEigenharp::init(void* arg) {
         deinit();
     }
     active_ = false;
-	std::string fwDir = prefs.getString("firmware dir","../eigenharp/resources/");
+	std::string fwDir = prefs.getString("firmware dir","./resources/");
 	minPollTime_ = prefs.getInt("min poll time",100);
     eigenD_.reset(new EigenApi::Eigenharp(fwDir.c_str()));
     MecEigenharpHandler *pCb = new MecEigenharpHandler(prefs,callback_);

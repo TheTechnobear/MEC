@@ -7,7 +7,7 @@
 #include <osc/OscOutboundPacketStream.h>
 #include <ip/UdpSocket.h>
 
-#include "mec.h"
+#include "mec_app.h"
 #include "midi_output.h"
 
 #include <mec_api.h>

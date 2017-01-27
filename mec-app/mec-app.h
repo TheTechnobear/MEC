@@ -1,5 +1,5 @@
-#ifndef MEC_H
-#define MEC_H
+#ifndef MEC_APP_H
+#define MEC_APP_H
 
 #include <pthread.h>
 #include <mec_log.h>

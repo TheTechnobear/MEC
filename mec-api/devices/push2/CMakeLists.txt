@@ -1,2 +1,2 @@
 add_subdirectory(push2lib)
-add_subdirectory(tests)
+#add_subdirectory(tests)

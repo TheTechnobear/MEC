@@ -3,8 +3,14 @@ todo items are included in TODO.txt
 this file is more general notes,ideas and current status
 
 # Project
+mec-api - a framework for integrating expressive devices
+mec-app - standalone app, built on mec-api
+mec-vst - VST/AU, built on mec-api
+mec-app - bela app, built on mec-api
+
+
 SoundplaneLite - stripped down soundplane software, all in one folder (in use)
-Eigenharp -  including EigenFreeD, latest version of EigenFreeD, which will cease to exist in other forms(!?) (have to think about Max external here)
+cease to exist in other forms(!?) (have to think about Max external here)
 Push 2 - controlling code for Push2, currently only test stuff
 Mec - code which binds controller software into a useable form i.e. with Midi/Osc output
 external - external code i.e. projects like oscpack/libusb/rtmidi etc
@@ -13,37 +19,42 @@ external - external code i.e. projects like oscpack/libusb/rtmidi etc
 ## Input devices
 
 *Eigenharp*
-pico basically works with midi, need to test alpha again, and also have some kind of dimensions code
-... needs scale mapping
+extends  EigenFreeD, which in turn is built on source code from Eigenlabs.
+EigenD code, stripped to its essence, with a changes and also linux support
 
 *Soundplane*
-two implementations, a low level one (soundplane_tt_proc), and one usng the soundplane model,
-I want to use the soundplanemodel one, as this includes calibration, and means the soundplaneapp.txt file is useable
-this config then usese a MEC target in the soundplane project to integrate this model with MEC.
+built on soundplanelite, which is a cut down and extended version of soundplane code from Madrona labs
+two implementations: 
+- a low level one (soundplane_tt_proc), 
+- one usng the soundplane model
+currently we use the soundplane model implementation with a new 
 
 *Push 2*
-only basic tests done, not integrated
+only test code for nwo, showing display.
 idea is to support a push1 compatibity mode, and also general controller mode.
 want to be able to display parameters etc on screen and also use pads for playing/sequencing
 
-*Midi (keyboard)*
-low priority, but idea is to support a midi input
+*MPE*
+to do, 
+
+*OSC - T3D*
+to do
+
+*OSC - Command*
+idea is to provide a remove command interface to MEC via OSC
+
 
 ##Output devices
 
 *Midi*
-implemented using rtmidi, currently sends out MPE messages, but idea is also to support 'plain midi'
+primary target, built on rtmidi or JUCE for VST/AU
 
 *OSC*
-basics are in eigenharp, but I will probably adopt T3D
-
-*BELA*
-output to the bela platform ... or this may be just an api that bela can integrate with
+basics in place,  I will probably adopt T3D
 
 
-##Mec API (WIP - not working yet!)
-this is the new way forward, the mec app will use this in the mid term
-the api provides a way for applications to initalise mec devices, and then process their messages, and get callbacks for events handling on the devices
-intially there is a touch interface (callback) but other interfaces types coudld be added.
+##Mec API 
+provides interface to underlying input devices, with a common callback interface. the app using the mec api registers callbacks and then calls process().
+the callbacks are processed syncronoushly to the process() call, which is expected to be in the audio thread (i.e no blocking etc)
 
 

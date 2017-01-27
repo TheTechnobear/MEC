@@ -1,4 +1,4 @@
-project (eigenharplib)
+project (mec-eigenharp)
 
 if(APPLE)
     #add_definitions(-D ML_USE_SSE)
@@ -48,31 +48,31 @@ elseif(UNIX)
         picross/src/pic_tool_linux.cpp)
 elseif(WIN32) 
     set(EIGENHARP_SRC ${EIGENHARP_SRC} 
-    picross/src/pic_thread_win32.cpp
-    picross/src/pic_usb_win32.cpp 
-    picross/src/pic_winloop.cpp 
-    picross/src/pic_tool_win32.cpp
+        picross/src/pic_thread_win32.cpp
+        picross/src/pic_usb_win32.cpp 
+        picross/src/pic_winloop.cpp 
+        picross/src/pic_tool_win32.cpp
     )
 endif(APPLE)
 
 
 include_directories ( . ./picross ./eigenfreed ./eigenfreed/src ./lib_alpha2 ./lib_pico ./lib_picodecoder )
 
-add_library(eigenharplib SHARED ${EIGENHARP_SRC} ${EIGENHARP_HDRS} )
+add_library(mec-eigenharp SHARED ${EIGENHARP_SRC} ${EIGENHARP_HDRS} )
 
-target_link_libraries (eigenharplib picodecoder)
+target_link_libraries (mec-eigenharp picodecoder)
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   target_link_libraries(eigenharplib atomic)
 endif()
 
 if(APPLE)
-    target_link_libraries(eigenharplib  "-framework Cocoa  -framework IOKit -framework CoreAudio")
+    target_link_libraries(mec-eigenharp  "-framework Cocoa  -framework IOKit -framework CoreAudio")
 elseif(UNIX) 
-    target_link_libraries(eigenharplib  "libusb" "pthread")
+    target_link_libraries(mec-eigenharp  "libusb" "pthread")
 endif(APPLE)
 
 
-add_subdirectory(tests)
+#add_subdirectory(tests)
 add_subdirectory(lib_picodecoder)
 

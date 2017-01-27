@@ -9,7 +9,7 @@
 // #include <osc/OscPacketListener.h>
 // #include <ip/UdpSocket.h>
 
-#include "mec.h"
+#include "mec_app.h"
 #include <mec_prefs.h>
 
 pthread_cond_t  waitCond = PTHREAD_COND_INITIALIZER;
@@ -92,16 +92,16 @@ int main(int ac, char **av) {
         usleep(1000);
     }
 
-    if (prefs.exists("push2")) {
-        LOG_1("push2 initialise ");
-        pthread_t push2_thread;
-        rc = pthread_create(&push2_thread, NULL, push2_proc, prefs.getSubTree("push2"));
-        if (rc) {
-            LOG_1("unabled to create push2 thread" << rc );
-            exit(-1);
-        }
-        usleep(1000);
-    }
+    // if (prefs.exists("push2")) {
+    //     LOG_1("push2 initialise ");
+    //     pthread_t push2_thread;
+    //     rc = pthread_create(&push2_thread, NULL, push2_proc, prefs.getSubTree("push2"));
+    //     if (rc) {
+    //         LOG_1("unabled to create push2 thread" << rc );
+    //         exit(-1);
+    //     }
+    //     usleep(1000);
+    // }
 
     if (prefs.exists("midi")) {
         LOG_1("midi initialise ");

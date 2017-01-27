@@ -1,7 +1,8 @@
 #include <push2lib/push2lib.h>
 
 
-#include "mec.h"
+#include "mec_app.h"
+
 // #include "midi_output.h"
 #include <mec_prefs.h>
 

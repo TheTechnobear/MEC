@@ -37,11 +37,6 @@ add_subdirectory(external/portaudio portaudio)
 add_subdirectory(external/cJSON cjson)
 add_subdirectory(external/rtmidi rtmidi)
 
-
-add_subdirectory (eigenharp) 
-add_subdirectory (soundplanelite) 
-add_subdirectory (push2) 
-add_subdirectory (mecapi) 
-add_subdirectory (mec)
-
+add_subdirectory (mec-api) 
+add_subdirectory (mec-app)
 

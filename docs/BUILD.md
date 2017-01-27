@@ -45,7 +45,7 @@ however you will find in eigenharp/resources binary versions of the decoder libr
 
 
 #Important notes
-Mac OSX 10.11 (only, macOS Sierra ok) - Stopping apps
+Mac OSX 10.11 - Stopping apps
 becareful when stopping under El Capitan (MAC OSX 10.11) , abrutly stopping usb drivers will cause panic
 for mec use osc to terminate EVEN inside Xcode!
 

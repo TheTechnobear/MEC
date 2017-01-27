@@ -1,11 +1,26 @@
+#Running macOS
+
+copy resources and then adapt mec.json
+
+##Tested
+
+- 10.12 macOS sierra
+
+#Running windows
+
+not available yet!
+
 #Running and installing on Linux
 
-#Tested
+copy resources and then adapt mec.json
+
+##Tested
+
 - Debian Jessie (Beaglebone)
 - Ubuntu 16.04 LTS
 - Ubuntu MATE 16.04 raspberry pi
 
-#setup distro for build
+##setup distro for build
 
     // upgrade distro
     sudo apt-get update
@@ -22,7 +37,7 @@
     sudo apt-get install libusb-1.0-0-dev libasound2-dev
 
 
-#config system
+##config system
 
     vi /etc/security/limits.conf
 
@@ -36,10 +51,3 @@
     sudo cp ../axoloti/resources/*.rules /etc/udev/rules.d/
     sudo udevadm control --reload-rules
  
- 
-
-#for user (in directory)
-     cp ../soundplanelite/resources/SodundplaneAppState.txt
-     cp ../mec/resources/mec.json
-
-edit mec.json for input and output devices
