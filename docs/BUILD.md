@@ -1,7 +1,6 @@
 #Dependancies
 CMake
 libusb
-homebrew (mac), or you need to install cmake manually 
 
 #Building linux (or mac)
 
@@ -14,11 +13,18 @@ homebrew (mac), or you need to install cmake manually
 #Building Mac (with xcode)
 
     brew install cmake
+    brew install libusb --universal
 
     mkdir build
     cd build
     cmake .. -GXcode 
+
     xcodebuild -project mec.xcodeproj -target ALL_BUILD -configuration MinSizeRel
+
+or
+
+    cmake --build .
+
 
 #Building within Sublime
 
