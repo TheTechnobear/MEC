@@ -22,7 +22,25 @@ Push2 will provide both a control surface (pads) and also a visual feedback thru
 
 Primary target is BBB with Bela.
 
-#Building and Running MEC
+(later windows will be added)
+
+
+#Mec Projects
+Mec consists for the following projects
+
+mec-api , the api/code that all the 'end user' projects are built on, this can be used by your own applications
+
+##End user projects
+these are for use by end users
+mec-app , the standalone app, used for testing and also without any other software, this is the default build, built with cmake
+
+options projects, built seperately
+mec-vst , builds VST/AU, based on JUCE, use the jucer file to build an appropriate platform project
+mec-bela , project for the bela project , see http://bela.io, build using bela makefiles/web ui
+mec-max , Max External for use with Cycling 74 Max/MSP, build using cmake
+
+
+#Building and Running standalone MEC application (mec-app)
 
 See BUILD.md in docs folders , but basically its:
 
