@@ -1,9 +1,9 @@
 {
-	"author" : "Cycling '74",
-	"description" : "Lightweight reference implementation of a package built around the core Max-API.",
-	"homepatcher" : "max-devkit.maxpat",
+	"author" : "Mark Harris",
+	"description" : "MEC for MAX",
+	"homepatcher" : "mecdemo.maxpat",
 	"max_version_min" : "7.1",
-	"name" : "max-devkit",
+	"name" : "mec-max",
 	"os" : {
 		"macintosh" : {
 			"platform" : [ "ia32", "x64" ],
@@ -15,10 +15,10 @@
 		}
 	},
 	"package_extra" : { 
-		"reverse_domain" : "com.cycling74",
-		"copyright" : "Copyright (c) 2016 Cycling '74"
+		"reverse_domain" : "com.technobear",
+		"copyright" : "TheTechnobear"
 	},
 	"tags" : [ ],
 	"version" : "@GIT_VERSION_MAJ@.@GIT_VERSION_MIN@.@GIT_VERSION_SUB@",
-	"website" : "http://www.github.com/Cycling74/max-devkit"
+	"website" : "http://www.github.com/TheTechnobear/MEC"
 }
