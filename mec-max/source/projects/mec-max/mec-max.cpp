@@ -10,8 +10,7 @@ using namespace c74::max;
 /////////////////////////////////////////////
 
 #include <queue>
-#include <iostream>
-const double TICK_TIME=10;
+const double TICK_TIME=1;
 
 struct TouchMsg
 {
@@ -86,7 +85,6 @@ public:
 private:
     void queuePush(TouchMsg* m)
     {
-//        std::lock_guard<std::mutex> lock(queue_mutex);
         TouchMessages.push(m);
     }
 };
@@ -102,6 +100,7 @@ struct t_mec
     bool stop;    // request to stop
     t_clock *clock;
     void* outlet;
+    std::string configFile;
 };
 
 static t_class* this_class = nullptr;
@@ -110,8 +109,6 @@ static t_symbol* t_off;
 static t_symbol* t_red;
 static t_symbol* t_orange;
 static t_symbol* t_green;
-
-
 
 
 void mec_quittask(void* arg)
@@ -158,7 +155,6 @@ void mec_tick(t_mec *self)
         pMsg=nextTouchMsg();
         if(pMsg)
         {
-            // object_post((t_object*)self, "msg z %f", pMsg->z);
             outputTouch(self,pMsg);
             delete pMsg;
         }
@@ -173,11 +169,29 @@ void mec_tick(t_mec *self)
 void *mec_new(t_symbol* name, long argc, t_atom* argv)
 {
     t_mec* self = (t_mec*) object_alloc(this_class);
+
+    object_post((t_object *)self, "Mec for MAX - experimental only");
     self->pApi=nullptr;
     self->running=false;
     self->stop=false;
     self->clock=clock_new(self, (method)mec_tick);
     self->outlet=outlet_new(self,NULL);
+    self->configFile="./mec.json";
+
+    if(argc == 1) 
+    {
+        if(argv->a_type == A_SYM) 
+        {
+            self->configFile = atom_getsym(argv)->s_name;
+        }
+        else 
+        {
+           object_warn((t_object*)self, "first arguement is expected to be config filename");
+        }
+    }
+    object_post((t_object *)self, "config file : %s", self->configFile.c_str());
+
+
     return self;
 }
 
@@ -186,7 +200,6 @@ void mec_free(t_mec* self)
 {
     if(OB_INVALID((t_object*)self)) {object_error((t_object*)self, "free invalid object"); return;}
 
-    object_post((t_object*)self, "mec_free");
     delete self->pApi;
     self->pApi = nullptr;
 
@@ -198,6 +211,8 @@ void mec_free(t_mec* self)
         }
        freeobject(self->clock);
     }
+
+    object_post((t_object*)self, "MEC freed");
 }
 
 
@@ -209,7 +224,7 @@ void mec_start(t_mec* self)
         object_warn((t_object*)self, "already started");
         return;
     }
-    object_post((t_object*)self, "mec_start");
+
     if(self->pApi) 
     {
         if(self->pCallback) 
@@ -221,7 +236,7 @@ void mec_start(t_mec* self)
         delete self->pApi;
     }
 
-    self->pApi = new MecApi("/Users/kodiak/Library/Application Support/MEC/mec.json");
+    self->pApi = new MecApi(self->configFile.c_str());
     self->pCallback = new MecMaxCallback();
     self->pApi->subscribe(self->pCallback);
 
@@ -231,6 +246,8 @@ void mec_start(t_mec* self)
 
     if(OB_INVALID(self->clock)) object_warn((t_object*) self, "clock invalid - start");
     else clock_fdelay(self->clock,TICK_TIME);
+
+    object_post((t_object*)self, "MEC started");
 }
   
 
@@ -257,14 +274,7 @@ void mec_stop(t_mec* self)
 
     delete self->pApi;
     self->pApi = nullptr;
-    object_post((t_object*)self, "mec_stop");
-}
-
-void mec_error(t_mec* self)
-{
-    if(OB_INVALID((t_object*)self)) {object_error((t_object*)self, "error invalid object"); return;}
-
-    object_error((t_object*)self, "I say error ");
+    object_post((t_object*)self, "MEC stopped");
 }
 
 
@@ -272,7 +282,7 @@ void mec_setled (t_mec* self, t_symbol* s, short ac, t_atom* av)
 {
     if(OB_INVALID((t_object*)self)) {object_error((t_object*)self, "setled invalid object"); return;}
 
-    object_post((t_object*)self, "mec_setled");
+    object_post((t_object*)self, "mec_setled : not currently supported");
 }
 
 
@@ -282,7 +292,6 @@ void ext_main(void* r)
 
     class_addmethod(this_class, (method)mec_start,   "start",    0);
     class_addmethod(this_class, (method)mec_stop,    "stop",     0);
-    class_addmethod(this_class, (method)mec_error,   "error",     0);
     class_addmethod(this_class, (method)mec_setled,  "setled",   A_GIMME, 0);
 
     class_register(CLASS_BOX, this_class);
