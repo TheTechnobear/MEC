@@ -15,10 +15,77 @@
 
 #define OUTPUT_BUFFER_SIZE 1024
 
-//hacks for now 
+//hacks for now
 #define VELOCITY 1.0f
 #define PB_RANGE 2.0f
 #define MPE_PB_RANGE 48.0f
+
+
+
+class MecConsoleCallback: public  IMecCallback
+{
+public:
+    MecConsoleCallback(MecPreferences& p)
+        :   prefs_(p),
+            throttle_(p.getInt("throttle", 0)),
+            valid_(true)
+    {
+        if (valid_) {
+            LOG_0( "mecapi_proc enabling for console output, throttle :  " << throttle_);
+        }
+    }
+
+    bool isValid() { return valid_;}
+
+    void touchOn(int touchId, float note, float x, float y, float z)
+    {
+        static std::string topic = "touchOn";
+        outputMsg(topic, touchId, note, x, y, z);
+    }
+
+    void touchContinue(int touchId, float note, float x, float y, float z)
+    {
+        static unsigned long count = 0;
+        count++;
+        static std::string topic = "touchContinue";
+        //optionally display only every N continue messages
+        if(throttle_==0 || (count % throttle_)== 0) {
+            outputMsg(topic, touchId, note, x, y, z);
+        }
+    }
+
+    void touchOff(int touchId, float note, float x, float y, float z)
+    {
+        static std::string topic = "touchOff";
+        outputMsg(topic, touchId, note, x, y, z);
+
+    }
+
+    void control(int ctrlId, float v)
+    {
+        std::cout << "control - "
+                  << " ctrlId: " << ctrlId
+                  << " v:" << v
+                  << std::endl;
+    }
+
+    void outputMsg(std::string topic, int touchId, float note, float x, float y, float z)
+    {
+        std::cout << topic << " - "
+                  << " touch: " << touchId
+                  << " note: " << note
+                  << " x: " <<  x
+                  << " y: " << y
+                  << " z: " << z
+                  << std::endl;
+    }
+
+private:
+    MecPreferences prefs_;
+    bool valid_;
+    unsigned int throttle_;
+};
+
 
 class MecOSCCallback: public  IMecCallback
 {
@@ -38,43 +105,43 @@ public:
     void touchOn(int touchId, float note, float x, float y, float z)
     {
         static std::string topic = "mec/touchOn";
-        sendMsg(topic,touchId,note,x,y,z);
+        sendMsg(topic, touchId, note, x, y, z);
     }
 
     void touchContinue(int touchId, float note, float x, float y, float z)
     {
         static std::string topic = "mec/touchContinue";
-        sendMsg(topic,touchId,note,x,y,z);
-    }    
+        sendMsg(topic, touchId, note, x, y, z);
+    }
 
     void touchOff(int touchId, float note, float x, float y, float z)
     {
         static std::string topic = "mec/touchOff";
-        sendMsg(topic,touchId,note,x,y,z);
+        sendMsg(topic, touchId, note, x, y, z);
 
-    }    
+    }
 
     void control(int ctrlId, float v)
     {
         osc::OutboundPacketStream op( buffer_, OUTPUT_BUFFER_SIZE );
         op << osc::BeginBundleImmediate
            << osc::BeginMessage( "mec/control")
-           << ctrlId << v 
+           << ctrlId << v
            << osc::EndMessage
            << osc::EndBundle;
         transmitSocket_.Send( op.Data(), op.Size() );
     }
 
-    void sendMsg(std::string topic, int touchId, float note, float x, float y, float z) 
+    void sendMsg(std::string topic, int touchId, float note, float x, float y, float z)
     {
         osc::OutboundPacketStream op( buffer_, OUTPUT_BUFFER_SIZE );
         op << osc::BeginBundleImmediate
            << osc::BeginMessage( topic.c_str())
-           << touchId << note << x << y << z 
+           << touchId << note << x << y << z
            << osc::EndMessage
            << osc::EndBundle;
         transmitSocket_.Send( op.Data(), op.Size() );
-    }    
+    }
 
 private:
     MecPreferences prefs_;
@@ -93,16 +160,17 @@ class MecMidiCallback: public  IMecCallback
 {
 public:
     MecMidiCallback(MecPreferences& p)
-        :   prefs_(p), output_(p.getInt("voices", 15), (float) p.getDouble("pitchbend range", 48.0))
+        :   prefs_(p),
+            output_(p.getInt("voices", 15), (float) p.getDouble("pitchbend range", 48.0))
     {
         std::string device = prefs_.getString("device");
-		int virt = prefs_.getInt("virtual",0);
-        if (output_.create(device,virt>0)) {
+        int virt = prefs_.getInt("virtual", 0);
+        if (output_.create(device, virt > 0)) {
             LOG_1( "MecMidiCallback enabling for midi to " << device );
             LOG_1( "TODO (MecMidiCallback) :" );
             LOG_1( "- MPE init, including PB range" );
         }
-        if(!output_.isOpen()) {
+        if (!output_.isOpen()) {
             LOG_0( "MecMidiCallback not open, so invalid for" << device );
         }
     }
@@ -111,22 +179,22 @@ public:
 
     void touchOn(int touchId, float note, float x, float y, float z)
     {
-       output_.touchOn(touchId + NOTE_CH_OFFSET, note, x, y , z);
+        output_.touchOn(touchId + NOTE_CH_OFFSET, note, x, y , z);
     }
 
     void touchContinue(int touchId, float note, float x, float y, float z)
     {
-       output_.touchContinue(touchId + NOTE_CH_OFFSET, note, x, y , z);
-    }    
+        output_.touchContinue(touchId + NOTE_CH_OFFSET, note, x, y , z);
+    }
 
     void touchOff(int touchId, float note, float x, float y, float z)
     {
         output_.touchOff(touchId + NOTE_CH_OFFSET);
-    }    
+    }
 
     void control(int ctrlId, float v)
     {
-        output_.control(GLOBAL_CH, ctrlId,v);
+        output_.control(GLOBAL_CH, ctrlId, v);
     }
 private:
     MecPreferences prefs_;
@@ -137,50 +205,57 @@ private:
 void *mecapi_proc(void * arg)
 {
     LOG_0( "mecapi_proc start");
-
     MecPreferences prefs(arg);
-
     MecPreferences outprefs(prefs.getSubTree("outputs"));
-    bool midiEnabled = outprefs.exists("midi");
-    bool oscEnabled = outprefs.exists("osc");
 
+    std::unique_ptr<MecApi> mecApi;
+    mecApi.reset(new MecApi());
 
-    if (midiEnabled || oscEnabled) {
-        MecApi mecapi;
-        // currently either midi or osc
-        // need to add subscripton list to mec api
-        if (midiEnabled) {
-            MecPreferences midiprefs(outprefs.getSubTree("midi"));
-            MecMidiCallback *pCb = new MecMidiCallback(midiprefs);
-            if (pCb->isValid()) {
-                mecapi.subscribe(pCb);
-            } else {
-                delete pCb;
-            }
-        } else if (oscEnabled) {
-            MecPreferences oscprefs(outprefs.getSubTree("osc"));
-            MecOSCCallback *pCb = new MecOSCCallback(oscprefs);
-            if (pCb->isValid()) {
-                mecapi.subscribe(pCb);
-            } else {
-                delete pCb;
-            }
-        } 
-
-        mecapi.init();
-
-        pthread_mutex_lock(&waitMtx);
-        while (keepRunning)
-        {
-            mecapi.process();
-            struct timespec ts;
-            getWaitTime(ts, 1000);
-            pthread_cond_timedwait(&waitCond, &waitMtx, &ts);
+    if (outprefs.exists("midi")) {
+        MecPreferences cbprefs(outprefs.getSubTree("midi"));
+        MecMidiCallback *pCb = new MecMidiCallback(cbprefs);
+        if (pCb->isValid()) {
+            mecApi->subscribe(pCb);
+        } else {
+            delete pCb;
         }
-        pthread_mutex_unlock(&waitMtx);
     }
-    LOG_0( "mecapi_proc stop");
+    if (outprefs.exists("osc")) {
+        MecPreferences cbprefs(outprefs.getSubTree("osc"));
+        MecOSCCallback *pCb = new MecOSCCallback(cbprefs);
+        if (pCb->isValid()) {
+            mecApi->subscribe(pCb);
+        } else {
+            delete pCb;
+        }
+    }
+    if (outprefs.exists("console")) {
+        MecPreferences cbprefs(outprefs.getSubTree("console"));
+        MecConsoleCallback *pCb = new MecConsoleCallback(cbprefs);
+        if (pCb->isValid()) {
+            mecApi->subscribe(pCb);
+        } else {
+            delete pCb;
+        }
+    }
+
+    mecApi->init();
+
+    pthread_mutex_lock(&waitMtx);
+    while (keepRunning)
+    {
+        mecApi->process();
+        struct timespec ts;
+        getWaitTime(ts, 1000);
+        pthread_cond_timedwait(&waitCond, &waitMtx, &ts);
+    }
+    pthread_mutex_unlock(&waitMtx);
+
+    // delete the api, so that it can clean up
+    LOG_0( "mecapi_proc stopping");
+    mecApi.reset();
     sleep(1);
+    LOG_0( "mecapi_proc stopped");
     pthread_exit(NULL);
 }
 

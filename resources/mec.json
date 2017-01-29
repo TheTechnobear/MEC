@@ -17,6 +17,9 @@
                 "device" : "Axoloti Core",
                 "_device" : "IAC Driver Bus 1",
                 "_device" : "Axoloti Core 20:0"
+            },
+            "_console" : {
+                "throttle" : 0,
             }
         }
     },
@@ -77,6 +80,10 @@
         }
     },
 
-    "_midi"  :  {
+    "_midi" : {
+        "device" : "Axoloti Core",
+        "_device" : "IAC Driver Bus 1",
+        "mpe" : true,
+        "pitchbend range" : 48.0
     }
 }

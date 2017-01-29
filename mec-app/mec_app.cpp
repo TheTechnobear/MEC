@@ -103,17 +103,6 @@ int main(int ac, char **av) {
     //     usleep(1000);
     // }
 
-    if (prefs.exists("midi")) {
-        LOG_1("midi initialise ");
-        pthread_t midi_thread;
-        rc = pthread_create(&midi_thread, NULL, midi_proc, prefs.getSubTree("midi"));
-        if (rc) {
-            LOG_1("unabled to create midi thread" << rc );
-            exit(-1);
-        }
-        usleep(1000);
-    }
-
     // MEC api , handling soundplane and eigenharp, evenything will move here!
     if (prefs.exists("mec")) {
         LOG_1("mec api initialise ");

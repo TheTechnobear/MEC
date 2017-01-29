@@ -132,6 +132,7 @@ void MecApi_Impl::control(int ctrlId, float v) {
 
 #include "mec_eigenharp.h"
 #include "mec_soundplane.h"
+#include "mec_midi.h"
 
 void MecApi_Impl::initDevices() {
 
@@ -178,8 +179,21 @@ void MecApi_Impl::initDevices() {
     //     LOG_1("push2 initialise ");
     // }
 
-    // if (prefs_->exists("midi")) {
-    //     LOG_1("midi initialise ");
-    // }
+    if (prefs_->exists("midi")) {
+        LOG_1("midi initialise ");
+        std::shared_ptr<MecDevice> device;
+        device.reset(new MecMidi(*this));
+        if(device->init(prefs_->getSubTree("midi"))) {
+            if(device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("midi init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("midi init failed ");
+            device->deinit();
+        }
+    }
 }
 
