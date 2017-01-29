@@ -133,6 +133,7 @@ void MecApi_Impl::control(int ctrlId, float v) {
 #include "devices/mec_eigenharp.h"
 #include "devices/mec_soundplane.h"
 #include "devices/mec_midi.h"
+#include "devices/mec_push2.h"
 
 void MecApi_Impl::initDevices() {
 
@@ -175,10 +176,6 @@ void MecApi_Impl::initDevices() {
         }
     }
 
-    // if (prefs_->exists("push2")) {
-    //     LOG_1("push2 initialise ");
-    // }
-
     if (prefs_->exists("midi")) {
         LOG_1("midi initialise ");
         std::shared_ptr<MecDevice> device;
@@ -195,5 +192,24 @@ void MecApi_Impl::initDevices() {
             device->deinit();
         }
     }
+
+    if (prefs_->exists("push2")) {
+        LOG_1("push2 initialise ");
+        std::shared_ptr<MecDevice> device;
+        device.reset(new MecPush2(*this));
+        if(device->init(prefs_->getSubTree("push2"))) {
+            if(device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("push2 init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("push2 init failed ");
+            device->deinit();
+        }
+    }
+
+
 }
 

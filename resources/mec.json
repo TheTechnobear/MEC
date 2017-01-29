@@ -5,7 +5,7 @@
 
     "mec"  :  {
         "outputs" : {
-            "osc" : {
+            "_osc" : {
                 "host" : "127.0.0.1",
                 "port" : 9001
             },
@@ -15,16 +15,16 @@
                 "voices" : 15,
                 "pitchbend range" : 48.0,
                 "device" : "Axoloti Core",
-                "_device" : "IAC Driver Bus 1",
+                "_device" : "IAC Driver IAC Bus 1",
                 "_device" : "Axoloti Core 20:0"
             },
-            "_console" : {
-                "throttle" : 0,
+            "console" : {
+                "throttle" : 0
             }
         }
     },
 
-    "eigenharp" : {
+    "_eigenharp" : {
         "steal voices" : true,
         "voices" : 15,
         "velocity count" : 5,
@@ -72,17 +72,13 @@
     },
 
     "_push2"  :  {
-        "outputs" : {
-            "midi" : {
-                "device" : "Axoloti Core",
-                "_device" : "IAC Driver Bus 1"
-            }
-        }
+        "device" : "Ableton Push 2 Live Port",
+        "pitchbend range" : 2.0
     },
 
     "_midi" : {
         "device" : "Axoloti Core",
-        "_device" : "IAC Driver Bus 1",
+        "_device" : "IAC Driver IAC Bus 1",
         "mpe" : true,
         "pitchbend range" : 48.0
     }

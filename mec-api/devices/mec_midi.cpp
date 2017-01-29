@@ -1,7 +1,5 @@
 #include "mec_midi.h"
 
-#include <SoundplaneMECOutput.h>
-
 #include "../mec_log.h"
 #include "../mec_prefs.h"
 #include "../mec_voice.h"
@@ -192,7 +190,7 @@ bool MecMidi::midiCallback(double deltatime, std::vector< unsigned char > *messa
 
     case 0x80: {
         // note off
-        if (touch.active_ || !mpeMode_) {
+        if (mpeMode_) {
             // touch.note_ == data1 !!
             // touch.x_ = 0.0f;
             touch.y_ = 0.0f;

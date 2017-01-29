@@ -5,7 +5,6 @@ set(MEC_SRC
     mec_app.cpp
     osc_cmd.cpp
     mecapi_cmd.cpp
-    # push2_cmd.cpp
     midi_output.cpp
     midi_output.h
 )
