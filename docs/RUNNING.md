@@ -1,3 +1,11 @@
+##configuration
+the sample mec.json has many enries, most are not required
+I have simply included all entries, with thier default.
+
+json files are fairly simply but its worth using an editor with json syntax checking, the most common mistake is not including commas in lists, or including a comment for the last entry... very easy to do :)
+json does not allow commenting out of lines, so instead where I want to comment out and entry (e.g. to show some options) , I prefix it with an underscore... but you should remember it still a valid json line, so will need a comma at the end 
+
+
 #Running macOS
 
 copy resources and then adapt mec.json
@@ -10,7 +18,7 @@ copy resources and then adapt mec.json
 
 not available yet!
 
-#Running and installing on Linux
+#Running Linux
 
 copy resources and then adapt mec.json
 
@@ -20,7 +28,9 @@ copy resources and then adapt mec.json
 - Ubuntu 16.04 LTS
 - Ubuntu MATE 16.04 raspberry pi
 
-##setup distro for build
+
+
+##Setup for linux distro for build
 
     // upgrade distro
     sudo apt-get update
@@ -37,7 +47,8 @@ copy resources and then adapt mec.json
     sudo apt-get install libusb-1.0-0-dev libasound2-dev
 
 
-##config system
+##Config system
+note: this may vary with distros, this is for debian based distros
 
     vi /etc/security/limits.conf
 
@@ -46,8 +57,6 @@ copy resources and then adapt mec.json
 
     sudo adduser yourusername audio 
 
-    sudo cp ../eigenharp/resources/*.rules /etc/udev/rules.d/
-    sudo cp ../soundplanelite/resources/*.rules /etc/udev/rules.d/
-    sudo cp ../axoloti/resources/*.rules /etc/udev/rules.d/
+    sudo cp resources/*.rules /etc/udev/rules.d/
     sudo udevadm control --reload-rules
  
