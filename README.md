@@ -29,7 +29,8 @@ Building on this core a number of integation 'applications' are provided.
 
 ##Building and Running
 
-please see the various documents in the docs sub-folder
+see documents in the [docs sub-folder](/docs)
+
 
 ##Credits
 Id like to thank the following open source projects for helping make this possible:
