@@ -1,5 +1,4 @@
-##Overview
-**MEC - Micro Expression Controller**
+##MEC - Micro Expression Control
 
 The primary goal of this project is to provide a lightweight (micro) environment for expressive controllers. The software is light enough to be used on tiny microcomputers (like the raspberry PI), and yet integrate into different software environments.
 One of the inital motivations (that still exists) is to allow controllers like the Eigenharp/Soundplane to operate without the need for a computer.
