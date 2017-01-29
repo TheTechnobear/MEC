@@ -130,9 +130,9 @@ void MecApi_Impl::control(int ctrlId, float v) {
 
 /////////////////////////////////////////////////////////
 
-#include "mec_eigenharp.h"
-#include "mec_soundplane.h"
-#include "mec_midi.h"
+#include "devices/mec_eigenharp.h"
+#include "devices/mec_soundplane.h"
+#include "devices/mec_midi.h"
 
 void MecApi_Impl::initDevices() {
 

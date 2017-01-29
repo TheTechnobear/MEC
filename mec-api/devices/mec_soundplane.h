@@ -1,9 +1,9 @@
 #ifndef MecSoundplane_H 
 #define MecSoundplane_H
 
-#include "mec_api.h"
-#include "mec_device.h"
-#include "mec_msg_queue.h"
+#include "../mec_api.h"
+#include "../mec_device.h"
+#include "../mec_msg_queue.h"
 
 class SoundplaneModel;
 class MLAppState;

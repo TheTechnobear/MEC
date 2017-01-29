@@ -1,9 +1,9 @@
 #ifndef MecMidi_H 
 #define MecMidi_H
 
-#include "mec_api.h"
-#include "mec_device.h"
-#include "mec_msg_queue.h"
+#include "../mec_api.h"
+#include "../mec_device.h"
+#include "../mec_msg_queue.h"
 
 #include <RtMidi.h>
 

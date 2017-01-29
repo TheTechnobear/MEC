@@ -1,8 +1,8 @@
 #ifndef MecEigenharp_H 
 #define MecEigenharp_H
 
-#include "mec_api.h"
-#include "mec_device.h"
+#include "../mec_api.h"
+#include "../mec_device.h"
 
 #include <eigenfreed/eigenfreed.h>
 #include <memory>

@@ -10,20 +10,20 @@ set(MECAPI_SRC
     mec_api.cpp
     mec_api.h
     mec_device.h
-    mec_eigenharp.cpp
-    mec_eigenharp.h
     mec_log.h
-    mec_midi.cpp
-    mec_midi.h
     mec_msg_queue.cpp
     mec_msg_queue.h
     mec_prefs.cpp
     mec_prefs.h
-    mec_soundplane.cpp
-    mec_soundplane.h
     mec_surfacemapper.cpp
     mec_surfacemapper.h
     mec_voice.h
+    devices/mec_eigenharp.cpp
+    devices/mec_eigenharp.h
+    devices/mec_midi.cpp
+    devices/mec_midi.h
+    devices/mec_soundplane.cpp
+    devices/mec_soundplane.h
 )
 
 include_directories (
