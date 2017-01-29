@@ -34,7 +34,7 @@ TouchMsg* nextTouchMsg()
 } 
 
 
-class MecMaxCallback: public IMecCallback
+class MecMaxCallback: public MecCallback
 {
 public:
     MecMaxCallback()

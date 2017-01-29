@@ -5,10 +5,11 @@
 #include "../mec_device.h"
 #include "../mec_msg_queue.h"
 
-class SoundplaneModel;
-class MLAppState;
 
 #include <memory>
+#include <thread>
+
+class UdpListeningReceiveSocket;
 
 class MecOscT3D : public MecDevice {
 
@@ -20,10 +21,16 @@ public:
     virtual void deinit();
     virtual bool isActive();
 
+    void listenProc();
+
 private:
 	IMecCallback& callback_;
     bool active_;
     MecMsgQueue queue_;
+    std::unique_ptr<UdpListeningReceiveSocket> socket_;
+    std::thread listenThread_;
+
+    unsigned int port_;
 };
 
 #endif // MecOscT3D_H

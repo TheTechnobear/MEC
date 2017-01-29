@@ -44,7 +44,7 @@ void getWaitTime(struct timespec& ts, int t) {
 #endif
 
 
-volatile int keepRunning = 1;
+volatile bool keepRunning = true;
 
 void exitHandler() {
     LOG_0("mec_app exit handler called" );
@@ -76,34 +76,10 @@ int main(int ac, char **av) {
 
     LOG_0("mec_app initialise ");
 
-
     MecPreferences prefs;
     if (!prefs.valid()) return -1;
+    keepRunning = true;
 
-
-    if (prefs.exists("osc")) {
-        LOG_1("osc initialise " );
-        pthread_t command_thread;
-        rc = pthread_create(&command_thread, NULL, osc_command_proc, prefs.getSubTree("osc"));
-        if (rc) {
-            LOG_1("unabled to create osc thread" << rc );
-            exit(-1);
-        }
-        usleep(1000);
-    }
-
-    // if (prefs.exists("push2")) {
-    //     LOG_1("push2 initialise ");
-    //     pthread_t push2_thread;
-    //     rc = pthread_create(&push2_thread, NULL, push2_proc, prefs.getSubTree("push2"));
-    //     if (rc) {
-    //         LOG_1("unabled to create push2 thread" << rc );
-    //         exit(-1);
-    //     }
-    //     usleep(1000);
-    // }
-
-    // MEC api , handling soundplane and eigenharp, evenything will move here!
     if (prefs.exists("mec")) {
         LOG_1("mec api initialise ");
         pthread_t mec_thread;
@@ -114,7 +90,6 @@ int main(int ac, char **av) {
         }
         usleep(1000);
     }
-
 
     // Install the signal handler for SIGINT.
     struct sigaction s;

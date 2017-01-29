@@ -13,6 +13,6 @@ void getWaitTime(struct timespec& ts, int t);
 
 extern pthread_cond_t  waitCond;
 extern pthread_mutex_t waitMtx;
-extern volatile int keepRunning;
+extern volatile bool keepRunning;
 
 #endif

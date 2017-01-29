@@ -20,9 +20,27 @@
 #define PB_RANGE 2.0f
 #define MPE_PB_RANGE 48.0f
 
+class MecCmdCallback : public IMecCallback 
+{
+public:
+    virtual void mec_control(int cmd, void* other) 
+    {
+        switch(cmd) {
+            case IMecCallback::SHUTDOWN: {
+                LOG_0( "mec requesting shutdown");
+                keepRunning = 0;
+                pthread_cond_broadcast(&waitCond);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+};
 
 
-class MecConsoleCallback: public  IMecCallback
+class MecConsoleCallback: public  MecCmdCallback
 {
 public:
     MecConsoleCallback(MecPreferences& p)
@@ -82,12 +100,12 @@ public:
 
 private:
     MecPreferences prefs_;
-    bool valid_;
     unsigned int throttle_;
+    bool valid_;
 };
 
 
-class MecOSCCallback: public  IMecCallback
+class MecOSCCallback: public  MecCmdCallback
 {
 public:
     MecOSCCallback(MecPreferences& p)
@@ -156,7 +174,7 @@ private:
 #define STRIP_BASE_CC 0
 #define PEDAL_BASE_CC 11
 
-class MecMidiCallback: public  IMecCallback
+class MecMidiCallback: public  MecCmdCallback
 {
 public:
     MecMidiCallback(MecPreferences& p)

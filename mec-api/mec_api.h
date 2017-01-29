@@ -7,11 +7,16 @@ class MecApi_Impl;
 
 class IMecCallback {
 public:
+    enum MecControl {
+        SHUTDOWN
+    };
+    
     virtual ~IMecCallback() {};
     virtual void touchOn(int touchId, float note, float x, float y, float z) = 0;
     virtual void touchContinue(int touchId, float note, float x, float y, float z) = 0;
     virtual void touchOff(int touchId, float note, float x, float y, float z) = 0;
     virtual void control(int ctrlId, float v) = 0;
+    virtual void mec_control(int cmd, void* other) = 0;
 };
 
 class MecCallback : public IMecCallback {
@@ -21,6 +26,7 @@ public:
     virtual void touchContinue(int touchId, float note, float x, float y, float z){};
     virtual void touchOff(int touchId, float note, float x, float y, float z) {};
     virtual void control(int ctrlId, float v) {};
+    virtual void mec_control(int cmd, void* other) {};
 };
 
 

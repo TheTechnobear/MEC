@@ -3,7 +3,7 @@ project(mec-app)
 set(MEC_SRC 
     mec_app.h
     mec_app.cpp
-    osc_cmd.cpp
+    # osc_cmd.cpp
     mecapi_cmd.cpp
     midi_output.cpp
     midi_output.h

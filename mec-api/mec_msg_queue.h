@@ -9,8 +9,13 @@ struct MecMsg {
         TOUCH_CONTINUE,
         TOUCH_OFF,
         CONTROL,
-
+        MEC_CONTROL
     } type_;
+
+    enum mec_cmd {
+        SHUTDOWN,
+        PING
+    };
 
     union {
         struct {
@@ -21,6 +26,9 @@ struct MecMsg {
             int     controlId_;
             float   value_;
         } control_;
+        struct {
+            mec_cmd cmd_;
+        } mec_control_;
     } data_;
 };
 

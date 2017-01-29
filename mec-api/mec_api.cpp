@@ -26,6 +26,7 @@ public:
     virtual void touchContinue(int touchId, float note, float x, float y, float z);
     virtual void touchOff(int touchId, float note, float x, float y, float z);
     virtual void control(int ctrlId, float v);
+    virtual void mec_control(int cmd, void* other);
 
 private:
     void initDevices();
@@ -127,6 +128,12 @@ void MecApi_Impl::control(int ctrlId, float v) {
     }
 }
 
+void MecApi_Impl::mec_control(int cmd, void* other) {
+    for (std::vector<IMecCallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
+        (*it)->mec_control(cmd,other);
+    }
+}
+
 
 /////////////////////////////////////////////////////////
 
@@ -134,6 +141,7 @@ void MecApi_Impl::control(int ctrlId, float v) {
 #include "devices/mec_soundplane.h"
 #include "devices/mec_midi.h"
 #include "devices/mec_push2.h"
+#include "devices/mec_osct3d.h"
 
 void MecApi_Impl::initDevices() {
 
@@ -206,6 +214,23 @@ void MecApi_Impl::initDevices() {
             }
         } else {
             LOG_1("push2 init failed ");
+            device->deinit();
+        }
+    }
+
+    if (prefs_->exists("osct3d")) {
+        LOG_1("osct3d initialise ");
+        std::shared_ptr<MecDevice> device;
+        device.reset(new MecOscT3D(*this));
+        if(device->init(prefs_->getSubTree("osct3d"))) {
+            if(device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("osct3d init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("osct3d init failed ");
             device->deinit();
         }
     }

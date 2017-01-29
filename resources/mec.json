@@ -1,8 +1,4 @@
 {
-    "osc"  :  {
-    },
-
-
     "mec"  :  {
         "outputs" : {
             "_osc" : {
@@ -23,6 +19,18 @@
             }
         }
     },
+
+    "_midi" : {
+        "device" : "Axoloti Core",
+        "_device" : "IAC Driver IAC Bus 1",
+        "mpe" : true,
+        "pitchbend range" : 48.0
+    },
+
+    "osct3d"  :  {
+        "port" :  9000
+    },
+
 
     "_eigenharp" : {
         "steal voices" : true,
@@ -74,12 +82,5 @@
     "_push2"  :  {
         "device" : "Ableton Push 2 Live Port",
         "pitchbend range" : 2.0
-    },
-
-    "_midi" : {
-        "device" : "Axoloti Core",
-        "_device" : "IAC Driver IAC Bus 1",
-        "mpe" : true,
-        "pitchbend range" : 48.0
     }
 }

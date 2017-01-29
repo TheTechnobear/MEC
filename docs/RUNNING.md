@@ -6,6 +6,13 @@ json files are fairly simply but its worth using an editor with json syntax chec
 json does not allow commenting out of lines, so instead where I want to comment out and entry (e.g. to show some options) , I prefix it with an underscore... but you should remember it still a valid json line, so will need a comma at the end 
 
 
+#other useful tools
+macos - homebrew :)
+
+    brew install liblo 
+
+provides oscdump and oscsend
+
 #Running macOS
 
 copy resources and then adapt mec.json

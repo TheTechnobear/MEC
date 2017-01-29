@@ -59,6 +59,6 @@ Mac OSX 10.11+ - Stopping apps
 be careful when stopping under Mac OS post 10.11 , abrutly stopping usb drivers will cause kernel panic, due to a bug in macOS
 for mec use osc to terminate EVEN inside Xcode!
 
-    oscsend localhost 9000 /tb/mec/command s stop
+    oscsend localhost 9000 /t3d/command s shutdown
 
 (there is also a Ctrl-C handler which will shutdown nicely)
