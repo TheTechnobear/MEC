@@ -11,9 +11,7 @@
 
 ////////////////////////////////////////////////
 // TODO
-// 1. callback should be on the same thread as process is called on
-// 2. voices not needed? as soundplane already does touch alloction, just need to detemine on and off
-
+// 1. voices not needed? as soundplane already does touch alloction, just need to detemine on and off
 ////////////////////////////////////////////////
 class MecSoundplaneHandler: public  SoundplaneMECCallback
 {

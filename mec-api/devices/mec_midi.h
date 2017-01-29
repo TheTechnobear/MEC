@@ -23,6 +23,14 @@ public:
     virtual bool midiCallback(double deltatime, std::vector< unsigned char > *message);
 
 private:
+
+    bool active_;
+
+	IMecCallback& callback_;
+    std::unique_ptr<RtMidiIn> midiDevice_; 
+
+    MecMsgQueue queue_;
+
     struct VoiceData {
             float startNote_;
             float note_;
@@ -31,14 +39,8 @@ private:
             float z_;
             bool  active_;
     };
-
-
-    bool active_;
-	IMecCallback& callback_;
-    std::unique_ptr<RtMidiIn> midiDevice_; 
-    MecMsgQueue queue_;
-
     VoiceData   touches_[16];
+
     float       pitchbendRange_;
     bool        mpeMode_;
 };

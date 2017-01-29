@@ -22,6 +22,8 @@ set(MECAPI_SRC
     devices/mec_eigenharp.h
     devices/mec_midi.cpp
     devices/mec_midi.h
+    # devices/mec_osct3d.cpp
+    # devices/mec_osct3d.h
     devices/mec_push2.cpp
     devices/mec_push2.h
     devices/mec_soundplane.cpp
