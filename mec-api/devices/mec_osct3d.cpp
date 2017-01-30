@@ -171,51 +171,7 @@ bool OscT3D::init(void* arg) {
 }
 
 bool OscT3D::process() {
-    MecMsg msg;
-    while (queue_.nextMsg(msg)) {
-        switch (msg.type_) {
-        case MecMsg::TOUCH_ON:
-            callback_.touchOn(
-                msg.data_.touch_.touchId_,
-                msg.data_.touch_.note_,
-                msg.data_.touch_.x_,
-                msg.data_.touch_.y_,
-                msg.data_.touch_.z_);
-            break;
-        case MecMsg::TOUCH_CONTINUE:
-            callback_.touchContinue(
-                msg.data_.touch_.touchId_,
-                msg.data_.touch_.note_,
-                msg.data_.touch_.x_,
-                msg.data_.touch_.y_,
-                msg.data_.touch_.z_);
-            break;
-        case MecMsg::TOUCH_OFF:
-            callback_.touchOff(
-                msg.data_.touch_.touchId_,
-                msg.data_.touch_.note_,
-                msg.data_.touch_.x_,
-                msg.data_.touch_.y_,
-                msg.data_.touch_.z_);
-            break;
-        case MecMsg::CONTROL :
-            callback_.control(
-                msg.data_.control_.controlId_,
-                msg.data_.control_.value_);
-            break;
-        case MecMsg::MEC_CONTROL :
-            if(msg.data_.mec_control_.cmd_==MecMsg::SHUTDOWN) {
-                LOG_1( "OSC posting shutdown request");
-                callback_.mec_control(
-                    ICallback::SHUTDOWN,
-                    nullptr);
-            }
-            break;
-        default:
-            LOG_0("OscT3D::process unhandled message type");
-        }
-    }
-    return true;
+    return queue_.process(callback_);
 }
 
 void OscT3D::deinit() {

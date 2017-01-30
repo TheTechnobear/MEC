@@ -69,43 +69,7 @@ bool MidiDevice::init(void* arg) {
 }
 
 bool MidiDevice::process() {
-    MecMsg msg;
-    while (queue_.nextMsg(msg)) {
-        switch (msg.type_) {
-        case MecMsg::TOUCH_ON:
-            callback_.touchOn(
-                msg.data_.touch_.touchId_,
-                msg.data_.touch_.note_,
-                msg.data_.touch_.x_,
-                msg.data_.touch_.y_,
-                msg.data_.touch_.z_);
-            break;
-        case MecMsg::TOUCH_CONTINUE:
-            callback_.touchContinue(
-                msg.data_.touch_.touchId_,
-                msg.data_.touch_.note_,
-                msg.data_.touch_.x_,
-                msg.data_.touch_.y_,
-                msg.data_.touch_.z_);
-            break;
-        case MecMsg::TOUCH_OFF:
-            callback_.touchOff(
-                msg.data_.touch_.touchId_,
-                msg.data_.touch_.note_,
-                msg.data_.touch_.x_,
-                msg.data_.touch_.y_,
-                msg.data_.touch_.z_);
-            break;
-        case MecMsg::CONTROL :
-            callback_.control(
-                msg.data_.control_.controlId_,
-                msg.data_.control_.value_);
-            break;
-        default:
-            LOG_0("MidiDevice::process unhandled message type");
-        }
-    }
-    return true;
+    return queue_.process(callback_);
 }
 
 void MidiDevice::deinit() {

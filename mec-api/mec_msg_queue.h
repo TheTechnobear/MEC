@@ -5,6 +5,8 @@
 
 namespace mec {
 
+class ICallback;
+
 struct MecMsg {
     enum type {
         TOUCH_ON,
@@ -46,6 +48,7 @@ public:
     bool isFull();
     int  available();
     int  pending();
+    bool process(ICallback&);
 
 private:
     std::unique_ptr<MsgQueue_impl> impl_;

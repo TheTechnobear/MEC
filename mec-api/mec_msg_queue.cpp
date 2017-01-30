@@ -1,8 +1,7 @@
 #include "mec_msg_queue.h"
 
+#include "mec_api.h"
 #include "mec_log.h"
-
-
 
 namespace mec {
 
@@ -113,5 +112,53 @@ int MsgQueue_impl::pending() {
 
     return writePtr_ + RING_BUFFER_SIZE - readPtr_;
 }
+
+bool  MsgQueue::process(ICallback& c) {
+    MecMsg msg;
+    while (nextMsg(msg)) {
+        switch (msg.type_) {
+        case MecMsg::TOUCH_ON:
+            c.touchOn(
+                msg.data_.touch_.touchId_,
+                msg.data_.touch_.note_,
+                msg.data_.touch_.x_,
+                msg.data_.touch_.y_,
+                msg.data_.touch_.z_);
+            break;
+        case MecMsg::TOUCH_CONTINUE:
+            c.touchContinue(
+                msg.data_.touch_.touchId_,
+                msg.data_.touch_.note_,
+                msg.data_.touch_.x_,
+                msg.data_.touch_.y_,
+                msg.data_.touch_.z_);
+            break;
+        case MecMsg::TOUCH_OFF:
+            c.touchOff(
+                msg.data_.touch_.touchId_,
+                msg.data_.touch_.note_,
+                msg.data_.touch_.x_,
+                msg.data_.touch_.y_,
+                msg.data_.touch_.z_);
+            break;
+        case MecMsg::CONTROL :
+            c.control(
+                msg.data_.control_.controlId_,
+                msg.data_.control_.value_);
+            break;
+
+        case MecMsg::MEC_CONTROL :
+            if(msg.data_.mec_control_.cmd_==MecMsg::SHUTDOWN) {
+                LOG_1( "posting shutdown request");
+                c.mec_control(ICallback::SHUTDOWN,nullptr);
+            }
+        default:
+            LOG_0("MsgQueue::process unhandled message type");
+        }
+    }
+    return true;
+}
+
+
 
 }
