@@ -1,4 +1,4 @@
-#include "mec_midi.h"
+#include "mec_mididevice.h"
 
 #include "../mec_log.h"
 #include "../mec_prefs.h"

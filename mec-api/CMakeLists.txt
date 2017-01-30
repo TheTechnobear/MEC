@@ -20,8 +20,8 @@ set(MECAPI_SRC
     mec_voice.h
     devices/mec_eigenharp.cpp
     devices/mec_eigenharp.h
-    devices/mec_midi.cpp
-    devices/mec_midi.h
+    devices/mec_mididevice.cpp
+    devices/mec_mididevice.h
     devices/mec_osct3d.cpp
     devices/mec_osct3d.h
     devices/mec_push2.cpp

@@ -8,7 +8,7 @@
 
 #include "devices/mec_eigenharp.h"
 #include "devices/mec_soundplane.h"
-#include "devices/mec_midi.h"
+#include "devices/mec_mididevice.h"
 #include "devices/mec_push2.h"
 #include "devices/mec_osct3d.h"
 
