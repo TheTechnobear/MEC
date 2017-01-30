@@ -32,6 +32,7 @@ public:
         for(int i=0;i<sizeof(activeTouches_);i++) {
             activeTouches_[i] = false;
         }
+        stealVoices_ = false;
     }
 
     bool isValid() { return valid_;}
@@ -60,27 +61,7 @@ public:
                 int tId=std::stoi(touch);
                 float x=0.0f,y=0.0f,z=0.0f,note=0.0f;
                 args >> x >> y >> z >> note >>  osc::EndMessage;
-
-                MecMsg msg;
-                msg.data_.touch_.touchId_ = tId;
-                msg.data_.touch_.note_ = note;
-                msg.data_.touch_.x_ = x;
-                msg.data_.touch_.y_ = y;
-                msg.data_.touch_.z_ = z;
-
-                if(note == 0.0f) { // noteoff 
-                    msg.type_ = MecMsg::TOUCH_OFF;
-                    activeTouches_[tId] = false;
-                } else {
-                    if(!activeTouches_[tId]) {
-                        msg.type_ = MecMsg::TOUCH_ON;
-                        activeTouches_[tId] = true;
-                    } else {
-                        msg.type_ = MecMsg::TOUCH_CONTINUE;
-                    }
-                }
-
-                queue_.addToQueue(msg);
+                queue_touch(tId,note,x,(y * 2.0f) - 1.0f,z);
             }
             else if ( addr == A_FRM) {
                 osc::int32 d1, d2;
@@ -106,6 +87,80 @@ public:
         }
     }
 
+    virtual void queue_touch(int tId, float mn, float mx, float my, float mz)
+    {
+        Voices::Voice* voice = voices_.voiceId(tId);
+        if (mz>0.0)
+        {
+            if (!voice) {
+                voice = voices_.startVoice(tId);
+                // LOG_1("start voice for " << tId << " ch " << voice->i_);
+
+                if(!voice && stealVoices_) {
+                    // no available voices, steal?
+                    Voices::Voice* stolen = voices_.oldestActiveVoice();
+                    MecMsg msg;
+                    msg.data_.touch_.touchId_ = stolen->i_;
+                    msg.data_.touch_.note_ = stolen->note_;
+                    msg.data_.touch_.x_ = stolen->x_;
+                    msg.data_.touch_.y_ = stolen->y_;
+                    msg.data_.touch_.z_ = 0.0f;
+                    msg.type_ = MecMsg::TOUCH_OFF;
+                    queue_.addToQueue(msg);
+                    voices_.stopVoice(voice);
+                    voice = voices_.startVoice(tId);
+                }
+                if(voice) voices_.addPressure(voice, mz);
+            }
+            else {
+                if (voice->state_ == Voices::Voice::PENDING) {
+                    // LOG_1("pressure voice for " << tId << " ch " << voice->i_ << " mz " << mz);
+                    voices_.addPressure(voice, mz);
+                    if (voice->state_ == Voices::Voice::ACTIVE) {
+                        MecMsg msg;
+                        msg.data_.touch_.touchId_ = voice->i_;
+                        msg.data_.touch_.note_ = mn;
+                        msg.data_.touch_.x_ = mx;
+                        msg.data_.touch_.y_ = my;
+                        msg.data_.touch_.z_ = voice->v_;
+                        msg.type_ = MecMsg::TOUCH_ON;
+                        queue_.addToQueue(msg);
+                    }
+                    // dont send to callbacks until we have the minimum pressures for velocity
+                }
+                else {
+                    MecMsg msg;
+                    msg.data_.touch_.touchId_ = voice->i_;
+                    msg.data_.touch_.note_ = mn;
+                    msg.data_.touch_.x_ = mx;
+                    msg.data_.touch_.y_ = my;
+                    msg.data_.touch_.z_ = mz;
+                    msg.type_ = MecMsg::TOUCH_CONTINUE;
+                    queue_.addToQueue(msg);
+                }
+            }
+            voice->note_ = mn;
+            voice->x_ = mx;
+            voice->y_ = my;
+            voice->z_ = mz;
+            voice->t_ = 0;
+        }
+        else
+        {
+            if (voice) {
+                // LOG_1("stop voice for " << tId << " ch " << voice->i_);
+                MecMsg msg;
+                msg.data_.touch_.touchId_ = voice->i_;
+                msg.data_.touch_.note_ = mn;
+                msg.data_.touch_.x_ = mx;
+                msg.data_.touch_.y_ = my;
+                msg.data_.touch_.z_ = mz;
+                msg.type_ = MecMsg::TOUCH_OFF;
+                queue_.addToQueue(msg);
+                voices_.stopVoice(voice);
+            }
+        }
+    }
 private:
     inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
     float   note(float n) { return n; }
@@ -113,8 +168,11 @@ private:
     Preferences prefs_;
     MsgQueue& queue_;
     bool valid_;
-    bool   activeTouches_[16];
+    bool activeTouches_[16];
     UdpListeningReceiveSocket* socket_;
+    bool stealVoices_;
+    Voices voices_;
+
 };
 
 

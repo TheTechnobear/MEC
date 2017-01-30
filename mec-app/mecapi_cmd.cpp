@@ -12,6 +12,7 @@
 
 #include <mec_api.h>
 #include <mec_prefs.h>
+#include <processors/mec_midiprocessor.h>
 
 #define OUTPUT_BUFFER_SIZE 1024
 
@@ -38,7 +39,6 @@ public:
         }
     }
 };
-
 
 class MecConsoleCallback: public  MecCmdCallback
 {
@@ -105,6 +105,8 @@ private:
 };
 
 
+
+// this is basically T3D, but doesnt have the framemessages (/t3d/frm)
 class MecOSCCallback: public  MecCmdCallback
 {
 public:
@@ -122,19 +124,19 @@ public:
 
     void touchOn(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "mec/touchOn";
+        static std::string topic = "/t3d/tch" + std::to_string(touchId);
         sendMsg(topic, touchId, note, x, y, z);
     }
 
     void touchContinue(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "mec/touchContinue";
+        static std::string topic = "/t3d/tch" + std::to_string(touchId);
         sendMsg(topic, touchId, note, x, y, z);
     }
 
     void touchOff(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "mec/touchOff";
+        static std::string topic = "/t3d/tch" + std::to_string(touchId);
         sendMsg(topic, touchId, note, x, y, z);
 
     }
@@ -143,7 +145,7 @@ public:
     {
         osc::OutboundPacketStream op( buffer_, OUTPUT_BUFFER_SIZE );
         op << osc::BeginBundleImmediate
-           << osc::BeginMessage( "mec/control")
+           << osc::BeginMessage( "/t3d/control")
            << ctrlId << v
            << osc::EndMessage
            << osc::EndBundle;
@@ -155,7 +157,7 @@ public:
         osc::OutboundPacketStream op( buffer_, OUTPUT_BUFFER_SIZE );
         op << osc::BeginBundleImmediate
            << osc::BeginMessage( topic.c_str())
-           << touchId << note << x << y << z
+           << touchId << x << y << z << note
            << osc::EndMessage
            << osc::EndBundle;
         transmitSocket_.Send( op.Data(), op.Size() );
@@ -168,51 +170,37 @@ private:
     bool valid_;
 };
 
-#define GLOBAL_CH 0
-#define NOTE_CH_OFFSET 1
-#define BREATH_CC 2
-#define STRIP_BASE_CC 0
-#define PEDAL_BASE_CC 11
 
-class MecMidiCallback: public  MecCmdCallback
-{
+
+class MecMidiProcessor : public mec::MidiProcessor {
 public:
-    MecMidiCallback(mec::Preferences& p)
-        :   prefs_(p),
-            output_(p.getInt("voices", 15), (float) p.getDouble("pitchbend range", 48.0))
+    MecMidiProcessor(mec::Preferences& p) :   prefs_(p)
     {
+        // p.getInt("voices", 15);
+        setPitchbendRange(p.getDouble("pitchbend range", 48.0));
         std::string device = prefs_.getString("device");
         int virt = prefs_.getInt("virtual", 0);
         if (output_.create(device, virt > 0)) {
-            LOG_1( "MecMidiCallback enabling for midi to " << device );
-            LOG_1( "TODO (MecMidiCallback) :" );
+            LOG_1( "MecMidiProcessor enabling for midi to " << device );
+            LOG_1( "TODO (MecMidiProcessor) :" );
             LOG_1( "- MPE init, including PB range" );
         }
         if (!output_.isOpen()) {
-            LOG_0( "MecMidiCallback not open, so invalid for" << device );
+            LOG_0( "MecMidiProcessor not open, so invalid for" << device );
         }
     }
 
     bool isValid() { return output_.isOpen();}
 
-    void touchOn(int touchId, float note, float x, float y, float z)
-    {
-        output_.touchOn(touchId + NOTE_CH_OFFSET, note, x, y , z);
-    }
+    void  process(mec::MidiProcessor::MidiMsg& m) {
+        if(output_.isOpen()) {
+            std::vector<unsigned char> msg;
 
-    void touchContinue(int touchId, float note, float x, float y, float z)
-    {
-        output_.touchContinue(touchId + NOTE_CH_OFFSET, note, x, y , z);
-    }
-
-    void touchOff(int touchId, float note, float x, float y, float z)
-    {
-        output_.touchOff(touchId + NOTE_CH_OFFSET);
-    }
-
-    void control(int ctrlId, float v)
-    {
-        output_.control(GLOBAL_CH, ctrlId, v);
+            for(int i=0;i<m.size;i++) {
+                msg.push_back(m.data[i]);
+            }
+            output_.sendMsg( msg );
+        }
     }
 private:
     mec::Preferences prefs_;
@@ -242,7 +230,7 @@ void *mecapi_proc(void * arg)
 
     if (outprefs.exists("midi")) {
         mec::Preferences cbprefs(outprefs.getSubTree("midi"));
-        MecMidiCallback *pCb = new MecMidiCallback(cbprefs);
+        MecMidiProcessor *pCb = new MecMidiProcessor(cbprefs);
         if (pCb->isValid()) {
             mecApi->subscribe(pCb);
         } else {

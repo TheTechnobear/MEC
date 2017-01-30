@@ -2,6 +2,7 @@
 #include <Midi.h>
 
 #include <mec_api.h>
+#include <processors/mec_midiprocessor.h>
 
 Midi 			gMidi;
 mec::MecApi* 		gMecApi=NULL;
@@ -10,6 +11,8 @@ const char* 	gMidiPort0 = "hw:1,0,0";
 
 
 AuxiliaryTask gMecProcessTask;
+
+/*
 
 struct MidiVoiceData {
 	unsigned startNote_;
@@ -21,9 +24,6 @@ struct MidiVoiceData {
 	int changeMask_;
 };
 MidiVoiceData gMidiVoices[16];
-
-//TODO
-// 5. eigenharp improve velocity
 
 class BelaMidiMecCallback : public mec::Callback {
 public:
@@ -114,6 +114,29 @@ public:
 private:
     float pitchbendRange_;
 };
+*/
+
+// this replaces the above, and can all be removed after testing
+class MecMidiProcessor : public mec::MidiProcessor {
+public:
+    MecMidiProcessor() {
+         // p.getInt("voices", 15);
+        setPitchbendRange(48.0);
+    }   
+
+    bool isValid() { return output_.isOpen();}
+
+    void  process(mec::MidiProcessor::MidiMsg& m) {
+        if(output_.isOpen()) {
+            midi_byte_t msg[4];
+            msg_[0] = m.data[0];
+            msg_[1] = m.data[1];
+            msg_[2] = m.data[2];
+            msg_[3] = m.data[3];
+            gMidi.writeOutput(msg,m.size);
+        }
+    }
+};
 
 void mecProcess(void* pvMec) {
 	MecApi *pMecApi = (MecApi*) pvMec;
@@ -126,7 +149,7 @@ bool setup(BelaContext *context, void *userData)
 	gMidi.writeTo(gMidiPort0);
 
 	gMecApi=new mec::MecApi();
-	gMecCallback=new BelaMidiMecCallback();
+	gMecCallback=new MecMidiProcessor();
 	gMecApi->init();
 	gMecApi->subscribe(gMecCallback);
 	

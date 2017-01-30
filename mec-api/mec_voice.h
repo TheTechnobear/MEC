@@ -9,14 +9,14 @@ namespace mec {
 
 class Voices {
 public:
-    Voices(unsigned voiceCount = 15, unsigned velocityCount = 5) 
-     : maxVoices_(voiceCount), velocityCount_(velocityCount){
+    Voices(unsigned voiceCount = 15, unsigned velocityCount = 5)
+        : maxVoices_(voiceCount), velocityCount_(velocityCount) {
         voices_.resize(maxVoices_);
         for (int i = 0; i < maxVoices_; i++) {
-            voices_[i].i_=i;
+            voices_[i].i_ = i;
             voices_[i].state_ = Voice::INACTIVE;
             voices_[i].id_ = -1;
-			freeVoices_.push_back(&voices_[i]);
+            freeVoices_.push_back(&voices_[i]);
         }
 
     };
@@ -41,8 +41,9 @@ public:
         //velocity, taken from velocity detector
         struct {
             unsigned vcount_;
-            float sumx_,sumy_,sumxy_,sumxsq_,x_;
-            float scale_,curve_; // comes from config
+            float sumx_, sumy_, sumxy_, sumxsq_, x_;
+            float scale_, curve_; // comes from config
+            float raw_;
         } vel_;
     };
 
@@ -56,30 +57,30 @@ public:
 
     Voice*    startVoice(unsigned id) {
         Voice* voice;
-        if(freeVoices_.size() > 0) {
-           voice = freeVoices_.back();
-           freeVoices_.pop_back();
-        } else { 
+        if (freeVoices_.size() > 0) {
+            voice = freeVoices_.back();
+            freeVoices_.pop_back();
+        } else {
             // all voices used, use oldestActiveVoice
             // if you wish to steal it
             return NULL;
         }
         voice->id_ = id;
         voice->state_ = Voice::PENDING;
-        voice->v_=0;
+        voice->v_ = 0;
 
         voice->vel_.scale_ = 1.0f;
-        voice->vel_.curve_ = 0.0f;
-        voice->vel_.vcount_=0;
-        voice->vel_.sumx_=voice->vel_.sumy_=voice->vel_.sumxy_=voice->vel_.sumxsq_=0.0;
-        voice->vel_.x_=0.0;
+        voice->vel_.curve_ = 1.0f;
+        voice->vel_.vcount_ = 0;
+        voice->vel_.sumx_ = voice->vel_.sumy_ = voice->vel_.sumxy_ = voice->vel_.sumxsq_ = 0.0;
+        voice->vel_.x_ = 0.0;
 
-        voice->vel_.sumx_+=voice->vel_.x_;
-        voice->vel_.sumxsq_+=voice->vel_.x_*voice->vel_.x_;
+        voice->vel_.sumx_ += voice->vel_.x_;
+        voice->vel_.sumxsq_ += voice->vel_.x_ * voice->vel_.x_;
         voice->vel_.x_++;
 
-        voice->vel_.sumx_+=voice->vel_.x_;
-        voice->vel_.sumxsq_+=voice->vel_.x_*voice->vel_.x_;
+        voice->vel_.sumx_ += voice->vel_.x_;
+        voice->vel_.sumxsq_ += voice->vel_.x_ * voice->vel_.x_;
         voice->vel_.x_++;
 
 
@@ -88,10 +89,10 @@ public:
     }
 
     void   addPressure(Voice* voice, float p) {
-        if(voice->state_ == Voice::PENDING) {
+        if (voice->state_ == Voice::PENDING) {
 
 
-            if(voice->vel_.vcount_< velocityCount_)
+            if (voice->vel_.vcount_ < velocityCount_)
             {
                 voice->vel_.sumx_   += voice->vel_.x_;
                 voice->vel_.sumy_   += p;
@@ -103,10 +104,10 @@ public:
             }
 
             voice->state_ = Voice::ACTIVE;
-            double vel_raw = voice->vel_.scale_*
-                (voice->vel_.x_*voice->vel_.sumxy_ - (voice->vel_.sumx_*voice->vel_.sumy_))
-                / (voice->vel_.x_*voice->vel_.sumxsq_ - (voice->vel_.sumx_*voice->vel_.sumx_));
-            voice->v_  = 1 - pow ( (double) (1-vel_raw),(double)(voice->vel_.curve_));
+            voice->vel_.raw_ = voice->vel_.scale_ *
+                               (voice->vel_.x_ * voice->vel_.sumxy_ - (voice->vel_.sumx_ * voice->vel_.sumy_))
+                               / (voice->vel_.x_ * voice->vel_.sumxsq_ - (voice->vel_.sumx_ * voice->vel_.sumx_));
+            voice->v_  = 1 - pow ( (double) (1 - voice->vel_.raw_), (double)(voice->vel_.curve_));
         }
     }
 

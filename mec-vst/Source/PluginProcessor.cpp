@@ -11,6 +11,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#include <processors/mec_midiprocessor.h>
+
 
 //==============================================================================
 MecAudioProcessor::MecAudioProcessor()
@@ -110,53 +112,24 @@ void MecAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // initialisation that you need..
     sampleRate_ = sampleRate;
     samplesPerBlock_ = samplesPerBlock;
-    struct PluginMecCallback : public mec::Callback {
-        const int MPE_GLOBAL_CH = 1;
-        const int MPE_NOTE_OFFSET = 2;
+    struct MecMidiProcessor : public mec::MidiProcessor {
         const float PBR = 48.0f;
-        const int CC_TIMBRE=74;
-        PluginMecCallback(MidiBuffer& midiBuf) : mecMidiQueue_(midiBuf) {
+        MecMidiProcessor(MidiBuffer& midiBuf) :
+            mec::MidiProcessor(PBR),
+            mecMidiQueue_(midiBuf) {
         }
-        virtual void touchOn(int touchId, float note, float x, float y, float z) {
-            startNotes_[touchId] = note;
-            int ch = touchId +MPE_NOTE_OFFSET;
-            float pbs = note - startNotes_[touchId];
-            pbs = (pbs > PBR ? PBR : (pbs < -PBR ? -PBR : pbs));
-            int pb = MidiMessage::pitchbendToPitchwheelPos(pbs , PBR );
-            mecMidiQueue_.addEvent(MidiMessage::pitchWheel(ch, pb),0);
-            mecMidiQueue_.addEvent(MidiMessage::controllerEvent(ch, CC_TIMBRE, bipolar7bit(y)),0);
-            mecMidiQueue_.addEvent(MidiMessage::noteOn(ch, startNotes_[touchId], z), 0);
-            mecMidiQueue_.addEvent(MidiMessage::channelPressureChange(ch, 0),0);
-        }
-        virtual void touchContinue(int touchId, float note, float x, float y, float z) {
-            int ch = touchId + MPE_NOTE_OFFSET;
-            float pbs = note - startNotes_[touchId];
-            pbs = (pbs > PBR ? PBR : (pbs < -PBR ? -PBR : pbs));
-            int pb = MidiMessage::pitchbendToPitchwheelPos(pbs , PBR );
-            mecMidiQueue_.addEvent(MidiMessage::pitchWheel(ch, pb),0);
-            mecMidiQueue_.addEvent(MidiMessage::controllerEvent(ch, CC_TIMBRE, bipolar7bit(y)),0);
-            mecMidiQueue_.addEvent(MidiMessage::channelPressureChange(ch, unipolar7bit(z)),0);
-        }
-        virtual void touchOff(int touchId, float note, float x, float y, float z) {
-            int ch = touchId + MPE_NOTE_OFFSET;
-            float pbs = note - startNotes_[touchId];
-            pbs = (pbs > PBR ? PBR : (pbs < -PBR ? -PBR : pbs));
-            int pb = MidiMessage::pitchbendToPitchwheelPos(pbs , PBR );
-            mecMidiQueue_.addEvent(MidiMessage::pitchWheel(ch, pb), 0);
-            mecMidiQueue_.addEvent(MidiMessage::controllerEvent(ch, CC_TIMBRE, bipolar7bit(y)),0);
-            mecMidiQueue_.addEvent(MidiMessage::noteOff(ch, startNotes_[touchId], 0.8f), 0);
-            mecMidiQueue_.addEvent(MidiMessage::channelPressureChange(ch, 0),0);
-        }
-        virtual void control(int ctrlId, float v) {
-            mecMidiQueue_.addEvent(MidiMessage::controllerEvent(MPE_GLOBAL_CH, ctrlId, unipolar7bit(v)),0);
+        
+        void  process(mec::MidiProcessor::MidiMsg& m) {
+            mecMidiQueue_.addEvent(m.data, m.size, 0);
         }
         MidiBuffer&   mecMidiQueue_;
-        int startNotes_[16];
     };
+    
+    
     
     if(mecapi_==nullptr) {
         mecapi_.reset(new mec::MecApi(mecPrefFile_.toRawUTF8()));
-        mecapi_->subscribe(new PluginMecCallback(mecMidiQueue_));
+        mecapi_->subscribe(new MecMidiProcessor(mecMidiQueue_));
         mecapi_->init();
     }
 

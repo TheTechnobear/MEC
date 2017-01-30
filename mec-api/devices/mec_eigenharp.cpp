@@ -70,7 +70,7 @@ public:
                 if(!voice && stealVoices_) {
                     // no available voices, steal?
                     Voices::Voice* stolen = voices_.oldestActiveVoice();
-                    callback_.touchOff(stolen->i_,stolen->note_,stolen->x_,stolen->y_,stolen->z_);
+                    callback_.touchOff(stolen->i_,stolen->note_,stolen->x_,stolen->y_,0.0f);
                     voices_.stopVoice(voice);
                     voice = voices_.startVoice(key);
                 }

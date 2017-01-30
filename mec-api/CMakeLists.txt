@@ -28,6 +28,8 @@ set(MECAPI_SRC
     devices/mec_push2.h
     devices/mec_soundplane.cpp
     devices/mec_soundplane.h
+    processors/mec_midiprocessor.cpp
+    processors/mec_midiprocessor.h
 )
 
 include_directories (
