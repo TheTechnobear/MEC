@@ -32,7 +32,8 @@ private:
     void initDevices();
 
     std::vector<std::shared_ptr<MecDevice>> devices_;
-    std::unique_ptr<MecPreferences> prefs_;
+    std::unique_ptr<MecPreferences> fileprefs_; // top level prefs on file
+    std::unique_ptr<MecPreferences> prefs_;     // api prefs
     std::vector<IMecCallback*> callbacks_;
 };
 
@@ -67,8 +68,10 @@ void MecApi::unsubscribe(IMecCallback* p) {
 /////////////////////////////////////////////////////////
 //MecApi_Impl
 MecApi_Impl::MecApi_Impl(const std::string& configFile) {
-    prefs_.reset(new MecPreferences(configFile));
+    fileprefs_.reset(new MecPreferences(configFile));
+    prefs_.reset(new MecPreferences(fileprefs_->getSubTree("mec")));
 } 
+
 MecApi_Impl::~MecApi_Impl() {
     LOG_1("MecApi_Impl::~MecApi_Impl");
     for (std::vector<std::shared_ptr<MecDevice>>::iterator it = devices_.begin() ; it != devices_.end(); ++it) {
@@ -78,6 +81,7 @@ MecApi_Impl::~MecApi_Impl() {
     devices_.clear();
     LOG_1("devices cleared");
     prefs_.reset();
+    fileprefs_.reset();
 }
 
 void MecApi_Impl::init() {
@@ -144,10 +148,10 @@ void MecApi_Impl::mec_control(int cmd, void* other) {
 #include "devices/mec_osct3d.h"
 
 void MecApi_Impl::initDevices() {
-
-    // if (prefs_->exists("osc")) {
-    //     LOG_1(std::cout   << "osc initialise " << std::endl;)
-    // }
+    if(fileprefs_==nullptr || prefs_==nullptr) {
+        LOG_1("MecApi_Impl :: invalid preferences file");
+        return;
+    } 
 
     if (prefs_->exists("eigenharp")) {
         LOG_1("eigenharp initialise ");

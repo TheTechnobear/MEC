@@ -124,6 +124,10 @@ int MecPreferences::getArrayInt(void* v,int i, int def) {
 }
 
 
+void* MecPreferences::getTree() {
+    return jsonData_;
+}
+
 void* MecPreferences::getSubTree(const std::string v) {
     if (! jsonData_) return nullptr;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());

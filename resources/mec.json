@@ -1,5 +1,71 @@
 {
     "mec"  :  {
+        "_midi" : {
+            "device" : "Axoloti Core",
+            "_device" : "IAC Driver IAC Bus 1",
+            "mpe" : true,
+            "pitchbend range" : 48.0
+        },
+
+        "osct3d"  :  {
+            "port" :  9000
+        },
+
+
+        "_eigenharp" : {
+            "steal voices" : true,
+            "voices" : 15,
+            "velocity count" : 5,
+            "pitchbend range" : 2.0,
+            "firmware dir" : "../eigenharp/resources/",
+            "mapping" : { 
+                "pico" : {
+                    "_notes" : [ 2 , 5, 12],
+                    "calculated" : {
+                        "keys in col"    : 9,
+                        "row multiplier" : 1,  
+                        "col multipler"  : 9,
+                        "note offset"    : 60
+                    }
+                },
+                "tau" : {
+                    "calculated-wrong" : {
+                        "keys in col"    : 16,
+                        "row multiplier" : 1,  
+                        "col multipler"  : 4,
+                        "note offset"    : 20
+                    }
+                },
+                "alpha" : {
+                    "calculated" : {
+                        "keys in col"    : 24,
+                        "row multiplier" : 4,  
+                        "col multipler"  : -1,
+                        "note offset"    : 20
+                    },
+                    "calculated-factory" : {
+                        "keys in col"    : 24,
+                        "row multiplier" : 1,  
+                        "col multipler"  : 4,
+                        "note offset"    : 20
+                    }
+               }
+            }
+        },
+
+        "_soundplane"  :  {
+            "app state dir" : ".",
+            "steal voices" : true,
+            "voices " : 15
+        },
+
+        "_push2"  :  {
+            "device" : "Ableton Push 2 Live Port",
+            "pitchbend range" : 2.0
+        }
+    },
+
+    "mec-app"  :  {
         "outputs" : {
             "_osc" : {
                 "host" : "127.0.0.1",
@@ -18,69 +84,5 @@
                 "throttle" : 0
             }
         }
-    },
-
-    "_midi" : {
-        "device" : "Axoloti Core",
-        "_device" : "IAC Driver IAC Bus 1",
-        "mpe" : true,
-        "pitchbend range" : 48.0
-    },
-
-    "osct3d"  :  {
-        "port" :  9000
-    },
-
-
-    "_eigenharp" : {
-        "steal voices" : true,
-        "voices" : 15,
-        "velocity count" : 5,
-        "pitchbend range" : 2.0,
-        "firmware dir" : "../eigenharp/resources/",
-        "mapping" : { 
-            "pico" : {
-                "_notes" : [ 2 , 5, 12],
-                "calculated" : {
-                    "keys in col"    : 9,
-                    "row multiplier" : 1,  
-                    "col multipler"  : 9,
-                    "note offset"    : 60
-                }
-            },
-            "tau" : {
-                "calculated-wrong" : {
-                    "keys in col"    : 16,
-                    "row multiplier" : 1,  
-                    "col multipler"  : 4,
-                    "note offset"    : 20
-                }
-            },
-            "alpha" : {
-                "calculated" : {
-                    "keys in col"    : 24,
-                    "row multiplier" : 4,  
-                    "col multipler"  : -1,
-                    "note offset"    : 20
-                },
-                "calculated-factory" : {
-                    "keys in col"    : 24,
-                    "row multiplier" : 1,  
-                    "col multipler"  : 4,
-                    "note offset"    : 20
-                }
-           }
-        }
-    },
-
-    "_soundplane"  :  {
-        "app state dir" : ".",
-        "steal voices" : true,
-        "voices " : 15
-    },
-
-    "_push2"  :  {
-        "device" : "Ableton Push 2 Live Port",
-        "pitchbend range" : 2.0
     }
 }

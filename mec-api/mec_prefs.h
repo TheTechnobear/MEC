@@ -14,10 +14,12 @@ public:
     int         getInt(const std::string& v, int def = 0);
     double      getDouble(const std::string& v, double def = 0.0);
     std::string getString(const std::string& v, const std::string def = "");
-    void*       getSubTree(const std::string v);
     void*       getArray(const std::string v);
     int         getArraySize(void*);
     int         getArrayInt(void*, int i,int def);
+
+    void*       getSubTree(const std::string v);
+    void*       getTree();
 
     bool        exists(const std::string v);
     void        print();

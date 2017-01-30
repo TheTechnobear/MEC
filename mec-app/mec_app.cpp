@@ -80,10 +80,10 @@ int main(int ac, char **av) {
     if (!prefs.valid()) return -1;
     keepRunning = true;
 
-    if (prefs.exists("mec")) {
+    if (prefs.exists("mec") && prefs.exists("mec-app")) {
         LOG_1("mec api initialise ");
         pthread_t mec_thread;
-        rc = pthread_create(&mec_thread, NULL, mecapi_proc, prefs.getSubTree("mec"));
+        rc = pthread_create(&mec_thread, NULL, mecapi_proc, prefs.getTree());
         if (rc) {
             LOG_0("unabled to create mecapi thread" << rc );
             exit(-1);

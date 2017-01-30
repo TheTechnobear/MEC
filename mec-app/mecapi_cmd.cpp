@@ -222,9 +222,20 @@ private:
 
 void *mecapi_proc(void * arg)
 {
+    static int exitCode = 0;
+
     LOG_0( "mecapi_proc start");
     MecPreferences prefs(arg);
-    MecPreferences outprefs(prefs.getSubTree("outputs"));
+
+    if (!prefs.exists("mec") || !prefs.exists("mec-app")) {
+        exitCode = 1; // fail
+        pthread_exit(&exitCode);
+    }
+
+    MecPreferences app_prefs(prefs.getSubTree("mec-app"));
+    MecPreferences api_prefs(prefs.getSubTree("mec"));
+
+    MecPreferences outprefs(app_prefs.getSubTree("outputs"));
 
     std::unique_ptr<MecApi> mecApi;
     mecApi.reset(new MecApi());
@@ -274,7 +285,9 @@ void *mecapi_proc(void * arg)
     mecApi.reset();
     sleep(1);
     LOG_0( "mecapi_proc stopped");
-    pthread_exit(NULL);
+
+    exitCode = 0; // success
+    pthread_exit(nullptr);
 }
 
 
