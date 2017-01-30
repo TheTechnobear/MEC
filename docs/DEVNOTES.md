@@ -52,7 +52,7 @@ currently this is in the mec apps , the idea is to bring some common code into m
 primary target, built on rtmidi or JUCE for VST/AU
 
 *OSC*
-basics in place,  I will probably adopt T3D
+now in t3d format
 
 
 ##Mec API 
