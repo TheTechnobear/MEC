@@ -3,13 +3,17 @@
 
 #include "mec_prefs.h"
 
-class MecDevice {
+namespace mec {
+
+class Device {
 public:
-    virtual ~MecDevice() {};
+    virtual ~Device() {};
     virtual bool init(void*)=0;
     virtual bool process()=0 ;
     virtual void deinit()=0;
     virtual bool isActive()=0;
 };
+
+}
 
 #endif //MEC_DEVICE

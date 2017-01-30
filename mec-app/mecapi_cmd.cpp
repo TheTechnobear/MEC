@@ -20,13 +20,13 @@
 #define PB_RANGE 2.0f
 #define MPE_PB_RANGE 48.0f
 
-class MecCmdCallback : public IMecCallback 
+class MecCmdCallback : public mec::ICallback 
 {
 public:
     virtual void mec_control(int cmd, void* other) 
     {
         switch(cmd) {
-            case IMecCallback::SHUTDOWN: {
+            case mec::ICallback::SHUTDOWN: {
                 LOG_0( "mec requesting shutdown");
                 keepRunning = 0;
                 pthread_cond_broadcast(&waitCond);
@@ -43,7 +43,7 @@ public:
 class MecConsoleCallback: public  MecCmdCallback
 {
 public:
-    MecConsoleCallback(MecPreferences& p)
+    MecConsoleCallback(mec::Preferences& p)
         :   prefs_(p),
             throttle_(p.getInt("throttle", 0)),
             valid_(true)
@@ -99,7 +99,7 @@ public:
     }
 
 private:
-    MecPreferences prefs_;
+    mec::Preferences prefs_;
     unsigned int throttle_;
     bool valid_;
 };
@@ -108,7 +108,7 @@ private:
 class MecOSCCallback: public  MecCmdCallback
 {
 public:
-    MecOSCCallback(MecPreferences& p)
+    MecOSCCallback(mec::Preferences& p)
         :   prefs_(p),
             transmitSocket_( IpEndpointName( p.getString("host", "127.0.0.1").c_str(), p.getInt("port", 9001) )),
             valid_(true)
@@ -162,7 +162,7 @@ public:
     }
 
 private:
-    MecPreferences prefs_;
+    mec::Preferences prefs_;
     UdpTransmitSocket transmitSocket_;
     char buffer_[OUTPUT_BUFFER_SIZE];
     bool valid_;
@@ -177,7 +177,7 @@ private:
 class MecMidiCallback: public  MecCmdCallback
 {
 public:
-    MecMidiCallback(MecPreferences& p)
+    MecMidiCallback(mec::Preferences& p)
         :   prefs_(p),
             output_(p.getInt("voices", 15), (float) p.getDouble("pitchbend range", 48.0))
     {
@@ -215,7 +215,7 @@ public:
         output_.control(GLOBAL_CH, ctrlId, v);
     }
 private:
-    MecPreferences prefs_;
+    mec::Preferences prefs_;
     MidiOutput output_;
 };
 
@@ -225,23 +225,23 @@ void *mecapi_proc(void * arg)
     static int exitCode = 0;
 
     LOG_0( "mecapi_proc start");
-    MecPreferences prefs(arg);
+    mec::Preferences prefs(arg);
 
     if (!prefs.exists("mec") || !prefs.exists("mec-app")) {
         exitCode = 1; // fail
         pthread_exit(&exitCode);
     }
 
-    MecPreferences app_prefs(prefs.getSubTree("mec-app"));
-    MecPreferences api_prefs(prefs.getSubTree("mec"));
+    mec::Preferences app_prefs(prefs.getSubTree("mec-app"));
+    mec::Preferences api_prefs(prefs.getSubTree("mec"));
 
-    MecPreferences outprefs(app_prefs.getSubTree("outputs"));
+    mec::Preferences outprefs(app_prefs.getSubTree("outputs"));
 
-    std::unique_ptr<MecApi> mecApi;
-    mecApi.reset(new MecApi());
+    std::unique_ptr<mec::MecApi> mecApi;
+    mecApi.reset(new mec::MecApi());
 
     if (outprefs.exists("midi")) {
-        MecPreferences cbprefs(outprefs.getSubTree("midi"));
+        mec::Preferences cbprefs(outprefs.getSubTree("midi"));
         MecMidiCallback *pCb = new MecMidiCallback(cbprefs);
         if (pCb->isValid()) {
             mecApi->subscribe(pCb);
@@ -250,7 +250,7 @@ void *mecapi_proc(void * arg)
         }
     }
     if (outprefs.exists("osc")) {
-        MecPreferences cbprefs(outprefs.getSubTree("osc"));
+        mec::Preferences cbprefs(outprefs.getSubTree("osc"));
         MecOSCCallback *pCb = new MecOSCCallback(cbprefs);
         if (pCb->isValid()) {
             mecApi->subscribe(pCb);
@@ -259,7 +259,7 @@ void *mecapi_proc(void * arg)
         }
     }
     if (outprefs.exists("console")) {
-        MecPreferences cbprefs(outprefs.getSubTree("console"));
+        mec::Preferences cbprefs(outprefs.getSubTree("console"));
         MecConsoleCallback *pCb = new MecConsoleCallback(cbprefs);
         if (pCb->isValid()) {
             mecApi->subscribe(pCb);

@@ -11,11 +11,13 @@
 
 class UdpListeningReceiveSocket;
 
-class MecOscT3D : public MecDevice {
+namespace mec {
+
+class OscT3D : public Device {
 
 public:
-    MecOscT3D(IMecCallback&);
-    virtual ~MecOscT3D();
+    OscT3D(ICallback&);
+    virtual ~OscT3D();
     virtual bool init(void*);
     virtual bool process();
     virtual void deinit();
@@ -24,13 +26,15 @@ public:
     void listenProc();
 
 private:
-	IMecCallback& callback_;
+	ICallback& callback_;
     bool active_;
-    MecMsgQueue queue_;
+    MsgQueue queue_;
     std::unique_ptr<UdpListeningReceiveSocket> socket_;
     std::thread listenThread_;
 
     unsigned int port_;
 };
+
+}
 
 #endif // MecOscT3D_H

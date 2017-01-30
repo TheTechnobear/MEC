@@ -14,14 +14,16 @@ a couple of configurations are supported so far in a preferences file
 an array of note values, one for each key -  "notes" : [1,2,3]
 */
 
-class MecSurfaceMapper {
+namespace mec {
+
+class SurfaceMapper {
 public:
-	MecSurfaceMapper();
+	SurfaceMapper();
 	int  noteFromKey(int key);
-	void load(MecPreferences& prefs);
+	void load(Preferences& prefs);
 private:
-    void loadNoteArray(MecPreferences& prefs);
-    void loadCalcDefinition(MecPreferences& prefs);
+    void loadNoteArray(Preferences& prefs);
+    void loadCalcDefinition(Preferences& prefs);
 
     enum mode {
         SM_NoMapping,
@@ -39,5 +41,6 @@ private:
     int colMult_;
     int noteOffset_; 
 };
+}
 
 #endif //MEC_SURFACE_MAPPER_H

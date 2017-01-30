@@ -5,9 +5,11 @@
 #include <vector>
 #include <list>
 
-class MecVoices {
+namespace mec {
+
+class Voices {
 public:
-    MecVoices(unsigned voiceCount = 15, unsigned velocityCount = 5) 
+    Voices(unsigned voiceCount = 15, unsigned velocityCount = 5) 
      : maxVoices_(voiceCount), velocityCount_(velocityCount){
         voices_.resize(maxVoices_);
         for (int i = 0; i < maxVoices_; i++) {
@@ -18,7 +20,7 @@ public:
         }
 
     };
-    virtual ~MecVoices() {};
+    virtual ~Voices() {};
 
 
     struct Voice {
@@ -133,5 +135,6 @@ private:
     unsigned maxVoices_;
     unsigned velocityCount_;
 };
+}
 
 #endif //MEC_VOICES_H_

@@ -1,5 +1,5 @@
-#ifndef MecEigenharp_H 
-#define MecEigenharp_H
+#ifndef MECEigenharp_H 
+#define MECEigenharp_H
 
 #include "../mec_api.h"
 #include "../mec_device.h"
@@ -7,21 +7,24 @@
 #include <eigenfreed/eigenfreed.h>
 #include <memory>
 
-class MecEigenharp : public MecDevice {
+namespace mec {  
+class Eigenharp : public Device {
 
 public:
-    MecEigenharp(IMecCallback&);
-    virtual ~MecEigenharp();
+    Eigenharp(ICallback&);
+    virtual ~Eigenharp();
     virtual bool init(void*);
     virtual bool process();
     virtual void deinit();
     virtual bool isActive();
 
 private:
-	IMecCallback& callback_;
+	ICallback& callback_;
     std::unique_ptr<EigenApi::Eigenharp> eigenD_;
     bool active_;
     long minPollTime_;
 };
 
-#endif // MecEigenharp
+}
+
+#endif // MECEigenharp_H

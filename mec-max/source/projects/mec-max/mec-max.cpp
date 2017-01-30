@@ -34,7 +34,7 @@ TouchMsg* nextTouchMsg()
 } 
 
 
-class MecMaxCallback: public MecCallback
+class MecMaxCallback: public mec::Callback
 {
 public:
     MecMaxCallback()
@@ -94,7 +94,7 @@ private:
 struct t_mec
 {
     t_object ob;
-    MecApi *pApi;
+    mec::MecApi *pApi;
     MecMaxCallback *pCallback;
     bool running; // current running status
     bool stop;    // request to stop
@@ -236,7 +236,7 @@ void mec_start(t_mec* self)
         delete self->pApi;
     }
 
-    self->pApi = new MecApi(self->configFile.c_str());
+    self->pApi = new mec::MecApi(self->configFile.c_str());
     self->pCallback = new MecMaxCallback();
     self->pApi->subscribe(self->pCallback);
 

@@ -1,5 +1,5 @@
-#ifndef MecMidi_H 
-#define MecMidi_H
+#ifndef MecDeviceMidi_H 
+#define MecDeviceMidi_H
 
 #include "../mec_api.h"
 #include "../mec_device.h"
@@ -10,11 +10,13 @@
 #include <memory>
 #include <vector>
 
-class MecMidi : public MecDevice {
+namespace mec {
+
+class MidiDevice : public Device {
 
 public:
-    MecMidi(IMecCallback&);
-    virtual ~MecMidi();
+    MidiDevice(ICallback&);
+    virtual ~MidiDevice();
     virtual bool init(void*);
     virtual bool process();
     virtual void deinit();
@@ -26,10 +28,10 @@ private:
 
     bool active_;
 
-	IMecCallback& callback_;
+	ICallback& callback_;
     std::unique_ptr<RtMidiIn> midiDevice_; 
 
-    MecMsgQueue queue_;
+    MsgQueue queue_;
 
     struct VoiceData {
             float startNote_;
@@ -45,4 +47,6 @@ private:
     bool        mpeMode_;
 };
 
-#endif // MecMidi_H
+}
+
+#endif // MecDeviceMidi_H

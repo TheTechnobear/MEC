@@ -6,20 +6,22 @@
 
 #include "mec_log.h"
 
-MecPreferences::MecPreferences(const std::string& file) : jsonData_(nullptr), owned_(true) {
+namespace mec {
+
+Preferences::Preferences(const std::string& file) : jsonData_(nullptr), owned_(true) {
     valid_ = loadPreferences(file);
 }
 
-MecPreferences::MecPreferences(void* p) : jsonData_(static_cast<cJSON*> (p)), owned_(false) {
+Preferences::Preferences(void* p) : jsonData_(static_cast<cJSON*> (p)), owned_(false) {
 }
 
 
 
-MecPreferences::~MecPreferences() {
+Preferences::~Preferences() {
     if (jsonData_ && owned_ ) cJSON_Delete((cJSON*) jsonData_);
 }
 
-bool MecPreferences::loadPreferences(const std::string& file) {
+bool Preferences::loadPreferences(const std::string& file) {
     if (jsonData_ && owned_) {
         cJSON_Delete((cJSON*) jsonData_);
         jsonData_ = nullptr;
@@ -58,7 +60,7 @@ bool MecPreferences::loadPreferences(const std::string& file) {
     return false;
 }
 
-bool MecPreferences::getBool(const std::string& v, bool def) {
+bool Preferences::getBool(const std::string& v, bool def) {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
     if (node!=nullptr) {
@@ -69,7 +71,7 @@ bool MecPreferences::getBool(const std::string& v, bool def) {
 }
 
 
-int MecPreferences::getInt(const std::string& v, int def) {
+int Preferences::getInt(const std::string& v, int def) {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
     if (node!=nullptr && node->type == cJSON_Number) {
@@ -79,7 +81,7 @@ int MecPreferences::getInt(const std::string& v, int def) {
 }
 
 
-double MecPreferences::getDouble(const std::string& v, double def) {
+double Preferences::getDouble(const std::string& v, double def) {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
     if (node!=nullptr && node->type == cJSON_Number) {
@@ -88,7 +90,7 @@ double MecPreferences::getDouble(const std::string& v, double def) {
     return def;
 }
 
-std::string MecPreferences::getString(const std::string& v, const std::string def) {
+std::string Preferences::getString(const std::string& v, const std::string def) {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
     if (node!=nullptr && node->type == cJSON_String) {
@@ -97,7 +99,7 @@ std::string MecPreferences::getString(const std::string& v, const std::string de
     return def;
 }
 
-void* MecPreferences::getArray(const std::string v) {
+void* Preferences::getArray(const std::string v) {
     if (! jsonData_) return nullptr;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
     if (node!=nullptr && node->type == cJSON_Array) {
@@ -106,7 +108,7 @@ void* MecPreferences::getArray(const std::string v) {
     return nullptr;
 }
 
-int MecPreferences::getArraySize(void* v) {
+int Preferences::getArraySize(void* v) {
     cJSON *node = (cJSON*) v;
     if(node!=nullptr && node->type == cJSON_Array) {
         return cJSON_GetArraySize(node);
@@ -114,7 +116,7 @@ int MecPreferences::getArraySize(void* v) {
     return 0;
 }
 
-int MecPreferences::getArrayInt(void* v,int i, int def) {
+int Preferences::getArrayInt(void* v,int i, int def) {
     cJSON *array = (cJSON*) v;
     cJSON *node = cJSON_GetArrayItem(array,i);
     if (node!=nullptr && node->type == cJSON_Number) {
@@ -124,11 +126,11 @@ int MecPreferences::getArrayInt(void* v,int i, int def) {
 }
 
 
-void* MecPreferences::getTree() {
+void* Preferences::getTree() {
     return jsonData_;
 }
 
-void* MecPreferences::getSubTree(const std::string v) {
+void* Preferences::getSubTree(const std::string v) {
     if (! jsonData_) return nullptr;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
     if (node!=nullptr && node->type == cJSON_Object) {
@@ -137,13 +139,13 @@ void* MecPreferences::getSubTree(const std::string v) {
     return nullptr;
 }
 
-bool MecPreferences::exists(const std::string v) {
+bool Preferences::exists(const std::string v) {
     if (! jsonData_) return false;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
     return node != nullptr;
 }
 
-void MecPreferences::print() {
+void Preferences::print() {
     if (! jsonData_)  {
         LOG_0("invalid json data");
 
@@ -154,5 +156,5 @@ void MecPreferences::print() {
     }
 }
 
-
+}
 

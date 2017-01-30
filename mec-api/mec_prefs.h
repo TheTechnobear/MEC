@@ -4,11 +4,13 @@
 #include <cstring>
 #include <string>
 
-class MecPreferences {
+namespace mec {
+
+class Preferences {
 public:
-    MecPreferences(const std::string& file = "./mec.json");
-    virtual ~MecPreferences();
-    MecPreferences(void* subtree);
+    Preferences(const std::string& file = "./mec.json");
+    virtual ~Preferences();
+    Preferences(void* subtree);
 
     bool        getBool(const std::string& v, bool def = false);
     int         getInt(const std::string& v, int def = 0);
@@ -33,5 +35,7 @@ private:
     bool    owned_;
     bool    valid_;
 };
+
+}
 
 #endif //MECPREFS_H

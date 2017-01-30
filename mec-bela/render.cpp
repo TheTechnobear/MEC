@@ -4,8 +4,8 @@
 #include <mec_api.h>
 
 Midi 			gMidi;
-MecApi* 		gMecApi=NULL;
-MecCallback* 	gMecCallback=NULL;
+mec::MecApi* 		gMecApi=NULL;
+mec::Callback* 	gMecCallback=NULL;
 const char* 	gMidiPort0 = "hw:1,0,0";
 
 
@@ -25,7 +25,7 @@ MidiVoiceData gMidiVoices[16];
 //TODO
 // 5. eigenharp improve velocity
 
-class BelaMidiMecCallback : public MecCallback {
+class BelaMidiMecCallback : public mec::Callback {
 public:
 	BelaMidiMecCallback() :	pitchbendRange_(48.0) {
 		;
@@ -125,7 +125,7 @@ bool setup(BelaContext *context, void *userData)
 {
 	gMidi.writeTo(gMidiPort0);
 
-	gMecApi=new MecApi();
+	gMecApi=new mec::MecApi();
 	gMecCallback=new BelaMidiMecCallback();
 	gMecApi->init();
 	gMecApi->subscribe(gMecCallback);

@@ -15,18 +15,19 @@
 // TODO
 ////////////////////////////////////////////////
 
+namespace mec {
 
-class MecOscT3DHandler: public  osc::OscPacketListener
+class OscT3DHandler: public  osc::OscPacketListener
 {
 public:
-    MecOscT3DHandler(MecPreferences& p, MecMsgQueue& q)
+    OscT3DHandler(Preferences& p, MsgQueue& q)
         :   prefs_(p),
             queue_(q),
             valid_(true),
             socket_(nullptr) 
     {
         if (valid_) {
-            LOG_0("MecOscT3DHandler enabling for mecapi");
+            LOG_0("OscT3DHandler enabling for mecapi");
         }
         for(int i=0;i<sizeof(activeTouches_);i++) {
             activeTouches_[i] = false;
@@ -109,8 +110,8 @@ private:
     inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
     float   note(float n) { return n; }
 
-    MecPreferences prefs_;
-    MecMsgQueue& queue_;
+    Preferences prefs_;
+    MsgQueue& queue_;
     bool valid_;
     bool   activeTouches_[16];
     UdpListeningReceiveSocket* socket_;
@@ -118,32 +119,32 @@ private:
 
 
 ////////////////////////////////////////////////
-MecOscT3D::MecOscT3D(IMecCallback& cb) :
+OscT3D::OscT3D(ICallback& cb) :
     active_(false), callback_(cb) {
 }
 
-MecOscT3D::~MecOscT3D() {
+OscT3D::~OscT3D() {
     deinit();
 }
 
 
-void MecOscT3DListen(MecOscT3D* self) {
+void OscT3DListen(OscT3D* self) {
     self->listenProc();
 }
 
-void MecOscT3D::listenProc() {
+void OscT3D::listenProc() {
     LOG_1( "T3D socket listening on : " << port_);
     socket_->Run();
 }
 
-bool MecOscT3D::init(void* arg) {
-    MecPreferences prefs(arg);
+bool OscT3D::init(void* arg) {
+    Preferences prefs(arg);
 
     if (active_) {
         deinit();
     }
     active_ = false;
-    MecOscT3DHandler *pCb = new MecOscT3DHandler(prefs, queue_);
+    OscT3DHandler *pCb = new OscT3DHandler(prefs, queue_);
 
     port_ = prefs.getInt("port", 9000);
 
@@ -163,13 +164,13 @@ bool MecOscT3D::init(void* arg) {
     
     pCb->setSocket(socket_.get());
 
-    listenThread_= std::thread(MecOscT3DListen, this);
+    listenThread_= std::thread(OscT3DListen, this);
 
 
     return active_;
 }
 
-bool MecOscT3D::process() {
+bool OscT3D::process() {
     MecMsg msg;
     while (queue_.nextMsg(msg)) {
         switch (msg.type_) {
@@ -206,32 +207,32 @@ bool MecOscT3D::process() {
             if(msg.data_.mec_control_.cmd_==MecMsg::SHUTDOWN) {
                 LOG_1( "OSC posting shutdown request");
                 callback_.mec_control(
-                    IMecCallback::SHUTDOWN,
+                    ICallback::SHUTDOWN,
                     nullptr);
             }
             break;
         default:
-            LOG_0("MecOscT3D::process unhandled message type");
+            LOG_0("OscT3D::process unhandled message type");
         }
     }
     return true;
 }
 
-void MecOscT3D::deinit() {
-    LOG_0("MecOscT3D::deinit");
+void OscT3D::deinit() {
+    LOG_0("OscT3D::deinit");
     if(active_) {
         socket_->AsynchronousBreak();
         listenThread_.join();
         socket_.reset();
-        LOG_0("MecOscT3D::deinit done");
+        LOG_0("OscT3D::deinit done");
     }
     active_ = false;
 }
 
-bool MecOscT3D::isActive() {
+bool OscT3D::isActive() {
     return active_;
 }
 
 
-
+}
 

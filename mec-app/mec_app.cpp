@@ -76,7 +76,7 @@ int main(int ac, char **av) {
 
     LOG_0("mec_app initialise ");
 
-    MecPreferences prefs;
+    mec::Preferences prefs;
     if (!prefs.valid()) return -1;
     keepRunning = true;
 

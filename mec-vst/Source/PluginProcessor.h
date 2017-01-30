@@ -13,8 +13,9 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+#include <mec_api.h>
 #include <memory>
-class MecApi;
+
 
 //==============================================================================
 /**
@@ -85,7 +86,7 @@ private:
     AudioPluginFormatManager    formatManager_;
     AudioProcessorGraph         graph_;
     AudioProcessorGraph::Node*  node_;
-    std::unique_ptr<MecApi>     mecapi_;
+    std::unique_ptr<mec::MecApi>     mecapi_;
     MidiBuffer                  mecMidiQueue_;
     double                      sampleRate_;
     int                         samplesPerBlock_;

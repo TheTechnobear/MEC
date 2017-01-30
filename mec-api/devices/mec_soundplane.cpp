@@ -9,14 +9,18 @@
 #include "../mec_prefs.h"
 #include "../mec_voice.h"
 
+
+namespace mec {
+
+
 ////////////////////////////////////////////////
 // TODO
 // 1. voices not needed? as soundplane already does touch alloction, just need to detemine on and off
 ////////////////////////////////////////////////
-class MecSoundplaneHandler: public  SoundplaneMECCallback
+class SoundplaneHandler: public  SoundplaneMECCallback
 {
 public:
-    MecSoundplaneHandler(MecPreferences& p, MecMsgQueue& q)
+    SoundplaneHandler(Preferences& p, MsgQueue& q)
         :   prefs_(p),
             queue_(q),
             valid_(true),
@@ -24,7 +28,7 @@ public:
             stealVoices_(p.getBool("steal voices", true))
     {
         if (valid_) {
-            LOG_0("MecSoundplaneHandler enabling for mecapi");
+            LOG_0("SoundplaneHandler enabling for mecapi");
         }
     }
 
@@ -32,7 +36,7 @@ public:
 
     virtual void device(const char* dev, int rows, int cols)
     {
-        LOG_1("MecSoundplaneHandler  device d: " << dev);
+        LOG_1("SoundplaneHandler  device d: " << dev);
         LOG_1(" r: " << rows << " c: " << cols);
     }
 
@@ -40,7 +44,7 @@ public:
     {
         static const unsigned int NOTE_CH_OFFSET = 1;
 
-        MecVoices::Voice* voice = voices_.voiceId(touch);
+        Voices::Voice* voice = voices_.voiceId(touch);
         float fn = n;
         float mn = note(fn);
         float mx = clamp(x, -1.0f, 1.0f);
@@ -56,7 +60,7 @@ public:
         msg.data_.touch_.z_ = mz;
         if (a)
         {
-            // LOG_1("MecSoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
+            // LOG_1("SoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
             // LOG_1(" touch: " <<  touch);
             // LOG_1(" note: " <<  n  << " mn: "   << mn << " fn: " << fn);
             // LOG_1(" x: " << x      << " y: "   << y    << " z: "   << z);
@@ -68,7 +72,7 @@ public:
 
                 if (!voice && stealVoices_) {
                     // no available voices, steal?
-                    MecVoices::Voice* stolen = voices_.oldestActiveVoice();
+                    Voices::Voice* stolen = voices_.oldestActiveVoice();
                     
                     MecMsg stolenMsg;
                     stolenMsg.type_ = MecMsg::TOUCH_OFF;
@@ -127,25 +131,25 @@ private:
     inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
     float   note(float n) { return n; }
 
-    MecPreferences prefs_;
-    MecMsgQueue& queue_;
-    MecVoices voices_;
+    Preferences prefs_;
+    MsgQueue& queue_;
+    Voices voices_;
     bool valid_;
     bool stealVoices_;
 };
 
 
 ////////////////////////////////////////////////
-MecSoundplane::MecSoundplane(IMecCallback& cb) :
+Soundplane::Soundplane(ICallback& cb) :
     active_(false), callback_(cb) {
 }
 
-MecSoundplane::~MecSoundplane() {
+Soundplane::~Soundplane() {
     deinit();
 }
 
-bool MecSoundplane::init(void* arg) {
-    MecPreferences prefs(arg);
+bool Soundplane::init(void* arg) {
+    Preferences prefs(arg);
 
     if (active_) {
         deinit();
@@ -163,22 +167,22 @@ bool MecSoundplane::init(void* arg) {
     model_->setPropertyImmediate("mec_active",  1.0f);
     model_->setPropertyImmediate("data_freq_mec", 500.0f);
 
-    MecSoundplaneHandler *pCb = new MecSoundplaneHandler(prefs, queue_);
+    SoundplaneHandler *pCb = new SoundplaneHandler(prefs, queue_);
     if (pCb->isValid()) {
         model_->mecOutput().connect(pCb);
-        LOG_0("MecSoundplane::init - model init");
+        LOG_0("Soundplane::init - model init");
         model_->initialize();
         active_ = true;
-        LOG_0("MecSoundplane::init - complete");
+        LOG_0("Soundplane::init - complete");
     } else {
-        LOG_0("MecSoundplane::init - delete callback");
+        LOG_0("Soundplane::init - delete callback");
         delete pCb;
     }
 
     return active_;
 }
 
-bool MecSoundplane::process() {
+bool Soundplane::process() {
     MecMsg msg;
     while (queue_.nextMsg(msg)) {
         switch (msg.type_) {
@@ -212,24 +216,24 @@ bool MecSoundplane::process() {
                 msg.data_.control_.value_);
             break;
         default:
-            LOG_0("MecSoundplane::process unhandled message type");
+            LOG_0("Soundplane::process unhandled message type");
         }
     }
     return true;
 }
 
-void MecSoundplane::deinit() {
-    LOG_0("MecSoundplane::deinit");
+void Soundplane::deinit() {
+    LOG_0("Soundplane::deinit");
     if (!model_) return;
-    LOG_0("MecSoundplane::reset model");
+    LOG_0("Soundplane::reset model");
     model_.reset();
     active_ = false;
 }
 
-bool MecSoundplane::isActive() {
+bool Soundplane::isActive() {
     return active_;
 }
 
 
-
+}
 

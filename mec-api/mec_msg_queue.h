@@ -3,6 +3,8 @@
 
 #include <memory>
 
+namespace mec {
+
 struct MecMsg {
     enum type {
         TOUCH_ON,
@@ -32,12 +34,12 @@ struct MecMsg {
     } data_;
 };
 
-class MecMsgQueue_impl;
+class MsgQueue_impl;
 
-class MecMsgQueue {
+class MsgQueue {
 public:
-    MecMsgQueue();
-    ~MecMsgQueue();
+    MsgQueue();
+    ~MsgQueue();
     bool addToQueue(MecMsg&);
     bool nextMsg(MecMsg&);
     bool isEmpty();
@@ -46,8 +48,9 @@ public:
     int  pending();
 
 private:
-    std::unique_ptr<MecMsgQueue_impl> impl_;
+    std::unique_ptr<MsgQueue_impl> impl_;
 };
 
+}
 
 #endif// MECMSGQUEUE_H

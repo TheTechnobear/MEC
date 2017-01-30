@@ -11,9 +11,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-#include <mec_api.h>
-
-
 
 //==============================================================================
 MecAudioProcessor::MecAudioProcessor()
@@ -113,7 +110,7 @@ void MecAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // initialisation that you need..
     sampleRate_ = sampleRate;
     samplesPerBlock_ = samplesPerBlock;
-    struct PluginMecCallback : public MecCallback {
+    struct PluginMecCallback : public mec::Callback {
         const int MPE_GLOBAL_CH = 1;
         const int MPE_NOTE_OFFSET = 2;
         const float PBR = 48.0f;
@@ -158,7 +155,7 @@ void MecAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     };
     
     if(mecapi_==nullptr) {
-        mecapi_.reset(new MecApi(mecPrefFile_.toRawUTF8()));
+        mecapi_.reset(new mec::MecApi(mecPrefFile_.toRawUTF8()));
         mecapi_->subscribe(new PluginMecCallback(mecMidiQueue_));
         mecapi_->init();
     }

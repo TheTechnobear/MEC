@@ -4,25 +4,27 @@
 #include "../mec_prefs.h"
 #include "../mec_voice.h"
 
+namespace mec {
+
 ////////////////////////////////////////////////
-MecMidi::MecMidi(IMecCallback& cb) :
+MidiDevice::MidiDevice(ICallback& cb) :
     active_(false), callback_(cb) {
 }
 
-MecMidi::~MecMidi() {
+MidiDevice::~MidiDevice() {
     deinit();
 }
 
 
-void MecMidiInCallback( double deltatime, std::vector< unsigned char > *message, void *userData )
+void MidiDeviceInCallback( double deltatime, std::vector< unsigned char > *message, void *userData )
 {
-    MecMidi* self = static_cast<MecMidi*>(userData);
+    MidiDevice* self = static_cast<MidiDevice*>(userData);
     self->midiCallback(deltatime, message);
 }
 
 
-bool MecMidi::init(void* arg) {
-    MecPreferences prefs(arg);
+bool MidiDevice::init(void* arg) {
+    Preferences prefs(arg);
 
     if (active_) {
         deinit();
@@ -59,14 +61,14 @@ bool MecMidi::init(void* arg) {
 
 
     midiDevice_->ignoreTypes( true, true, true );
-    midiDevice_->setCallback( MecMidiInCallback, this );
+    midiDevice_->setCallback( MidiDeviceInCallback, this );
 
     active_ = true;
-    LOG_0("MecMidi::init - complete");
+    LOG_0("MidiDevice::init - complete");
     return active_;
 }
 
-bool MecMidi::process() {
+bool MidiDevice::process() {
     MecMsg msg;
     while (queue_.nextMsg(msg)) {
         switch (msg.type_) {
@@ -100,24 +102,24 @@ bool MecMidi::process() {
                 msg.data_.control_.value_);
             break;
         default:
-            LOG_0("MecMidi::process unhandled message type");
+            LOG_0("MidiDevice::process unhandled message type");
         }
     }
     return true;
 }
 
-void MecMidi::deinit() {
-    LOG_0("MecMidi::deinit");
+void MidiDevice::deinit() {
+    LOG_0("MidiDevice::deinit");
     if (midiDevice_) midiDevice_->cancelCallback();
     midiDevice_.reset();
     active_ = false;
 }
 
-bool MecMidi::isActive() {
+bool MidiDevice::isActive() {
     return active_;
 }
 
-bool MecMidi::midiCallback(double deltatime, std::vector< unsigned char > *message)  {
+bool MidiDevice::midiCallback(double deltatime, std::vector< unsigned char > *message)  {
     int status = 0, data1 = 0, data2 = 0, data3 = 0;
     unsigned int n = message->size();
     if (n > 3)  LOG_0("midiCallback unexpect midi size" << n);
@@ -306,7 +308,7 @@ bool MecMidi::midiCallback(double deltatime, std::vector< unsigned char > *messa
     return true;
 }
 
-
+}
 
 
 

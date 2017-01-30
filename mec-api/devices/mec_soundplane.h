@@ -9,23 +9,26 @@ class SoundplaneModel;
 class MLAppState;
 
 #include <memory>
+namespace mec {
 
-class MecSoundplane : public MecDevice {
+
+class Soundplane : public Device {
 
 public:
-    MecSoundplane(IMecCallback&);
-    virtual ~MecSoundplane();
+    Soundplane(ICallback&);
+    virtual ~Soundplane();
     virtual bool init(void*);
     virtual bool process();
     virtual void deinit();
     virtual bool isActive();
 
 private:
-	IMecCallback& callback_;
+	ICallback& callback_;
     std::unique_ptr<SoundplaneModel> model_;
     std::unique_ptr<MLAppState> modelState_;
     bool active_;
-    MecMsgQueue queue_;
+    MsgQueue queue_;
 };
 
+}
 #endif // MecSoundplane_H

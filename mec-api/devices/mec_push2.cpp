@@ -13,24 +13,27 @@
 // - surface/scale mapping for pads.
 
 ////////////////////////////////////////////////
-MecPush2::MecPush2(IMecCallback& cb) :
+
+namespace mec { 
+
+Push2::Push2(ICallback& cb) :
     active_(false), callback_(cb) {
 }
 
-MecPush2::~MecPush2() {
+Push2::~Push2() {
     deinit();
 }
 
 
-void MecPush2InCallback( double deltatime, std::vector< unsigned char > *message, void *userData )
+void Push2InCallback( double deltatime, std::vector< unsigned char > *message, void *userData )
 {
-    MecPush2* self = static_cast<MecPush2*>(userData);
+    Push2* self = static_cast<Push2*>(userData);
     self->midiCallback(deltatime, message);
 }
 
 
-bool MecPush2::init(void* arg) {
-    MecPreferences prefs(arg);
+bool Push2::init(void* arg) {
+    Preferences prefs(arg);
 
     if (active_) {
         deinit();
@@ -66,7 +69,7 @@ bool MecPush2::init(void* arg) {
 
 
     midiDevice_->ignoreTypes( true, true, true );
-    midiDevice_->setCallback( MecPush2InCallback, this );
+    midiDevice_->setCallback( Push2InCallback, this );
 
 
     push2Api_.reset(new Push2API::Push2());
@@ -83,11 +86,11 @@ bool MecPush2::init(void* arg) {
     push2Api_->p1_drawCell(row, 3, "01234567891234567");
 
     active_ = true;
-    LOG_0("MecPush2::init - complete");
+    LOG_0("Push2::init - complete");
     return active_;
 }
 
-bool MecPush2::process() {
+bool Push2::process() {
     MecMsg msg;
     while (queue_.nextMsg(msg)) {
         switch (msg.type_) {
@@ -121,7 +124,7 @@ bool MecPush2::process() {
                 msg.data_.control_.value_);
             break;
         default:
-            LOG_0("MecPush2::process unhandled message type");
+            LOG_0("Push2::process unhandled message type");
         }
     }
 
@@ -131,8 +134,8 @@ bool MecPush2::process() {
     return true;
 }
 
-void MecPush2::deinit() {
-    LOG_0("MecPush2::deinit");
+void Push2::deinit() {
+    LOG_0("Push2::deinit");
 
     if(push2Api_)push2Api_->deinit();
     push2Api_.reset();
@@ -143,11 +146,11 @@ void MecPush2::deinit() {
     active_ = false;
 }
 
-bool MecPush2::isActive() {
+bool Push2::isActive() {
     return active_;
 }
 
-bool MecPush2::midiCallback(double deltatime, std::vector< unsigned char > *message)  {
+bool Push2::midiCallback(double deltatime, std::vector< unsigned char > *message)  {
     int status = 0, data1 = 0, data2 = 0, data3 = 0;
     unsigned int n = message->size();
     if (n > 3)  LOG_0("midiCallback unexpect midi size" << n);
@@ -229,7 +232,7 @@ bool MecPush2::midiCallback(double deltatime, std::vector< unsigned char > *mess
     return true;
 }
 
-
+}
 
 
 

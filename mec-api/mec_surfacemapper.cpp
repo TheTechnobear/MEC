@@ -2,10 +2,12 @@
 
 #include "mec_log.h"
 
-MecSurfaceMapper::MecSurfaceMapper() : mode_(SM_NoMapping) {
+namespace mec {
+
+SurfaceMapper::SurfaceMapper() : mode_(SM_NoMapping) {
 }
 
-void MecSurfaceMapper::load(MecPreferences& prefs){
+void SurfaceMapper::load(Preferences& prefs){
 	LOG_2("load surface mapping");
 
 	mode_ = SM_NoMapping;
@@ -13,7 +15,7 @@ void MecSurfaceMapper::load(MecPreferences& prefs){
 	if(prefs.exists("calculated")) { loadCalcDefinition(prefs); return ;}
 }
 
-int MecSurfaceMapper::noteFromKey(int key) {
+int SurfaceMapper::noteFromKey(int key) {
 	switch (mode_) {
 		case SM_NoMapping: 	return key;
 		case SM_Notes: 		return notes_[key % MAX_KEYS];
@@ -22,7 +24,7 @@ int MecSurfaceMapper::noteFromKey(int key) {
 	return key;
 }	
 
-void MecSurfaceMapper::loadNoteArray(MecPreferences& prefs) {
+void SurfaceMapper::loadNoteArray(Preferences& prefs) {
 	mode_ = SM_Notes;
 	void* a = prefs.getArray("notes");
 	int sz = prefs.getArraySize(a);
@@ -36,8 +38,8 @@ void MecSurfaceMapper::loadNoteArray(MecPreferences& prefs) {
 	LOG_2("loaded surface mapping (notes) # keys : " << sz);
 }
 
-void MecSurfaceMapper::loadCalcDefinition(MecPreferences& p) {
-	MecPreferences prefs(p.getSubTree("calculated"));
+void SurfaceMapper::loadCalcDefinition(Preferences& p) {
+	Preferences prefs(p.getSubTree("calculated"));
 	mode_ = SM_Calculated;
 	keyInCol_ 	= prefs.getInt("keys in col", 127);
     rowMult_	= prefs.getInt("row multiplier", 1);
@@ -48,6 +50,4 @@ void MecSurfaceMapper::loadCalcDefinition(MecPreferences& p) {
 
 }
 
-
-
-
+}

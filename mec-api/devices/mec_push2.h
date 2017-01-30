@@ -1,5 +1,5 @@
-#ifndef MecPush2_H 
-#define MecPush2_H
+#ifndef MEC_Push2_H 
+#define MEC_Push2_H
 
 #include "../mec_api.h"
 #include "../mec_device.h"
@@ -12,11 +12,13 @@
 
 #include <push2lib/push2lib.h>
 
-class MecPush2 : public MecDevice {
+namespace mec {
+
+class Push2 : public Device {
 
 public:
-    MecPush2(IMecCallback&);
-    virtual ~MecPush2();
+    Push2(ICallback&);
+    virtual ~Push2();
     virtual bool init(void*);
     virtual bool process();
     virtual void deinit();
@@ -27,12 +29,14 @@ public:
 private:
 
     bool active_;
-	IMecCallback& callback_;
+	ICallback& callback_;
     std::unique_ptr<Push2API::Push2> push2Api_;
     std::unique_ptr<RtMidiIn>        midiDevice_; 
-    MecMsgQueue queue_;
+    MsgQueue queue_;
 
     float       pitchbendRange_;
 };
 
-#endif // MecPush2_H
+}
+
+#endif // MEC_Push2_H
