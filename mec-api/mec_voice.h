@@ -58,8 +58,8 @@ public:
     Voice*    startVoice(unsigned id) {
         Voice* voice;
         if (freeVoices_.size() > 0) {
-            voice = freeVoices_.back();
-            freeVoices_.pop_back();
+            voice = freeVoices_.front();
+            freeVoices_.pop_front();
         } else {
             // all voices used, use oldestActiveVoice
             // if you wish to steal it
@@ -92,7 +92,7 @@ public:
         if (voice->state_ == Voice::PENDING) {
 
 
-            if (voice->vel_.vcount_ < velocityCount_)
+            if (voice->vel_.vcount_ < velocityCount_ )
             {
                 voice->vel_.sumx_   += voice->vel_.x_;
                 voice->vel_.sumy_   += p;
@@ -100,7 +100,11 @@ public:
                 voice->vel_.sumxsq_ += (voice->vel_.x_ * voice->vel_.x_);
                 voice->vel_.vcount_ ++;
                 voice->vel_.x_ ++;
-                return;
+
+                if(p <= 1.0 ) {
+                    return;
+                }
+                // else max pressure, so consider 'complete'
             }
 
             voice->state_ = Voice::ACTIVE;
