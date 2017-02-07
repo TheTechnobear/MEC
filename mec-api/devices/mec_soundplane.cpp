@@ -83,8 +83,8 @@ public:
                     stolenMsg.data_.touch_.z_ = stolen->z_;
 
                     queue_.addToQueue(stolenMsg);
+                    voices_.stopVoice(stolen);
 
-                    voices_.stopVoice(voice);
                     voice = voices_.startVoice(touch);
                 }
 
@@ -92,18 +92,24 @@ public:
                     msg.type_ = MecMsg::TOUCH_ON;
                     msg.data_.touch_.touchId_ = voice->i_;
                     queue_.addToQueue(msg);
+                    voice->note_ = mn;
+                    voice->x_ = mx;
+                    voice->y_ = my;
+                    voice->z_ = mz;
+                    voice->t_ = t;
                 }
             }
             else {
                 msg.type_ = MecMsg::TOUCH_CONTINUE;
                 msg.data_.touch_.touchId_ = voice->i_;
                 queue_.addToQueue(msg);
+                voice->note_ = mn;
+                voice->x_ = mx;
+                voice->y_ = my;
+                voice->z_ = mz;
+                voice->t_ = t;
             }
-            voice->note_ = mn;
-            voice->x_ = mx;
-            voice->y_ = my;
-            voice->z_ = mz;
-            voice->t_ = t;
+            
         }
         else
         {

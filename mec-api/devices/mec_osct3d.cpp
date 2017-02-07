@@ -24,12 +24,12 @@ public:
         :   prefs_(p),
             queue_(q),
             valid_(true),
-            socket_(nullptr) 
+            socket_(nullptr)
     {
         if (valid_) {
             LOG_0("OscT3DHandler enabling for mecapi");
         }
-        for(int i=0;i<sizeof(activeTouches_);i++) {
+        for (int i = 0; i < sizeof(activeTouches_); i++) {
             activeTouches_[i] = false;
         }
         stealVoices_ = false;
@@ -51,22 +51,22 @@ public:
             // handles the bundle traversal.
             static const std::string A_COMMAND = "/t3d/command";
             static const std::string A_TOUCH = "/t3d/tch";
-            static const std::string A_FRM= "/t3d/frm";
+            static const std::string A_FRM = "/t3d/frm";
 
 
             osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
             std::string addr = m.AddressPattern();
-            if ( addr.length() >8 && addr.find(A_TOUCH)==0){
+            if ( addr.length() > 8 && addr.find(A_TOUCH) == 0) {
                 std::string touch = addr.substr(8);
-                int tId=std::stoi(touch);
-                float x=0.0f,y=0.0f,z=0.0f,note=0.0f;
+                int tId = std::stoi(touch);
+                float x = 0.0f, y = 0.0f, z = 0.0f, note = 0.0f;
                 args >> x >> y >> z >> note >>  osc::EndMessage;
-                queue_touch(tId,note,x,(y * 2.0f) - 1.0f,z);
+                queue_touch(tId, note, x, (y * 2.0f) - 1.0f, z);
             }
             else if ( addr == A_FRM) {
                 osc::int32 d1, d2;
                 args >> d1 >> d2 >> osc::EndMessage;
-            }  
+            }
             else if ( addr ==  A_COMMAND) {
                 const char* cmd;
                 args >> cmd >> osc::EndMessage;
@@ -75,8 +75,8 @@ public:
                 if (strcmp(cmd, "shutdown") == 0) {
                     LOG_1( "T3D shutdown request" );
                     MecMsg msg;
-                    msg.type_=MecMsg::MEC_CONTROL;
-                    msg.data_.mec_control_.cmd_=MecMsg::SHUTDOWN;
+                    msg.type_ = MecMsg::MEC_CONTROL;
+                    msg.data_.mec_control_.cmd_ = MecMsg::SHUTDOWN;
                     queue_.addToQueue(msg);
                 }
             }
@@ -90,13 +90,13 @@ public:
     virtual void queue_touch(int tId, float mn, float mx, float my, float mz)
     {
         Voices::Voice* voice = voices_.voiceId(tId);
-        if (mz>0.0)
+        if (mz > 0.0)
         {
             if (!voice) {
                 voice = voices_.startVoice(tId);
                 // LOG_1("start voice for " << tId << " ch " << voice->i_);
 
-                if(!voice && stealVoices_) {
+                if (!voice && stealVoices_) {
                     // no available voices, steal?
                     Voices::Voice* stolen = voices_.oldestActiveVoice();
                     MecMsg msg;
@@ -107,12 +107,12 @@ public:
                     msg.data_.touch_.z_ = 0.0f;
                     msg.type_ = MecMsg::TOUCH_OFF;
                     queue_.addToQueue(msg);
-                    voices_.stopVoice(voice);
+                    voices_.stopVoice(stolen);
                     voice = voices_.startVoice(tId);
                 }
-                if(voice) voices_.addPressure(voice, mz);
             }
-            else {
+
+            if (voice) {
                 if (voice->state_ == Voices::Voice::PENDING) {
                     // LOG_1("pressure voice for " << tId << " ch " << voice->i_ << " mz " << mz);
                     voices_.addPressure(voice, mz);
@@ -138,15 +138,16 @@ public:
                     msg.type_ = MecMsg::TOUCH_CONTINUE;
                     queue_.addToQueue(msg);
                 }
+                voice->note_ = mn;
+                voice->x_ = mx;
+                voice->y_ = my;
+                voice->z_ = mz;
+                voice->t_ = 0;
             }
-            voice->note_ = mn;
-            voice->x_ = mx;
-            voice->y_ = my;
-            voice->z_ = mz;
-            voice->t_ = 0;
-        }
-        else
-        {
+            // else no voice available
+
+        } else {
+            
             if (voice) {
                 // LOG_1("stop voice for " << tId << " ch " << voice->i_);
                 MecMsg msg;
@@ -215,14 +216,14 @@ bool OscT3D::init(void* arg) {
     LOG_1( "T3D socket on port : " << port_);
 
     socket_.reset(
-        new UdpListeningReceiveSocket(  
-            IpEndpointName( IpEndpointName::ANY_ADDRESS, port_ ), 
+        new UdpListeningReceiveSocket(
+            IpEndpointName( IpEndpointName::ANY_ADDRESS, port_ ),
             pCb )
     );
-    
+
     pCb->setSocket(socket_.get());
 
-    listenThread_= std::thread(OscT3DListen, this);
+    listenThread_ = std::thread(OscT3DListen, this);
 
 
     return active_;
@@ -234,7 +235,7 @@ bool OscT3D::process() {
 
 void OscT3D::deinit() {
     LOG_0("OscT3D::deinit");
-    if(active_) {
+    if (active_) {
         socket_->AsynchronousBreak();
         listenThread_.join();
         socket_.reset();

@@ -15,9 +15,9 @@ public:
         :   prefs_(p),
             callback_(cb),
             valid_(true),
-            voices_(p.getInt("voices",15), p.getInt("velocity count",5)),
+            voices_(p.getInt("voices", 15), p.getInt("velocity count", 5)),
             pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
-            stealVoices_(p.getBool("steal voices",true))
+            stealVoices_(p.getBool("steal voices", true))
     {
         if (valid_) {
             LOG_0("EigenharpHandler enabling for mecapi");
@@ -54,7 +54,7 @@ public:
         float   mx = bipolar(r);
         float   my = bipolar(y);
         float   mz = unipolar(p);
-        float   mn = note(key,mx);
+        float   mn = note(key, mx);
         if (a)
         {
 
@@ -67,16 +67,16 @@ public:
                 voice = voices_.startVoice(key);
                 // LOG_2("start voice for " << key << " ch " << voice->i_);
 
-                if(!voice && stealVoices_) {
+                if (!voice && stealVoices_) {
                     // no available voices, steal?
                     Voices::Voice* stolen = voices_.oldestActiveVoice();
-                    callback_.touchOff(stolen->i_,stolen->note_,stolen->x_,stolen->y_,0.0f);
-                    voices_.stopVoice(voice);
+                    callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
+                    voices_.stopVoice(stolen);
                     voice = voices_.startVoice(key);
                 }
-                if(voice) voices_.addPressure(voice, mz);
             }
-            else {
+
+            if (voice) {
                 if (voice->state_ == Voices::Voice::PENDING) {
                     voices_.addPressure(voice, mz);
                     if (voice->state_ == Voices::Voice::ACTIVE) {
@@ -87,18 +87,20 @@ public:
                 else {
                     callback_.touchContinue(voice->i_, mn, mx, my, mz);
                 }
+
+                voice->note_ = mn;
+                voice->x_ = mx;
+                voice->y_ = my;
+                voice->z_ = mz;
+                voice->t_ = t;
             }
-            voice->note_ = mn;
-            voice->x_ = mx;
-            voice->y_ = my;
-            voice->z_ = mz;
-            voice->t_ = t;
-        }
-        else
-        {
+            // else no voice available
+
+        } else {
+
             if (voice) {
                 // LOG_2("stop voice for " << key << " ch " << voice->i_);
-                callback_.touchOff(voice->i_,mn,mx,my,mz);
+                callback_.touchOff(voice->i_, mn, mx, my, mz);
                 voices_.stopVoice(voice);
             }
         }
@@ -106,24 +108,24 @@ public:
 
     virtual void breath(const char* dev, unsigned long long t, unsigned val)
     {
-        callback_.control(0,unipolar(val));
+        callback_.control(0, unipolar(val));
     }
 
     virtual void strip(const char* dev, unsigned long long t, unsigned strip, unsigned val)
     {
-        callback_.control(0x10 + strip,unipolar(val));
+        callback_.control(0x10 + strip, unipolar(val));
     }
 
     virtual void pedal(const char* dev, unsigned long long t, unsigned pedal, unsigned val)
     {
-        callback_.control(0x20 + pedal,unipolar(val));
+        callback_.control(0x20 + pedal, unipolar(val));
     }
 
 private:
-    inline  float clamp(float v,float mn, float mx) {return (std::max(std::min(v,mx),mn));}
+    inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
     float   unipolar(int val) { return std::min( float(val) / 4096.0f, 1.0f); }
     float   bipolar(int val) { return clamp(float(val) / 4096.0f, -1.0f, 1.0f);}
-    float   note(unsigned key,float mx) { return mapper_.noteFromKey(key) + (mx * pitchbendRange_) ; }
+    float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + (mx * pitchbendRange_) ; }
 
     Preferences prefs_;
     ICallback& callback_;
@@ -136,7 +138,7 @@ private:
 
 
 ////////////////////////////////////////////////
-Eigenharp::Eigenharp(ICallback& cb) : 
+Eigenharp::Eigenharp(ICallback& cb) :
     active_(false), callback_(cb), minPollTime_(100)  {
 }
 
@@ -145,17 +147,17 @@ Eigenharp::~Eigenharp() {
 }
 
 bool Eigenharp::init(void* arg) {
-   Preferences prefs(arg);
+    Preferences prefs(arg);
 
-   if (active_) {
+    if (active_) {
         LOG_2("Eigenharp::init - already active deinit");
         deinit();
     }
     active_ = false;
-	std::string fwDir = prefs.getString("firmware dir","./resources/");
-	minPollTime_ = prefs.getInt("min poll time",100);
+    std::string fwDir = prefs.getString("firmware dir", "./resources/");
+    minPollTime_ = prefs.getInt("min poll time", 100);
     eigenD_.reset(new EigenApi::Eigenharp(fwDir.c_str()));
-    EigenharpHandler *pCb = new EigenharpHandler(prefs,callback_);
+    EigenharpHandler *pCb = new EigenharpHandler(prefs, callback_);
     if (pCb->isValid()) {
         eigenD_->addCallback(pCb);
         if (eigenD_->create()) {
@@ -166,7 +168,7 @@ bool Eigenharp::init(void* arg) {
                 LOG_2("Eigenharp::init - failed to start");
             }
         } else {
-             LOG_2("Eigenharp::init - create failed");
+            LOG_2("Eigenharp::init - create failed");
         }
     } else {
         LOG_2("Eigenharp::init - invalid callback");
@@ -177,7 +179,7 @@ bool Eigenharp::init(void* arg) {
 
 bool Eigenharp::process() {
     const int sleepTime = 0;
-    if (active_) eigenD_->poll(sleepTime,minPollTime_);
+    if (active_) eigenD_->poll(sleepTime, minPollTime_);
     return true;
 }
 
