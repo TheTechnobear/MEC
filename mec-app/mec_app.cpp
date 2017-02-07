@@ -104,9 +104,16 @@ int main(int ac, char **av) {
     pthread_mutex_lock(&waitMtx);
 
     LOG_0("mec_app running ");
+
     while (keepRunning) {
         pthread_cond_wait(&waitCond, &waitMtx);
     }
+
+    // been told to stop, block SIGINT, to allow clean termination 
+    sigemptyset(&sigset);
+    sigaddset(&sigset, SIGINT);
+    pthread_sigmask(SIG_BLOCK, &sigset, &oldset);
+
     pthread_mutex_unlock(&waitMtx);
 
     // really we should join threads where to do a nice exit
