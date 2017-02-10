@@ -18,7 +18,7 @@
 namespace mec {
 
 /////////////////////////////////////////////////////////
-class MecApi_Impl : public ICallback {
+class MecApi_Impl : public ICallback, public ISurfaceCallback, public IMusicalCallback {
 public:
     MecApi_Impl(const std::string& configFile);
     ~MecApi_Impl();
@@ -29,12 +29,28 @@ public:
     void subscribe(ICallback*);
     void unsubscribe(ICallback*);
 
-    //ICallback
+
+    void subscribe(ISurfaceCallback*);
+    void unsubscribe(ISurfaceCallback*);
+
+    void subscribe(IMusicalCallback*);
+    void unsubscribe(IMusicalCallback*);
+
+
+    //callbacks...
     virtual void touchOn(int touchId, float note, float x, float y, float z);
     virtual void touchContinue(int touchId, float note, float x, float y, float z);
     virtual void touchOff(int touchId, float note, float x, float y, float z);
     virtual void control(int ctrlId, float v);
     virtual void mec_control(int cmd, void* other);
+
+    virtual void touchOn(const Touch&);
+    virtual void touchContinue(const Touch&);
+    virtual void touchOff(const Touch&);
+
+    virtual void touchOn(const MusicalTouch&);
+    virtual void touchContinue(const MusicalTouch&);
+    virtual void touchOff(const MusicalTouch&);
 
 private:
     void initDevices();
@@ -43,6 +59,8 @@ private:
     std::unique_ptr<Preferences> fileprefs_; // top level prefs on file
     std::unique_ptr<Preferences> prefs_;     // api prefs
     std::vector<ICallback*> callbacks_;
+    std::vector<ISurfaceCallback*>  surfaces_;
+    std::vector<IMusicalCallback*>  musicalsurfaces_;
 };
 
 
@@ -72,6 +90,23 @@ void MecApi::subscribe(ICallback* p) {
 void MecApi::unsubscribe(ICallback* p) {
     impl_->unsubscribe(p);
 }
+
+void MecApi::subscribe(ISurfaceCallback* p) {
+    impl_->subscribe(p);
+
+}
+void MecApi::unsubscribe(ISurfaceCallback* p) {
+    impl_->unsubscribe(p);
+}
+void MecApi::subscribe(IMusicalCallback* p) {
+    impl_->subscribe(p);
+
+}
+void MecApi::unsubscribe(IMusicalCallback* p) {
+    impl_->unsubscribe(p);
+}
+
+
 
 /////////////////////////////////////////////////////////
 //MecApi_Impl
@@ -116,6 +151,33 @@ void MecApi_Impl::unsubscribe(ICallback* p) {
     }
 }
 
+void MecApi_Impl::subscribe(ISurfaceCallback* p) {
+    surfaces_.push_back(p);
+}
+
+void MecApi_Impl::unsubscribe(ISurfaceCallback* p) {
+    for (std::vector<ISurfaceCallback*>::iterator it = surfaces_.begin() ; it != surfaces_.end(); ++it) {
+        if(p==(*it)) {
+            surfaces_.erase(it);
+            return;
+        }
+    }
+}
+
+void MecApi_Impl::subscribe(IMusicalCallback* p) {
+    musicalsurfaces_.push_back(p);
+}
+
+void MecApi_Impl::unsubscribe(IMusicalCallback* p) {
+    for (std::vector<IMusicalCallback*>::iterator it = musicalsurfaces_.begin() ; it != musicalsurfaces_.end(); ++it) {
+        if(p==(*it)) {
+            musicalsurfaces_.erase(it);
+            return;
+        }
+    }
+}
+
+
 void MecApi_Impl::touchOn(int touchId, float note, float x, float y, float z) {
     for (std::vector<ICallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
         (*it)->touchOn(touchId,note,x,y,z);
@@ -145,6 +207,45 @@ void MecApi_Impl::mec_control(int cmd, void* other) {
         (*it)->mec_control(cmd,other);
     }
 }
+
+
+void MecApi_Impl::touchOn(const Touch& t) {
+    for (std::vector<ISurfaceCallback*>::iterator it = surfaces_.begin() ; it != surfaces_.end(); ++it) {
+        (*it)->touchOn(t);
+    }
+}
+
+void MecApi_Impl::touchContinue(const Touch& t) {
+    for (std::vector<ISurfaceCallback*>::iterator it = surfaces_.begin() ; it != surfaces_.end(); ++it) {
+        (*it)->touchContinue(t);
+    }
+}
+
+void MecApi_Impl::touchOff(const Touch& t) {
+    for (std::vector<ISurfaceCallback*>::iterator it = surfaces_.begin() ; it != surfaces_.end(); ++it) {
+        (*it)->touchOff(t);
+    }
+}
+
+void MecApi_Impl::touchOn(const MusicalTouch& t) {
+    for (std::vector<IMusicalCallback*>::iterator it = musicalsurfaces_.begin() ; it != musicalsurfaces_.end(); ++it) {
+        (*it)->touchOn(t);
+    }
+}
+
+void MecApi_Impl::touchContinue(const MusicalTouch& t) {
+    for (std::vector<IMusicalCallback*>::iterator it = musicalsurfaces_.begin() ; it != musicalsurfaces_.end(); ++it) {
+        (*it)->touchContinue(t);
+    }
+}
+
+void MecApi_Impl::touchOff(const MusicalTouch& t) {
+    for (std::vector<IMusicalCallback*>::iterator it = musicalsurfaces_.begin() ; it != musicalsurfaces_.end(); ++it) {
+        (*it)->touchOff(t);
+    }
+}
+
+
 
 
 /////////////////////////////////////////////////////////

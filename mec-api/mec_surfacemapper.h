@@ -3,6 +3,11 @@
 
 #include "mec_prefs.h"
 
+
+
+// SURFACE MAPPING 
+// this class will be superceded by mec::surface
+
 const int MAX_KEYS = 256;
 
 

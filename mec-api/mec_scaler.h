@@ -11,30 +11,39 @@
 // 
 // scale can be chromatic or not, intervales are determined in float
 // e.g.
-//  major : 0.0, 2.0, 4.0, 5.0, 7.0, 9.0, 11.0, 12.0
-//  minor  : 0.0, 2.0, 3.0, 5.0. 7.0, 8.0, 10.0, 12.0
-//  chromatic: 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
+// major : 0.0, 2.0, 4.0, 5.0, 7.0, 9.0, 11.0, 12.0
+// minor  : 0.0, 2.0, 3.0, 5.0. 7.0, 8.0, 10.0, 12.0
+// chromatic: 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
   
 namespace mec {
 
-struct MusicalTouch : public Touch {
-    float note_;
+
+
+class Scales {
+public:
+            Scales();
+    virtual ~Scales();
+    void    load(Preferences& prefs);
+
+    const std::std::vector<float>& getScale(const std::string& name);
+private:
+    std::map<std::string,std::vector<float>> scales_;
 };
 
 
-
 class Scaler {
-
 public:
             Scaler();
     virtual ~Scaler();
-    void  load(Preferences& prefs);
+    void    load(Preferences& prefs);
 
     virtual MusicalTouch mapToNote(const Touch& t);
  
-    void  setScale(float[] notes);
-private:
+    void  setScale(std::std::vector<float>);
+    void  setScale(sconst std::string& name);
 
+private:
+    std::vector<float> scale_;
 };
 
 }
