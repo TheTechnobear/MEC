@@ -5,6 +5,7 @@ libusb
 #Building linux (or mac)
 
     apt-get install libusb-1.0-0-dev
+    apt-get install libasound2-dev (linux only)
     mkdir build
     cd build
     cmake .. 
