@@ -1,0 +1,98 @@
+{
+    "__thought experiment only , do not use__" : {},
+    "mec" : {
+
+        "device types" : {
+            "eigenharp" : {
+                "__hardware config info__ e.g. ports, defaults, firmware"
+            },
+            "soundplane" : {
+                "__hardware config info__"
+            },
+            "osct3d" : {
+                "port" : 0
+            },
+            "etc..." : {
+                "__hardware config info__"
+            }
+        },
+
+        "__here are the active devices, i.e the above is just whats availabel, here are the ones in use, and you may have muliple of a type"
+        "__somehow you will need to identify a device when there are multiple instances, some devices may not allow multiple"
+        "__settings in these section override those in device type__, i.e device type can act as default"
+        "__surface is important, it has to be unique!"
+        "active devices" : {
+            "pico_1" : {
+                "type" : "eigenharp",
+                "id" : "pico 1",
+                "surface" : 1  
+            },
+            "tau_1" : {
+                "type" : "eigenharp",
+                "id" : "alpha 1",
+                "surface" : 2 
+            },
+            "soundplane_1" : {
+                "type" : "soundplane",
+                "surface" : 3 
+            },
+            "osc_1" : {
+                "type" : "osct3d",
+                "surface" : 4,
+                "port" : 3123 
+            }
+        }
+
+
+        "surface mapping" : {
+            "1"  : {
+                "10" : {
+                    // "rmin" : 0, defaults to 0 
+                    "rmax" : 5 
+                },
+                "11" : {
+                    "rmin" : 5, 
+                    "rmax" : 10 
+                },
+                "11" : {
+                    "rmin" : 10, 
+                    // "rmax" :  defaults to max
+                }
+            }
+            "2"  : {
+                "20" : {  // includes everything , will be manually 'switched'
+                },
+                "21" : {
+                },
+            }
+            "3"  : {
+                "30" : {
+                    "xmax" : 0.5 
+                },
+                "31" : {
+                    "xmin" : 0.5 
+                },
+            }
+
+        },
+
+        "scales" : {
+             "major" :  [0.0, 2.0, 4.0, 5.0, 7.0, 9.0, 11.0, 12.0],
+             "minor"  : [ 0.0, 2.0, 3.0, 5.0, 7.0, 8.0, 10.0, 12.0],
+             "chromatic" : [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+        },
+
+        "scaler" : {
+            "1" : {
+                "zone" : 10,
+                "scale" : "major"
+            },
+            "2" : {
+                "zone" : 11,
+                "scale" : "minor"
+            }
+        }
+
+
+    }
+}
