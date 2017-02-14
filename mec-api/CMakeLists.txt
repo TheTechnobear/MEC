@@ -15,6 +15,10 @@ set(MECAPI_SRC
     mec_msg_queue.h
     mec_prefs.cpp
     mec_prefs.h
+    mec_scaler.cpp
+    mec_scaler.h
+    mec_surface.cpp
+    mec_surface.h
     mec_surfacemapper.cpp
     mec_surfacemapper.h
     mec_voice.h
@@ -44,3 +48,6 @@ include_directories (
 add_library(mec-api SHARED ${MECAPI_SRC})
 
 target_link_libraries (mec-api mec-eigenharp mec-soundplane mec-push2 cjson oscpack rtmidi)
+
+add_subdirectory(tests)
+

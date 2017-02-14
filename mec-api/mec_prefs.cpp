@@ -8,13 +8,15 @@
 
 namespace mec {
 
-Preferences::Preferences(const std::string& file) : jsonData_(nullptr), owned_(true) {
+Preferences::Preferences(const std::string& file) :
+    jsonData_(nullptr), owned_(true) {
     valid_ = loadPreferences(file);
 }
 
-Preferences::Preferences(void* p) : jsonData_(static_cast<cJSON*> (p)), owned_(false) {
+Preferences::Preferences(void* p) :
+    jsonData_(static_cast<cJSON*> (p)), owned_(false),
+    valid_(jsonData_ != nullptr) {
 }
-
 
 
 Preferences::~Preferences() {
@@ -40,112 +42,130 @@ bool Preferences::loadPreferences(const std::string& file) {
         jsonData_ = cJSON_Parse(jsonStr.c_str());
         owned_ = true;
 
-
         if (jsonData_) {
-            LOG_0("loaded preferences");
-            char* p = cJSON_Print( (cJSON*) jsonData_);
-            std::cout << p << std::endl;
-            delete p;
             return true;
         }
-        else
-        {
-            LOG_0( "unable to parse preferences file");
-        }
     }
-    else
-    {
-        LOG_0("unable to load preferences file");
-    }
+    LOG_0("unable to load preferences file");
     return false;
 }
 
-bool Preferences::getBool(const std::string& v, bool def) {
+std::vector<std::string> Preferences::getKeys() const {
+    std::vector<std::string> ret;
+
+    cJSON *c = static_cast<cJSON*>(jsonData_)->child;
+    while (c)  {
+        std::string s = c->string;
+        ret.push_back(s);
+        c = c->next;
+    }
+    return ret;
+}
+
+bool Preferences::getBool(const std::string& v, bool def) const {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
-    if (node!=nullptr) {
-        if(node->type == cJSON_True) return true;
+    if (node != nullptr) {
+        if (node->type == cJSON_True) return true;
         else if (node->type == cJSON_False) return false;
     }
     return def;
 }
 
 
-int Preferences::getInt(const std::string& v, int def) {
+int Preferences::getInt(const std::string& v, int def) const {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
-    if (node!=nullptr && node->type == cJSON_Number) {
+    if (node != nullptr && node->type == cJSON_Number) {
         return node->valueint;
     }
     return def;
 }
 
 
-double Preferences::getDouble(const std::string& v, double def) {
+double Preferences::getDouble(const std::string& v, double def) const {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
-    if (node!=nullptr && node->type == cJSON_Number) {
+    if (node != nullptr && node->type == cJSON_Number) {
         return node->valuedouble;
     }
     return def;
 }
 
-std::string Preferences::getString(const std::string& v, const std::string def) {
+std::string Preferences::getString(const std::string& v, const std::string def) const {
     if (! jsonData_) return def;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
-    if (node!=nullptr && node->type == cJSON_String) {
+    if (node != nullptr && node->type == cJSON_String) {
         return node->valuestring;
     }
     return def;
 }
 
-void* Preferences::getArray(const std::string v) {
+void* Preferences::getArray(const std::string v) const {
     if (! jsonData_) return nullptr;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
-    if (node!=nullptr && node->type == cJSON_Array) {
+    if (node != nullptr && node->type == cJSON_Array) {
         return node;
     }
     return nullptr;
 }
 
-int Preferences::getArraySize(void* v) {
+int Preferences::getArraySize(void* v) const {
     cJSON *node = (cJSON*) v;
-    if(node!=nullptr && node->type == cJSON_Array) {
+    if (node != nullptr && node->type == cJSON_Array) {
         return cJSON_GetArraySize(node);
     }
     return 0;
 }
 
-int Preferences::getArrayInt(void* v,int i, int def) {
+int Preferences::getArrayInt(void* v, int i, int def) const {
     cJSON *array = (cJSON*) v;
-    cJSON *node = cJSON_GetArrayItem(array,i);
-    if (node!=nullptr && node->type == cJSON_Number) {
+    cJSON *node = cJSON_GetArrayItem(array, i);
+    if (node != nullptr && node->type == cJSON_Number) {
         return node->valueint;
     }
     return def;
 }
 
+double Preferences::getArrayDouble(void* v, int i, double def) const {
+    cJSON *array = (cJSON*) v;
+    cJSON *node = cJSON_GetArrayItem(array, i);
+    if (node != nullptr && node->type == cJSON_Number) {
+        return node->valuedouble;
+    }
+    return def;
+}
 
-void* Preferences::getTree() {
+std::string Preferences::getArrayString(void* v, int i, const std::string def) const {
+    cJSON *array = (cJSON*) v;
+    cJSON *node = cJSON_GetArrayItem(array, i);
+    if (node != nullptr && node->type == cJSON_String) {
+        return node->valuestring;
+    }
+    return def;
+}
+
+
+void* Preferences::getTree() const {
     return jsonData_;
 }
 
-void* Preferences::getSubTree(const std::string v) {
+void* Preferences::getSubTree(const std::string v) const {
     if (! jsonData_) return nullptr;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
-    if (node!=nullptr && node->type == cJSON_Object) {
+    if (node != nullptr && node->type == cJSON_Object) {
         return node;
     }
     return nullptr;
 }
 
-bool Preferences::exists(const std::string v) {
+bool Preferences::exists(const std::string v) const {
     if (! jsonData_) return false;
     cJSON * node = cJSON_GetObjectItem((cJSON*) jsonData_, v.c_str());
     return node != nullptr;
 }
 
-void Preferences::print() {
+void Preferences::print() const {
     if (! jsonData_)  {
         LOG_0("invalid json data");
 
@@ -156,5 +176,10 @@ void Preferences::print() {
     }
 }
 
+bool Preferences::valid() const {
+    return valid_;
 }
+
+
+} // namespace
 

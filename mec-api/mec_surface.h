@@ -1,6 +1,7 @@
 #ifndef MEC_SURFACE_H
 #define MEC_SURFACE_H
 
+#include "mec_api.h"
 #include "mec_prefs.h"
 
 
@@ -15,24 +16,26 @@ namespace mec {
 
 class Surface {
 public:
-            Surface();
+            Surface(int surfaceId);
     virtual ~Surface();
-    void    load(Preferences& prefs);
+    virtual void    load(Preferences& prefs);
 
-    virtual Touch map(const Touch&);
+    int getId();
+
+    virtual Touch map(const Touch&)=0;
 
 private:
     int surfaceId_;
 };
 
 // for now, only allow split/join A/B A+B
-class SplitSurface {
+class SplitSurface : public Surface {
 public:
-            SplitSurface();
+            SplitSurface(int surfaceId);
     virtual ~SplitSurface();
-    void    load(Preferences& prefs);
+    virtual void    load(Preferences& prefs) override;
 
-    virtual Touch map(const Touch&);
+    virtual Touch map(const Touch&) override;
 
 private:
     float minX_, maxX_;
@@ -45,13 +48,13 @@ private:
 };
 
 
-class JoinedSurface {
+class JoinedSurface : public Surface {
 public:
-            Surface();
-    virtual ~Surface();
-    void    load(Preferences& prefs);
+            JoinedSurface(int surfaceId);
+    virtual ~JoinedSurface();
+    virtual void    load(Preferences& prefs) override;
 
-    virtual Touch map(const Touch&);
+    virtual Touch map(const Touch&) override;
 
 private:
     int surfaceA_, surfaceB_;

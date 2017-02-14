@@ -13,7 +13,7 @@ public:
     enum MecControl {
         SHUTDOWN
     };
-    
+
     virtual ~ICallback() {};
     virtual void touchOn(int touchId, float note, float x, float y, float z) = 0;
     virtual void touchContinue(int touchId, float note, float x, float y, float z) = 0;
@@ -25,11 +25,11 @@ public:
 class Callback : public ICallback {
 public:
     virtual ~Callback() {};
-    virtual void touchOn(int touchId, float note, float x, float y, float z) {};
-    virtual void touchContinue(int touchId, float note, float x, float y, float z){};
-    virtual void touchOff(int touchId, float note, float x, float y, float z) {};
-    virtual void control(int ctrlId, float v) {};
-    virtual void mec_control(int cmd, void* other) {};
+    virtual void touchOn(int touchId, float note, float x, float y, float z) override {};
+    virtual void touchContinue(int touchId, float note, float x, float y, float z) override {};
+    virtual void touchOff(int touchId, float note, float x, float y, float z) override  {};
+    virtual void control(int ctrlId, float v) override  {};
+    virtual void mec_control(int cmd, void* other) override  {};
 };
 
 //////////////////////////////////////////
@@ -38,15 +38,26 @@ public:
 
 
 struct Touch {
+    Touch() {
+        ;
+    }
+    Touch(int id, int surface, float x, float y, float z, float r, float c) :
+        id_(id), surface_(surface),
+        x_(x), y_(y), z_(z),
+        r_(r), c_(c) {
+
+    }
+
     int   id_;
     int   surface_;
-
-    float r_;
-    float c_;
 
     float x_;
     float y_;
     float z_;
+
+    float r_; // string 
+    float c_; // fret
+
 };
 
 class ISurfaceCallback {
@@ -57,6 +68,16 @@ public:
 };
 
 struct MusicalTouch : public Touch {
+    MusicalTouch() {
+        ;
+    }
+
+    MusicalTouch(const Touch& t, float note, int scaler) :
+        Touch(t.id_, t.surface_, t.x_, t.y_, t.z_, t.r_, t.c_),
+        note_(note), scaler_(scaler)   {
+        ;
+    }
+
     float note_;
     int   scaler_;
 };

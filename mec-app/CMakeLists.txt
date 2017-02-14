@@ -33,4 +33,3 @@ target_link_libraries (mec-app mec-api oscpack rtmidi)
 if(APPLE)
     target_link_libraries(mec-app "-framework CoreMIDI")
 endif(APPLE)
-

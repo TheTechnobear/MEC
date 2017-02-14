@@ -79,6 +79,8 @@ int main(int ac, char **av) {
     mec::Preferences prefs;
     if (!prefs.valid()) return -1;
     keepRunning = true;
+    LOG_0("loaded preferences");
+    prefs.print();
 
     if (prefs.exists("mec") && prefs.exists("mec-app")) {
         LOG_1("mec api initialise ");

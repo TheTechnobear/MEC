@@ -2,32 +2,49 @@
 #define MEC_SCALER_H
 
 #include "mec_prefs.h"
+#include "mec_api.h"
 
+#include <vector>
+#include <map>
 
 // NOT USED YET INTERFACE EXPERIMENT ONLY
 // 
 // Scaler is used to map a surface to a musical output .. notes
-// e.g. r/c x/y to note
-// 
+// e.g. r/c  to note
+
+// row/column
+// consider ROW as a guitar string (so string N is offset N* rowOffset)
+// consider columns as a positon (like a fret) on that string. (its fretless, i.e. fractional position)
+// note: presently linear interp between scale positions
+ 
 // scale can be chromatic or not, intervales are determined in float
 // e.g.
 // major : 0.0, 2.0, 4.0, 5.0, 7.0, 9.0, 11.0, 12.0
-// minor  : 0.0, 2.0, 3.0, 5.0. 7.0, 8.0, 10.0, 12.0
+// minor  : 0.0, 2.0, 3.0, 5.0, 7.0, 8.0, 10.0, 12.0
 // chromatic: 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
+// notes:
+// a 12 note scales has 13 entries, we need this for the last interval, and also octave size.
+// we dont care what the last number is, it just has to be same tone as 0.0, but an octave higher
+// we use linear interp beween notes in scale
+
+
   
 namespace mec {
 
-
+typedef std::vector<float> ScaleArray;
 
 class Scales {
 public:
             Scales();
     virtual ~Scales();
-    void    load(Preferences& prefs);
+    bool    load(const Preferences& prefs);
 
-    const std::std::vector<float>& getScale(const std::string& name);
+    // static/singleton interface
+    static const ScaleArray& getScale(const std::string& name);
+    static bool init(const Preferences&);
+
 private:
-    std::map<std::string,std::vector<float>> scales_;
+    std::map<std::string,ScaleArray> scales_;
 };
 
 
@@ -35,15 +52,27 @@ class Scaler {
 public:
             Scaler();
     virtual ~Scaler();
-    void    load(Preferences& prefs);
+    bool    load(const Preferences& prefs);
 
     virtual MusicalTouch mapToNote(const Touch& t);
  
-    void  setScale(std::std::vector<float>);
-    void  setScale(sconst std::string& name);
+    float getTonic();
+    void  setTonic(float);
+    float getRowOffset();
+    void  setRowOffset(float);
+    float getColumnOffset();
+    void  setColumnOffset(float);
+
+    void  setScale(const ScaleArray& scale) ;
+    void  setScale(const std::string& name);
+    const ScaleArray& getScale();
 
 private:
-    std::vector<float> scale_;
+    int         id_;
+    ScaleArray  scale_;
+    float       tonic_;
+    float       rowOffset_;
+    float       columnOffset_;
 };
 
 }

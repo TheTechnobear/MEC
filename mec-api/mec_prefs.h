@@ -3,7 +3,7 @@
 
 #include <cstring>
 #include <string>
-
+#include <vector>
 namespace mec {
 
 class Preferences {
@@ -12,21 +12,25 @@ public:
     virtual ~Preferences();
     Preferences(void* subtree);
 
-    bool        getBool(const std::string& v, bool def = false);
-    int         getInt(const std::string& v, int def = 0);
-    double      getDouble(const std::string& v, double def = 0.0);
-    std::string getString(const std::string& v, const std::string def = "");
-    void*       getArray(const std::string v);
-    int         getArraySize(void*);
-    int         getArrayInt(void*, int i,int def);
+    std::vector<std::string> getKeys() const;
 
-    void*       getSubTree(const std::string v);
-    void*       getTree();
+    bool        getBool(const std::string& v, bool def = false) const; 
+    int         getInt(const std::string& v, int def = 0) const;
+    double      getDouble(const std::string& v, double def = 0.0) const;
+    std::string getString(const std::string& v, const std::string def = "") const;
 
-    bool        exists(const std::string v);
-    void        print();
-    bool        valid() {return valid_;}
+    void*       getArray(const std::string v) const;
+    int         getArraySize(void*) const;
+    int         getArrayInt(void*, int i,int def) const;
+    double      getArrayDouble(void*, int i,double def) const;
+    std::string getArrayString(void*,int i, const std::string def = "") const;
 
+    void*       getSubTree(const std::string v) const;
+    void*       getTree() const;
+
+    bool        exists(const std::string v) const;
+    void        print() const;
+    bool        valid() const;
 private:
     bool        loadPreferences(const std::string& file);
 
