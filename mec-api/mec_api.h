@@ -37,11 +37,25 @@ public:
 //////////////////////////////////////////
 
 
+
+typedef std::string SurfaceID;
+
+
+// represents a single touch on a surface
+// each active touch has a unique id, which is reused, often relates to a 'voice'
+// x/y continuous across the entire surface
+// r/c the surface is split into cells, defined by a row/column, the row can be considerd like a string on a stringed instrument
+// the column is the position along that string (like a fret position , but fretless ;) 
+// there is therefore a relationship between X and C , and R and Y
+
+// touches originate from a device, and then are passed thru surfaces to allow there coordinates to be translated.
+// a simple exampe is a device surfaces may be 'split' into 2 halfs, a 'split surface' will take the device touches and translate into touches for that 
+// split... to the application these touches will be the same as if they came from different devices
 struct Touch {
     Touch() {
         ;
     }
-    Touch(int id, int surface, float x, float y, float z, float r, float c) :
+    Touch(int id, SurfaceID surface, float x, float y, float z, float r, float c) :
         id_(id), surface_(surface),
         x_(x), y_(y), z_(z),
         r_(r), c_(c) {
@@ -49,14 +63,14 @@ struct Touch {
     }
 
     int   id_;
-    int   surface_;
+    SurfaceID   surface_;
 
-    float x_;
-    float y_;
-    float z_;
+    float x_; // typically pitch axis
+    float y_; // typically timbre axis
+    float z_; // typically pressure axis
 
-    float r_; // string 
-    float c_; // fret
+    float r_; // string, sames axis as y.. but often used for pitch offsets (e.g 4ths), then Y is within this axis
+    float c_; // pitch along string, usually proportional to x.
 
 };
 
@@ -67,19 +81,20 @@ public:
     virtual void touchOff(const Touch&) = 0;
 };
 
+
+// a musical touch, is a touch that has been converted into a pitched note using a scaler
 struct MusicalTouch : public Touch {
     MusicalTouch() {
         ;
     }
 
-    MusicalTouch(const Touch& t, float note, int scaler) :
+    MusicalTouch(const Touch& t, float note) :
         Touch(t.id_, t.surface_, t.x_, t.y_, t.z_, t.r_, t.c_),
-        note_(note), scaler_(scaler)   {
+        note_(note)  {
         ;
     }
 
     float note_;
-    int   scaler_;
 };
 
 class IMusicalCallback {

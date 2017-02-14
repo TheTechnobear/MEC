@@ -10,54 +10,83 @@
 // mapping between surfaces
 // 
 
+
+#include <map>
+#include <memory>
+
 namespace mec {
 
 
 
+class Surface;
+
+class SurfaceManager {
+public: 
+    SurfaceManager();
+    virtual ~SurfaceManager();
+    bool init(const Preferences& prefs);
+
+    std::shared_ptr<Surface> getSurface(SurfaceID id);
+private:
+    std::map<SurfaceID,std::shared_ptr<Surface>> surfaces_;
+};
+
+
 class Surface {
 public:
-            Surface(int surfaceId);
+            Surface(SurfaceID surfaceId);
     virtual ~Surface();
-    virtual void    load(Preferences& prefs);
 
-    int getId();
+    SurfaceID       getId();
+    virtual bool    load(const Preferences& prefs);
+    virtual Touch   map(const Touch&) const;
 
-    virtual Touch map(const Touch&)=0;
-
-private:
-    int surfaceId_;
+protected:
+    SurfaceID surfaceId_;
 };
 
-// for now, only allow split/join A/B A+B
+// simple split with even split division
 class SplitSurface : public Surface {
 public:
-            SplitSurface(int surfaceId);
+            SplitSurface(SurfaceID surfaceId);
     virtual ~SplitSurface();
-    virtual void    load(Preferences& prefs) override;
 
-    virtual Touch map(const Touch&) override;
+    virtual bool    load(const Preferences& prefs) override;
+    virtual Touch   map(const Touch&) const override;
 
 private:
-    float minX_, maxX_;
-    float minY_, maxY_;
-    float minZ_, maxZ_;
-    float minR_, maxR_;
-    float minC_, maxC_;
-
-    int surfaceA_, surfaceB_;
+    enum {
+        C_X, 
+        C_Y, 
+        C_Z,
+        C_R,
+        C_C
+    } axis_;
+    std::vector<SurfaceID> surfaces_;
+    float splitPoint_;
 };
 
 
+// simple join with a constant offsets
+// (later surfaceSize will be taken from originating surface)
 class JoinedSurface : public Surface {
 public:
-            JoinedSurface(int surfaceId);
+            JoinedSurface(SurfaceID surfaceId);
     virtual ~JoinedSurface();
-    virtual void    load(Preferences& prefs) override;
 
-    virtual Touch map(const Touch&) override;
+    virtual bool  load(const Preferences& prefs) override;
+    virtual Touch map(const Touch&) const override;
 
 private:
-    int surfaceA_, surfaceB_;
+    enum {
+        C_X, 
+        C_Y, 
+        C_Z,
+        C_R,
+        C_C
+    } axis_;
+    std::vector<SurfaceID> surfaces_;
+    float surfaceSize_; 
 };
 
 }

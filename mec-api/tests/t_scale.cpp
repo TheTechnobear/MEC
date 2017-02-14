@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <mec_scaler.h>
+#include <mec_log.h>
 
 void dumpScale(const mec::ScaleArray& a) {
     for(float n : a) {
@@ -45,29 +46,38 @@ int main (int argc, char** argv) {
 
     t.r_ = 0.0f;
     t.c_ = 26.0f;
-    mt = scaler.mapToNote(t);
+    mt = scaler.map(t);
     assert(mt.note_ == t.c_);
     t.c_ = 48.62f;
-    mt = scaler.mapToNote(t);
+    mt = scaler.map(t);
     assert(mt.note_ == t.c_);
 
     scaler.setScale("major");
     t.c_ = 10.0f;
-    mt = scaler.mapToNote(t);
+    mt = scaler.map(t);
     assert(mt.note_ == 17.0f);
     t.c_ = 9.5f;
-    mt = scaler.mapToNote(t);
+    mt = scaler.map(t);
     assert(mt.note_ == 16.5f);
     t.c_ = 10.5f;
-    mt = scaler.mapToNote(t);
+    mt = scaler.map(t);
     assert(mt.note_ == 18.0f);
 
-    scaler.setRowOffset(4.0f);
+    scaler.setRowOffset(5.0f);
     scaler.setColumnOffset(1.0f);
     t.r_ = 1;
-    t.c_ = 10.5;
-    mt = scaler.mapToNote(t);
-    assert(mt.note_ == 23.0f);
+    t.c_ = 10.5f;
+    mt = scaler.map(t);
+    assert(mt.note_ == 24.0f);
+
+    mec::Preferences s1(mec_prefs.getSubTree("scaler 1"));
+    assert(scaler.load(s1));
+    assert(scaler.getRowOffset() ==4.0f);
+    t.r_ = 1;
+    t.c_ = 8.5f;
+    mt = scaler.map(t);
+    // 12 + 2.5 + 4.0 (row o) + 1.0 (col o)
+    assert(mt.note_ == 19.5f);
 
 
     std::cout << "test completed" << std::endl;

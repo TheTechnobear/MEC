@@ -44,7 +44,6 @@ const ScaleArray& Scales::getScale(const std::string& name) {
 
 
 Scaler::Scaler() :
-    id_(-1),
     scale_(Scales::getScale("chromatic")),
     tonic_(0.0f),
     rowOffset_(0.0f), columnOffset_(0.0f) {
@@ -55,10 +54,17 @@ Scaler::~Scaler() {
 }
 
 bool Scaler::load(const Preferences& prefs) {
+    if (!prefs.valid()) return false;
+
+    scale_ = Scales::getScale(prefs.getString("scale", "major"));
+    tonic_ = (float) prefs.getDouble("tonic", 0.0f);
+    rowOffset_ = (float) prefs.getDouble("row offset", 0.0f);
+    columnOffset_  = (float) prefs.getDouble("column offset", 0.0f);
+
     return true;
 }
 
-MusicalTouch Scaler::mapToNote(const Touch& t) {
+MusicalTouch Scaler::map(const Touch& t) const {
     // see notes above, important 12 note scale has 13 entries!
     // think , row = string , column = fret
     int ix = t.c_;
@@ -76,27 +82,34 @@ MusicalTouch Scaler::mapToNote(const Touch& t) {
 
     note = columnOffset_ + (t.r_ * rowOffset_) + tonic_ + note;
 
-    return MusicalTouch(t, note, id_);
+    return MusicalTouch(t, note);
 }
 
-float Scaler::getTonic() {
+float Scaler::getTonic() const {
     return tonic_;
 }
+
+float Scaler::getRowOffset() const {
+    return rowOffset_;
+}
+
+float Scaler::getColumnOffset() const {
+    return columnOffset_;
+}
+
+const ScaleArray& Scaler::getScale() const {
+    return scale_;
+}
+
 void  Scaler::setTonic(float f) {
     tonic_ = f;
 }
 
-float Scaler::getRowOffset() {
-    return rowOffset_;
-}
 
 void  Scaler::setRowOffset(float f) {
     rowOffset_ = f;
 }
 
-float Scaler::getColumnOffset() {
-    return columnOffset_;
-}
 
 void  Scaler::setColumnOffset(float f) {
     columnOffset_ = f;
@@ -110,9 +123,6 @@ void  Scaler::setScale(const std::string& name) {
     scale_ = Scales::getScale(name);
 }
 
-const ScaleArray& Scaler::getScale() {
-    return scale_;
-}
 
 
 } // namespace

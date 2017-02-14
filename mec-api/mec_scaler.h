@@ -54,25 +54,26 @@ public:
     virtual ~Scaler();
     bool    load(const Preferences& prefs);
 
-    virtual MusicalTouch mapToNote(const Touch& t);
+    virtual MusicalTouch map(const Touch& t) const;
+
+    float getTonic() const;
+    float getRowOffset() const;
+    float getColumnOffset() const;
+    const ScaleArray& getScale() const;
  
-    float getTonic();
     void  setTonic(float);
-    float getRowOffset();
     void  setRowOffset(float);
-    float getColumnOffset();
     void  setColumnOffset(float);
 
     void  setScale(const ScaleArray& scale) ;
     void  setScale(const std::string& name);
-    const ScaleArray& getScale();
 
 private:
-    int         id_;
-    ScaleArray  scale_;
     float       tonic_;
     float       rowOffset_;
     float       columnOffset_;
+
+    ScaleArray  scale_;
 };
 
 }
