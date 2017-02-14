@@ -46,7 +46,7 @@ typedef std::string SurfaceID;
 // x/y continuous across the entire surface
 // r/c the surface is split into cells, defined by a row/column, the row can be considerd like a string on a stringed instrument
 // the column is the position along that string (like a fret position , but fretless ;) 
-// there is therefore a relationship between X and C , and R and Y
+// there is therefore a relationship between X-C , and R-Y
 
 // touches originate from a device, and then are passed thru surfaces to allow there coordinates to be translated.
 // a simple exampe is a device surfaces may be 'split' into 2 halfs, a 'split surface' will take the device touches and translate into touches for that 

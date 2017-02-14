@@ -11,7 +11,11 @@ void dumpScale(const mec::ScaleArray& a) {
     }
     std::cout << std::endl;
 }
+
+
 int main (int argc, char** argv) {
+    LOG_0("test started");
+
     mec::Preferences prefs("../mec-api/tests/test.json");
     assert(prefs.valid());
     mec::Preferences mec_prefs(prefs.getSubTree("mec"));
@@ -80,6 +84,6 @@ int main (int argc, char** argv) {
     assert(mt.note_ == 19.5f);
 
 
-    std::cout << "test completed" << std::endl;
+    LOG_0("test completed");
     return 0;    
 }

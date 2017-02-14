@@ -5,8 +5,10 @@
 
 #include <mec_voice.h>
 #include <mec_prefs.h>
+#include <mec_log.h>
 
 int main (int argc, char** argv) {
+    LOG_0("test started");
 
     mec::Preferences prefs("../mec-api/tests/test.json");
     assert(prefs.valid());
@@ -27,6 +29,6 @@ int main (int argc, char** argv) {
     voices.startVoice(4);
     assert(voices.oldestActiveVoice()->id_==2);
 
-    std::cout << "test completed" << std::endl;
+    LOG_0("test completed");
     return 0;    
 }

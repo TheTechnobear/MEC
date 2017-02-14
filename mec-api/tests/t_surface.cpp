@@ -8,6 +8,8 @@
 #include <mec_log.h>
 
 int main (int argc, char** argv) {
+    LOG_0("test started");
+
     mec::Preferences prefs("../mec-api/tests/test.json");
     assert(prefs.valid());
     mec::Preferences mec_prefs(prefs.getSubTree("mec"));
@@ -52,7 +54,6 @@ int main (int argc, char** argv) {
     assert(out.x_ == 1.1f);
     assert(out.surface_ == "2");
 
-
-    std::cout << "test completed" << std::endl;
+    LOG_0("test completed");
     return 0;    
 }
