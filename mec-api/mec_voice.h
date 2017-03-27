@@ -5,10 +5,15 @@
 #include <vector>
 #include <list>
 
+#include "mec_log.h"
+
 namespace mec {
 
 class Voices {
 public:
+    const float V_SCALE_AMT = 4.0f;
+    const float V_CURVE_AMT = 1.0f;
+
     Voices(unsigned voiceCount = 15, unsigned velocityCount = 5)
         : maxVoices_(voiceCount), velocityCount_(velocityCount) {
         voices_.resize(maxVoices_);
@@ -69,8 +74,8 @@ public:
         voice->state_ = Voice::PENDING;
         voice->v_ = 0;
 
-        voice->vel_.scale_ = 1.0f;
-        voice->vel_.curve_ = 1.0f;
+        voice->vel_.scale_ = V_SCALE_AMT;
+        voice->vel_.curve_ = V_CURVE_AMT;
         voice->vel_.vcount_ = 0;
         voice->vel_.sumx_ = voice->vel_.sumy_ = voice->vel_.sumxy_ = voice->vel_.sumxsq_ = 0.0;
         voice->vel_.x_ = 0.0;
@@ -111,7 +116,15 @@ public:
             voice->vel_.raw_ = voice->vel_.scale_ *
                                (voice->vel_.x_ * voice->vel_.sumxy_ - (voice->vel_.sumx_ * voice->vel_.sumy_))
                                / (voice->vel_.x_ * voice->vel_.sumxsq_ - (voice->vel_.sumx_ * voice->vel_.sumx_));
-            voice->v_  = 1 - pow ( (double) (1 - voice->vel_.raw_), (double)(voice->vel_.curve_));
+            voice->v_  = 1.0f - pow ( (double) (1.0f - voice->vel_.raw_), (double)(voice->vel_.curve_));
+
+            // LOG_1("vel detector : " << voice->id_);
+            // LOG_1("raw : " << voice->vel_.raw_ << " v " << voice->v_);
+            // LOG_1("x  " << voice->vel_.x_);
+            // LOG_1("sumxy " <<voice->vel_.sumxy_ << " sumxsq " << voice->vel_.sumxsq_);
+            // LOG_1("sumx  " << voice->vel_.sumx_ << " sumy " << voice->vel_.sumy_ );
+
+            if(voice->v_>1.0) voice->v_ = 1.0;
         }
     }
 

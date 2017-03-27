@@ -24,8 +24,8 @@ void MidiProcessor::touchOn(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
 
-    unsigned ch = id;
-    voice.startNote_ = note; //int
+    unsigned ch = id + 1; // MPE starts on 2
+    voice.startNote_ = (note + 0.4999999) ; //int
 
     float semis = note - float(voice.startNote_);
     int pb = bipolar14bit(semis / pitchbendRange_);
@@ -34,15 +34,15 @@ void MidiProcessor::touchOn(int id, float note, float x, float y, float z) {
     int my = bipolar7bit(y);
     int mz = unipolar7bit(z);
 
-    // LOG_1("MidiProcessor::touchOn  note: ");
-    // LOG_1("   note" << note  << " semi :" << semis << " pb: " << pb);
+    // LOG_1("MidiProcessor::touchOn");
+    // LOG_1("   note : " << note  << " startNote " << voice.startNote_ << " semi :" << semis << " pb: " << pb);
     // LOG_1("   x :" << x << " mx: " << mx);
     // LOG_1("   y :" << y << " my: " << my);
     // LOG_1("   z :" << z << " mz: " << mz);
 
     pitchbend(ch, pb);
     cc(ch, TIMBRE_CC,  my);
-    noteOn(ch, note, mz);
+    noteOn(ch, voice.startNote_, mz);
 
     voice.note_ = voice.startNote_;
     voice.pitchbend_ = pb;
@@ -56,7 +56,7 @@ void MidiProcessor::touchOn(int id, float note, float x, float y, float z) {
 void MidiProcessor::touchContinue(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
-    unsigned ch = id;
+    unsigned ch = id + 1; // MPE starts on 2
     // unsigned mx = bipolar14bit(x);
     int my = bipolar7bit(y);
     unsigned mz = unipolar7bit(z);
@@ -64,12 +64,12 @@ void MidiProcessor::touchContinue(int id, float note, float x, float y, float z)
     float semis = note - float(voice.startNote_);
     int pb = bipolar14bit(semis / pitchbendRange_);
 
-    // LOG_2(std::cout  << "midi output c")
-    // LOG_2(           << " note :" << note << " pb: " << pb << " semis: " << semis)
-    // LOG_2(           << " y :" << y << " my: " << my)
-    // LOG_2(           << " z :" << z << " mz: " << mz)
-    // LOG_2(           << " startnote :" << voice.startNote_ << " pbr: " << pitchbendRange_)
-    // LOG_2(           )
+    // LOG_1(std::cout  << "midi output c")
+    // LOG_1(           << " note :" << note << " pb: " << pb << " semis: " << semis)
+    // LOG_1(           << " y :" << y << " my: " << my)
+    // LOG_1(           << " z :" << z << " mz: " << mz)
+    // LOG_1(           << " startnote :" << voice.startNote_ << " pbr: " << pitchbendRange_)
+    // LOG_1(           )
 
     voice.note_ = note;
 
@@ -91,7 +91,7 @@ void MidiProcessor::touchOff(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
 
-    unsigned ch = id;
+    unsigned ch = id + 1; // MPE starts on 2
     unsigned vel = 0.0f; // last vel = release velocity
     noteOff(ch, voice.startNote_ , vel);
     pressure(ch, 0.0f);
