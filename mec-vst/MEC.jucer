@@ -2,14 +2,16 @@
 
 <JUCERPROJECT id="AbK7N3" name="MEC" projectType="audioplug" version="1.0.0"
               bundleIdentifier="com.technobear.MEC" includeBinaryInAppConfig="1"
-              buildVST="1" buildVST3="0" buildAU="1" buildAUv3="0" buildRTAS="0"
+              buildVST="1" buildVST3="1" buildAU="1" buildAUv3="0" buildRTAS="0"
               buildAAX="0" pluginName="MEC" pluginDesc="MEC" pluginManufacturer="technobear.com"
               pluginManufacturerCode="TBoc" pluginCode="Mecv" pluginChannelConfigs=""
               pluginIsSynth="1" pluginWantsMidiIn="1" pluginProducesMidiOut="1"
               pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0" pluginAUExportPrefix="MECAU"
               pluginRTASCategory="" aaxIdentifier="com.technobear.MEC" pluginAAXCategory="AAX_ePlugInCategory_Dynamics"
-              jucerVersion="4.3.1" companyName="technobear" companyWebsite="technobear.com"
-              companyEmail="mharris@technobear.com" defines="">
+              jucerVersion="5.0.2" companyName="technobear" companyWebsite="technobear.com"
+              companyEmail="mharris@technobear.com" defines="" displaySplashScreen="0"
+              reportAppUsage="0" splashScreenColour="Dark" buildStandalone="0"
+              enableIAA="0">
   <MAINGROUP id="qrelMx" name="MEC">
     <GROUP id="{8B769CF3-1AA8-1F88-1E2C-283ED0F962C7}" name="Source">
       <FILE id="KhPYmQ" name="PluginSelector.cpp" compile="1" resource="0"
@@ -49,32 +51,28 @@
         <MODULEPATH id="juce_data_structures" path="../../../SDKs/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../../SDKs/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_cryptography" path="../../../SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_video" path="../../../SDKs/JUCE/modules"/>
-        <MODULEPATH id="juce_opengl" path="../../../SDKs/JUCE/modules"/>
         <MODULEPATH id="juce_audio_basics" path="../../../SDKs/JUCE/modules"/>
         <MODULEPATH id="juce_audio_devices" path="../../../SDKs/JUCE/modules"/>
         <MODULEPATH id="juce_audio_formats" path="../../../SDKs/JUCE/modules"/>
         <MODULEPATH id="juce_audio_processors" path="../../../SDKs/JUCE/modules"/>
         <MODULEPATH id="juce_audio_plugin_client" path="../../../SDKs/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../SDKs/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
   <MODULES>
-    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0"/>
-    <MODULE id="juce_video" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
   </MODULES>
   <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_PLUGINHOST_VST="enabled" JUCE_PLUGINHOST_VST3="enabled"
                JUCE_PLUGINHOST_AU="enabled"/>

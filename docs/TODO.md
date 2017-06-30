@@ -4,7 +4,7 @@
 
 #build issues
 - properly package some of the mec apps (some need manual intervention)
-- mec-vst need to dylibs into Frameworks
+- mec-vst need to copy dylibs into Frameworks
 - mec-max need to sort out rpath for external, and package dylibs
 - consider a top level script to build everything (perhaps options depending on platform being run on... e.g. no point in bela on windows)
 

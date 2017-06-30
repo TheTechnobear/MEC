@@ -79,6 +79,7 @@ public:
     virtual void touchOn(const Touch&) = 0;
     virtual void touchContinue(const Touch&) = 0;
     virtual void touchOff(const Touch&) = 0;
+    virtual ~ISurfaceCallback() {};
 };
 
 
@@ -102,6 +103,7 @@ public:
     virtual void touchOn(const MusicalTouch&) = 0;
     virtual void touchContinue(const MusicalTouch&) = 0;
     virtual void touchOff(const MusicalTouch&) = 0;
+    virtual ~IMusicalCallback() {};
 };
 
 

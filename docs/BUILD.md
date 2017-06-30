@@ -58,6 +58,13 @@ there is an example config in resources directorys
 Eigenharps need access to the firmware files (ihx), in resources directory
 Soundplane need access to the SoundplaneAppState.txt, in resources directory 
 
+#Running VST/AU
+a) you will need to build mec, and then the mec-vst project separately
+b) after building, you need to copy the dynamic libs from ~/build/release/lib to ~/Library/Audio/Plug-Ins/VST/MEC.vst/Frameworks
+
+this is temporary until I sort out a better build/installation procedure
+
+
 #Eigenharp PICO
 the decoder for the pico is not open source, so a dummy implementation is supplied as source.
 this will obviously not work though.
