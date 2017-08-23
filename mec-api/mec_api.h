@@ -110,6 +110,7 @@ public:
 class MecApi {
 public:
     MecApi(const std::string& configFile = "./mec.json");
+    MecApi(void* prefs);
     ~MecApi();
     void init();
     void process();  // periodically call to process messages

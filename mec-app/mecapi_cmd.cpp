@@ -226,7 +226,7 @@ void *mecapi_proc(void * arg)
     mec::Preferences outprefs(app_prefs.getSubTree("outputs"));
 
     std::unique_ptr<mec::MecApi> mecApi;
-    mecApi.reset(new mec::MecApi());
+    mecApi.reset(new mec::MecApi(arg));
 
     if (outprefs.exists("midi")) {
         mec::Preferences cbprefs(outprefs.getSubTree("midi"));

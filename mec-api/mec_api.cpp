@@ -20,6 +20,7 @@ namespace mec {
 /////////////////////////////////////////////////////////
 class MecApi_Impl : public ICallback, public ISurfaceCallback, public IMusicalCallback {
 public:
+    MecApi_Impl(void* prefs);
     MecApi_Impl(const std::string& configFile);
     ~MecApi_Impl();
 
@@ -66,10 +67,16 @@ private:
 
 //////////////////////////////////////////////////////////
 //MecApi
+MecApi::MecApi(void* prefs) {
+    LOG_1("MecApi::MecApi");
+    impl_ = new MecApi_Impl(prefs);
+} 
+
 MecApi::MecApi(const std::string& configFile) {
     LOG_1("MecApi::MecApi");
     impl_ = new MecApi_Impl(configFile);
 } 
+
 MecApi::~MecApi() {
     LOG_1("MecApi::~MecApi");
     delete impl_;
@@ -110,6 +117,11 @@ void MecApi::unsubscribe(IMusicalCallback* p) {
 
 /////////////////////////////////////////////////////////
 //MecApi_Impl
+MecApi_Impl::MecApi_Impl(void* prefs) {
+    fileprefs_.reset(new Preferences(prefs));
+    prefs_.reset(new Preferences(fileprefs_->getSubTree("mec")));
+}
+
 MecApi_Impl::MecApi_Impl(const std::string& configFile) {
     fileprefs_.reset(new Preferences(configFile));
     prefs_.reset(new Preferences(fileprefs_->getSubTree("mec")));
