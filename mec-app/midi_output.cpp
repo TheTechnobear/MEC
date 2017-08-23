@@ -22,12 +22,14 @@ bool MidiOutput::create(const std::string& portname,bool virt) {
 
     if (output_->isPortOpen()) output_->closePort();
 
+    virtualOpen_ = false;
 	if(virt) {
 		try {
 			output_->openVirtualPort(portname);
 			LOG_0( "Midi virtual output created :" << portname );
+            virtualOpen_ = true; // port is open because it belongs to client 
 		} catch (RtMidiError  &error) {
-			error.printMessage();
+            LOG_0("Midi virtual output create error:" << error.what());
 			return false;
 		}
 		return true;
