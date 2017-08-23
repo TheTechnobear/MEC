@@ -29,7 +29,6 @@ bool Preferences::loadPreferences(const std::string& file) {
         jsonData_ = nullptr;
     }
 
-    // std::string file = "./mec.json";
     std::ifstream t(file);
     if (t.good())
     {
@@ -46,7 +45,7 @@ bool Preferences::loadPreferences(const std::string& file) {
             return true;
         }
     }
-    LOG_0("unable to load preferences file");
+    LOG_0("unable to load preferences file : " << file);
     return false;
 }
 

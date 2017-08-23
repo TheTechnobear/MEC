@@ -76,8 +76,11 @@ int main(int ac, char **av) {
 
     LOG_0("mec_app initialise ");
 
-    mec::Preferences prefs;
+    const char *pref_file = "./mec.json";
+    if( ac > 0 ) pref_file = av[1]; 
+    mec::Preferences prefs(pref_file);
     if (!prefs.valid()) return -1;
+
     keepRunning = true;
     LOG_0("loaded preferences");
     prefs.print();
