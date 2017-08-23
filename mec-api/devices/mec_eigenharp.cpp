@@ -5,6 +5,9 @@
 #include "../mec_surfacemapper.h"
 #include "../mec_voice.h"
 
+
+#include <set>
+
 namespace mec {
 
 ////////////////////////////////////////////////
@@ -66,6 +69,11 @@ public:
             LOG_2(" mn: " << mn << " mx: "  << mx       << " my: "  << my   << " mz: " << mz);
 
             if (!voice) {
+                if(stolenKeys_.find(key) != stolenKeys_.end()) {
+                    // this key has been stolen, must be released to reactivate it
+                    return;
+                } 
+
                 voice = voices_.startVoice(key);
                 // LOG_2("start voice for " << key << " ch " << voice->i_);
 
@@ -73,6 +81,7 @@ public:
                     // no available voices, steal?
                     Voices::Voice* stolen = voices_.oldestActiveVoice();
                     callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
+                    stolenKeys_.insert(stolen->i_);
                     voices_.stopVoice(stolen);
                     voice = voices_.startVoice(key);
                 }
@@ -108,6 +117,7 @@ public:
                 callback_.touchOff(voice->i_, mn, mx, my, mz);
                 voices_.stopVoice(voice);
             }
+            stolenKeys_.erase(key);
         }
     }
 
@@ -140,6 +150,7 @@ private:
     float pitchbendRange_;
     bool stealVoices_;
     unsigned long long throttle_;
+    std::set<unsigned> stolenKeys_;
 };
 
 
