@@ -75,17 +75,19 @@ public:
                 } 
 
                 voice = voices_.startVoice(key);
-                // LOG_2("start voice for " << key << " ch " << voice->i_);
 
                 if (!voice && stealVoices_) {
+                    // LOG_1("voice steal required for " << key);
                     // no available voices, steal?
                     Voices::Voice* stolen = voices_.oldestActiveVoice();
                     callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
-                    stolenKeys_.insert(stolen->i_);
+                    stolenKeys_.insert(stolen->id_);
                     voices_.stopVoice(stolen);
                     voice = voices_.startVoice(key);
+                    // if(voice) { LOG_1("voice steal found for " << key  "stolen from " << stolen->id_)); }
                 }
             }
+            // LOG_2("start voice for " << key << " ch " << voice->i_);
 
             if (voice) {
                 if (voice->state_ == Voices::Voice::PENDING) {
