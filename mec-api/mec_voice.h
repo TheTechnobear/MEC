@@ -36,7 +36,7 @@ public:
         float y_;
         float z_;
         float v_;
-        unsigned long t_;
+        unsigned long long t_;
         enum {
             INACTIVE,
             PENDING, // velocity
@@ -125,6 +125,7 @@ public:
             // LOG_1("sumx  " << voice->vel_.sumx_ << " sumy " << voice->vel_.sumy_ );
 
             if(voice->v_>1.0) voice->v_ = 1.0;
+            if(voice->v_< 0.01) voice->v_ = 0.01;
         }
     }
 

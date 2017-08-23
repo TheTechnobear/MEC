@@ -137,7 +137,7 @@ public:
     void touchOff(int touchId, float note, float x, float y, float z)
     {
         static std::string topic = "/t3d/tch" + std::to_string(touchId);
-        sendMsg(topic, touchId, note, x, y, z);
+        sendMsg(topic, touchId, note, x, y, 0);
 
     }
 

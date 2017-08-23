@@ -17,7 +17,8 @@ public:
             valid_(true),
             voices_(p.getInt("voices", 15), p.getInt("velocity count", 5)),
             pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
-            stealVoices_(p.getBool("steal voices", true))
+            stealVoices_(p.getBool("steal voices", true)),
+            throttle_(p.getInt("throttle",0) == 0 ? 0 : 1000000 / p.getInt("throttle",0) )
     {
         if (valid_) {
             LOG_0("EigenharpHandler enabling for mecapi");
@@ -47,6 +48,7 @@ public:
             }
         }
     }
+
 
     virtual void key(const char* dev, unsigned long long t, unsigned course, unsigned key, bool a, unsigned p, int r, int y)
     {
@@ -81,18 +83,21 @@ public:
                     voices_.addPressure(voice, mz);
                     if (voice->state_ == Voices::Voice::ACTIVE) {
                         callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
+                        voice->t_ = t;
                     }
                     // dont send to callbacks until we have the minimum pressures for velocity
                 }
                 else {
-                    callback_.touchContinue(voice->i_, mn, mx, my, mz);
+                    if(throttle_ == 0 || (t - voice->t_) >= throttle_) {
+                        callback_.touchContinue(voice->i_, mn, mx, my, mz);
+                        voice->t_ = t;
+                    }
                 }
 
                 voice->note_ = mn;
                 voice->x_ = mx;
                 voice->y_ = my;
                 voice->z_ = mz;
-                voice->t_ = t;
             }
             // else no voice available
 
@@ -134,6 +139,7 @@ private:
     bool valid_;
     float pitchbendRange_;
     bool stealVoices_;
+    unsigned long long throttle_;
 };
 
 
