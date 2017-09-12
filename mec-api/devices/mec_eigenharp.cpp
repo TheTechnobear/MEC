@@ -142,7 +142,8 @@ private:
     inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
     float   unipolar(int val) { return std::min( float(val) / 4096.0f, 1.0f); }
     float   bipolar(int val) { return clamp(float(val) / 4096.0f, -1.0f, 1.0f);}
-    float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + (mx * pitchbendRange_) ; }
+    //float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + (mx  * pitchbendRange_) ; }
+    float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + ((mx>0.0 ? mx*mx : -mx*mx)  * pitchbendRange_) ; }
 
     Preferences prefs_;
     ICallback& callback_;
