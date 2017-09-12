@@ -124,19 +124,19 @@ public:
 
     void touchOn(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "/t3d/tch" + std::to_string(touchId);
+        std::string topic = "/t3d/tch" + std::to_string(touchId);
         sendMsg(topic, touchId, note, x, y, z);
     }
 
     void touchContinue(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "/t3d/tch" + std::to_string(touchId);
+        std::string topic = "/t3d/tch" + std::to_string(touchId);
         sendMsg(topic, touchId, note, x, y, z);
     }
 
     void touchOff(int touchId, float note, float x, float y, float z)
     {
-        static std::string topic = "/t3d/tch" + std::to_string(touchId);
+        std::string topic = "/t3d/tch" + std::to_string(touchId);
         sendMsg(topic, touchId, note, x, y, 0);
 
     }
@@ -157,7 +157,7 @@ public:
         osc::OutboundPacketStream op( buffer_, OUTPUT_BUFFER_SIZE );
         op << osc::BeginBundleImmediate
            << osc::BeginMessage( topic.c_str())
-           << touchId << x << y << z << note
+           << x << y << z << note
            << osc::EndMessage
            << osc::EndBundle;
         transmitSocket_.Send( op.Data(), op.Size() );
