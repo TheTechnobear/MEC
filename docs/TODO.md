@@ -1,8 +1,8 @@
-#current goal/milestone
+# current goal/milestone
 - ensure minimum use-case is possible = working on all devices, with raw mapping, with lights/text control. 
 - does not include: scales, splits,
 
-#current priorities
+# current priorities
 (in order)
 - fix tau/alpha issues with touches
 - fix soundplane note scaling issue
@@ -11,13 +11,13 @@
 - add ability to drive push 2 parameters/display via osc 
 - packaging of mec-app
 
-#mec-api , known issues
+# mec-api , known issues
 - tau/alpha, hanging notes (mac and rPi) , eigenfreed? as ok on pico? or possibly message ordering?
 - tau, (or bs std) sends note on during initialisation, prevent
 - push2 , I call render in process(), it probably should be in a separate low prio thread.
 - consider libusb initialisation, may be multile libusb devices running
 
-#mec-api , planned changes - mec-api
+# mec-api , planned changes - mec-api
 - eh led control via osc
 - push 2 display via osc
 - better surface mapping
@@ -27,14 +27,14 @@
 - multiple instances of devices
 - allow api to say which devices to start... so can run multiple instances using same mec.json
 
-#mec-api , windows support
+# mec-api , windows support
 - perhaps check with MGwin build (allows pthread)
 - rtmidi uses pthread, move to juce?
 - adapt cmake
 - soundplane lib 
 - move to use std::thread in mec-app, remove any other pthread dependancy 
 
-#build issues
+# build issues
 - brew install issue on mac, as no longer supply universal binary, build libusb?
 - properly package some of the mec apps (some need manual intervention)
 - mec-app rpath
@@ -42,20 +42,20 @@
 - mec-max need to sort out rpath for external, and package dylibs
 - consider a top level script to build everything (perhaps options depending on platform being run on... e.g. no point in bela on windows)
 
-#work in progress
+# work in progress
 - scales
 - splits/combining of surfaces
 
-#refactor/generalising
+# refactor/generalising
 - voices data, a few places where I do similar things to collect the data
 - osc generation, create a processor (issue is oscpack, doesnt have a message as such... just a stream, does this add much?... do we need osc output elsewhere?)
 - reconsider rtmidi vs juce , rtmidi is dependent on pthread, so perhaps juce
 
-#improvements
+# improvements
 - osc/t3d ouput (mec-app) , output periodic framemessage (/t3d/frm)
 - osc/t3d input, track /t3d/dr, then look for /t3d/frm cancel voices if not received in time
 - config - device class and instances...
 
-#other
+# other
 - document configuration file/setup
 - improve existing docs

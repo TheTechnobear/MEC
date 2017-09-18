@@ -1,4 +1,4 @@
-##configuration
+# Configuration
 All configuration is provide by a json file, by default this is mec.json in the current directory, or you can specify one on as the first argument on the command line
 
 resources/mec.json is a sample configuration file, that will need to be adapted to your needs.
@@ -10,18 +10,18 @@ json does not allow commenting out of lines - by convention, where I want to com
 If you are uncommenting , or commenting out, the line must still be valid json (again take are with commas at line ends) 
 
 
-#Running macOS
+# Running macOS
 
 copy resources and then adapt mec.json
 
-#Running VST/AU
+# Running VST/AU
 a) you will need to build mec, and then the mec-vst project separately
 b) after building, you need to copy the dynamic libs from ~/build/release/lib to ~/Library/Audio/Plug-Ins/VST/MEC.vst/Frameworks
 
 this is temporary until I sort out a better build/installation procedure
 
 
-#Important note - Kernel Panic on macOS
+# Important note - Kernel Panic on macOS
 Mac OSX 10.11+ - Stopping apps
 abrutly stopping MEC, will cause the usb driver to create a **kernel panic**.
 this is caused byy an issue in the macOS kernel code - so its important MEC is shutdown gracefully even when using Xcode for debugging!
@@ -36,15 +36,15 @@ there is also a Ctrl-C handler which will shutdown nicely, but dont keep hammeri
 
 
 
-##Tested
+## Tested
 
 - 10.12 macOS sierra
 
-#Running windows
+# Running windows
 
 not available yet!
 
-#Running Linux
+# Running Linux
 
 copy resources and then adapt mec.json
 
@@ -57,7 +57,7 @@ copy resources and then adapt mec.json
 - Organelle (arch linux/arm)
 - Xenomai (Beaglebone black + bela)
 
-##Setup for linux distro for build
+## Setup for linux distro for build
 
     // upgrade distro
     sudo apt-get update
@@ -68,7 +68,7 @@ copy resources and then adapt mec.json
 
 
 
-##Config system
+## Configuring system
 note: this may vary with distros, this is for debian based distros
 
     vi /etc/security/limits.conf
@@ -83,7 +83,7 @@ note: this may vary with distros, this is for debian based distros
 
 
  
-#other useful tools
+# Other useful tools
 for testing, its quite useful to use osc, for this i use oscdump to capture messages from mec, and oscsend to sent osc messages to mec.
 under macos,  install via homebrew, using brew install liblo
 under linux, install liblo ith package manager 

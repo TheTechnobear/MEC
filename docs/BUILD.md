@@ -1,8 +1,8 @@
-#Dependancies
+# Dependancies
 CMake
 libusb
 
-#Building linux (or mac)
+# Building linux (or mac)
 
     sudo apt install git
     sudo apt install cmake
@@ -15,7 +15,7 @@ libusb
     cmake .. 
 
 
-#Building Mac (with xcode)
+# Building Mac (with xcode)
 
     brew install git
     brew install cmake
@@ -32,10 +32,10 @@ or
 
     cmake --build .
 
-#Other builds
+# Other builds
 mec-max, and mec-vst need to be build separately with the project provided
 
-#Building within Sublime Text
+# Building within Sublime Text
 
 you can also build within sublime
 
@@ -44,7 +44,7 @@ you can also build within sublime
     cmake -G "Sublime Text 2 - Unix Makefiles" .. 
 
 
-#Building on Bela
+# Building on Bela
 the bela web ui does not support a subdirectories, so the way install is
   
     mkdir -p ~/projects
@@ -60,14 +60,14 @@ the bela web ui does not support a subdirectories, so the way install is
 this means we now have the mec-bela project in the 'normal' bela projects directory, but it refers to ~/projects/MEC, so you should push from ~/Projects/Mec
 
 
-#Eigenharp PICO
+# Eigenharp PICO
 the decoder for the pico is not open source, so a dummy implementation is supplied as source.
 this will obviously not work though.
 however you will find in resources binary versions of the decoder library for various platforms, these should be used in place of the dummy version, built by the make process
 
 
 
-#Important note - Kernel Panic on macOS
+# Important note - Kernel Panic on macOS
 Mac OSX 10.11+ - Stopping apps
 abrutly stopping MEC, will cause the usb driver to create a **kernel panic**.
 this is caused byy an issue in the macOS kernel code - so its important MEC is shutdown gracefully even when using Xcode for debugging!

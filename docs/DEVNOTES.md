@@ -44,7 +44,7 @@ to do
 idea is to provide a remove command interface to MEC via OSC
 
 
-##Output devices
+## Output devices
 
 currently this is in the mec apps , the idea is to bring some common code into mec-api (without imposing an api) to support common mapping for midi and osc, and potentially other  output formats... this will be exposed as 'processors'
 
@@ -55,7 +55,7 @@ primary target, built on rtmidi or JUCE for VST/AU
 now in t3d format
 
 
-##Mec API 
+## Mec API 
 provides interface to underlying input devices, with a common callback interface. the app using the mec api registers callbacks and then calls process().
 the callbacks are processed syncronoushly to the process() call, which is expected to be in the audio thread (i.e no blocking etc)
 
