@@ -1,6 +1,5 @@
-todo items are included in TODO.txt
-
-this file is more general notes,ideas and current status
+This document contains general notes on development strategy, and status
+More detailed information on status, known issues, priorities is contained in todo.md
 
 # Project
 mec-api - a framework for integrating expressive devices
