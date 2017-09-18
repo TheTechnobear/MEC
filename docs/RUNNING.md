@@ -48,7 +48,7 @@ not available yet!
 
 copy resources and then adapt mec.json
 
-##Tested
+## Tested
 
 - Debian Jessie (Beaglebone)
 - Ubuntu 16.04 LTS
