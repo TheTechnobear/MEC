@@ -1,29 +1,25 @@
-#general
-- document configuration file/setup
-- improve existing docs
+#current goal/milestone
+- ensure minimum use-case is possible = working on all devices, with raw mapping, with lights/text control. 
+- does not include: scales, splits,
 
-#build issues
-- properly package some of the mec apps (some need manual intervention)
-- mec-vst need to copy dylibs into Frameworks
-- mec-max need to sort out rpath for external, and package dylibs
-- consider a top level script to build everything (perhaps options depending on platform being run on... e.g. no point in bela on windows)
-
-#refactor/generalising
-- voices data, a few places where I do similar things to collect the data
-- osc generation, create a processor (issue is oscpack, doesnt have a message as such... just a stream, does this add much?... do we need osc output elsewhere?)
-- reconsider rtmidi vs juce , rtmidi is dependent on pthread, so perhasp juce
-
-#improvements
-- osc/t3d ouput (mec-app) , output periodic framemessage (/t3d/frm)
-- osc/t3d input, track /t3d/dr, then look for /t3d/frm cancel voices if not received in time
-- config - device class and instances...
+#current priorities
+(in order)
+- fix tau/alpha issues with touches
+- fix soundplane note scaling issue
+- acheive feature parity, api integration for all devices
+- add ability to drives leds for eigenharps via osc
+- add ability to drive push 2 parameters/display via osc 
+- packaging of mec-app
 
 #mec-api , known issues
-- test eigenharp voice allocation again!
+- tau/alpha, hanging notes (mac and rPi) , eigenfreed? as ok on pico? or possibly message ordering?
+- tau, (or bs std) sends note on during initialisation, prevent
 - push2 , I call render in process(), it probably should be in a separate low prio thread.
 - consider libusb initialisation, may be multile libusb devices running
 
 #mec-api , planned changes - mec-api
+- eh led control via osc
+- push 2 display via osc
 - better surface mapping
 - runtime configuration changes (properties)
 - push 2 support, using properties/runtime config
@@ -38,3 +34,28 @@
 - soundplane lib 
 - move to use std::thread in mec-app, remove any other pthread dependancy 
 
+#build issues
+- brew install issue on mac, as no longer supply universal binary, build libusb?
+- properly package some of the mec apps (some need manual intervention)
+- mec-app rpath
+- mec-vst need to copy dylibs into Frameworks
+- mec-max need to sort out rpath for external, and package dylibs
+- consider a top level script to build everything (perhaps options depending on platform being run on... e.g. no point in bela on windows)
+
+#work in progress
+- scales
+- splits/combining of surfaces
+
+#refactor/generalising
+- voices data, a few places where I do similar things to collect the data
+- osc generation, create a processor (issue is oscpack, doesnt have a message as such... just a stream, does this add much?... do we need osc output elsewhere?)
+- reconsider rtmidi vs juce , rtmidi is dependent on pthread, so perhaps juce
+
+#improvements
+- osc/t3d ouput (mec-app) , output periodic framemessage (/t3d/frm)
+- osc/t3d input, track /t3d/dr, then look for /t3d/frm cancel voices if not received in time
+- config - device class and instances...
+
+#other
+- document configuration file/setup
+- improve existing docs
