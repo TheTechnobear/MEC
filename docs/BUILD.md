@@ -4,8 +4,12 @@ libusb
 
 #Building linux (or mac)
 
-    apt-get install libusb-1.0-0-dev
-    apt-get install libasound2-dev (linux only)
+    sudo apt install git
+    sudo apt install cmake
+
+    // libaries used
+    sudo apt-get install libusb-1.0-0-dev
+    sudo apt-get install libasound2-dev (linux only)
     mkdir build
     cd build
     cmake .. 
@@ -13,7 +17,9 @@ libusb
 
 #Building Mac (with xcode)
 
+    brew install git
     brew install cmake
+ 
     brew install libusb --universal
 
     mkdir build
@@ -26,10 +32,12 @@ or
 
     cmake --build .
 
+#Other builds
+mec-max, and mec-vst need to be build separately with the project provided
 
 #Building within Sublime Text
 
-you can also building within sublime
+you can also build within sublime
 
     mkdir build
     cd build
@@ -49,20 +57,7 @@ the bela web ui does not support a subdirectories, so the way install is
     cd ~/Bela/projects
     ln ~/projects/MEC/mec-bela
 
-this means we now have the mec-bela project in the 'normal' bela projects directory, but it refers to ~/projects/MEC
-this means any changes, you should push from ~/Projects/Mec
-
-#Running
-there is a preferences file, called mec.json which needs to be in the current directory when run.
-there is an example config in resources directorys
-Eigenharps need access to the firmware files (ihx), in resources directory
-Soundplane need access to the SoundplaneAppState.txt, in resources directory 
-
-#Running VST/AU
-a) you will need to build mec, and then the mec-vst project separately
-b) after building, you need to copy the dynamic libs from ~/build/release/lib to ~/Library/Audio/Plug-Ins/VST/MEC.vst/Frameworks
-
-this is temporary until I sort out a better build/installation procedure
+this means we now have the mec-bela project in the 'normal' bela projects directory, but it refers to ~/projects/MEC, so you should push from ~/Projects/Mec
 
 
 #Eigenharp PICO
@@ -72,16 +67,18 @@ however you will find in resources binary versions of the decoder library for va
 
 
 
-#Important notes
+#Important note - Kernel Panic on macOS
 Mac OSX 10.11+ - Stopping apps
-becareful when stopping under MacOS 10.11+ abrutly stopping usb drivers will cause panic - for mec use osc to terminate EVEN inside Xcode!
+abrutly stopping MEC, will cause the usb driver to create a **kernel panic**.
+this is caused byy an issue in the macOS kernel code - so its important MEC is shutdown gracefully even when using Xcode for debugging!
+
+there are two ways to shutdown nicely
+OSC
 
     oscsend localhost 9000 /t3d/command s shutdown
 
-(there is also a Ctrl-C handler which will shutdown nicely)
-
-
-
+Ctrl-C , ONCE only!
+there is also a Ctrl-C handler which will shutdown nicely, but dont keep hammering Ctrl-C to exit quicker, you will cause a panic )
 
 
 
