@@ -50,6 +50,9 @@ bool EF_Alpha::create()
     if (!EF_Harp::create()) return false;
     
     try {
+        memset(curmap_,0,sizeof(curmap_));
+        memset(skpmap_,0,sizeof(skpmap_));
+
         logmsg("create alpha loop");
         pLoop_ = new alpha2::active_t(pDevice_, &delegate_,false);
         logmsg("created alpha loop");
@@ -121,21 +124,13 @@ void EF_Alpha::restartKeyboard()
     }
 }
     
-void EF_Alpha::fireAlphaKeyEvent(unsigned long long t, unsigned key, unsigned p, int r, int y)
+void EF_Alpha::fireAlphaKeyEvent(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y)
 {
-    unsigned course = key >= 120;
-    EF_Harp::fireKeyEvent(t, course, key, isKeyDown(key),p, ( r - 2048) * 2, ( y - 2048 ) * 2);
+    const int MAIN_KEYBASE = 120;
+    unsigned course = key >= MAIN_KEYBASE;
+    EF_Harp::fireKeyEvent(t, course, key - (course * MAIN_KEYBASE), a, p, r, y);
 }
 
-bool EF_Alpha::isKeyDown(unsigned int k)
-{
-    return alpha2::active_t::keydown(k,keymap_);
-}
-    
-void EF_Alpha::setKeymap(const unsigned short *bitmap)
-{
-    keymap_ = bitmap;
-}
 
 bool EF_Alpha::loadBaseStation()
 {
@@ -232,8 +227,24 @@ void EF_Alpha::Delegate::kbd_dead(unsigned reason)
 
 void EF_Alpha::Delegate::kbd_key(unsigned long long t, unsigned key, unsigned p, int r, int y)
 {
-    if(key <KBD_KEYS) {
-        parent_.fireAlphaKeyEvent(t,key,p,r,y);
+    // pic::logmsg() << "kbd_key" << key << " p " << p << " r " << r << " y " << y;
+
+     unsigned w = alpha2::active_t::key2word(key);
+     unsigned short m = alpha2::active_t::key2mask(key);
+     bool a = false;
+
+     if(!(parent_.skpMap()[w]&m))
+     {
+         parent_.curMap()[w]|=m;
+         a = true;
+     }
+
+    if(key < KBD_KEYS) {
+        // pic::logmsg() << "kbd_key fire" << key << " p " << p << " r " << r << " y " << y;
+        int rr = ( r - 2048) * 2;
+        int ry = ( y - 2048 ) * 2;
+        parent_.fireAlphaKeyEvent(t,key,a,p,rr,ry);
+        return;
     }
     
     switch(key) {
@@ -259,9 +270,35 @@ void EF_Alpha::Delegate::kbd_raw(unsigned long long t, unsigned key, unsigned c1
 {
 }
 
-void EF_Alpha::Delegate::kbd_keydown(unsigned long long t, const unsigned short *bitmap)
-{
-	parent_.setKeymap(bitmap);
+void EF_Alpha::Delegate::kbd_keydown(unsigned long long t, const unsigned short *newmap)
+{   
+    // char buf[121];
+    // for(int i=0;i < 120;i++) {
+    //     buf[i] = alpha2::active_t::keydown(i,bitmap) ? '1' :  '0';
+    // }
+    // buf[120]=0;
+    // pic::logmsg() << buf;
+    for(unsigned w=0; w<9; w++)
+    {
+        parent_.skpMap()[w] &= newmap[w];
+
+        if(parent_.curMap()[w] == newmap[w]) continue;
+
+        unsigned keybase = alpha2::active_t::word2key(w);
+
+        for(unsigned k=0; k<16; k++)
+        {
+            unsigned short mask = alpha2::active_t::key2mask(k);
+
+            // if was on, but no longer on
+            if( (parent_.curMap()[w]&mask) && !(newmap[w]&mask) )
+            {
+                parent_.fireAlphaKeyEvent(t,keybase+k,0,0,0,0);
+            }
+        }
+
+        parent_.curMap()[w] = newmap[w];
+    }    
 }
 
 void EF_Alpha::Delegate::kbd_mic(unsigned char s,unsigned long long t, const float *data)

@@ -33,14 +33,14 @@
                     "calculated-wrong" : {
                         "keys in col"    : 16,
                         "row multiplier" : 1,  
-                        "col multipler"  : 4,
+                        "col multipler"  : 3,
                         "note offset"    : 20
                     }
                 },
                 "alpha" : {
                     "calculated" : {
                         "keys in col"    : 24,
-                        "row multiplier" : 4,  
+                        "row multiplier" : 3,  
                         "col multipler"  : -1,
                         "note offset"    : 20
                     },

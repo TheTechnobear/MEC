@@ -63,10 +63,10 @@ public:
         if (a)
         {
 
-            LOG_2("EigenharpHandler key device d: "  << dev  << " a: "  << a);
-            LOG_2(" c: "   << course   << " k: "   << key);
-            LOG_2(" r: "   << r        << " y: "   << y    << " p: "  << p);
-            LOG_2(" mn: " << mn << " mx: "  << mx       << " my: "  << my   << " mz: " << mz);
+            LOG_3("EigenharpHandler key device d: "  << dev  << " a: "  << a);
+            LOG_3(" c: "   << course   << " k: "   << key);
+            LOG_3(" r: "   << r        << " y: "   << y    << " p: "  << p);
+            LOG_3(" mn: " << mn << " mx: "  << mx       << " my: "  << my   << " mz: " << mz);
 
             if (!voice) {
                 if(stolenKeys_.find(key) != stolenKeys_.end()) {
@@ -77,7 +77,7 @@ public:
                 voice = voices_.startVoice(key);
 
                 if (!voice && stealVoices_) {
-                    // LOG_1("voice steal required for " << key);
+                    LOG_2("voice steal required for " << key);
                     // no available voices, steal?
                     Voices::Voice* stolen = voices_.oldestActiveVoice();
                     callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
@@ -87,12 +87,12 @@ public:
                     // if(voice) { LOG_1("voice steal found for " << key  "stolen from " << stolen->id_)); }
                 }
             }
-            // LOG_2("start voice for " << key << " ch " << voice->i_);
 
             if (voice) {
                 if (voice->state_ == Voices::Voice::PENDING) {
                     voices_.addPressure(voice, mz);
                     if (voice->state_ == Voices::Voice::ACTIVE) {
+                        LOG_2("start voice for " << key << " ch " << voice->i_);
                         callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
                         voice->t_ = t;
                     }
@@ -100,6 +100,7 @@ public:
                 }
                 else {
                     if(throttle_ == 0 || (t - voice->t_) >= throttle_) {
+                        LOG_2("continue voice for " << key << " ch " << voice->i_);
                         callback_.touchContinue(voice->i_, mn, mx, my, mz);
                         voice->t_ = t;
                     }
@@ -115,7 +116,7 @@ public:
         } else {
 
             if (voice) {
-                // LOG_2("stop voice for " << key << " ch " << voice->i_);
+                LOG_2("stop voice for " << key << " ch " << voice->i_);
                 callback_.touchOff(voice->i_, mn, mx, my, mz);
                 voices_.stopVoice(voice);
             }

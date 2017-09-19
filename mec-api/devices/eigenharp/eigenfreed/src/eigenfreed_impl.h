@@ -115,13 +115,14 @@ namespace EigenApi
         virtual void restartKeyboard();
         virtual void setLED(unsigned int keynum,unsigned int colour);
 
-        void fireAlphaKeyEvent(unsigned long long t, unsigned key, unsigned p, int r, int y);
+        void fireAlphaKeyEvent(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y);
 
-        bool isKeyDown(unsigned int keynum);
-        void setKeymap(const unsigned short *bitmap);
         
 		static bool isAvailable();
-		
+
+        unsigned short* curMap() { return curmap_;}
+        unsigned short* skpMap() { return skpmap_;}
+
     protected:
 
     private:
@@ -129,7 +130,7 @@ namespace EigenApi
         bool loadBaseStation();
 
         alpha2::active_t *pLoop_;
-        const unsigned short *keymap_;
+        unsigned short curmap_[9],skpmap_[9];
 
         class Delegate : public alpha2::active_t::delegate_t
         {
