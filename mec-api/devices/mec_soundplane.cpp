@@ -85,7 +85,7 @@ public:
                     stolenMsg.data_.touch_.x_ = stolen->x_;
                     stolenMsg.data_.touch_.y_ = stolen->y_;
                     stolenMsg.data_.touch_.z_ = 0.0f;
-
+                    stolenTouches_.insert(stolen->id_);
                     queue_.addToQueue(stolenMsg);
                     voices_.stopVoice(stolen);
 
