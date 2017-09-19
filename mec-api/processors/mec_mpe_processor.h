@@ -1,5 +1,5 @@
-#ifndef MecMidiProcessor_H
-#define MecMidiProcessor_H
+#ifndef Mec_MPE_Processor_H
+#define Mec_MPE_Processor_H
 
 //////////////
 // this class can be used to process incoming callbacks and convert into Midi messages
@@ -11,10 +11,10 @@
 
 namespace mec {
 
-class MidiProcessor : public ICallback {
+class MPE_Processor : public ICallback {
 public:
-    MidiProcessor(float pbr=48.0);
-    virtual ~MidiProcessor();
+    MPE_Processor(float pbr=48.0);
+    virtual ~MPE_Processor();
 
     struct MidiMsg {
         MidiMsg() { data[0]=0;size=0;}

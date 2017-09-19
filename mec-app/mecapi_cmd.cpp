@@ -12,7 +12,7 @@
 
 #include <mec_api.h>
 #include <mec_prefs.h>
-#include <processors/mec_midiprocessor.h>
+#include <processors/mec_mpe_processor.h>
 
 #define OUTPUT_BUFFER_SIZE 1024
 
@@ -172,27 +172,27 @@ private:
 
 
 
-class MecMidiProcessor : public mec::MidiProcessor {
+class MecMpeProcessor : public mec::MPE_Processor {
 public:
-    MecMidiProcessor(mec::Preferences& p) :   prefs_(p)
+    MecMpeProcessor(mec::Preferences& p) :   prefs_(p)
     {
         // p.getInt("voices", 15);
         setPitchbendRange(p.getDouble("pitchbend range", 48.0));
         std::string device = prefs_.getString("device");
         int virt = prefs_.getInt("virtual", 0);
         if (output_.create(device, virt > 0)) {
-            LOG_1( "MecMidiProcessor enabling for midi to " << device );
-            LOG_1( "TODO (MecMidiProcessor) :" );
+            LOG_1( "MecMpeProcessor enabling for midi to " << device );
+            LOG_1( "TODO (MecMpeProcessor) :" );
             LOG_1( "- MPE init, including PB range" );
         }
         if (!output_.isOpen()) {
-            LOG_0( "MecMidiProcessor not open, so invalid for" << device );
+            LOG_0( "MecMpeProcessor not open, so invalid for" << device );
         }
     }
 
     bool isValid() { return output_.isOpen();}
 
-    void  process(mec::MidiProcessor::MidiMsg& m) {
+    void  process(mec::MPE_Processor::MidiMsg& m) {
         if(output_.isOpen()) {
             std::vector<unsigned char> msg;
 
@@ -230,7 +230,7 @@ void *mecapi_proc(void * arg)
 
     if (outprefs.exists("midi")) {
         mec::Preferences cbprefs(outprefs.getSubTree("midi"));
-        MecMidiProcessor *pCb = new MecMidiProcessor(cbprefs);
+        MecMpeProcessor *pCb = new MecMpeProcessor(cbprefs);
         if (pCb->isValid()) {
             mecApi->subscribe(pCb);
         } else {

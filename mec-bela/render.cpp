@@ -2,7 +2,7 @@
 #include <Midi.h>
 
 #include <mec_api.h>
-#include <processors/mec_midiprocessor.h>
+#include <processors/mec_mpe_processor.h>
 
 Midi 			gMidi;
 mec::MecApi* 		gMecApi=NULL;
@@ -117,9 +117,9 @@ private:
 */
 
 // this replaces the above, and can all be removed after testing
-class MecMidiProcessor : public mec::MidiProcessor {
+class MecMpeProcessor : public mec::MPE_Processor {
 public:
-    MecMidiProcessor() {
+    MecMpeProcessor() {
          // p.getInt("voices", 15);
         setPitchbendRange(48.0);
     }   
@@ -149,7 +149,7 @@ bool setup(BelaContext *context, void *userData)
 	gMidi.writeTo(gMidiPort0);
 
 	gMecApi=new mec::MecApi();
-	gMecCallback=new MecMidiProcessor();
+	gMecCallback=new MecMpeProcessor();
 	gMecApi->init();
 	gMecApi->subscribe(gMecCallback);
 	

@@ -11,7 +11,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-#include <processors/mec_midiprocessor.h>
+#include <processors/mec_mpe_processor.h>
 
 
 //==============================================================================
@@ -112,14 +112,14 @@ void MecAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // initialisation that you need..
     sampleRate_ = sampleRate;
     samplesPerBlock_ = samplesPerBlock;
-    struct MecMidiProcessor : public mec::MidiProcessor {
+    struct MecMpeProcessor : public mec::MPE_Processor {
         const float PBR = 48.0f;
-        MecMidiProcessor(MidiBuffer& midiBuf) :
-            mec::MidiProcessor(PBR),
+        MecMpeProcessor(MidiBuffer& midiBuf) :
+            mec::MPE_Processor(PBR),
             mecMidiQueue_(midiBuf) {
         }
         
-        void  process(mec::MidiProcessor::MidiMsg& m) {
+        void  process(mec::MPE_Processor::MidiMsg& m) {
             mecMidiQueue_.addEvent(m.data, m.size, 0);
         }
         MidiBuffer&   mecMidiQueue_;
@@ -129,7 +129,7 @@ void MecAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     
     if(mecapi_==nullptr) {
         mecapi_.reset(new mec::MecApi(mecPrefFile_.toRawUTF8()));
-        mecapi_->subscribe(new MecMidiProcessor(mecMidiQueue_));
+        mecapi_->subscribe(new MecMpeProcessor(mecMidiQueue_));
         mecapi_->init();
     }
 

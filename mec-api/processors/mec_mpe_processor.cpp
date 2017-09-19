@@ -1,26 +1,26 @@
 
-#include "mec_midiprocessor.h"
+#include "mec_mpe_processor.h"
 
 #include "../mec_log.h"
 namespace mec {
 
 #define TIMBRE_CC 74
 
-MidiProcessor::MidiProcessor(float pbr) : pitchbendRange_ (pbr) {
+MPE_Processor::MPE_Processor(float pbr) : pitchbendRange_ (pbr) {
     ;
 }
 
-MidiProcessor::~MidiProcessor() {
+MPE_Processor::~MPE_Processor() {
     ;
 }
 
-void MidiProcessor::setPitchbendRange(float v) {
+void MPE_Processor::setPitchbendRange(float v) {
     pitchbendRange_ = v;
 }
 
 /////////////////////////
 // ICallback interface
-void MidiProcessor::touchOn(int id, float note, float x, float y, float z) {
+void MPE_Processor::touchOn(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
 
@@ -34,7 +34,7 @@ void MidiProcessor::touchOn(int id, float note, float x, float y, float z) {
     int my = bipolar7bit(y);
     int mz = unipolar7bit(z);
 
-    // LOG_1("MidiProcessor::touchOn");
+    // LOG_1("MPE_Processor::touchOn");
     // LOG_1("   note : " << note  << " startNote " << voice.startNote_ << " semi :" << semis << " pb: " << pb);
     // LOG_1("   x :" << x << " mx: " << mx);
     // LOG_1("   y :" << y << " my: " << my);
@@ -53,7 +53,7 @@ void MidiProcessor::touchOn(int id, float note, float x, float y, float z) {
     voice.pressure_ = 0.0f;
 }
 
-void MidiProcessor::touchContinue(int id, float note, float x, float y, float z) {
+void MPE_Processor::touchContinue(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
     unsigned ch = id + 1; // MPE starts on 2
@@ -87,14 +87,14 @@ void MidiProcessor::touchContinue(int id, float note, float x, float y, float z)
     }
 }
 
-void MidiProcessor::touchOff(int id, float note, float x, float y, float z) {
+void MPE_Processor::touchOff(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
 
     unsigned ch = id + 1; // MPE starts on 2
     unsigned vel = 0.0f; // last vel = release velocity
-    noteOff(ch, voice.startNote_ , vel);
     pressure(ch, 0.0f);
+    noteOff(ch, voice.startNote_ , vel);
 
     voice.startNote_ = 0;
     voice.note_ = 0.0f;
@@ -103,7 +103,7 @@ void MidiProcessor::touchOff(int id, float note, float x, float y, float z) {
     voice.pressure_ = 0.0f;//
 }
 
-void MidiProcessor::control(int attr, float v) {
+void MPE_Processor::control(int attr, float v) {
 
     if (global_[attr] != v ) {
         global_[attr] = v;
@@ -112,13 +112,13 @@ void MidiProcessor::control(int attr, float v) {
     }
 }
 
-void MidiProcessor::mec_control(int cmd, void* other) {
+void MPE_Processor::mec_control(int cmd, void* other) {
     // ignored
     ;
 }
 
 
-bool MidiProcessor::noteOn(unsigned ch, unsigned note, unsigned vel) {
+bool MPE_Processor::noteOn(unsigned ch, unsigned note, unsigned vel) {
     // LOG_1( "midi note on ch " << ch << " note " << note  << " vel " << vel );
     MidiMsg msg(int(0x90 + ch), note, vel);
     process(msg);
@@ -126,28 +126,28 @@ bool MidiProcessor::noteOn(unsigned ch, unsigned note, unsigned vel) {
 }
 
 
-bool MidiProcessor::noteOff(unsigned ch, unsigned note, unsigned vel) {
+bool MPE_Processor::noteOff(unsigned ch, unsigned note, unsigned vel) {
     // LOG_1( "midi  note off ch " << ch << " note " << note  << " vel " << vel )
     MidiMsg msg(int(0x80 + ch), note, vel);
     process(msg);
     return true;
 }
 
-bool MidiProcessor::cc(unsigned ch, unsigned cc, unsigned v) {
+bool MPE_Processor::cc(unsigned ch, unsigned cc, unsigned v) {
     // LOG_1( "midi note off ch " << ch << " note " << note  << " vel " << vel )
     MidiMsg msg(0xB0 + ch, cc, v);
     process(msg);
     return true;
 }
 
-bool MidiProcessor::pressure(unsigned ch, unsigned v) {
+bool MPE_Processor::pressure(unsigned ch, unsigned v) {
     // LOG_1( "midi pressure ch " << ch << " v  " << v)
     MidiMsg msg(0xD0 + ch, v);
     process(msg);
     return true;
 }
 
-bool MidiProcessor::pitchbend(unsigned ch, unsigned v) {
+bool MPE_Processor::pitchbend(unsigned ch, unsigned v) {
     // LOG_1( "midi pitchbend ch " << ch << " v  " << v)
     MidiMsg msg(0xE0 + ch, v & 0x7f, (v & 0x3F80) >> 7);
     process(msg);

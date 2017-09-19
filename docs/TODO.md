@@ -6,7 +6,6 @@
 (in order)
 - tau - test/fix issues
 - eigenharps - test/fix breath/strips
-- fix soundplane note scaling issue
 - acheive feature parity, api integration for all devices
 - add ability to drives leds for eigenharps via osc
 - add ability to drive push 2 parameters/display via osc 
@@ -62,7 +61,6 @@
 
 # device specific to do
 ## soundplane
-- check scaling
 - upgrade to new touch tracker (when stable/available)
 
 ## pico

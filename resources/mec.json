@@ -57,7 +57,7 @@
         "_soundplane"  :  {
             "app state dir" : ".",
             "steal voices" : true,
-            "voices " : 15
+            "voices" : 15
         },
 
         "_push2"  :  {
