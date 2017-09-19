@@ -138,7 +138,9 @@ private:
     class Delegate : public pico::active_t::delegate_t
         {
         public:
-        	Delegate(EF_Pico& p) : parent_(p) {;}
+        	Delegate(EF_Pico& p) : 
+                parent_(p) ,
+                s_count_(100), s_threshold_(65), s_state_(0),s_last_(0) {;}
             void kbd_dead(unsigned reason);
             void kbd_raw(bool resync,const pico::active_t::rawkbd_t &);
             void kbd_key(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y);
@@ -146,6 +148,7 @@ private:
             void kbd_breath(unsigned long long t, unsigned b);
             void kbd_mode(unsigned long long t, unsigned key, unsigned m);
         private:
+            unsigned s_count_,s_threshold_,s_state_, s_last_;
             EF_Pico& parent_;
         } delegate_;
     };

@@ -4,8 +4,6 @@
 
 # current priorities
 (in order)
-- tau - test/fix issues
-- eigenharps - test/fix breath/strips
 - acheive feature parity, api integration for all devices
 - add ability to drives leds for eigenharps via osc
 - add ability to drive push 2 parameters/display via osc 
@@ -64,12 +62,14 @@
 - upgrade to new touch tracker (when stable/available)
 
 ## pico
-- test/fix breath/strip/mode keys
+- mode keys
+- windows/threshold/warmup for strip(s)/breath
 
 ## tau
 - test key layout due to 'odd shape'
-- test/fix breath/strip/mode keys
+- mode keys
+- windows/threshold/warmup for strip(s)/breath
 
 ## alpha
-- test/fix breath/strip/mode keys
+- windows/threshold/warmup for strip(s)/breath
 

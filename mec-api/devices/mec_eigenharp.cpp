@@ -32,9 +32,6 @@ public:
 
     virtual void device(const char* dev, DeviceType dt, int rows, int cols, int ribbons, int pedals)
     {
-        LOG_1("EigenharpHandler device d: "  << dev << " dt: " <<  (int) dt);
-        LOG_1(" r: " << rows     << " c: " << cols);
-        LOG_1(" s: " << ribbons  << " p: " << pedals);
         const char* dk = "defaut";
         switch (dt) {
         case EigenApi::Callback::PICO:  dk = "pico";    break;
@@ -42,6 +39,10 @@ public:
         case EigenApi::Callback::ALPHA: dk = "alpha";   break;
         default: dk = "default";
         }
+
+        LOG_1("EigenharpHandler device d: "  << dev << " dt: " <<  (int) dt) << " dk: " << dk;
+        LOG_1(" r: " << rows     << " c: " << cols);
+        LOG_1(" s: " << ribbons  << " p: " << pedals);
 
         if (prefs_.exists("mapping")) {
             Preferences map(prefs_.getSubTree("mapping"));

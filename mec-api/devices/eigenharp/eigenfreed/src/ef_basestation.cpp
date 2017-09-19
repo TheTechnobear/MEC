@@ -81,7 +81,7 @@ bool EF_BaseStation::create()
                 efd_.fireDeviceEvent(usbDevice()->name(), Callback::DeviceType::ALPHA, 0, 0, 2, 4);
                 break; 
             case 2:
-                efd_.fireDeviceEvent(usbDevice()->name(), Callback::DeviceType::TAU, 0, 0, 2, 4);
+                efd_.fireDeviceEvent(usbDevice()->name(), Callback::DeviceType::TAU, 0, 0, 1, 4);
                 break;
             default:
                 efd_.fireDeviceEvent(usbDevice()->name(), Callback::DeviceType::ALPHA, 0, 0, 2, 4);

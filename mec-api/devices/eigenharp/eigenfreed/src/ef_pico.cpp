@@ -22,6 +22,12 @@
 
 #define PRODUCT_ID_PICO BCTPICO_USBPRODUCT
 
+#define STRIP_THRESH 50
+#define STRIP_MIN 110
+#define STRIP_MAX 3050
+
+
+
 namespace EigenApi
 {
 
@@ -220,7 +226,77 @@ void EF_Pico::Delegate::kbd_raw(bool resync,const pico::active_t::rawkbd_t &)
     
 void EF_Pico::Delegate::kbd_strip(unsigned long long t, unsigned s)
 {
-    parent_.fireStripEvent(t,1,s);
+        if(--s_count_ != 0)
+        {
+            return;
+        }
+
+        s_count_ = 20;
+
+        switch(s_state_)
+        {
+            case 0:
+                if(s<s_threshold_)
+                    break;
+
+                //pic::logmsg() << "strip starting: " << s;
+                s_state_ = 1;
+                s_count_ = 100;
+                break;
+
+            case 1:
+                if(s<s_threshold_)
+                {
+                    s_state_ = 0;
+                }
+                else
+                {
+                    //pic::logmsg() << "strip origin: " << s;
+                    s_state_ = 2;
+                    // origin_ = s;
+                }
+                break;
+
+            case 2:
+                // if(std::abs(long(s-last_))<200 && s>threshold_)
+                // {
+                //     int o = origin_;
+                //     o -= s;
+                //     float f = (float)o/(float)range_;
+                //     float abs = (float)(s-min_)/(float)(range_/2.0f)-1.0f;
+                //     if(abs>1.0f)
+                //         abs=1.0f;
+                //     if(abs<-1.0f)
+                //         abs=-1.0f;
+                //     //pic::logmsg() << "strip " << s << " -> " << f << "  range=" << range_ << "  abs=" << abs;
+                //     output_.add_value(1,piw::makefloat_bounded_nb(1,-1,0,f,t));
+                //     output_.add_value(2,piw::makefloat_bounded_nb(1,-1,0,abs,t));
+                //     break;
+                // }
+
+                if(std::abs(long(s-s_last_))<200 && s>s_threshold_)
+                {
+                    parent_.fireStripEvent(t,1,s);
+                }
+                s_state_ = 3;
+                s_count_ = 80;
+                break;
+
+            case 3:
+                if(s<s_threshold_)
+                {
+                    //pic::logmsg() << "strip ending";
+                    parent_.fireStripEvent(t,1,2048);
+                    s_state_ = 0;
+                }
+                else
+                {
+                    s_state_ = 2;
+                }
+                break;
+        }
+
+        s_last_ = s;
 }
 
     
