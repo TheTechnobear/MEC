@@ -5,6 +5,7 @@
 #include <picross/pic_usb.h>
 #include <lib_alpha2/alpha2_active.h>
 #include <lib_pico/pico_active.h>
+#include <memory>
 
 namespace EigenApi
 {
@@ -55,6 +56,8 @@ namespace EigenApi
         virtual bool start();
         virtual bool stop();
         virtual bool poll(long long t);
+
+        bool stopping() { return stopping_;}
         
 		virtual void fireKeyEvent(unsigned long long t, unsigned course, unsigned key, bool a, unsigned p, int r, int y);
         virtual void fireBreathEvent(unsigned long long t, unsigned val);
@@ -63,24 +66,30 @@ namespace EigenApi
         
         virtual void restartKeyboard() = 0;
         virtual void setLED(unsigned int keynum,unsigned int colour) = 0;
+
+        pic::usbdevice_t* usbDevice() { return pDevice_;}
+
+        std::string firmwareDir() { return fwDir_;}
+
+        static bool loadFirmware(pic::usbdevice_t* pDevice,std::string ihxFile);
+        static void logmsg(const char* msg);
+
+        EigenFreeD& efd_;
+protected:
         virtual std::string findDevice() = 0;
-        
+private:        
         // for controlling firmware loading
-        void pokeFirmware(pic::usbdevice_t* pDevice,int address,int byteCount,void* data);
-        void firmwareCpucs(pic::usbdevice_t* pDevice,const char* mode);
-        void resetFirmware(pic::usbdevice_t* pDevice);
-        void runFirmware(pic::usbdevice_t* pDevice);
-        void sendFirmware(pic::usbdevice_t* pDevice,int recType,int address,int byteCount,void* data);
-        bool loadFirmware(pic::usbdevice_t* pDevice,std::string ihxFile);
+        static void pokeFirmware(pic::usbdevice_t* pDevice,int address,int byteCount,void* data);
+        static void firmwareCpucs(pic::usbdevice_t* pDevice,const char* mode);
+        static void resetFirmware(pic::usbdevice_t* pDevice);
+        static void runFirmware(pic::usbdevice_t* pDevice);
+        static void sendFirmware(pic::usbdevice_t* pDevice,int recType,int address,int byteCount,void* data);
         
         // for IHX processing
-        unsigned hexToInt(char* buf, int len);
-        char hexToChar(char* buf);
-        bool processIHXLine(pic::usbdevice_t* pDevice,int fd,int line);
+        static unsigned hexToInt(char* buf, int len);
+        static char hexToChar(char* buf);
+        static bool processIHXLine(pic::usbdevice_t* pDevice,int fd,int line);
         
- 		// logging
-		void logmsg(const char* msg);
-        bool stopping() { return stopping_;}
 
         class IHXException
         {
@@ -91,64 +100,14 @@ namespace EigenApi
             std::string reason_;
         };
         
-        pic::usbdevice_t *pDevice_;
+        pic::usbdevice_t* pDevice_;
         std::string fwDir_;
-        EigenFreeD& efd_;
         unsigned lastBreath_;
         unsigned lastStrip_[2];
         unsigned lastPedal_[4];
         bool stopping_;
     };
     
-    class EF_Alpha : public EF_Harp
-    {
-    public:
-        EF_Alpha(EigenFreeD& efd, const char* fwDir);
-        virtual ~EF_Alpha();
-        
-        virtual bool create();
-        virtual bool destroy();
-        virtual bool start();
-        virtual bool stop();
-        virtual bool poll(long long t);
-        
-        virtual void restartKeyboard();
-        virtual void setLED(unsigned int keynum,unsigned int colour);
-
-        void fireAlphaKeyEvent(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y);
-
-        
-		static bool isAvailable();
-
-        unsigned short* curMap() { return curmap_;}
-        unsigned short* skpMap() { return skpmap_;}
-
-    protected:
-
-    private:
-        std::string findDevice();
-        bool loadBaseStation();
-
-        alpha2::active_t *pLoop_;
-        unsigned short curmap_[9],skpmap_[9];
-
-        class Delegate : public alpha2::active_t::delegate_t
-        {
-        public:
-        	Delegate(EF_Alpha& p) : parent_(p) {;}
-            void kbd_dead(unsigned reason);
-            void kbd_raw(unsigned long long t, unsigned key, unsigned c1, unsigned c2, unsigned c3, unsigned c4);
-            void kbd_mic(unsigned char s,unsigned long long t, const float *samples);
-            void kbd_key(unsigned long long t, unsigned key, unsigned p, int r, int y);
-            void kbd_keydown(unsigned long long t, const unsigned short *bitmap);
-            void pedal_down(unsigned long long t, unsigned pedal, unsigned p);
-            void midi_data(unsigned long long t, const unsigned char *data, unsigned len);
-            
-        private:
-            EF_Alpha& parent_;
-
-        } delegate_;
-    };
     
     class EF_Pico : public EF_Harp
     {
@@ -189,6 +148,77 @@ namespace EigenApi
         private:
             EF_Pico& parent_;
         } delegate_;
+    };
+
+
+    class EF_BaseStation : public EF_Harp
+    {
+    public:
+        EF_BaseStation(EigenFreeD& efd, const char* fwDir);
+        virtual ~EF_BaseStation();
+        
+        virtual bool create();
+        virtual bool destroy();
+        virtual bool start();
+        virtual bool stop();
+        virtual bool poll(long long t);
+        
+        virtual void restartKeyboard();
+        virtual void setLED(unsigned int keynum,unsigned int colour);
+
+        void fireAlphaKeyEvent(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y);
+
+        static bool isAvailable();
+
+        unsigned short* curMap() { return curmap_;}
+        unsigned short* skpMap() { return skpmap_;}
+
+    protected:
+        alpha2::active_t* loop() { return pLoop_;}
+    private:
+        std::string findDevice();
+        bool loadBaseStation();
+        std::shared_ptr<alpha2::active_t::delegate_t> delegate_; 
+        alpha2::active_t *pLoop_;
+        unsigned short curmap_[9],skpmap_[9];
+    };
+
+    class EF_Alpha : public alpha2::active_t::delegate_t
+    {
+    public:
+        EF_Alpha(EF_BaseStation& p) : parent_(p) {;}
+
+        //alpha2::active_t::delegate_t
+        void kbd_dead(unsigned reason);
+        void kbd_raw(unsigned long long t, unsigned key, unsigned c1, unsigned c2, unsigned c3, unsigned c4);
+        void kbd_mic(unsigned char s,unsigned long long t, const float *samples);
+        void kbd_key(unsigned long long t, unsigned key, unsigned p, int r, int y);
+        void kbd_keydown(unsigned long long t, const unsigned short *bitmap);
+        void pedal_down(unsigned long long t, unsigned pedal, unsigned p);
+        void midi_data(unsigned long long t, const unsigned char *data, unsigned len);
+            
+    private:
+        void fireAlphaKeyEvent(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y);
+        EF_BaseStation& parent_;
+    };
+
+    class EF_Tau : public alpha2::active_t::delegate_t
+    {
+    public:
+        EF_Tau(EF_BaseStation& p) : parent_(p) {;}
+
+        //alpha2::active_t::delegate_t
+        void kbd_dead(unsigned reason);
+        void kbd_raw(unsigned long long t, unsigned key, unsigned c1, unsigned c2, unsigned c3, unsigned c4);
+        void kbd_mic(unsigned char s,unsigned long long t, const float *samples);
+        void kbd_key(unsigned long long t, unsigned key, unsigned p, int r, int y);
+        void kbd_keydown(unsigned long long t, const unsigned short *bitmap);
+        void pedal_down(unsigned long long t, unsigned pedal, unsigned p);
+        void midi_data(unsigned long long t, const unsigned char *data, unsigned len);
+            
+    private:
+        void fireTauKeyEvent(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y);
+        EF_BaseStation& parent_;
     };
 }
 

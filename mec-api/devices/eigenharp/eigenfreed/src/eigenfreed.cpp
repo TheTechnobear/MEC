@@ -4,7 +4,7 @@
 
 #include <picross/pic_config.h>
 
-#define VERSION_STRING "eigenfreed v0.2 Alpha/Pico, experimental - Author: TheTechnobear"
+#define VERSION_STRING "eigenfreed v0.3 Alpha/Tau/Pico, experimental - Author: TheTechnobear"
 
 #include <picross/pic_time.h>
 #include <picross/pic_log.h>
@@ -77,9 +77,9 @@ bool EigenFreeD::create()
     logmsg("create EigenFreeD");
     pic_init_time();
     pic_set_foreground(true);
-    if(EF_Alpha::isAvailable()) 
+    if(EF_BaseStation::isAvailable()) 
     {
-		EF_Harp *pDevice = new EF_Alpha(*this, fwDir_);
+		EF_Harp *pDevice = new EF_BaseStation(*this, fwDir_);
         pDevice->create();
 		devices_.push_back(pDevice);
     }

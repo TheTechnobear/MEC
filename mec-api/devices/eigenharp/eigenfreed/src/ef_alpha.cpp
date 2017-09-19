@@ -12,220 +12,36 @@
 #include <picross/pic_log.h>
 #include <picross/pic_resources.h>
 
+// INFO ONLY from alpha2_active.h
+// #define KBD_KEYS 132
+// #define KBD_DESENSE (KBD_KEYS+0)
+// #define KBD_BREATH1 (KBD_KEYS+1)
+// #define KBD_BREATH2 (KBD_KEYS+2)
+// #define KBD_STRIP1  (KBD_KEYS+3)
+// #define KBD_STRIP2  (KBD_KEYS+4)
+// #define KBD_ACCEL   (KBD_KEYS+5)
+// #define KBD_SENSORS 6
 
-#define DEFAULT_DEBOUNCE 25000
-
-// max poll in uS (1000=1ms)
-#define MAX_POLL_TIME 100
-
-// these are all hardcode in eigend, rather than in alpha2_usb :(
-#define PRODUCT_ID_BSP BCTKBD_USBPRODUCT
-#define PRODUCT_ID_PSU 0x0105
-
-#define BASESTATION_PRE_LOAD 0x0002
-#define BASESTATION_FIRMWARE "bs_mm_fw_0103.ihx"
-
-#define PSU_PRE_LOAD 0x0003
-#define PSU_FIRMWARE "psu_mm_fw_0102.ihx"
 
 namespace EigenApi
 {
 
 
 
-// public interface
-
-EF_Alpha::EF_Alpha(EigenFreeD& efd, const char* fwDir) : EF_Harp(efd,fwDir), pLoop_(NULL), delegate_(*this)
-{
-}
-
-EF_Alpha::~EF_Alpha()
-{
-}
-
-
-bool EF_Alpha::create()
-{
-    logmsg("create eigenharp alpha");
-    if (!EF_Harp::create()) return false;
-    
-    try {
-        memset(curmap_,0,sizeof(curmap_));
-        memset(skpmap_,0,sizeof(skpmap_));
-
-        logmsg("create alpha loop");
-        pLoop_ = new alpha2::active_t(pDevice_, &delegate_,false);
-        logmsg("created alpha loop");
-        efd_.fireDeviceEvent(pDevice_->name(), Callback::DeviceType::ALPHA, 0, 0, 2, 4);
-    } catch (pic::error& e) {
-        // error is logged by default, so dont need to repeat, but useful if we want line number etc for debugging
-        // logmsg(e.what());
-        return false;
-    }
-
-    return true;
-}
-
-bool EF_Alpha::destroy()
-{
-    logmsg("destroy alpha....");
-    stopping_ = true;
-    if(pLoop_)
-    {
-//        pLoop_->stop();
-        delete pLoop_;
-        pLoop_=NULL;
-    }
-    logmsg("destroyed alpha");
-    return EF_Harp::destroy();
-}
-
-
-bool EF_Alpha::start()
-{
-    if (!EF_Harp::start()) return false;
-
-    if(pLoop_==NULL) return false;
-    pLoop_->start();
-    pLoop_->debounce_time(DEFAULT_DEBOUNCE);
-    logmsg("started alpha loop");
-    return true;
-}
-
-bool EF_Alpha::stop()
-{
-    if(pLoop_==NULL) return false;
-//    pLoop_->stop();
-//    logmsg("stopped loop");
-    
-    return EF_Harp::stop();
-}
-
-bool EF_Alpha::poll(long long t)
-{
-    if (!EF_Harp::poll(t)) return false;
-    pLoop_->poll(t);
-    pLoop_->msg_flush();
-    return true;
-}
-
-void EF_Alpha::setLED(unsigned int keynum,unsigned int colour)
-{
-    if(pLoop_==NULL) return;
-    pLoop_->msg_set_led(keynum, colour);
-}
-
-
-void EF_Alpha::restartKeyboard()
-{
-    if(pLoop_!=NULL)
-    {
-        pLoop_->restart();
-    }
-}
-    
+   
 void EF_Alpha::fireAlphaKeyEvent(unsigned long long t, unsigned key, bool a, unsigned p, int r, int y)
 {
     const int MAIN_KEYBASE = 120;
     unsigned course = key >= MAIN_KEYBASE;
-    EF_Harp::fireKeyEvent(t, course, key - (course * MAIN_KEYBASE), a, p, r, y);
+    parent_.fireKeyEvent(t, course, key - (course * MAIN_KEYBASE), a, p, r, y);
 }
 
-
-bool EF_Alpha::loadBaseStation()
-{
-    std::string ihxFile;
-    
-    
-	std::string usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,BASESTATION_PRE_LOAD,false).c_str();
-	if(usbdev.size()==0)
-	{
-        usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,PSU_PRE_LOAD,false).c_str();
-        if (usbdev.size()==0)
-        {
-            pic::logmsg() << "no basestation connected/powered on?";
-            return false;
-        }
-        ihxFile = PSU_FIRMWARE;
-	}
-    else
-    {
-        ihxFile = BASESTATION_FIRMWARE;
-    }
-
-    pic::usbdevice_t* pDevice;
-	try
-	{
-		pDevice=new pic::usbdevice_t(usbdev.c_str(),0);
-		pDevice->set_power_delegate(0);
-	}
-	catch(std::exception & e)
-	{
-		char buf[100];
-		sprintf(buf,"unable to open device: %s ", e.what());
-    	logmsg(buf);
-		return false;
-	}
-    return loadFirmware(pDevice,ihxFile);
-}
-
-std::string EF_Alpha::findDevice()
-{
-    std::string usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,PRODUCT_ID_BSP,false).c_str();
-    if(usbdev.size()==0) usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,PRODUCT_ID_PSU,false).c_str();
-    
-	if(usbdev.size()==0)
-	{
-		logmsg("basestation loading...");
-		if(loadBaseStation())
-		{
-			logmsg("basestation loaded");
-            
-			for (int i=0;i<10 && usbdev.size()==0 ;i++)
-			{
-				logmsg("attempting to find basestation...");
-                
-                // can take a few seconds for basestation to reregister itself
-				usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,PRODUCT_ID_BSP,false).c_str();
-                if(usbdev.size()==0) usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,PRODUCT_ID_PSU,false).c_str();
-                
-				pic_microsleep(1000000);
-			}
-            char buf[100];
-            sprintf(buf,"basestation loaded dev: %s ", usbdev.c_str());
-			logmsg(buf);
-		}
-		else
-		{
-			logmsg("error loading basestation");
-		}
-	}
-	return usbdev;
-}
-
-bool EF_Alpha::isAvailable()
-{
-    std::string usbdev;
-	usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,BASESTATION_PRE_LOAD,false).c_str();
-	if(usbdev.size()>0) return true;
-    usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,PRODUCT_ID_BSP,false).c_str();
-	if(usbdev.size()>0) return true;
-	usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,PSU_PRE_LOAD,false).c_str();
-	if(usbdev.size()>0) return true;
-    usbdev = pic::usbenumerator_t::find(BCTKBD_USBVENDOR,PRODUCT_ID_PSU,false).c_str();
-	if(usbdev.size()>0) return true;
-	return false;
-}
-    
-
-// EF_Alpha::Delegate
-
-void EF_Alpha::Delegate::kbd_dead(unsigned reason)
+void EF_Alpha::kbd_dead(unsigned reason)
 {
 	if(!parent_.stopping()) parent_.restartKeyboard();
 }
 
-void EF_Alpha::Delegate::kbd_key(unsigned long long t, unsigned key, unsigned p, int r, int y)
+void EF_Alpha::kbd_key(unsigned long long t, unsigned key, unsigned p, int r, int y)
 {
     // pic::logmsg() << "kbd_key" << key << " p " << p << " r " << r << " y " << y;
 
@@ -243,7 +59,7 @@ void EF_Alpha::Delegate::kbd_key(unsigned long long t, unsigned key, unsigned p,
         // pic::logmsg() << "kbd_key fire" << key << " p " << p << " r " << r << " y " << y;
         int rr = ( r - 2048) * 2;
         int ry = ( y - 2048 ) * 2;
-        parent_.fireAlphaKeyEvent(t,key,a,p,rr,ry);
+        fireAlphaKeyEvent(t,key,a,p,rr,ry);
         return;
     }
     
@@ -260,17 +76,18 @@ void EF_Alpha::Delegate::kbd_key(unsigned long long t, unsigned key, unsigned p,
             parent_.fireStripEvent(t, 2, p);
             break;
         }
-//        case KBD_ACCEL : break;
-//        case KBD_DESENSE : break;
+       // case KBD_DESENSE : break;
+       // case KBD_BREATH2 : break; 
+       // case KBD_ACCEL   : break;
         default: ;
     }
 }
 
-void EF_Alpha::Delegate::kbd_raw(unsigned long long t, unsigned key, unsigned c1, unsigned c2, unsigned c3, unsigned c4)
+void EF_Alpha::kbd_raw(unsigned long long t, unsigned key, unsigned c1, unsigned c2, unsigned c3, unsigned c4)
 {
 }
 
-void EF_Alpha::Delegate::kbd_keydown(unsigned long long t, const unsigned short *newmap)
+void EF_Alpha::kbd_keydown(unsigned long long t, const unsigned short *newmap)
 {   
     // char buf[121];
     // for(int i=0;i < 120;i++) {
@@ -293,7 +110,7 @@ void EF_Alpha::Delegate::kbd_keydown(unsigned long long t, const unsigned short 
             // if was on, but no longer on
             if( (parent_.curMap()[w]&mask) && !(newmap[w]&mask) )
             {
-                parent_.fireAlphaKeyEvent(t,keybase+k,0,0,0,0);
+                fireAlphaKeyEvent(t,keybase+k,0,0,0,0);
             }
         }
 
@@ -301,15 +118,15 @@ void EF_Alpha::Delegate::kbd_keydown(unsigned long long t, const unsigned short 
     }    
 }
 
-void EF_Alpha::Delegate::kbd_mic(unsigned char s,unsigned long long t, const float *data)
+void EF_Alpha::kbd_mic(unsigned char s,unsigned long long t, const float *data)
 {
 }
 
-void EF_Alpha::Delegate::midi_data(unsigned long long t, const unsigned char *data, unsigned len)
+void EF_Alpha::midi_data(unsigned long long t, const unsigned char *data, unsigned len)
 {
 }
 
-void EF_Alpha::Delegate::pedal_down(unsigned long long t, unsigned pedal, unsigned value)
+void EF_Alpha::pedal_down(unsigned long long t, unsigned pedal, unsigned value)
 {
     parent_.firePedalEvent(t, pedal, value);
 }

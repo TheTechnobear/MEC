@@ -1,5 +1,14 @@
 project (mec-eigenharp)
 
+
+
+
+if(APPLE)
+    #temporary, so I can see 'real' errors
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+elseif(UNIX) 
+endif(APPLE) 
+
 if(APPLE)
     #add_definitions(-D ML_USE_SSE)
     add_definitions(-D __MACOSX_CORE__)
@@ -30,7 +39,9 @@ set(EIGENHARP_SRC
     lib_pico/src/pico_active.cpp
     eigenfreed/src/eigenfreed.cpp
     eigenfreed/src/ef_harp.cpp
+    eigenfreed/src/ef_basestation.cpp
     eigenfreed/src/ef_alpha.cpp
+    eigenfreed/src/ef_tau.cpp
     eigenfreed/src/ef_pico.cpp
     eigenfreed/src/eigenapi.cpp
 )

@@ -4,7 +4,8 @@
 
 # current priorities
 (in order)
-- fix tau/alpha issues with touches
+- tau - test/fix issues
+- eigenharps - test/fix breath/strips
 - fix soundplane note scaling issue
 - acheive feature parity, api integration for all devices
 - add ability to drives leds for eigenharps via osc
@@ -12,8 +13,6 @@
 - packaging of mec-app
 
 # mec-api , known issues
-- tau/alpha, hanging notes (mac and rPi) , eigenfreed? as ok on pico? or possibly message ordering?
-- tau, (or bs std) sends note on during initialisation, prevent
 - push2 , I call render in process(), it probably should be in a separate low prio thread.
 - consider libusb initialisation, may be multile libusb devices running
 
@@ -41,6 +40,7 @@
 - mec-vst need to copy dylibs into Frameworks
 - mec-max need to sort out rpath for external, and package dylibs
 - consider a top level script to build everything (perhaps options depending on platform being run on... e.g. no point in bela on windows)
+- remove OSAtomic*  errors from eigenfreed/eigend, use std::atomic_* instead
 
 # work in progress
 - scales
@@ -59,3 +59,19 @@
 # other
 - document configuration file/setup
 - improve existing docs
+
+# device specific to do
+## soundplane
+- check scaling
+- upgrade to new touch tracker (when stable/available)
+
+## pico
+- test/fix breath/strip/mode keys
+
+## tau
+- test key layout due to 'odd shape'
+- test/fix breath/strip/mode keys
+
+## alpha
+- test/fix breath/strip/mode keys
+

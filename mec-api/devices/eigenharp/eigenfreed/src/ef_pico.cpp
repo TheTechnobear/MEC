@@ -42,13 +42,13 @@ bool EF_Pico::create()
     
     try {
         logmsg("close device to allow active_t to open");
-        pDevice_->detach();
-        pDevice_->close();
+        usbDevice()->detach();
+        usbDevice()->close();
         logmsg("create pico loop");
-        pLoop_ = new pico::active_t(pDevice_->name(), &delegate_);
+        pLoop_ = new pico::active_t(usbDevice()->name(), &delegate_);
         pLoop_->load_calibration_from_device();
         logmsg("created pico loop");
-        efd_.fireDeviceEvent(pDevice_->name(), Callback::DeviceType::PICO, 0, 0, 1, 0);
+        efd_.fireDeviceEvent(usbDevice()->name(), Callback::DeviceType::PICO, 0, 0, 1, 0);
 
     } catch (pic::error& e) {
         // error is logged by default, so dont need to repeat, but useful if we want line number etc for debugging
@@ -62,8 +62,7 @@ bool EF_Pico::create()
 bool EF_Pico::destroy()
 {
     logmsg("destroy pico....");
-    stopping_ = true;
-    if(pLoop_)
+    EF_Harp::stop();
     {
 //        pLoop_->stop();
         delete pLoop_;
@@ -132,7 +131,6 @@ bool EF_Pico::loadPicoFirmware()
 {
     std::string ihxFile;
     
-    
 	std::string usbdev = pic::usbenumerator_t::find(BCTPICO_USBVENDOR,PICO_PRE_LOAD,false).c_str();
 	if(usbdev.size()==0)
 	{
@@ -157,7 +155,9 @@ bool EF_Pico::loadPicoFirmware()
     	logmsg(buf);
 		return false;
 	}
-    return loadFirmware(pDevice,ihxFile);
+    std::string fwfile = firmwareDir();
+    fwfile.append(ihxFile);
+    return loadFirmware(pDevice,fwfile);
 }
 
 std::string EF_Pico::findDevice()

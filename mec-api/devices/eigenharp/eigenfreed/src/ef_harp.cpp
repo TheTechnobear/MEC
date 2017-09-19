@@ -323,8 +323,8 @@ bool EF_Harp::processIHXLine(pic::usbdevice_t* pDevice,int fd,int line)
 
 bool EF_Harp::loadFirmware(pic::usbdevice_t* pDevice,std::string ihxFile)
 {
-    std::string fwfile=fwDir_;
-    fwfile.append(ihxFile);
+    std::string fwfile=ihxFile;
+    // fwfile.append(ihxFile);
     int fd = pic::open(fwfile, IHX_OPENFLAGS);
     if(fd < 0)
     {
