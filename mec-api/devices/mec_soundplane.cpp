@@ -65,8 +65,12 @@ public:
             // LOG_1(" note: " <<  n  << " mn: "   << mn << " fn: " << fn);
             // LOG_1(" x: " << x      << " y: "   << y    << " z: "   << z);
             // LOG_1(" mx: " << mx    << " my: "  << my   << " mz: "  << mz);
-
             if (!voice) {
+                if(stolenTouches_.find(touch) != stolenTouches_.end()) {
+                    // this key has been stolen, must be released to reactivate it
+                    return;
+                } 
+
                 voice = voices_.startVoice(touch);
                 // LOG_2(std::cout << "start voice for " << key << " ch " << voice->i_ << std::endl;)
 
@@ -80,7 +84,7 @@ public:
                     stolenMsg.data_.touch_.note_ = stolen->note_;
                     stolenMsg.data_.touch_.x_ = stolen->x_;
                     stolenMsg.data_.touch_.y_ = stolen->y_;
-                    stolenMsg.data_.touch_.z_ = stolen->z_;
+                    stolenMsg.data_.touch_.z_ = 0.0f;
 
                     queue_.addToQueue(stolenMsg);
                     voices_.stopVoice(stolen);
@@ -117,10 +121,11 @@ public:
                 // LOG_2("stop voice for " << touch << " ch " << voice->i_ );
                 msg.type_ = MecMsg::TOUCH_OFF;
                 msg.data_.touch_.touchId_ = voice->i_;
+                msg.data_.touch_.z_ = 0.0;
                 queue_.addToQueue(msg);
-
                 voices_.stopVoice(voice);
             }
+            stolenTouches_.erase(touch);
         }
     }
 
@@ -142,6 +147,7 @@ private:
     Voices voices_;
     bool valid_;
     bool stealVoices_;
+    std::set<unsigned> stolenTouches_;
 };
 
 
