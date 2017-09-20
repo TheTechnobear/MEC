@@ -34,11 +34,11 @@ void MPE_Processor::touchOn(int id, float note, float x, float y, float z) {
     int my = bipolar7bit(y);
     int mz = unipolar7bit(z);
 
-    // LOG_1("MPE_Processor::touchOn");
-    // LOG_1("   note : " << note  << " startNote " << voice.startNote_ << " semi :" << semis << " pb: " << pb);
-    // LOG_1("   x :" << x << " mx: " << mx);
-    // LOG_1("   y :" << y << " my: " << my);
-    // LOG_1("   z :" << z << " mz: " << mz);
+     LOG_2("MidiProcessor::touchOn");
+     LOG_2("   note : " << note  << " startNote " << voice.startNote_ << " semi :" << semis << " pb: " << pb);
+     LOG_2("   x :" << x << " mx: " << mx);
+     LOG_2("   y :" << y << " my: " << my);
+     LOG_2("   z :" << z << " mz: " << mz);
 
     pitchbend(ch, pb);
     cc(ch, TIMBRE_CC,  my);
@@ -64,12 +64,12 @@ void MPE_Processor::touchContinue(int id, float note, float x, float y, float z)
     float semis = note - float(voice.startNote_);
     int pb = bipolar14bit(semis / pitchbendRange_);
 
-    // LOG_1(std::cout  << "midi output c")
-    // LOG_1(           << " note :" << note << " pb: " << pb << " semis: " << semis)
-    // LOG_1(           << " y :" << y << " my: " << my)
-    // LOG_1(           << " z :" << z << " mz: " << mz)
-    // LOG_1(           << " startnote :" << voice.startNote_ << " pbr: " << pitchbendRange_)
-    // LOG_1(           )
+     LOG_2("midi output c");
+     LOG_2(" note :" << note << " pb: " << pb << " semis: " << semis);
+     LOG_2(" y :" << y << " my: " << my);
+     LOG_2(" z :" << z << " mz: " << mz);
+     LOG_2(" startnote :" << voice.startNote_ << " pbr: " << pitchbendRange_);
+     LOG_2("           ");
 
     voice.note_ = note;
 
@@ -94,6 +94,8 @@ void MPE_Processor::touchOff(int id, float note, float x, float y, float z) {
     unsigned ch = id + 1; // MPE starts on 2
     unsigned vel = 0.0f; // last vel = release velocity
     pressure(ch, 0.0f);
+    LOG_2("MidiProcessor::touchOff");
+    LOG_2("   note : " << note  << " startNote " << voice.startNote_);
     noteOff(ch, voice.startNote_ , vel);
 
     voice.startNote_ = 0;

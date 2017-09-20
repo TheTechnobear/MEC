@@ -4,8 +4,10 @@
 profile
 **/build/*
 build
+cmake-build-debug
 
 **/*.sublime-workspace
+**/.idea
 
 #Xcode
 xcuserdata

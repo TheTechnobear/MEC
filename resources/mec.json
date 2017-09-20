@@ -11,6 +11,7 @@
             "port" :  9000
         },
 
+        "morph" : {},
 
         "_eigenharp" : {
             "steal voices" : true,
@@ -73,11 +74,12 @@
                 "port" : 9001
             },
 
-            "_midi" : {
-                "virtual" : 0,
+            "midi" : {
+                "virtual" : 1,
                 "voices" : 15,
                 "pitchbend range" : 48.0,
-                "device" : "Axoloti Core",
+                "device" : "MEC MIDI Out",
+		"_device" : "Axoloti Core",
                 "_device" : "IAC Driver Bus 1",
                 "_device" : "Axoloti Core 20:0"
             },

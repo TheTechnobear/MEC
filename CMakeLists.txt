@@ -37,6 +37,7 @@ add_subdirectory(external/oscpack oscpack)
 add_subdirectory(external/portaudio portaudio)
 add_subdirectory(external/cJSON cjson)
 add_subdirectory(external/rtmidi rtmidi)
+add_subdirectory(external/sensel-lib sensel-lib)
 
 add_subdirectory (mec-api) 
 add_subdirectory (mec-app)

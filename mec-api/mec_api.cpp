@@ -11,6 +11,7 @@
 #include "devices/mec_mididevice.h"
 #include "devices/mec_push2.h"
 #include "devices/mec_osct3d.h"
+#include "devices/mec_morph.h"
 
 #include <vector>
 #include <memory>
@@ -55,6 +56,10 @@ public:
 
 private:
     void initDevices();
+    template<typename DeviceSubclass, typename std::enable_if<std::is_base_of<Device, DeviceSubclass>::value>::type* = nullptr>
+    void initDevice(std::string name);
+    template<typename DeviceSubclass, typename std::enable_if<std::is_base_of<Device, DeviceSubclass>::value>::type* = nullptr>
+    void initDeviceSurfaceAndLegacy(std::string name);
 
     std::vector<std::shared_ptr<Device>> devices_;
     std::unique_ptr<Preferences> fileprefs_; // top level prefs on file
@@ -270,93 +275,52 @@ void MecApi_Impl::initDevices() {
         return;
     } 
 
-    if (prefs_->exists("eigenharp")) {
-        LOG_1("eigenharp initialise ");
+    initDevice<Eigenharp>("eigenharp");
+    initDevice<Soundplane>("soundplane");
+    initDevice<MidiDevice>("midi");
+    initDevice<Push2>("push2");
+    initDevice<OscT3D>("osct3d");
+    initDeviceSurfaceAndLegacy<Morph>("morph");
+}
+
+template<typename DeviceSubclass, typename std::enable_if<std::is_base_of<Device, DeviceSubclass>::value>::type*>
+void MecApi_Impl::initDevice(std::string name) {
+    if(prefs_->exists(name)) {
+        LOG_1("" << name << " initialize ");
         std::shared_ptr<Device> device;
-        device.reset(new mec::Eigenharp(*this));
-        if(device->init(prefs_->getSubTree("eigenharp"))) {
+        device.reset(new DeviceSubclass(*this));
+        if(device->init(prefs_->getSubTree(name))) {
             if(device->isActive()) {
                 devices_.push_back(device);
             } else {
-                LOG_1("eigenharp init inactive ");
+                LOG_1("" << name << " init inactive");
                 device->deinit();
             }
         } else {
-            LOG_1("eigenharp init failed ");
+            LOG_1("" << name << " init failed ");
             device->deinit();
         }
     }
+}
 
-    if (prefs_->exists("soundplane")) {
-        LOG_1("soundplane initialise");
+template<typename DeviceSubclass, typename std::enable_if<std::is_base_of<Device, DeviceSubclass>::value>::type*>
+void MecApi_Impl::initDeviceSurfaceAndLegacy(std::string name) {
+    if(prefs_->exists(name)) {
+        LOG_1("" << name << " initialize ");
         std::shared_ptr<Device> device;
-        device.reset(new Soundplane(*this));
-        if(device->init(prefs_->getSubTree("soundplane"))) {
-            if(device->isActive()) {
-                devices_.push_back(device);
-                LOG_1("soundplane init active ");
-            } else {
-                LOG_1("soundplane init inactive ");
-                device->deinit();
-            }
-        } else {
-            LOG_1("soundplane init failed ");
-            device->deinit();
-        }
-    }
-
-    if (prefs_->exists("midi")) {
-        LOG_1("midi initialise ");
-        std::shared_ptr<Device> device;
-        device.reset(new MidiDevice(*this));
-        if(device->init(prefs_->getSubTree("midi"))) {
+        device.reset(new DeviceSubclass(*this, *this));
+        if(device->init(prefs_->getSubTree(name))) {
             if(device->isActive()) {
                 devices_.push_back(device);
             } else {
-                LOG_1("midi init inactive ");
+                LOG_1("" << name << " init inactive");
                 device->deinit();
             }
         } else {
-            LOG_1("midi init failed ");
+            LOG_1("" << name << " init failed ");
             device->deinit();
         }
     }
-
-    if (prefs_->exists("push2")) {
-        LOG_1("push2 initialise ");
-        std::shared_ptr<Device> device;
-        device.reset(new Push2(*this));
-        if(device->init(prefs_->getSubTree("push2"))) {
-            if(device->isActive()) {
-                devices_.push_back(device);
-            } else {
-                LOG_1("push2 init inactive ");
-                device->deinit();
-            }
-        } else {
-            LOG_1("push2 init failed ");
-            device->deinit();
-        }
-    }
-
-    if (prefs_->exists("osct3d")) {
-        LOG_1("osct3d initialise ");
-        std::shared_ptr<Device> device;
-        device.reset(new OscT3D(*this));
-        if(device->init(prefs_->getSubTree("osct3d"))) {
-            if(device->isActive()) {
-                devices_.push_back(device);
-            } else {
-                LOG_1("osct3d init inactive ");
-                device->deinit();
-            }
-        } else {
-            LOG_1("osct3d init failed ");
-            device->deinit();
-        }
-    }
-
-
 }
 
 }

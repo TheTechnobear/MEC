@@ -32,6 +32,8 @@ set(MECAPI_SRC
     devices/mec_push2.h
     devices/mec_soundplane.cpp
     devices/mec_soundplane.h
+    devices/mec_morph.cpp
+    devices/mec_morph.h
     processors/mec_mpe_processor.cpp
     processors/mec_mpe_processor.h
 )
@@ -43,11 +45,12 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/../external/cJSON"
     "${PROJECT_SOURCE_DIR}/../external/oscpack"
     "${PROJECT_SOURCE_DIR}/../external/rtmidi"
-    )
+    "${PROJECT_SOURCE_DIR}/../external/sensel-lib"
+)
 
 add_library(mec-api SHARED ${MECAPI_SRC})
 
-target_link_libraries (mec-api mec-eigenharp mec-soundplane mec-push2 cjson oscpack rtmidi)
+target_link_libraries (mec-api mec-eigenharp mec-soundplane mec-push2 cjson oscpack rtmidi sensel)
 
 add_subdirectory(tests)
 
