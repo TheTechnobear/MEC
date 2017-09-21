@@ -12,13 +12,15 @@
 namespace mec {
 namespace morph {
 
-#define MAX_NUM_INTERPOLATION_STEPS 100
+#define MAX_NUM_INTERPOLATION_STEPS 50
 #define MAX_NUM_CONTACTS_PER_PANEL 16
 #define MAX_NUM_CONCURRENT_OVERALL_CONTACTS 16 // has to be 0-15 atm as mec-api uses the touch ids as indices in the 0-15 voice array!
 #define MAX_X_DELTA_TO_CONSIDER_TOUCHES_CLOSE 15
 #define MAX_Y_DELTA_TO_CONSIDER_TOUCHES_CLOSE 15
 #define EXPECTED_MEASUREMENT_ERROR 5
 #define PANEL_WIDTH 230 //TODO: find out panel width via Sensel API
+#define PANEL_HEIGHT 128
+#define MAX_Z_PRESSURE 2048
 
 struct TouchWithDeltas : public Touch {
     TouchWithDeltas() : delta_x_(0.0f), delta_y_(0.0f), delta_z_(0.0f) {}
@@ -416,7 +418,7 @@ std::shared_ptr<CompositePanel::MappedTouch> CompositePanel::NO_MAPPED_TOUCH;
 class Impl {
 public:
     Impl(ISurfaceCallback &surfaceCallback, ICallback &callback) :
-            surfaceCallback_(surfaceCallback), callback_(callback), active_(false) {}
+            surfaceCallback_(surfaceCallback), callback_(callback), active_(false), base_note_(64.0) {}
 
     ~Impl() {}
 
@@ -473,8 +475,16 @@ public:
             composite_surfaceID = std::to_string(3);
             LOG_1("morph::Impl::init - property composite_surface_id_properyname not defined, using default 3");
         }
+
         size_t num_panels = panels_->size();
         compositePanel_.reset(new CompositePanel(composite_surfaceID, transitionAreaWidth));
+
+        std::string base_note_propertyname = "base_note";
+        if(prefs.exists(base_note_propertyname)) {
+            base_note_ = stof(prefs.getString(base_note_propertyname));
+        } else {
+            LOG_1("morph::Impl::init - property base_note not defined, using default " << base_note_);
+        }
 
         LOG_1("Morph - " << num_panels << " panels initialized");
 
@@ -492,8 +502,21 @@ public:
         return active_;
     }
 
+    float FIX = 0.5; //TODO: why is one semitone 0.5 instead of 1.0?
     float xPosToNote(float xPos) {
-        return xPos / PANEL_WIDTH * 12 + 36;
+        return (xPos / PANEL_WIDTH * 12 + base_note_) * FIX;
+    }
+
+    float normalizeXPos(float xPos) {
+        return (xPos / PANEL_WIDTH * 12) * FIX;
+    }
+
+    float normalizeYPos(float yPos) {
+        return yPos / PANEL_HEIGHT;
+    }
+
+    float normalizeZPos(float zPos) {
+        return zPos / MAX_Z_PRESSURE;
     }
 
     int currnote = 0;
@@ -534,19 +557,22 @@ public:
         for (auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
             surfaceCallback_.touchOn(*touchIter);
             // remove as soon as surface support is fully implemented
-            callback_.touchOn(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
+            callback_.touchOn(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
+                              normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
         }
         std::vector<TouchWithDeltas> &continuedTouches = remappedTouches.getContinuedTouches();
         for (auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
             surfaceCallback_.touchContinue(*touchIter);
             // remove as soon as surface support is fully implemented
-            callback_.touchContinue(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
+            callback_.touchContinue(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
+                                    normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
         }
         std::vector<TouchWithDeltas> &endedTouches = remappedTouches.getEndedTouches();
         for (auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
             surfaceCallback_.touchOff(*touchIter);
             // remove as soon as surface support is fully implemented
-            callback_.touchOff(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
+            callback_.touchOff(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
+                               normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
         }
         allTouches.clear();
         return true;
@@ -558,6 +584,7 @@ private:
     bool active_;
     std::unique_ptr<CompositePanel> compositePanel_;
     std::unique_ptr<std::vector<std::unique_ptr<SinglePanel>>> panels_;
+    float base_note_;
 };
 
 } // namespace morph
