@@ -1,6 +1,5 @@
 #include "mec_morph.h"
 #include "../mec_log.h"
-#include "../mec_msg_queue.h"
 
 #include <src/sensel.h>
 
@@ -536,30 +535,18 @@ public:
             surfaceCallback_.touchOn(*touchIter);
             // remove as soon as surface support is fully implemented
             callback_.touchOn(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
-            waitUntilMidiMsgIsSent();
-            //MecMsg msg;
-            //messageFromTouch(&msg, *touchIter, MecMsg::TOUCH_ON);
-            //queue_->addToQueue(msg);
         }
         std::vector<TouchWithDeltas> &continuedTouches = remappedTouches.getContinuedTouches();
         for (auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
             surfaceCallback_.touchContinue(*touchIter);
             // remove as soon as surface support is fully implemented
             callback_.touchContinue(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
-            waitUntilMidiMsgIsSent();
-            //MecMsg msg;
-            //messageFromTouch(&msg, *touchIter, MecMsg::TOUCH_CONTINUE);
-            //queue_->addToQueue(msg);
         }
         std::vector<TouchWithDeltas> &endedTouches = remappedTouches.getEndedTouches();
         for (auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
             surfaceCallback_.touchOff(*touchIter);
             // remove as soon as surface support is fully implemented
             callback_.touchOff(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
-            waitUntilMidiMsgIsSent();
-            //MecMsg msg;
-            //messageFromTouch(&msg, *touchIter, MecMsg::TOUCH_OFF);
-            //queue_->addToQueue(msg);
         }
         allTouches.clear();
         return true;
@@ -571,22 +558,6 @@ private:
     bool active_;
     std::unique_ptr<CompositePanel> compositePanel_;
     std::unique_ptr<std::vector<std::unique_ptr<SinglePanel>>> panels_;
-    //std::shared_ptr<MsgQueue> queue_;
-
-    void waitUntilMidiMsgIsSent() {
-        /*struct timespec tim, tim2;
-        tim.tv_sec = 0;
-        tim.tv_nsec = 1000000L;
-        nanosleep(&tim, &tim2);*/
-    }
-//    void messageFromTouch(MecMsg* message, TouchWithDeltas& touch, MecMsg::type msgType) {
-//        message->type_ = msgType;
-//        message->data_.touch_.touchId_ = touch.id_;
-//        message->data_.touch_.x_ = touch.x_;
-//        message->data_.touch_.y_ = touch.y_;
-//        message->data_.touch_.z_ = touch.z_;
-//        message->data_.touch_.note_ = xPosToNote(touch.x_);
-//    }
 };
 
 } // namespace morph
