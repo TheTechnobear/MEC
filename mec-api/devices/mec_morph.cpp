@@ -1,5 +1,6 @@
 #include "mec_morph.h"
 #include "../mec_log.h"
+#include "../mec_msg_queue.h"
 
 #include <src/sensel.h>
 
@@ -14,7 +15,7 @@ namespace morph {
 
 #define MAX_NUM_INTERPOLATION_STEPS 100
 #define MAX_NUM_CONTACTS_PER_PANEL 16
-#define MAX_NUM_CONCURRENT_OVERALL_CONTACTS 32
+#define MAX_NUM_CONCURRENT_OVERALL_CONTACTS 16 // has to be 0-15 atm as mec-api uses the touch ids as indices in the 0-15 voice array!
 #define MAX_X_DELTA_TO_CONSIDER_TOUCHES_CLOSE 15
 #define MAX_Y_DELTA_TO_CONSIDER_TOUCHES_CLOSE 15
 #define EXPECTED_MEASUREMENT_ERROR 5
@@ -197,8 +198,8 @@ public:
     CompositePanel(std::string surfaceID, int transitionAreaWidth) :
             surfaceID_(surfaceID), transitionAreaWidth_(transitionAreaWidth)
     {
-        for(int i = 1; i <= MAX_NUM_CONCURRENT_OVERALL_CONTACTS; ++i) {
-            availableTouchIDs.insert(i * 100);
+        for(int i = 0; i < MAX_NUM_CONCURRENT_OVERALL_CONTACTS; ++i) {
+            availableTouchIDs.insert(i);
         }
     }
 
@@ -493,8 +494,10 @@ public:
     }
 
     float xPosToNote(float xPos) {
-        return xPos / PANEL_WIDTH * 12;
+        return xPos / PANEL_WIDTH * 12 + 36;
     }
+
+    int currnote = 0;
 
     bool process() {
         Touches touches;
@@ -502,6 +505,11 @@ public:
         // send touch events for individual panels...
         for (auto panelIter = panels_->begin(); panelIter != panels_->end(); ++panelIter) {
             bool touchesRead = (*panelIter)->readTouches(touches);
+            /*touchesRead = true;
+            TouchWithDeltas touch = TouchWithDeltas(0, "surfacex", currnote, 2, 3, currnote, 2, 0, 0, 0);
+            currnote += 1;
+            if(currnote > 100) currnote = 0;
+            touches.addNew(touch);*/
             /*if(touchesRead) {
                 std::vector<TouchWithDeltas> &newTouches = touches.getNewTouches();
                 for (auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
@@ -528,19 +536,32 @@ public:
             surfaceCallback_.touchOn(*touchIter);
             // remove as soon as surface support is fully implemented
             callback_.touchOn(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
+            waitUntilMidiMsgIsSent();
+            //MecMsg msg;
+            //messageFromTouch(&msg, *touchIter, MecMsg::TOUCH_ON);
+            //queue_->addToQueue(msg);
         }
         std::vector<TouchWithDeltas> &continuedTouches = remappedTouches.getContinuedTouches();
         for (auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
             surfaceCallback_.touchContinue(*touchIter);
             // remove as soon as surface support is fully implemented
             callback_.touchContinue(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
+            waitUntilMidiMsgIsSent();
+            //MecMsg msg;
+            //messageFromTouch(&msg, *touchIter, MecMsg::TOUCH_CONTINUE);
+            //queue_->addToQueue(msg);
         }
         std::vector<TouchWithDeltas> &endedTouches = remappedTouches.getEndedTouches();
         for (auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
             surfaceCallback_.touchOff(*touchIter);
             // remove as soon as surface support is fully implemented
             callback_.touchOff(touchIter->id_, xPosToNote(touchIter->x_), touchIter->x_, touchIter->y_, touchIter->z_);
+            waitUntilMidiMsgIsSent();
+            //MecMsg msg;
+            //messageFromTouch(&msg, *touchIter, MecMsg::TOUCH_OFF);
+            //queue_->addToQueue(msg);
         }
+        allTouches.clear();
         return true;
     }
 
@@ -550,6 +571,22 @@ private:
     bool active_;
     std::unique_ptr<CompositePanel> compositePanel_;
     std::unique_ptr<std::vector<std::unique_ptr<SinglePanel>>> panels_;
+    //std::shared_ptr<MsgQueue> queue_;
+
+    void waitUntilMidiMsgIsSent() {
+        /*struct timespec tim, tim2;
+        tim.tv_sec = 0;
+        tim.tv_nsec = 1000000L;
+        nanosleep(&tim, &tim2);*/
+    }
+//    void messageFromTouch(MecMsg* message, TouchWithDeltas& touch, MecMsg::type msgType) {
+//        message->type_ = msgType;
+//        message->data_.touch_.touchId_ = touch.id_;
+//        message->data_.touch_.x_ = touch.x_;
+//        message->data_.touch_.y_ = touch.y_;
+//        message->data_.touch_.z_ = touch.z_;
+//        message->data_.touch_.note_ = xPosToNote(touch.x_);
+//    }
 };
 
 } // namespace morph
