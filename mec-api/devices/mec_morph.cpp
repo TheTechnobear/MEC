@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <cmath>
 #include <set>
+#include <map>
 
 namespace mec {
 namespace morph {
@@ -34,27 +35,27 @@ struct TouchWithDeltas : public Touch {
 
 class Touches {
 public:
-    void addNew(TouchWithDeltas& touch) {
+    void addNew(const TouchWithDeltas& touch) {
         newTouches_.push_back(touch);
     }
 
-    void addContinued(TouchWithDeltas& touch) {
+    void addContinued(const TouchWithDeltas& touch) {
         continuedTouches_.push_back(touch);
     }
 
-    void addEnded(TouchWithDeltas& touch) {
+    void addEnded(const TouchWithDeltas& touch) {
         endedTouches_.push_back(touch);
     }
 
-    std::vector<TouchWithDeltas>& getNewTouches() {
+    const std::vector<TouchWithDeltas>& getNewTouches() const {
         return newTouches_;
     }
 
-    std::vector<TouchWithDeltas>& getContinuedTouches() {
+    const std::vector<TouchWithDeltas>& getContinuedTouches() const {
         return continuedTouches_;
     }
 
-    std::vector<TouchWithDeltas>& getEndedTouches() {
+    const std::vector<TouchWithDeltas>& getEndedTouches() const {
         return endedTouches_;
     }
 
@@ -65,15 +66,15 @@ public:
     }
     
     void add(Touches& touches) {
-        std::vector<TouchWithDeltas> &newTouches = touches.getNewTouches();
+        const std::vector<TouchWithDeltas> &newTouches = touches.getNewTouches();
         for(auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
             addNew(*touchIter);
         }
-        std::vector<TouchWithDeltas> &continuedTouches = touches.getContinuedTouches();
+        const std::vector<TouchWithDeltas> &continuedTouches = touches.getContinuedTouches();
         for(auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
             addContinued(*touchIter);
         }
-        std::vector<TouchWithDeltas> &endedTouches = touches.getEndedTouches();
+        const std::vector<TouchWithDeltas> &endedTouches = touches.getEndedTouches();
         for(auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
             addEnded(*touchIter);
         }
@@ -86,33 +87,53 @@ private:
 
 class Panel {
 public:
-     virtual bool init() = 0;
-     virtual bool readTouches(Touches &touches) = 0;
+    Panel(const SurfaceID &surfaceID) : surfaceID_(surfaceID) {}
+    const SurfaceID& getSurfaceID() const {
+        return surfaceID_;
+    }
+    virtual bool init() = 0;
+    virtual bool readTouches(Touches &touches) = 0;
+
+private:
+    SurfaceID surfaceID_;
 };
 
 class SinglePanel : public Panel {
 public:
-    SinglePanel(unsigned char index, std::string surfaceID) : index_(index), handle_(nullptr), frameData_(nullptr),
-                             surfaceID_(surfaceID) /*TODO*/ {}
+    SinglePanel(const SenselDeviceID &deviceID, const SurfaceID &surfaceID) : Panel(surfaceID), deviceID_(deviceID), handle_(nullptr), frameData_(nullptr)
+    {}
 
     virtual bool init() {
-        SenselStatus openStatus = senselOpenDeviceByID(&handle_, index_);
+        SenselStatus openStatus = senselOpenDeviceByComPort(&handle_, deviceID_.com_port);
         if (openStatus != SENSEL_OK) {
-            LOG_0("morph::Panel::init - unable to open device with id " << index_);
+            LOG_0("morph::Panel::init - unable to open device at com port " << deviceID_.com_port);
             return false;
         }
+        SenselFirmwareInfo firmwareInfo;
+        SenselStatus getFirmwareStatus = senselGetFirmwareInfo(&handle_, &firmwareInfo);
+        if (getFirmwareStatus != SENSEL_OK) {
+            LOG_0("morph::Panel::init - unable to retrieve firmware info for panel " << getSurfaceID());
+            return false;
+        }
+        LOG_1("morph::Panel::init firmware info for panel " << getSurfaceID() << ": device_id: " << +firmwareInfo.device_id);
+        LOG_1("morph::Panel::init firmware info for panel " << getSurfaceID() << ": revision: " << +firmwareInfo.device_revision);
+        LOG_1("morph::Panel::init firmware info for panel " << getSurfaceID() << ": protocol version: " << +firmwareInfo.fw_protocol_version);
+        LOG_1("morph::Panel::init firmware info for panel " << getSurfaceID() << ": fw_version_build: "  << +firmwareInfo.fw_version_build);
+        LOG_1("morph::Panel::init firmware info for panel " << getSurfaceID() << ": fw_version_major: "  << +firmwareInfo.fw_version_major);
+        LOG_1("morph::Panel::init firmware info for panel " << getSurfaceID() << ": fw_version_minor: "  << +firmwareInfo.fw_version_minor);
+        LOG_1("morph::Panel::init firmware info for panel " << getSurfaceID() << ": fw_version_release: " << +firmwareInfo.fw_version_release);
         SenselStatus setFrameContentStatus = senselSetFrameContent(handle_, FRAME_CONTENT_CONTACTS_MASK);
         if (setFrameContentStatus != SENSEL_OK) {
-            LOG_0("morph::Panel::init - unable to set contacts mask for panel " << index_);
+            LOG_0("morph::Panel::init - unable to set contacts mask for panel " << getSurfaceID());
             return false;
         }
         SenselStatus allocFrameStatus = senselAllocateFrameData(handle_, &frameData_);
         if (allocFrameStatus != SENSEL_OK) {
-            LOG_0("morph::Panel::init - unable to allocate frame data for panel " << index_);
+            LOG_0("morph::Panel::init - unable to allocate frame data for panel " << getSurfaceID());
             return false;
         }
         senselStartScanning(handle_);
-        LOG_2("morph::Panel::init - panel " << index_ << " initialized");
+        LOG_2("morph::Panel::init - panel " << getSurfaceID() << " initialized");
         return true;
     }
 
@@ -121,38 +142,38 @@ public:
             SenselStatus stopStatus = senselStopScanning(handle_);
             //TODO - should we wait?
             if (stopStatus != SENSEL_OK) {
-                LOG_0("morph::Panel::destructor - unable to stop panel " << index_);
+                LOG_0("morph::Panel::destructor - unable to stop panel " << getSurfaceID());
             }
             if (frameData_ != nullptr) {
                 SenselStatus freeFrameStatus = senselFreeFrameData(handle_, frameData_);
                 if (freeFrameStatus != SENSEL_OK) {
-                    LOG_0("morph::Panel::destructor - unable to free frame data for panel " << index_);
+                    LOG_0("morph::Panel::destructor - unable to free frame data for panel " << getSurfaceID());
                 }
             }
             SenselStatus closeStatus = senselClose(handle_);
             if (closeStatus != SENSEL_OK) {
-                LOG_0("morph::Panel::destructor - unable to close panel " << index_);
+                LOG_0("morph::Panel::destructor - unable to close panel " << getSurfaceID());
             }
         }
-        LOG_2("morph::Panel::destructor - panel " << index_ << " freed");
+        LOG_2("morph::Panel::destructor - panel " << getSurfaceID() << " freed");
     }
 
     virtual bool readTouches(Touches &touches) {
         bool sensorReadState = senselReadSensor(handle_);
         if(sensorReadState != SENSEL_OK) {
-            LOG_0("morph::Panel::readTouches - unable to read sensor for panel " << index_);
+            LOG_0("morph::Panel::readTouches - unable to read sensor for panel " << getSurfaceID());
             return false;
         }
         unsigned int num_frames = 0;
         bool numFramesRetrievedState = senselGetNumAvailableFrames(handle_, &num_frames);
         if(numFramesRetrievedState != SENSEL_OK) {
-            LOG_0("morph::Panel::readTouches - unable to determine number of frames for panel " << index_);
+            LOG_0("morph::Panel::readTouches - unable to determine number of frames for panel " << getSurfaceID());
             return false;
         }
         for(int current_frame = 0; current_frame < num_frames; ++current_frame) {
             bool frameRetrievedState = senselGetFrame(handle_, frameData_);
             if(frameRetrievedState != SENSEL_OK) {
-                LOG_0("morph::Panel::readTouches - unable to get frame data for panel " << index_);
+                LOG_0("morph::Panel::readTouches - unable to get frame data for panel " << getSurfaceID());
                 continue; // better try to continue, other frames might be usable
             }
             for(int current_contact = 0; current_contact < frameData_->n_contacts; ++current_contact) {
@@ -165,23 +186,61 @@ public:
                 float z_delta = frameData_->contacts[current_contact].delta_force;
                 float c = y;
                 float r = x;
-                int touchid = current_contact + index_ * MAX_NUM_CONTACTS_PER_PANEL;
-                TouchWithDeltas touch(touchid, surfaceID_, x, y, z, r, c, x_delta, y_delta, z_delta);
+                std::string stateString;
+                int touchid = current_contact;
+                std::shared_ptr<TouchWithDeltas> touch;
+                touch.reset(new TouchWithDeltas(touchid, getSurfaceID(), x, y, z, r, c, x_delta, y_delta, z_delta));
                 switch(state) {
-                    case 1: // CONTACT_START
-                        touches.addNew(touch);
+                    case CONTACT_START: // 1
+                        touches.addNew(*touch);
+                        stateString = "CONTACT_START";
+                        activeTouches_[touchid] = touch;
                         break;
-                    case 2: // CONTACT_MOVE
-                        touches.addContinued(touch);
+                    case CONTACT_MOVE: // 2
+                    {
+                        // delta_x, delta_y and delta_z as returned from the firmware
+                        // are either 0 or way off atm. (TODO: investigate/report)
+                        // thus we have to calculate the deltas ourselves until this is fixed
+                        // by memorizing the last (x,y,z) position per touchid
+                        std::shared_ptr<TouchWithDeltas> foundTouch = activeTouches_[touchid];
+                        if (foundTouch) {
+                            foundTouch->delta_x_ = touch->x_ - foundTouch->x_;
+                            foundTouch->delta_y_ = touch->y_ - foundTouch->y_;
+                            foundTouch->delta_z_ = touch->z_ - foundTouch->z_;
+                            foundTouch->x_ = touch->x_;
+                            foundTouch->y_ = touch->y_;
+                            foundTouch->z_ = touch->z_;
+                        } else {
+                            LOG_0("mec::readTouches - unable to find active touch for move event - this shouldn't happen.");
+                            foundTouch = touch;
+                        }
+                        LOG_2("mec::SinglePanel::readTouches (corrected deltas): (x: " << foundTouch->x_ << ",y:" << foundTouch->y_
+                                                                              << ",dx:" << foundTouch->delta_x_ << ",dy:"
+                                                                    << foundTouch->delta_y_ << ")");
+                        touches.addContinued(*foundTouch);
+                        stateString = "CONTACT_MOVE";
                         break;
-                    case 3: // CONTACT_END
-                        touches.addEnded(touch);
+                    }
+                    case CONTACT_END: // 3
+                    {
+                        std::shared_ptr<TouchWithDeltas> foundTouch = activeTouches_[touchid];
+                        if(foundTouch) {
+                            activeTouches_.erase(touchid);
+                        } else {
+                            LOG_0("mec::readTouches - unable to find active touch for end event - this shouldn't happen.");
+                        }
+                        touches.addEnded(*touch);
+                        stateString = "CONTACT_END";
                         break;
-                    case 0: // CONTACT_INVALID
+                    }
+                    case CONTACT_INVALID: // 0
                     default:
+                        stateString = "CONTACT_INVALID";
                         LOG_0("morph::Panel::readTouches - invalid/unexpected touch state " << state);
                         // better try to continue, other contacts might be usable
                 }
+                LOG_2("mec::SinglePanel::readTouches: (x: " << x << ",y:" << y << ",dx:" << x_delta << ",dy:"
+                                                            << y_delta << ",state:" << stateString << ")");
             }
         }
         return true;
@@ -190,30 +249,39 @@ public:
 private:
     SENSEL_HANDLE handle_;
     SenselFrameData *frameData_;
-    unsigned char index_;
-    SurfaceID surfaceID_;
+    SenselDeviceID deviceID_;
+    std::map<int, std::shared_ptr<TouchWithDeltas>> activeTouches_;
 };
 
-class CompositePanel {
+class CompositePanel : public Panel {
 public:
-    CompositePanel(std::string surfaceID, int transitionAreaWidth) :
-            surfaceID_(surfaceID), transitionAreaWidth_(transitionAreaWidth)
+    CompositePanel(SurfaceID surfaceID, const std::vector<std::shared_ptr<Panel>> containedPanels, int transitionAreaWidth) :
+            Panel(surfaceID), containedPanels_(containedPanels), transitionAreaWidth_(transitionAreaWidth)
     {
         for(int i = 0; i < MAX_NUM_CONCURRENT_OVERALL_CONTACTS; ++i) {
             availableTouchIDs.insert(i);
         }
+        for(int i = 0; i < containedPanels.size(); ++i) {
+            containedPanelsPositions_[containedPanels[i]->getSurfaceID()] = i;
+        }
     }
 
-    void remapTouches(Touches& collectedTouches, Touches& remappedTouches) {
-        remappedTouches.clear();
+    virtual bool init() {
+        return true;
+    }
 
-        remapEndedTouches(collectedTouches, remappedTouches);
-
-        remapContinuedTouches(collectedTouches, remappedTouches);
-
-        remapStartedTouches(collectedTouches, remappedTouches);
-
-        remapInTransitionInterpolatedTouches(remappedTouches);
+    virtual bool readTouches(Touches &touches) {
+        touches.clear();
+        Touches newTouches;
+        for(auto panelIter = containedPanels_.begin(); panelIter != containedPanels_.end(); ++panelIter) {
+            bool touchesRead = (*panelIter)->readTouches(newTouches);
+            if(!touchesRead) {
+                LOG_0("morph::CompositePanel::readTouches - unable to read touches for contained panel " << (*panelIter)->getSurfaceID());
+                continue; // perhaps we have more luck with some of the other panels
+            }
+        }
+        remapTouches(newTouches, touches);
+        return true;
     }
 
 private:
@@ -232,6 +300,26 @@ private:
         }
     };
 
+    float transitionAreaWidth_;
+    std::unordered_set<std::shared_ptr<MappedTouch>> mappedTouches_;
+    std::unordered_set<std::shared_ptr<MappedTouch>> interpolatedTouches_;
+    std::set<int> availableTouchIDs;
+    std::vector<std::shared_ptr<Panel>> containedPanels_;
+    std::map<SurfaceID, int> containedPanelsPositions_;
+    static std::shared_ptr<MappedTouch> NO_MAPPED_TOUCH;
+
+    void remapTouches(Touches& collectedTouches, Touches& remappedTouches) {
+        remappedTouches.clear();
+
+        remapEndedTouches(collectedTouches, remappedTouches);
+
+        remapContinuedTouches(collectedTouches, remappedTouches);
+
+        remapStartedTouches(collectedTouches, remappedTouches);
+
+        remapInTransitionInterpolatedTouches(remappedTouches);
+    }
+
     bool isInTransitionArea(TouchWithDeltas& touch) {
         double xpos_on_panel = fmod(touch.x_, (float)PANEL_WIDTH);
         return xpos_on_panel >= PANEL_WIDTH - transitionAreaWidth_ / 2 ||
@@ -239,9 +327,12 @@ private:
     }
 
     std::shared_ptr<MappedTouch> findCloseMappedTouch(TouchWithDeltas& touch) {
-        LOG_2("map::CompositePanel::findCloseMappedTouch - touch to find: (x: " << touch.x_ << ",y:" << touch.y_ << ")");
+        LOG_2("map::CompositePanel::findCloseMappedTouch - touch to find: (x: " << touch.x_ << ",y:" << touch.y_
+                                                                           << ",dx:" << touch.delta_x_ << ",dy:" << touch.delta_y_ << ")");
         for(auto touchIter = mappedTouches_.begin(); touchIter != mappedTouches_.end(); ++touchIter) {
-            LOG_2("map::CompositePanel::findCloseMappedTouch - mapped touch: (x: " << (*touchIter)->x_ << ",y:" << (*touchIter)->y_ << ")");
+            LOG_2("map::CompositePanel::findCloseMappedTouch - mapped touch: (x: "
+                          << (*touchIter)->x_ << ",y:" << (*touchIter)->y_
+                          << ",dx:" << (*touchIter)->delta_x_ << ",dy:" << (*touchIter)->delta_y_ << ")");
             if(fabs((*touchIter)->x_ - touch.x_) <= MAX_X_DELTA_TO_CONSIDER_TOUCHES_CLOSE &&
                     fabs((*touchIter)->y_ - touch.y_) <= MAX_Y_DELTA_TO_CONSIDER_TOUCHES_CLOSE) {
                 LOG_2("map::CompositePanel::findCloseMappedTouch - mapped touch found");
@@ -253,13 +344,14 @@ private:
     }
 
     std::shared_ptr<MappedTouch> findMappedTouch(TouchWithDeltas& touch) {
-        //LOG_2("map::CompositePanel::findMappedTouch - touch to find: (x: " << touch.x_ << ",y:" << touch.y_
-        //      << ",dx:" << touch.delta_x_ << ",dy:" << touch.delta_y_ << ")");
+        LOG_2("map::CompositePanel::findMappedTouch - touch to find: (x: " << touch.x_ << ",y:" << touch.y_
+              << ",dx:" << touch.delta_x_ << ",dy:" << touch.delta_y_ << ")");
         for(auto touchIter = mappedTouches_.begin(); touchIter != mappedTouches_.end(); ++touchIter) {
-            //LOG_2("map::CompositePanel::findCloseMappedTouch - mapped touch: (x: " << (*touchIter)->x_
-            //      << ",y:" << (*touchIter)->y_ << ",dx:" << (*touchIter)->delta_x_ << ",dy:" << (*touchIter)->delta_y_ << ")");
+            LOG_2("map::CompositePanel::findMappedTouch - mapped touch: (x: " << (*touchIter)->x_
+                  << ",y:" << (*touchIter)->y_ << ",dx:" << (*touchIter)->delta_x_ << ",dy:" << (*touchIter)->delta_y_ << ")");
             if(fabs((*touchIter)->x_- touch.x_ + touch.delta_x_) <= EXPECTED_MEASUREMENT_ERROR &&
                     fabs((*touchIter)->y_- touch.y_ + touch.delta_y_) <= EXPECTED_MEASUREMENT_ERROR) {
+                LOG_2("map::CompositePanel::findMappedTouch - mapped touch found");
                 return *touchIter;
             }
         }
@@ -274,7 +366,7 @@ private:
 
     void remapStartedTouches(Touches &collectedTouches, Touches &remappedTouches) {
         TouchWithDeltas transposedTouch;
-        std::vector<TouchWithDeltas> &newTouches = collectedTouches.getNewTouches();
+        const std::vector<TouchWithDeltas> &newTouches = collectedTouches.getNewTouches();
         for(auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
             transposeTouch(*touchIter, transposedTouch);
             bool createNewMappingEntry = true;
@@ -304,7 +396,7 @@ private:
                 int touchID = *availableTouchIDs.begin();
                 availableTouchIDs.erase(touchID);
                 mappedTouch->id_ = touchID;
-                mappedTouch->surface_ = surfaceID_;
+                mappedTouch->surface_ = getSurfaceID();
                 mappedTouches_.insert(mappedTouch);
                 LOG_2("mec::CompositePanel::remapStartedTouches - new. num mapped touches" << mappedTouches_.size() << " num interp.steps: " << mappedTouch->numInterpolationSteps_);
                 remappedTouches.addNew(*mappedTouch);
@@ -314,7 +406,7 @@ private:
 
     void remapEndedTouches(Touches &collectedTouches, Touches &remappedTouches) {
         TouchWithDeltas transposedTouch;
-        std::vector<TouchWithDeltas> &endedTouches = collectedTouches.getEndedTouches();
+        const std::vector<TouchWithDeltas> &endedTouches = collectedTouches.getEndedTouches();
         for(auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
             transposeTouch(*touchIter, transposedTouch);
             std::shared_ptr<MappedTouch> mappedTouch = findMappedTouch(transposedTouch);
@@ -340,7 +432,7 @@ private:
 
     void remapContinuedTouches(Touches &collectedTouches, Touches &remappedTouches) {
         TouchWithDeltas transposedTouch;
-        std::vector<TouchWithDeltas> &continuedTouches = collectedTouches.getContinuedTouches();
+        const std::vector<TouchWithDeltas> &continuedTouches = collectedTouches.getContinuedTouches();
         for(auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
             transposeTouch(*touchIter, transposedTouch);
             std::shared_ptr<MappedTouch> mappedTouch = findMappedTouch(transposedTouch);
@@ -393,32 +485,158 @@ private:
         }
     }
 
-    std::string surfaceID_;
-    float transitionAreaWidth_;
-
-    void transposeTouch(Touch &collectedTouch, Touch &transposedTouch) {
+    void transposeTouch(const TouchWithDeltas &collectedTouch, TouchWithDeltas &transposedTouch) {
         transposedTouch.id_ = collectedTouch.id_;
-        //LOG_2("mec::CompositePanel::transposeTouch - collectedTouch: (x:" << collectedTouch.x_ << ",y:" << collectedTouch.y_ << ",id:" << collectedTouch.id_<< ")");
-        transposedTouch.x_ = collectedTouch.x_ + (collectedTouch.id_ / 16) * PANEL_WIDTH;
+        LOG_2("mec::CompositePanel::transposeTouch - collectedTouch: (x:" << collectedTouch.x_ << ",y:" << collectedTouch.y_ << ",id:" << collectedTouch.id_<< ")");
+        auto panelPositionIter = containedPanelsPositions_.find(collectedTouch.surface_);
+        int panelPosition = 0;
+        if(panelPositionIter != containedPanelsPositions_.end()) {
+            panelPosition = panelPositionIter->second;
+        } else {
+            LOG_0("morph::CompositePanel::transposeTouch - surface " << collectedTouch.surface_
+                                                                     << " is not registered for composite panel " << getSurfaceID()
+                                                                     << "but still received a touch event from it");
+        }
+        transposedTouch.x_ = collectedTouch.x_ + panelPosition * PANEL_WIDTH;
         transposedTouch.y_ = collectedTouch.y_;
         transposedTouch.z_ = collectedTouch.z_;
         transposedTouch.surface_ = collectedTouch.surface_;
         transposedTouch.c_ = transposedTouch.y_;
         transposedTouch.r_ = transposedTouch.x_;
+        transposedTouch.delta_x_ = collectedTouch.delta_x_;
+        transposedTouch.delta_y_ = collectedTouch.delta_y_;
+        transposedTouch.delta_z_ = collectedTouch.delta_z_;
     }
-
-    std::unordered_set<std::shared_ptr<MappedTouch>> mappedTouches_;
-    std::unordered_set<std::shared_ptr<MappedTouch>> interpolatedTouches_;
-    std::set<int> availableTouchIDs;
-    static std::shared_ptr<MappedTouch> NO_MAPPED_TOUCH;
 };
 
 std::shared_ptr<CompositePanel::MappedTouch> CompositePanel::NO_MAPPED_TOUCH;
 
+class OverlayFunction {
+public:
+    OverlayFunction(const std::string name, ISurfaceCallback &surfaceCallback, ICallback &callback)
+            : name_(name), surfaceCallback_(surfaceCallback), callback_(callback)
+    {}
+    virtual bool init(const Preferences &preferences) = 0;
+    virtual bool interpretTouches(const Touches &touches) = 0;
+    const std::string& getName() const {
+        return name_;
+    }
+protected:
+    std::string name_;
+    ISurfaceCallback &surfaceCallback_;
+    ICallback &callback_;
+};
+
+class XYZPlaneOverlay : public OverlayFunction {
+public:
+    XYZPlaneOverlay(const std::string name, ISurfaceCallback &surfaceCallback, ICallback &callback)
+            : OverlayFunction(name, surfaceCallback, callback)
+    {}
+    virtual bool init(const Preferences &preferences) {
+        if(preferences.exists("semitones")) {
+            semitones_ = preferences.getDouble("semitones");
+        } else {
+            semitones_ = 12;
+            LOG_1("morph::OverlayFunction::init - property semitones not defined, using default 12");
+        }
+
+        if(preferences.exists("baseNote")) {
+            baseNote_ = preferences.getDouble("baseNote");
+        } else {
+            baseNote_ = 32;
+            LOG_1("morph::OverlayFunction::init - property baseNote not defined, using default 32");
+        }
+        return true;
+    }
+    virtual bool interpretTouches(const Touches &touches) {
+        const std::vector<TouchWithDeltas> &newTouches = touches.getNewTouches();
+        for (auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
+            surfaceCallback_.touchOn(*touchIter);
+            // remove as soon as surface support is fully implemented
+            callback_.touchOn(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
+                              normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
+        }
+        const std::vector<TouchWithDeltas> &continuedTouches = touches.getContinuedTouches();
+        for (auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
+            surfaceCallback_.touchContinue(*touchIter);
+            // remove as soon as surface support is fully implemented
+            callback_.touchContinue(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
+                                    normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
+        }
+        const std::vector<TouchWithDeltas> &endedTouches = touches.getEndedTouches();
+        for (auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
+            surfaceCallback_.touchOff(*touchIter);
+            // remove as soon as surface support is fully implemented
+            callback_.touchOff(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
+                               normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
+        }
+        return true;
+    }
+private:
+    float semitones_;
+    float baseNote_;
+
+    float xPosToNote(float xPos) {
+        return (xPos / PANEL_WIDTH * 12 + baseNote_); //TODO: semitones: get panel width for composite panels
+    }
+
+    float normalizeXPos(float xPos) {
+        return (xPos / PANEL_WIDTH * 12);
+    }
+
+    float normalizeYPos(float yPos) {
+        return yPos / PANEL_HEIGHT;
+    }
+
+    float normalizeZPos(float zPos) {
+        return zPos / MAX_Z_PRESSURE;
+    }
+};
+
+class OverlayFactory {
+public:
+    static std::unique_ptr<OverlayFunction> create(const std::string &overlayName, ISurfaceCallback &surfaceCallback_, ICallback &callback_) {
+        std::unique_ptr<OverlayFunction> overlay;
+        if(overlayName == "xyzplane") {
+            overlay.reset(new XYZPlaneOverlay(overlayName, surfaceCallback_, callback_));
+        }
+        return overlay;
+    }
+};
+
+class Instrument {
+public:
+    Instrument(const std::string name, std::shared_ptr<Panel> panel, std::unique_ptr<OverlayFunction> overlayFunction) :
+            panel_(panel), name_(name), overlayFunction_(std::move(overlayFunction))
+    {}
+    bool process() {
+        Touches touches;
+        bool touchesRead = panel_->readTouches(touches);
+        if(!touchesRead) {
+            LOG_0("morph::Instrument::process - unable to read touches from panel " << panel_->getSurfaceID());
+            return false;
+        }
+        bool touchesInterpreted = overlayFunction_->interpretTouches(touches);
+        if(!touchesInterpreted) {
+            LOG_0("morph::Instrument::process - unable to interpret touches from panel " << panel_->getSurfaceID() << "via overlay function" << overlayFunction_->getName());
+            return false;
+        }
+        return true;
+    }
+
+    const std::string &getName() {
+        return name_;
+    }
+private:
+    std::string name_;
+    std::shared_ptr<Panel> panel_;
+    std::unique_ptr<OverlayFunction> overlayFunction_;
+};
+
 class Impl {
 public:
     Impl(ISurfaceCallback &surfaceCallback, ICallback &callback) :
-            surfaceCallback_(surfaceCallback), callback_(callback), active_(false), base_note_(64.0) {}
+            surfaceCallback_(surfaceCallback), callback_(callback), active_(false) {}
 
     ~Impl() {}
 
@@ -430,71 +648,32 @@ public:
             deinit();
         }
 
-        SenselDeviceList device_list;
-
-        SenselStatus deviceStatus = senselGetDeviceList(&device_list);
-        if (deviceStatus != SENSEL_OK || device_list.num_devices == 0) {
-            LOG_0("morph::Impl::init - unable to detect Sensel Morph panel(s), calling deinit");
-            deinit();
+        int numPanels = initPanels(prefs);
+        if(numPanels < 1) {
+            LOG_0("morph::Impl::init - umable to initialize panels, exiting");
             return false;
         }
 
-        panels_.reset(new std::vector<std::unique_ptr<SinglePanel>>());
-        for (int i = 0; i < device_list.num_devices; ++i) {
-            std::string surfaceID;
-            std::string surfaceid_propertyname = "surface_for_panel" + std::to_string(i);
-            if(prefs.exists(surfaceid_propertyname)) {
-                surfaceID = prefs.getString(surfaceid_propertyname);
-            } else {
-                LOG_1("morph::Impl::init - property surface_for_panel" << i << " not defined, using surface " << i);
-                surfaceID = std::to_string(i);
-            }
-            std::unique_ptr<SinglePanel> panel;
-            panel.reset(new SinglePanel(device_list.devices[i].idx, surfaceID));
-            bool initSuccessful = panel->init();
-            if (initSuccessful) {
-                panels_->push_back(std::move(panel));
-            } else {
-                LOG_0("morph::Impl::init - unable to initialize panel " << i);
-            }
+        bool compositePanelsInitialized = initCompositePanels(prefs);
+        if(!compositePanelsInitialized) {
+            LOG_0("morph::Impl::init - umable to initialize composite panels, exiting");
+            return false;
         }
 
-        std::string transition_area_properyname = "transition_area_width";
-        int transitionAreaWidth;
-        if(prefs.exists(transition_area_properyname)) {
-            transitionAreaWidth = prefs.getInt(transition_area_properyname);
-        } else {
-            transitionAreaWidth = 20;
-            LOG_1("morph::Impl::init - property transition_area_width not defined, using default 20");
-        }
-        std::string composite_surface_id_properyname = "composite_surface_id";
-        std::string composite_surfaceID;
-        if(prefs.exists(composite_surface_id_properyname)) {
-            composite_surfaceID = prefs.getInt(composite_surface_id_properyname);
-        } else {
-            composite_surfaceID = std::to_string(3);
-            LOG_1("morph::Impl::init - property composite_surface_id_properyname not defined, using default 3");
+        bool instrumentsInitialized = initInstruments(prefs);
+        if(!instrumentsInitialized) {
+            LOG_0("morph::Impl::init - umable to initialize instruments, exiting");
+            return false;
         }
 
-        size_t num_panels = panels_->size();
-        compositePanel_.reset(new CompositePanel(composite_surfaceID, transitionAreaWidth));
-
-        std::string base_note_propertyname = "base_note";
-        if(prefs.exists(base_note_propertyname)) {
-            base_note_ = stof(prefs.getString(base_note_propertyname));
-        } else {
-            LOG_1("morph::Impl::init - property base_note not defined, using default " << base_note_);
-        }
-
-        LOG_1("Morph - " << num_panels << " panels initialized");
+        LOG_1("Morph - " << numPanels << " panels initialized");
 
         active_ = true;
         return active_;
     }
 
     void deinit() {
-        compositePanel_.release();
-        panels_.release();
+        panels_.clear();
         LOG_1("Morph - panels freed");
     }
 
@@ -502,89 +681,200 @@ public:
         return active_;
     }
 
-    float FIX = 0.5; //TODO: why is one semitone 0.5 instead of 1.0?
-    float xPosToNote(float xPos) {
-        return (xPos / PANEL_WIDTH * 12 + base_note_) * FIX;
-    }
-
-    float normalizeXPos(float xPos) {
-        return (xPos / PANEL_WIDTH * 12) * FIX;
-    }
-
-    float normalizeYPos(float yPos) {
-        return yPos / PANEL_HEIGHT;
-    }
-
-    float normalizeZPos(float zPos) {
-        return zPos / MAX_Z_PRESSURE;
-    }
-
-    int currnote = 0;
-
     bool process() {
-        Touches touches;
-        Touches allTouches;
-        // send touch events for individual panels...
-        for (auto panelIter = panels_->begin(); panelIter != panels_->end(); ++panelIter) {
-            bool touchesRead = (*panelIter)->readTouches(touches);
-            /*touchesRead = true;
-            TouchWithDeltas touch = TouchWithDeltas(0, "surfacex", currnote, 2, 3, currnote, 2, 0, 0, 0);
-            currnote += 1;
-            if(currnote > 100) currnote = 0;
-            touches.addNew(touch);*/
-            /*if(touchesRead) {
-                std::vector<TouchWithDeltas> &newTouches = touches.getNewTouches();
-                for (auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
-                    surfaceCallback_.touchOn(*touchIter);
-                }
-                std::vector<TouchWithDeltas> &continuedTouches = touches.getContinuedTouches();
-               for (auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
-                   surfaceCallback_.touchContinue(*touchIter);
-                }
-                std::vector<TouchWithDeltas> &endedTouches = touches.getEndedTouches();
-                for (auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
-                    surfaceCallback_.touchOff(*touchIter);
-                }
-            }*/
-            allTouches.add(touches);
-            touches.clear();
+        bool allProcessingSucceeded = true;
+        for(auto instrumentIter = instruments_.begin(); instrumentIter != instruments_.end(); ++instrumentIter) {
+            bool processSucceeded = (*instrumentIter)->process();
+            if(!processSucceeded) {
+                LOG_0("unable to process touches for instrument " << (*instrumentIter)->getName());
+                allProcessingSucceeded = false;
+            }
         }
-
-        // ...and for composite panel
-        Touches remappedTouches;
-        compositePanel_->remapTouches(allTouches, remappedTouches);
-        std::vector<TouchWithDeltas> &newTouches = remappedTouches.getNewTouches();
-        for (auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
-            surfaceCallback_.touchOn(*touchIter);
-            // remove as soon as surface support is fully implemented
-            callback_.touchOn(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
-                              normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
-        }
-        std::vector<TouchWithDeltas> &continuedTouches = remappedTouches.getContinuedTouches();
-        for (auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
-            surfaceCallback_.touchContinue(*touchIter);
-            // remove as soon as surface support is fully implemented
-            callback_.touchContinue(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
-                                    normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
-        }
-        std::vector<TouchWithDeltas> &endedTouches = remappedTouches.getEndedTouches();
-        for (auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
-            surfaceCallback_.touchOff(*touchIter);
-            // remove as soon as surface support is fully implemented
-            callback_.touchOff(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
-                               normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
-        }
-        allTouches.clear();
-        return true;
+        return allProcessingSucceeded;
     }
 
 private:
     ICallback &callback_;
     ISurfaceCallback &surfaceCallback_;
     bool active_;
-    std::unique_ptr<CompositePanel> compositePanel_;
-    std::unique_ptr<std::vector<std::unique_ptr<SinglePanel>>> panels_;
-    float base_note_;
+    std::unordered_set<std::shared_ptr<Panel>> panels_;
+    std::unordered_set<std::unique_ptr<Instrument>> instruments_;
+
+    int initPanels(Preferences& preferences) {
+        Preferences panelsPrefs(preferences.getSubTree("panels"));
+        if (!panelsPrefs.valid()) {
+            LOG_0("morph::Impl::initPanels - no panels defined, in preferences, add 'panels' section.");
+            return 0;
+        }
+
+        std::vector<std::string> remainingPanelNames = panelsPrefs.getKeys();
+
+        SenselDeviceList device_list;
+
+        SenselStatus deviceStatus = senselGetDeviceList(&device_list);
+        if (deviceStatus != SENSEL_OK || device_list.num_devices == 0) {
+            LOG_0("morph::Impl::initPanels - unable to detect Sensel Morph panel(s), calling deinit");
+            deinit();
+            return 0;
+        }
+
+        int numPanels = 0;
+        for (int i = 0; i < device_list.num_devices; ++i) {
+            bool deviceFound = false;
+            // we run four matching passes.
+            // 0) First we look for panel entries where both serial number and overlayId match,
+            // 1) then for entries with at least the serial number (and no overlay specified),
+            // 2) then for entries with at least the overlayId (and no serial number specified),
+            // 3) then for entries that have neither serial number nor overlayId specified
+            for(int matchingPass = 0; matchingPass < 4 && !deviceFound; ++matchingPass) {
+                for (auto panelNameIter = remainingPanelNames.begin(); panelNameIter != remainingPanelNames.end() && !deviceFound;) {
+                    Preferences panelPrefs(panelsPrefs.getSubTree(*panelNameIter));
+                    const std::string &serial = panelPrefs.getString("serial", "NO_SERIAL");
+                    if (matchingPass > 1 || std::strcmp(serial.c_str(), (char *) device_list.devices[i].serial_num) == 0) {
+                        const std::string &overlayId = panelPrefs.getString("overlayId", "NO_OVERLAY_ID");
+                        //if(matchingPass > 0 || std::strcmp(overlayId.c_str(), (char*) device_list.devices[i].overlay_id) == 0) {} -- overlay id not retrievable yet via public API, always match for the moment
+                        {
+                            initPanel(device_list.devices[i], *panelNameIter);
+                            panelNameIter = remainingPanelNames.erase(panelNameIter);
+                            ++numPanels;
+                            deviceFound = true;
+                            break;
+                        }
+                    }
+                    ++panelNameIter;
+                }
+            }
+        }
+        return numPanels;
+    }
+
+    bool initCompositePanels(Preferences &preferences) {
+        Preferences compositePanelsPrefs(preferences.getSubTree("composite panels"));
+        if (!compositePanelsPrefs.valid()) {
+            LOG_2("morph::Impl::initCompositePanels - no composite panels defined in preferences.");
+            return true;
+        }
+
+        const std::vector<std::string> &compositePanelNames = compositePanelsPrefs.getKeys();
+
+        for(auto compositePanelNameIter = compositePanelNames.begin(); compositePanelNameIter != compositePanelNames.end(); ++compositePanelNameIter) {
+            const std::string &compositePanelName = *compositePanelNameIter;
+            Preferences compositePanelPrefs(compositePanelsPrefs.getSubTree(compositePanelName));
+            if (!compositePanelPrefs.valid()) {
+                LOG_2("morph::Impl::initCompositePanels - cannot read composite panel definition for " << compositePanelName);
+                continue;
+            }
+            void* subPanelNames = compositePanelPrefs.getArray("panels");
+            if(subPanelNames == nullptr) {
+                LOG_0("morph::Impl::initCompositePanels - composite panel definition '" << compositePanelName << "' is missing the 'panels' list");
+                continue; //perhaps we find other valid composite panel definitions
+            }
+            std::vector<std::shared_ptr<Panel>> panels;
+            for (int i = 0; i < compositePanelPrefs.getArraySize(subPanelNames); i++) {
+                SurfaceID panelID = compositePanelPrefs.getArrayString(subPanelNames, i, "");
+                for(auto panelIter = panels_.begin(); panelIter != panels_.end(); ++panelIter) {
+                    if((*panelIter)->getSurfaceID() == panelID) {
+                        panels.push_back(*panelIter);
+                        break;
+                    }
+                }
+            }
+            std::string transition_area_properyname = "transitionAreaWidth";
+            int transitionAreaWidth;
+            if(compositePanelPrefs.exists(transition_area_properyname)) {
+                transitionAreaWidth = compositePanelPrefs.getInt(transition_area_properyname);
+            } else {
+                transitionAreaWidth = 20;
+                LOG_1("morph::Impl::init - property transition_area_width not defined, using default 20");
+            }
+            std::shared_ptr<Panel> compositePanel;
+            compositePanel.reset(new CompositePanel(*compositePanelNameIter, panels, transitionAreaWidth));
+            bool initSuccessful = compositePanel->init();
+            if (initSuccessful) {
+                panels_.insert(compositePanel);
+            } else {
+                LOG_0("morph::Impl::initCompositePanels - unable to initialize panel " << *compositePanelNameIter);
+            }
+        }
+        return true;
+    }
+
+    bool initInstruments(Preferences &preferences) {
+        Preferences instrumentsPrefs(preferences.getSubTree("instruments"));
+        if (!instrumentsPrefs.valid()) {
+            LOG_0("morph::Impl::initInstruments - no instruments defined in preferences, add 'instruments' subsection.");
+            return false;
+        }
+
+        const std::vector<std::string> &instrumentNames = instrumentsPrefs.getKeys();
+        for(auto instrumentNameIter = instrumentNames.begin(); instrumentNameIter != instrumentNames.end(); ++instrumentNameIter) {
+            Preferences instrumentPrefs(instrumentsPrefs.getSubTree(*instrumentNameIter));
+            if(!instrumentPrefs.valid()) {
+                LOG_0("morph::Impl::initInstruments - unable to read preferences for instrument " << *instrumentNameIter);
+                continue;
+            }
+            SurfaceID panelID;
+            if(instrumentPrefs.exists("panel")) {
+                panelID = instrumentPrefs.getString("panel");
+            } else {
+                LOG_0("morph::Impl::initInstruments - panel not defined, add 'panel' mapping to valid panel id");
+                continue;
+            }
+            std::shared_ptr<Panel> panel;
+            for(auto panelIter = panels_.begin(); panelIter != panels_.end(); ++panelIter) {
+                if((*panelIter)->getSurfaceID() == panelID) {
+                    panel = *panelIter;
+                    break;
+                }
+            }
+            if(!panel) {
+                LOG_0("morph::Impl::initInstruments - unable to find panel with id " << panelID);
+                continue;
+            }
+
+            Preferences overlayPrefs(instrumentPrefs.getSubTree("overlay"));
+            if(!overlayPrefs.valid()) {
+                LOG_0("morph::Impl::initInstruments - unable to find overlay preferences for instrument '" << *instrumentNameIter << "'");
+                continue;
+            }
+            std::string overlayName;
+            if(overlayPrefs.exists("name")) {
+                overlayName = overlayPrefs.getString("name");
+            } else {
+                LOG_0("morph::Impl::initInstruments - unable to find overlay name preferences for instrument '" << *instrumentNameIter
+                                                                                                               << "'. add 'name' entry to overlay section");
+                continue;
+            }
+
+            Preferences overlayParamPrefs(overlayPrefs.getSubTree("params"));
+            if(!overlayParamPrefs.valid()) {
+                LOG_0("morph::Impl::initInstruments - unable to find overlay parameter preferences for instrument '" << *instrumentNameIter
+                << "', add 'param' section to overlay section");
+                continue;
+            }
+            std::unique_ptr<OverlayFunction> overlayFunction;
+            overlayFunction = std::move(OverlayFactory::create(overlayName, surfaceCallback_, callback_));
+            overlayFunction->init(overlayParamPrefs);
+            std::unique_ptr<Instrument> instrument;
+            instrument.reset(new Instrument(*instrumentNameIter, panel, std::move(overlayFunction)));
+            instruments_.insert(std::move(instrument));
+        }
+        return true;
+    }
+
+    void initPanel(const SenselDeviceID &deviceID, const std::string& panelName) {
+        LOG_1("morph::Impl::init - device id for panel " << panelName << ": (idx:" << +deviceID.idx
+                                                         << ",com_port:" << deviceID.com_port
+                                                         << ",serial_number:" << deviceID.serial_num << ")");
+        std::shared_ptr<Panel> panel;
+        panel.reset(new SinglePanel(deviceID, panelName));
+        bool initSuccessful = panel->init();
+        if (initSuccessful) {
+            panels_.insert(panel);
+        } else {
+            LOG_0("morph::Impl::init - unable to initialize panel " << panelName);
+        }
+    }
 };
 
 } // namespace morph
