@@ -1,0 +1,169 @@
+{
+    "mec" : {
+        "_midi" : {
+            "device" : "Axoloti Core",
+            "_device" : "IAC Driver Bus 1",
+            "mpe" : true,
+            "pitchbend range" : 48.0
+        },
+        "osct3d" : {
+            "port" : 9000
+        },
+        "_comment" : "Sensel Morph based instrument definitions",
+        "morph" : {
+            "_comment" : "panels bind the combination of a physical morph panel and an overlay to MEC,",
+            "_comment" : "assigning a panel name to this combination. Named panels can appear",
+            "_comment" : "and disappear at runtime, e.g. if an overlay is exchanged or when a physical panel gets disconnected.",
+            "_comment" : "A names panel is identified by the serial number (that is printed at the backside of the panel)",
+            "_comment" : "and/or an overlay id.",
+            "_comment" : "If only the serial number is mentioned, the named panel will be available if the physical panel",
+            "_comment" : "with that serial number is connected.",
+            "_comment" : "If both serial number and overlay id are mentioned then the named panel will be available if the",
+            "_comment" : "physical panel with that serial number is connected and the specified overlay lies on top.",
+            "_comment" : "If only the overlay id is mentioned then the named panel will be available if the specified",
+            "_comment" : "overlay lies on top of any connected panel. (the first found panel with that overlay will be taken",
+            "_comment" : "if more than one overlay with that id are used simultaneously (and no explicit serial numbers are specified).",
+            "panels" : {
+                "panel0" : {
+                    "serial" : "SM01164910358",
+                    "_overlayId" : 0
+                },
+                "panel1" : {
+                    "serial" : "SM01164910353",
+                    "_overlayId" : 0
+                },
+                "panel2" : {
+                    "serial" : "SM01164910482",
+                    "_overlayId" : 0
+                },
+                "panel3" : {
+                    "serial" : "SM01164910342",
+                    "_overlayId" : 0
+                }
+            },
+            "_comment" : "composite panels can combine separate named panels into one (larger). Named panels that belong",
+            "_comment" : "to that composite panel have to be mentioned (and taken in the specified order)",
+            "_comment" : "the transition area width determines how wide the area where panel transitions",
+            "_comment" : "are interpolated should be (touches that stop in that area are linearly interpolated and",
+            "_comment" : "taken over by new touches near the expected position on the adjacent target panel",
+            "_comment" : "(so no touch end/start events are generated, so we can continously pitch-bend over panel",
+            "_comment" : "boundaries). As the z-force measurement becomes unreliable at the panel borders touch sensitivity",
+            "_comment" : "is disabled in the transition area (the last measured z force outside the area is kept constantly).",
+            "_comment" : "If no new touch is found on the target panel after maxInterpolationSteps scan cycles the interpolated touch",
+            "_comment" : "is ended (so we don't hear an endless sound in the case the finger leaves the panel between the two",
+            "_comment" : "sensing areas).",
+            "_comment" : "A composite panel is only active if all mentioned named sub-panels are available.",
+            "_comment" : "A composite panel can be used in all situations where a (single) named panel can also be used.",
+            "composite panels" : {
+                "4 panels" : {
+                    "panels" : [
+                        "panel0",
+                        "panel1",
+                        "panel2",
+                        "panel3"
+                    ],
+                    "transitionAreaWidth" : 20,
+                    "maxInterpolationSteps" : 50
+                }
+            },
+            "_comment" : "an instrument associates a named panel (or composite panel) with an overlay functionality",
+            "_comment" : "that transforms panel positions to notes.",
+            "_comment" : "(TODO: think about factoring out a common scaler step for all MEC devices - or is this limiting for Morphs?)",
+            "_comment" : "Currently only 'xyzplane' is available which maps x axis to note+pitchbend, y axis to CC76 and",
+            "_comment" : "z axis to aftertouch. Other overlay functions will likely follow in the future.",
+            "_comment" : "Parameters for the xyzplane:",
+            "_comment" : "* semitones defines how many semitones the lowest and the highest x",
+            "_comment" : "  positions are apart (the in-between x positions are linearly interpolated).",
+            "_comment" : "* baseNote defines the pitch of the lowest note (thus the highest note is baseNote + semitones)",
+            "_comment" : "An instrument is only active when the associated named panel is available. As named panels can",
+            "_comment" : "be activated and deactivated by exchanging overlays, instruments (and thus the functionality of",
+            "_comment" : "the morphs) can be changed on the fly that way.",
+            "instruments" : {
+                "4 panel continuum" : {
+                    "panel" : "4 panels",
+                    "overlay" : {
+                        "name" : "xyzplane",
+                        "params" : {
+                            "semitones" : 48,
+                            "baseNote" : 32
+                        }
+                    }
+                }
+            }
+        },
+        "_eigenharp" : {
+            "steal voices" : true,
+            "voices" : 15,
+            "velocity count" : 5,
+            "pitchbend range" : 2.0,
+            "firmware dir" : "../resources/",
+            "throttle" : 0,
+            "mapping" : {
+                "pico" : {
+                    "_notes" : [
+                        2,
+                        5,
+                        12
+                    ],
+                    "calculated" : {
+                        "keys in col" : 9,
+                        "row multiplier" : 1,
+                        "col multipler" : 9,
+                        "note offset" : 60
+                    }
+                },
+                "tau" : {
+                    "calculated-wrong" : {
+                        "keys in col" : 16,
+                        "row multiplier" : 1,
+                        "col multipler" : 3,
+                        "note offset" : 20
+                    }
+                },
+                "alpha" : {
+                    "calculated" : {
+                        "keys in col" : 24,
+                        "row multiplier" : 3,
+                        "col multipler" : -1,
+                        "note offset" : 20
+                    },
+                    "calculated-factory" : {
+                        "keys in col" : 24,
+                        "row multiplier" : 1,
+                        "col multipler" : 4,
+                        "note offset" : 20
+                    }
+                }
+            }
+        },
+        "_soundplane" : {
+            "app state dir" : ".",
+            "steal voices" : true,
+            "voices" : 15
+        },
+        "_push2" : {
+            "device" : "Ableton Push 2 Live Port",
+            "pitchbend range" : 2.0
+        }
+    },
+    "mec-app" : {
+        "outputs" : {
+            "_osc" : {
+                "host" : "127.0.0.1",
+                "port" : 9001
+            },
+            "midi" : {
+                "virtual" : 1,
+                "voices" : 15,
+                "pitchbend range" : 48.0,
+                "device" : "MEC MIDI Out",
+                "_device" : "Axoloti Core",
+                "_device" : "IAC Driver Bus 1",
+                "_device" : "Axoloti Core 20:0"
+            },
+            "console" : {
+                "throttle" : 0
+            }
+        }
+    }
+}

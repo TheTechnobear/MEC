@@ -55,9 +55,7 @@ std::vector<std::string> Preferences::getKeys() const {
     cJSON *c = static_cast<cJSON*>(jsonData_)->child;
     while (c)  {
         std::string s = c->string;
-        if(s.substr(0, 1) != "_") {
-            ret.push_back(s);
-        }
+        ret.push_back(s);
         c = c->next;
     }
     return ret;
