@@ -35,27 +35,27 @@ struct TouchWithDeltas : public Touch {
 
 class Touches {
 public:
-    void addNew(const TouchWithDeltas& touch) {
+    void addNew(const std::shared_ptr<TouchWithDeltas> touch) {
         newTouches_.push_back(touch);
     }
 
-    void addContinued(const TouchWithDeltas& touch) {
+    void addContinued(const std::shared_ptr<TouchWithDeltas> touch) {
         continuedTouches_.push_back(touch);
     }
 
-    void addEnded(const TouchWithDeltas& touch) {
+    void addEnded(const std::shared_ptr<TouchWithDeltas> touch) {
         endedTouches_.push_back(touch);
     }
 
-    const std::vector<TouchWithDeltas>& getNewTouches() const {
+    const std::vector<std::shared_ptr<TouchWithDeltas>>& getNewTouches() const {
         return newTouches_;
     }
 
-    const std::vector<TouchWithDeltas>& getContinuedTouches() const {
+    const std::vector<std::shared_ptr<TouchWithDeltas>>& getContinuedTouches() const {
         return continuedTouches_;
     }
 
-    const std::vector<TouchWithDeltas>& getEndedTouches() const {
+    const std::vector<std::shared_ptr<TouchWithDeltas>>& getEndedTouches() const {
         return endedTouches_;
     }
 
@@ -66,23 +66,23 @@ public:
     }
     
     void add(Touches& touches) {
-        const std::vector<TouchWithDeltas> &newTouches = touches.getNewTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &newTouches = touches.getNewTouches();
         for(auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
             addNew(*touchIter);
         }
-        const std::vector<TouchWithDeltas> &continuedTouches = touches.getContinuedTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &continuedTouches = touches.getContinuedTouches();
         for(auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
             addContinued(*touchIter);
         }
-        const std::vector<TouchWithDeltas> &endedTouches = touches.getEndedTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &endedTouches = touches.getEndedTouches();
         for(auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
             addEnded(*touchIter);
         }
     }
 private:
-    std::vector<TouchWithDeltas> newTouches_;
-    std::vector<TouchWithDeltas> continuedTouches_;
-    std::vector<TouchWithDeltas> endedTouches_;
+    std::vector<std::shared_ptr<TouchWithDeltas>> newTouches_;
+    std::vector<std::shared_ptr<TouchWithDeltas>> continuedTouches_;
+    std::vector<std::shared_ptr<TouchWithDeltas>> endedTouches_;
 };
 
 class Panel {
@@ -195,7 +195,7 @@ public:
                 switch(state) {
                     case CONTACT_START: // 1
                         foundTouch = touch;
-                        touches.addNew(*foundTouch);
+                        touches.addNew(foundTouch);
                         stateString = "CONTACT_START";
                         activeTouches_[touchid] = touch;
                         break;
@@ -211,7 +211,7 @@ public:
                             foundTouch = touch;
                             LOG_0("mec::SinglePanel::readTouches CONTACT_MOVE - unable to find active touch for end event - this shouldn't happen.");
                         }
-                        touches.addContinued(*foundTouch);
+                        touches.addContinued(foundTouch);
                         stateString = "CONTACT_MOVE";
                         break;
                     }
@@ -225,7 +225,7 @@ public:
                             foundTouch = touch;
                             LOG_0("mec::SinglePanel::readTouches CONTACT_END - unable to find active touch for end event - this shouldn't happen.");
                         }
-                        touches.addEnded(*foundTouch);
+                        touches.addEnded(foundTouch);
                         stateString = "CONTACT_END";
                         break;
                     }
@@ -394,7 +394,7 @@ private:
     }
 
     void remapStartedTouches(Touches &collectedTouches, Touches &remappedTouches, std::unordered_set<std::shared_ptr<MappedTouch>> &associatedMappedTouches) {
-        const std::vector<TouchWithDeltas> &newTouches = collectedTouches.getNewTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &newTouches = collectedTouches.getNewTouches();
         for(auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
             LOG_2("morph::CompositePanel::remapStartedTouches - creating new touch for panel " << getSurfaceID() << "; num mapped touches: " << mappedTouches_.size());
             TouchWithDeltas transposedTouch;
@@ -414,7 +414,7 @@ private:
                     closeMappedTouch->numInterpolationSteps_ = 0;
                     LOG_2("mec::CompositePanel::remapStartedTouches - continued. num interp.steps: "  << closeMappedTouch->numInterpolationSteps_);
                     associatedMappedTouches.insert(closeMappedTouch);
-                    remappedTouches.addContinued(*closeMappedTouch);
+                    remappedTouches.addContinued(closeMappedTouch);
                     createNewMappingEntry = false;
                 } else {
                     LOG_2("mec::CompositePanel::remapStartedTouches - no close touch found");
@@ -431,7 +431,7 @@ private:
                 mappedTouches_.insert(mappedTouch);
                 LOG_2("mec::CompositePanel::remapStartedTouches - new. num mapped touches " << mappedTouches_.size() << " num interp.steps: " << mappedTouch->numInterpolationSteps_);
                 associatedMappedTouches.insert(mappedTouch);
-                remappedTouches.addNew(*mappedTouch);
+                remappedTouches.addNew(mappedTouch);
             }
             LOG_2("morph::CompositePanel::remapStartedTouches - new touch created for panel " << getSurfaceID() << "; num mapped touches: " << mappedTouches_.size());
         }
@@ -439,7 +439,7 @@ private:
 
     void remapContinuedTouches(Touches &collectedTouches, Touches &remappedTouches, std::unordered_set<std::shared_ptr<MappedTouch>> &associatedMappedTouches) {
         TouchWithDeltas transposedTouch;
-        const std::vector<TouchWithDeltas> &continuedTouches = collectedTouches.getContinuedTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &continuedTouches = collectedTouches.getContinuedTouches();
         for(auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
             LOG_2("morph::CompositePanel::remapContinuedTouches - continuing touch for panel " << getSurfaceID() << "; num mapped touches: " << mappedTouches_.size());
             transposeTouch(*touchIter, transposedTouch);
@@ -457,7 +457,7 @@ private:
                 }
                 //LOG_2("mec::CompositePanel::remapContinuedTouches - continued");
                 associatedMappedTouches.insert(mappedTouch);
-                remappedTouches.addContinued(*mappedTouch);
+                remappedTouches.addContinued(mappedTouch);
             } else {
                 LOG_2("mec::CompositePanel::remapContinuedTouches - no mapped touch found for: (x:" << transposedTouch.x_ << ",y:" << transposedTouch.y_ << ")");
             }
@@ -467,7 +467,7 @@ private:
 
     void remapEndedTouches(Touches &collectedTouches, Touches &remappedTouches) {
         TouchWithDeltas transposedTouch;
-        const std::vector<TouchWithDeltas> &endedTouches = collectedTouches.getEndedTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &endedTouches = collectedTouches.getEndedTouches();
         for(auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
             LOG_2("morph::CompositePanel::remapEndedTouches - ending touch for panel " << getSurfaceID() << "; num mapped touches: " << mappedTouches_.size());
             transposeTouch(*touchIter, transposedTouch);
@@ -478,13 +478,13 @@ private:
                 if (isInTransitionArea(transposedTouch) && mappedTouch->numInterpolationSteps_ < MAX_NUM_INTERPOLATION_STEPS) {
                     interpolatedTouches_.insert(mappedTouch);
                     LOG_2("mec::CompositePanel::remapEndedTouches - continued. num interp.steps: " << mappedTouch->numInterpolationSteps_);
-                    remappedTouches.addContinued(*mappedTouch);
+                    remappedTouches.addContinued(mappedTouch);
                 } else {
                     std::shared_ptr<MappedTouch> &endedTouch = mappedTouch;
                     mappedTouches_.erase(mappedTouch);
                     endedTouch->update(transposedTouch);
                     LOG_2("mec::CompositePanel::remapEndedTouches - ended. num mapped touches: " << mappedTouches_.size() << " num interp.steps: " << endedTouch->numInterpolationSteps_);
-                    remappedTouches.addEnded(*endedTouch);
+                    remappedTouches.addEnded(endedTouch);
                     availableTouchIDs.insert(endedTouch->id_);
                 }
             } else {
@@ -507,7 +507,7 @@ private:
                 interpolatePosition(**touchIter);
                 LOG_2("mec::CompositePanel::remapInTransitionInterpolatedTouches - continued. num interp.steps: " << (*touchIter)->numInterpolationSteps_);
                 associatedMappedTouches.insert(*touchIter);
-                remappedTouches.addContinued(**touchIter);
+                remappedTouches.addContinued(*touchIter);
                 removeTouch = false;
             } else {
                 LOG_2("mec::CompositePanel::remapInTransitionInterpolatedTouches - not in transition area, ending");
@@ -519,7 +519,7 @@ private:
                 availableTouchIDs.insert(endedTouch->id_);
                 LOG_2("mec::CompositePanel::remapInTransitionInterpolatedTouches - ended. mapped touches: " << mappedTouches_.size() << " num interp.steps: " << endedTouch->numInterpolationSteps_);
                 LOG_2("mec::CompositePanel::remapInTransitionInterpolatedTouched - ended touch: (x:" << endedTouch->x_ << ",y:" << endedTouch->y_ << ")");
-                remappedTouches.addEnded(*endedTouch);
+                remappedTouches.addEnded(endedTouch);
             }
             LOG_2("morph::CompositePanel::remapInTransitionInterpolatedTouches - touch transitioned for panel " << getSurfaceID() << "; num mapped touches: " << mappedTouches_.size());
         }
@@ -540,35 +540,35 @@ private:
                 availableTouchIDs.insert(endedTouch->id_);
                 LOG_2("mec::CompositePanel::endUnassociatedMappedTouches - ended. mapped touches: " << mappedTouches_.size() << " num interp.steps: " << endedTouch->numInterpolationSteps_);
                 LOG_2("mec::CompositePanel::endUnassociatedMappedTouches - ended touch: (x:" << endedTouch->x_ << ",y:" << endedTouch->y_ << ")");
-                remappedTouches.addEnded(*endedTouch);
+                remappedTouches.addEnded(endedTouch);
             }
         }
     }
 
-    void transposeTouch(const TouchWithDeltas &collectedTouch, TouchWithDeltas &transposedTouch) {
-        transposedTouch.id_ = collectedTouch.id_;
-        LOG_2("mec::CompositePanel::transposeTouch - collectedTouch: (x:" << collectedTouch.x_ << ",y:" << collectedTouch.y_
-                                                                          << ",dx:" << collectedTouch.delta_x_
-                                                                          << ",dy:" << collectedTouch.delta_y_
-                                                                          << ",id:" << collectedTouch.id_<< ")");
-        auto panelPositionIter = containedPanelsPositions_.find(collectedTouch.surface_);
+    void transposeTouch(const std::shared_ptr<TouchWithDeltas> &collectedTouch, TouchWithDeltas &transposedTouch) {
+        transposedTouch.id_ = collectedTouch->id_;
+        LOG_2("mec::CompositePanel::transposeTouch - collectedTouch: (x:" << collectedTouch->x_ << ",y:" << collectedTouch->y_
+                                                                          << ",dx:" << collectedTouch->delta_x_
+                                                                          << ",dy:" << collectedTouch->delta_y_
+                                                                          << ",id:" << collectedTouch->id_<< ")");
+        auto panelPositionIter = containedPanelsPositions_.find(collectedTouch->surface_);
         int panelPosition = 0;
         if(panelPositionIter != containedPanelsPositions_.end()) {
             panelPosition = panelPositionIter->second;
         } else {
-            LOG_0("morph::CompositePanel::transposeTouch - surface " << collectedTouch.surface_
+            LOG_0("morph::CompositePanel::transposeTouch - surface " << collectedTouch->surface_
                                                                      << " is not registered for composite panel " << getSurfaceID()
                                                                      << "but still received a touch event from it");
         }
-        transposedTouch.x_ = collectedTouch.x_ + panelPosition * PANEL_WIDTH;
-        transposedTouch.y_ = collectedTouch.y_;
-        transposedTouch.z_ = collectedTouch.z_;
-        transposedTouch.surface_ = collectedTouch.surface_;
+        transposedTouch.x_ = collectedTouch->x_ + panelPosition * PANEL_WIDTH;
+        transposedTouch.y_ = collectedTouch->y_;
+        transposedTouch.z_ = collectedTouch->z_;
+        transposedTouch.surface_ = collectedTouch->surface_;
         transposedTouch.c_ = transposedTouch.y_;
         transposedTouch.r_ = transposedTouch.x_;
-        transposedTouch.delta_x_ = collectedTouch.delta_x_;
-        transposedTouch.delta_y_ = collectedTouch.delta_y_;
-        transposedTouch.delta_z_ = collectedTouch.delta_z_;
+        transposedTouch.delta_x_ = collectedTouch->delta_x_;
+        transposedTouch.delta_y_ = collectedTouch->delta_y_;
+        transposedTouch.delta_z_ = collectedTouch->delta_z_;
         LOG_2("mec::CompositePanel::transposeTouch - transposedTouch: (x:" << transposedTouch.x_ << ",y:" << transposedTouch.y_
                                                                            << ",dx:" << transposedTouch.delta_x_
                                                                            << ",dy:" << transposedTouch.delta_y_
@@ -616,26 +616,26 @@ public:
         return true;
     }
     virtual bool interpretTouches(const Touches &touches) {
-        const std::vector<TouchWithDeltas> &newTouches = touches.getNewTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &newTouches = touches.getNewTouches();
         for (auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
-            surfaceCallback_.touchOn(*touchIter);
+            surfaceCallback_.touchOn(**touchIter);
             // remove as soon as surface support is fully implemented
-            callback_.touchOn(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
-                              normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
+            callback_.touchOn((*touchIter)->id_, xPosToNote((*touchIter)->x_), normalizeXPos((*touchIter)->x_),
+                              normalizeYPos((*touchIter)->y_), normalizeZPos((*touchIter)->z_));
         }
-        const std::vector<TouchWithDeltas> &continuedTouches = touches.getContinuedTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &continuedTouches = touches.getContinuedTouches();
         for (auto touchIter = continuedTouches.begin(); touchIter != continuedTouches.end(); ++touchIter) {
-            surfaceCallback_.touchContinue(*touchIter);
+            surfaceCallback_.touchContinue(**touchIter);
             // remove as soon as surface support is fully implemented
-            callback_.touchContinue(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
-                                    normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
+            callback_.touchContinue((*touchIter)->id_, xPosToNote((*touchIter)->x_), normalizeXPos((*touchIter)->x_),
+                                    normalizeYPos((*touchIter)->y_), normalizeZPos((*touchIter)->z_));
         }
-        const std::vector<TouchWithDeltas> &endedTouches = touches.getEndedTouches();
+        const std::vector<std::shared_ptr<TouchWithDeltas>> &endedTouches = touches.getEndedTouches();
         for (auto touchIter = endedTouches.begin(); touchIter != endedTouches.end(); ++touchIter) {
-            surfaceCallback_.touchOff(*touchIter);
+            surfaceCallback_.touchOff(**touchIter);
             // remove as soon as surface support is fully implemented
-            callback_.touchOff(touchIter->id_, xPosToNote(touchIter->x_), normalizeXPos(touchIter->x_),
-                               normalizeYPos(touchIter->y_), normalizeZPos(touchIter->z_));
+            callback_.touchOff((*touchIter)->id_, xPosToNote((*touchIter)->x_), normalizeXPos((*touchIter)->x_),
+                               normalizeYPos((*touchIter)->y_), normalizeZPos((*touchIter)->z_));
         }
         return true;
     }
