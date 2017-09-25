@@ -9,7 +9,6 @@
         "osct3d" : {
             "port" : 9000
         },
-        "_comment" : "Sensel Morph based instrument definitions",
         "morph" : {
             "panels" : {
                 "panel0" : {
