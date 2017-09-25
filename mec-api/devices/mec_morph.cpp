@@ -18,9 +18,9 @@ namespace morph {
 #define MAX_X_DELTA_TO_CONSIDER_TOUCHES_CLOSE 15
 #define MAX_Y_DELTA_TO_CONSIDER_TOUCHES_CLOSE 15
 #define EXPECTED_MEASUREMENT_ERROR 5
-#define PANEL_WIDTH 230 //TODO: find out panel width via Sensel API
-#define PANEL_HEIGHT 128
-#define MAX_Z_PRESSURE 2048
+#define PANEL_WIDTH 230.0 //TODO: find out panel width via Sensel API
+#define PANEL_HEIGHT 128.0
+#define MAX_Z_PRESSURE 2048.0
 
 struct TouchWithDeltas : public Touch {
     TouchWithDeltas() : delta_x_(0.0f), delta_y_(0.0f), delta_z_(0.0f) {}
@@ -652,7 +652,7 @@ private:
     }
 
     float normalizeYPos(float yPos) {
-        return yPos / PANEL_HEIGHT;
+        return 1.0 - yPos / PANEL_HEIGHT;
     }
 
     float normalizeZPos(float zPos) {

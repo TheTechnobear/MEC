@@ -81,21 +81,21 @@ public:
 
     void control(int ctrlId, float v)
     {
-        std::cout << "control - "
+        LOG_1(    "control - "
                   << " ctrlId: " << ctrlId
                   << " v:" << v
-                  << std::endl;
+                  << std::endl);
     }
 
     void outputMsg(std::string topic, int touchId, float note, float x, float y, float z)
     {
-        std::cout << topic << " - "
+        LOG_1(    topic << " - "
                   << " touch: " << touchId
                   << " note: " << note
                   << " x: " <<  x
                   << " y: " << y
                   << " z: " << z
-                  << std::endl;
+                  << std::endl);
     }
 
 private:

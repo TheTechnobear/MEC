@@ -40,7 +40,7 @@ public:
         default: dk = "default";
         }
 
-        LOG_1("EigenharpHandler device d: "  << dev << " dt: " <<  (int) dt) << " dk: " << dk;
+        LOG_1("EigenharpHandler device d: "  << dev << " dt: " <<  (int) dt << " dk: " << dk);
         LOG_1(" r: " << rows     << " c: " << cols);
         LOG_1(" s: " << ribbons  << " p: " << pedals);
 
