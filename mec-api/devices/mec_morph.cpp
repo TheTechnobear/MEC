@@ -13,7 +13,6 @@
 namespace mec {
 namespace morph {
 
-#define MAX_NUM_INTERPOLATION_STEPS 50
 #define MAX_NUM_CONTACTS_PER_PANEL 16
 #define MAX_NUM_CONCURRENT_OVERALL_CONTACTS 16 // has to be 0-15 atm as mec-api uses the touch ids as indices in the 0-15 voice array!
 #define MAX_X_DELTA_TO_CONSIDER_TOUCHES_CLOSE 15
@@ -159,7 +158,7 @@ public:
     }
 
     virtual bool readTouches(Touches &touches) {
-        LOG_2("morph::SinglePanel::readTouches - reading touches for panel " << getSurfaceID());
+        LOG_3("morph::SinglePanel::readTouches - reading touches for panel " << getSurfaceID());
         bool sensorReadState = senselReadSensor(handle_);
         if(sensorReadState != SENSEL_OK) {
             LOG_0("morph::SinglePanel::readTouches - unable to read sensor for panel " << getSurfaceID());
@@ -241,7 +240,7 @@ public:
                                                             << ",state:" << stateString << ")");
             }
         }
-        LOG_2("morph::SinglePanel::readTouches - touches read for panel " << getSurfaceID());
+        LOG_3("morph::SinglePanel::readTouches - touches read for panel " << getSurfaceID());
         return true;
     }
 
@@ -272,8 +271,8 @@ private:
 
 class CompositePanel : public Panel {
 public:
-    CompositePanel(SurfaceID surfaceID, const std::vector<std::shared_ptr<Panel>> containedPanels, int transitionAreaWidth) :
-            Panel(surfaceID), containedPanels_(containedPanels), transitionAreaWidth_(transitionAreaWidth)
+    CompositePanel(SurfaceID surfaceID, const std::vector<std::shared_ptr<Panel>> containedPanels, int transitionAreaWidth, int maxInterpolationSteps) :
+            Panel(surfaceID), containedPanels_(containedPanels), transitionAreaWidth_(transitionAreaWidth), maxInterpolationSteps_(maxInterpolationSteps)
     {
         for(int i = 0; i < MAX_NUM_CONCURRENT_OVERALL_CONTACTS; ++i) {
             availableTouchIDs.insert(i);
@@ -290,7 +289,7 @@ public:
     virtual bool readTouches(Touches &touches) {
         touches.clear();
         Touches newTouches;
-        LOG_2("morph::CompositePanel::readTouches - reading touches for contained panel " << getSurfaceID());
+        LOG_3("morph::CompositePanel::readTouches - reading touches for contained panel " << getSurfaceID());
         for(auto panelIter = containedPanels_.begin(); panelIter != containedPanels_.end(); ++panelIter) {
             bool touchesRead = (*panelIter)->readTouches(newTouches);
             if(!touchesRead) {
@@ -298,10 +297,10 @@ public:
                 continue; // perhaps we have more luck with some of the other panels
             }
         }
-        LOG_2("morph::CompositePanel::readTouches - read touches for contained panel " << getSurfaceID());
-        LOG_2("morph::CompositePanel::readTouches - remapping touches for contained panel " << getSurfaceID());
+        LOG_3("morph::CompositePanel::readTouches - read touches for contained panel " << getSurfaceID());
+        LOG_3("morph::CompositePanel::readTouches - remapping touches for contained panel " << getSurfaceID());
         remapTouches(newTouches, touches);
-        LOG_2("morph::CompositePanel::readTouches - remapped touches for contained panel " << getSurfaceID());
+        LOG_3("morph::CompositePanel::readTouches - remapped touches for contained panel " << getSurfaceID());
         return true;
     }
 
@@ -322,6 +321,7 @@ private:
     };
 
     float transitionAreaWidth_;
+    int maxInterpolationSteps_;
     std::unordered_set<std::shared_ptr<MappedTouch>> mappedTouches_;
     std::unordered_set<std::shared_ptr<MappedTouch>> interpolatedTouches_;
     std::set<int> availableTouchIDs;
@@ -475,7 +475,7 @@ private:
             if(mappedTouch != NO_MAPPED_TOUCH) {
                 // an ended touch in the transition area is interpolated for MAX_NUM_INTERPOLATION_STEPS before being
                 // either taken over by a close new touch or being ended
-                if (isInTransitionArea(transposedTouch) && mappedTouch->numInterpolationSteps_ < MAX_NUM_INTERPOLATION_STEPS) {
+                if (isInTransitionArea(transposedTouch) && mappedTouch->numInterpolationSteps_ < maxInterpolationSteps_) {
                     interpolatedTouches_.insert(mappedTouch);
                     LOG_2("mec::CompositePanel::remapEndedTouches - continued. num interp.steps: " << mappedTouch->numInterpolationSteps_);
                     remappedTouches.addContinued(mappedTouch);
@@ -503,7 +503,7 @@ private:
             // in a previous cycle) are still interpolated up to MAX_NUM_INTERPOLATION_STEPS times.
             // If they were not taken over by a close new touch by then they are ended.
             bool removeTouch = true;
-            if(isInTransitionArea(**touchIter) && (*touchIter)->numInterpolationSteps_ < MAX_NUM_INTERPOLATION_STEPS) {
+            if(isInTransitionArea(**touchIter) && (*touchIter)->numInterpolationSteps_ < maxInterpolationSteps_) {
                 interpolatePosition(**touchIter);
                 LOG_2("mec::CompositePanel::remapInTransitionInterpolatedTouches - continued. num interp.steps: " << (*touchIter)->numInterpolationSteps_);
                 associatedMappedTouches.insert(*touchIter);
@@ -656,7 +656,11 @@ private:
     }
 
     float normalizeZPos(float zPos) {
-        return zPos / MAX_Z_PRESSURE;
+        float normalizedPressure = zPos / MAX_Z_PRESSURE;
+        if(normalizedPressure < 0.01) {
+            normalizedPressure = 0.01;
+        }
+        return normalizedPressure;
     }
 };
 
@@ -677,17 +681,17 @@ public:
             panel_(panel), name_(name), overlayFunction_(std::move(overlayFunction))
     {}
     bool process() {
-        LOG_2("morph::Instrument::process - reading touches");
+        LOG_3("morph::Instrument::process - reading touches");
         Touches touches;
         bool touchesRead = panel_->readTouches(touches);
         if(!touchesRead) {
             LOG_0("morph::Instrument::process - unable to read touches from panel " << panel_->getSurfaceID());
             return false;
         }
-        LOG_2("morph::Instrument::process - touches read");
-        LOG_2("morph::Instrument::process - interpreting touches");
+        LOG_3("morph::Instrument::process - touches read");
+        LOG_3("morph::Instrument::process - interpreting touches");
         bool touchesInterpreted = overlayFunction_->interpretTouches(touches);
-        LOG_2("morph::Instrument::process - touches interpreted");
+        LOG_3("morph::Instrument::process - touches interpreted");
         if(!touchesInterpreted) {
             LOG_0("morph::Instrument::process - unable to interpret touches from panel " << panel_->getSurfaceID() << "via overlay function" << overlayFunction_->getName());
             return false;
@@ -858,8 +862,16 @@ private:
                 transitionAreaWidth = 20;
                 LOG_1("morph::Impl::init - property transition_area_width not defined, using default 20");
             }
+            std::string maxInterpolationSteps_properyname = "maxInterpolationSteps";
+            int maxInterpolationSteps;
+            if(compositePanelPrefs.exists(maxInterpolationSteps_properyname)) {
+                maxInterpolationSteps = compositePanelPrefs.getInt(maxInterpolationSteps_properyname);
+            } else {
+                maxInterpolationSteps = 10;
+                LOG_1("morph::Impl::init - property maxInterpolationSteps not defined, using default 10");
+            }
             std::shared_ptr<Panel> compositePanel;
-            compositePanel.reset(new CompositePanel(*compositePanelNameIter, panels, transitionAreaWidth));
+            compositePanel.reset(new CompositePanel(*compositePanelNameIter, panels, transitionAreaWidth, maxInterpolationSteps));
             bool initSuccessful = compositePanel->init();
             if (initSuccessful) {
                 panels_.insert(compositePanel);

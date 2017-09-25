@@ -37,7 +37,7 @@
                         "panel3"
                     ],
                     "transitionAreaWidth" : 20,
-                    "maxInterpolationSteps" : 5
+                    "maxInterpolationSteps" : 2
                 }
             },
             "instruments" : {
