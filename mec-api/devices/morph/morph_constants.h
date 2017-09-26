@@ -1,0 +1,8 @@
+#ifndef MEC_MORPH_CONSTANTS_H
+#define MEC_MORPH_CONSTANTS_H
+
+#define MEC_MORPH_PANEL_WIDTH 230.0 //TODO: find out panel width via Sensel API
+#define MEC_MORPH_PANEL_HEIGHT 128.0
+#define MEC_MORPH_MAX_Z_PRESSURE 2048.0
+
+#endif //MEC_MORPH_CONSTANTS_H
