@@ -5,6 +5,9 @@
 #include "../mec_device.h"
 #include "../mec_msg_queue.h"
 
+
+#include "ParameterModel.h"
+
 #include <RtMidi.h>
 
 #include <memory>
@@ -30,11 +33,18 @@ private:
 
     bool active_;
 	ICallback& callback_;
-    std::unique_ptr<Push2API::Push2> push2Api_;
-    std::unique_ptr<RtMidiIn>        midiDevice_; 
-    MsgQueue queue_;
+    // push display
+    std::shared_ptr<Push2API::Push2> push2Api_;
 
+    // kontrol interface
+    std::shared_ptr<oKontrol::ParameterModel>       param_model_;
+
+    // midi
+    std::unique_ptr<RtMidiIn>        midiDevice_; 
+    MsgQueue    queue_;
     float       pitchbendRange_;
+
+
 };
 
 }

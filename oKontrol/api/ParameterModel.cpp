@@ -91,5 +91,16 @@ bool ParameterModel::changeParam(ParameterSource src, const std::string& id, con
     return false;
 }
 
+void ParameterModel::publishMetaData() const {
+    for ( auto i : listeners_) {
+        for(auto p: parameters_) {
+            i->param(PS_LOCAL,  *(p.second));
+        }
+        for(auto p: pages_) {
+            i->page(PS_LOCAL,  *(p.second));
+        }
+    }
+}
+
 
 } //namespace

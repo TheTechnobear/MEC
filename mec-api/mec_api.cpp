@@ -11,6 +11,7 @@
 #include "devices/mec_mididevice.h"
 #include "devices/mec_push2.h"
 #include "devices/mec_osct3d.h"
+#include "devices/mec_kontrol.h"
 
 #include <vector>
 #include <memory>
@@ -356,6 +357,22 @@ void MecApi_Impl::initDevices() {
         }
     }
 
+    if (prefs_->exists("kontrol")) {
+        LOG_1("kontrol initialise ");
+        std::shared_ptr<Device> device;
+        device.reset(new Kontrol(*this));
+        if(device->init(prefs_->getSubTree("kontrol"))) {
+            if(device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("kontrol init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("kontrol init failed ");
+            device->deinit();
+        }
+    }
 
 }
 

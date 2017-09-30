@@ -14,7 +14,25 @@
 
 ////////////////////////////////////////////////
 
-namespace mec { 
+namespace mec {
+
+
+class Push2_OLED : public oKontrol::ParameterCallback {
+public:
+    Push2_OLED(const std::shared_ptr<Push2API::Push2>& api) : push2Api_(api) {
+        param_model_ = oKontrol::ParameterModel::model();
+        ;
+    }
+    // ParameterCallback
+    virtual void addClient(const std::string&, unsigned );
+    virtual void page(oKontrol::ParameterSource , const oKontrol::Page& );
+    virtual void param(oKontrol::ParameterSource, const oKontrol::Parameter&);
+    virtual void changed(oKontrol::ParameterSource src, const oKontrol::Parameter& p);
+
+private:
+    std::shared_ptr<Push2API::Push2> push2Api_;
+    std::shared_ptr<oKontrol::ParameterModel> param_model_;
+};
 
 Push2::Push2(ICallback& cb) :
     active_(false), callback_(cb) {
@@ -23,7 +41,6 @@ Push2::Push2(ICallback& cb) :
 Push2::~Push2() {
     deinit();
 }
-
 
 void Push2InCallback( double deltatime, std::vector< unsigned char > *message, void *userData )
 {
@@ -75,15 +92,20 @@ bool Push2::init(void* arg) {
     push2Api_.reset(new Push2API::Push2());
     push2Api_->init();
 
-    // 'test for Push 1 compatibility mode'
-    int row = 2;
+
+    param_model_ = oKontrol::ParameterModel::model();
+    param_model_->addCallback(std::make_shared<Push2_OLED>(push2Api_));
+
+    // // 'test for Push 1 compatibility mode'
+    // int row = 2;
     push2Api_->clearDisplay();
-    push2Api_->drawText(row, 10, "...01234567891234567......");
-    push2Api_->clearRow(row);
-    push2Api_->p1_drawCell(row, 0, "01234567891234567");
-    push2Api_->p1_drawCell(row, 1, "01234567891234567");
-    push2Api_->p1_drawCell(row, 2, "01234567891234567");
-    push2Api_->p1_drawCell(row, 3, "01234567891234567");
+    // push2Api_->drawText(row, 10, "...01234567891234567......");
+    // push2Api_->clearRow(row);
+    // push2Api_->p1_drawCell(row, 0, "01234567891234567");
+    // push2Api_->p1_drawCell(row, 1, "01234567891234567");
+    // push2Api_->p1_drawCell(row, 2, "01234567891234567");
+    // push2Api_->p1_drawCell(row, 3, "01234567891234567");
+
 
     active_ = true;
     LOG_0("Push2::init - complete");
@@ -99,7 +121,7 @@ bool Push2::process() {
 void Push2::deinit() {
     LOG_0("Push2::deinit");
 
-    if(push2Api_)push2Api_->deinit();
+    if (push2Api_)push2Api_->deinit();
     push2Api_.reset();
 
     if (midiDevice_) midiDevice_->cancelCallback();
@@ -131,9 +153,9 @@ bool Push2::midiCallback(double deltatime, std::vector< unsigned char > *message
     switch (type) {
     case 0x90: {
         // note on (+note off if vel =0)
-        if(data1>0)
+        if (data1 > 0)
             msg.type_ = MecMsg::TOUCH_ON;
-        else 
+        else
             msg.type_ = MecMsg::TOUCH_OFF;
 
         msg.data_.touch_.touchId_ = ch;
@@ -194,7 +216,57 @@ bool Push2::midiCallback(double deltatime, std::vector< unsigned char > *message
     return true;
 }
 
+
+// Push2_OLED
+void Push2_OLED::addClient(const std::string&, unsigned ) {
+    ; // uninteresting
 }
+
+void Push2_OLED::page(oKontrol::ParameterSource , const oKontrol::Page& page) {
+    for (int i = 0; i < 8 && i < param_model_->getPageCount(); i++) {
+        auto pageId = param_model_->getPageId(i);
+        if (pageId == page.id()) {
+            push2Api_->p1_drawCell(1, i, page.displayName().c_str());
+            return;
+        }
+    }   
+}
+
+void Push2_OLED::param(oKontrol::ParameterSource, const oKontrol::Parameter& param) {
+    auto pageId = param_model_->getPageId(0);
+    if (pageId.empty()) return;
+
+    for (int i = 0; i < 8; i++) {
+        auto id = param_model_->getParamId(pageId, i);
+        if (id.empty()) return;
+        if ( id == param.id()){
+            push2Api_->p1_drawCell(0, i, param.displayName().c_str());
+            push2Api_->p1_drawCell(1, i, param.displayValue().c_str());
+            push2Api_->p1_drawCell(2, i, param.displayUnit().c_str());
+            return;
+        }
+    }
+}
+
+void Push2_OLED::changed(oKontrol::ParameterSource, const oKontrol::Parameter& param) {
+    auto pageId = param_model_->getPageId(0);
+    if (pageId.empty()) return;
+
+    for (int i = 0; i < 8; i++) {
+        auto id = param_model_->getParamId(pageId, i);
+        if (id.empty()) return;
+        if ( id == param.id()){
+            push2Api_->p1_drawCell(0, i, param.displayName().c_str());
+            push2Api_->p1_drawCell(1, i, param.displayValue().c_str());
+            push2Api_->p1_drawCell(2, i, param.displayUnit().c_str());
+            return;
+        }
+    }
+}
+
+
+
+} // namespace
 
 
 

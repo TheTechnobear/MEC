@@ -17,6 +17,8 @@ public:
     bool connect(const std::string& host=ADDRESS, unsigned port = 9001);
     void stop();
 
+    void requestMetaData();
+
     // ParameterCallback
     virtual void addClient(const std::string&, unsigned) {;}
     virtual void page(ParameterSource src, const Page& p); 

@@ -77,6 +77,7 @@ public:
     ) const;
 
     void changeParam(ParameterSource src, const std::string& id, ParamValue v) const;
+    void publishMetaData() const;
 
     std::shared_ptr<UdpListeningReceiveSocket> socket() { return socket_;}
 private:

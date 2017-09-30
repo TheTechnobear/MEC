@@ -63,6 +63,11 @@
         "_push2"  :  {
             "device" : "Ableton Push 2 Live Port",
             "pitchbend range" : 2.0
+        },
+
+        "_kontrol"  :  {
+            "connectPort" : 9000,
+            "listenPort" : 9001
         }
     },
 

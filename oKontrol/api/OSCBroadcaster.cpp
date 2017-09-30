@@ -33,6 +33,21 @@ void OSCBroadcaster::stop() {
     socket_.reset();
 }
 
+void OSCBroadcaster::requestMetaData() {
+    if (!socket_) return;
+    osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage( "/oKontrol/metaData" )
+        << osc::EndMessage
+        << osc::EndBundle;
+
+    socket_->Send( ops.Data(), ops.Size() );
+
+}
+
+
+
 void OSCBroadcaster::page(ParameterSource src, const Page& p) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;

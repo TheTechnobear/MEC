@@ -84,6 +84,8 @@ public:
                 char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
                 remoteEndpoint.AddressAsString(buf);
                 receiver_.addClient(std::string(buf), port);
+            } else if ( std::strcmp( m.AddressPattern(), "/oKontrol/metaData" ) == 0 ) {
+                receiver_.publishMetaData();
             }
         } catch ( osc::Exception& e ) {
             // std::err << "error while parsing message: "
@@ -167,6 +169,9 @@ void OSCReceiver::changeParam(ParameterSource src, const std::string& id, ParamV
     param_model_->changeParam(src, id, f);
 }
 
+void OSCReceiver::publishMetaData() const {
+    param_model_->publishMetaData();
+}
 
 
 } // namespace

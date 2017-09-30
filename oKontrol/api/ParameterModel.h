@@ -92,6 +92,7 @@ public:
 		listeners_.push_back(listener);
 	}
 
+    void publishMetaData() const;
 
 	unsigned 	getPageCount() { return pageIds_.size();}
 	std::string getPageId(unsigned pageNum) { return pageNum < pageIds_.size() ? pageIds_[pageNum] : nullptr;}
