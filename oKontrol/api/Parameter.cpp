@@ -1,5 +1,7 @@
 #include "Parameter.h"
 
+#include <iostream>
+
 namespace oKontrol {
 
 // PT_Invalid
@@ -65,7 +67,23 @@ std::shared_ptr<Parameter> createParameter(const std::string& t) {
     else    if (t == "hz")   return std::make_shared<Parameter_LinearHz>(PT_LinHz);
     else    if (t == "msec")   return std::make_shared<Parameter_Time>(PT_mSec);
 
+    std::cerr << "parameter type not found: " << t << std::endl;
+
     return std::make_shared<Parameter>(PT_Invalid);
+}
+
+void Parameter::createArgs(std::vector<ParamValue>& args) const {
+    switch(type_) {
+        case PT_Float: args.push_back("float");break;
+        case PT_Boolean: args.push_back("bool");break;
+        case PT_Pct: args.push_back("pct");break;
+        case PT_LinHz: args.push_back("hz");break;
+        case PT_mSec: args.push_back("msec");break;
+        default:
+            args.push_back("unsupported");
+    }
+    args.push_back(ParamValue(id_));
+    args.push_back(ParamValue(type_));
 }
 
 
@@ -79,6 +97,7 @@ std::shared_ptr<Parameter> Parameter::create(const std::vector<ParamValue>& args
         if (p->type() != PT_Invalid) p->init(args, pos);
     } catch (const std::runtime_error& e) {
         // perhaps report here why
+        std::cerr << "error: " << e.what() << std::endl;
         p->type_ = PT_Invalid;
     }
 
@@ -100,10 +119,6 @@ void Parameter::init(const std::vector<ParamValue>& args, unsigned& pos) {
     if ( args.size() > pos && args[pos].type() == ParamValue::T_String ) displayName_ = args[pos++].stringValue() ; else throwError(id(),"missing displayName");
 }
 
-void Parameter::createArgs(std::vector<ParamValue>& args) const {
-    args.push_back(ParamValue(id_));
-    args.push_back(ParamValue(type_));
-}
 
 const std::string& Parameter::displayName() const  {
     return displayName_;

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <string.h>
+#include <iostream>
 
 namespace oKontrol {
 
@@ -35,12 +36,15 @@ ParameterModel::ParameterModel() {
 }
 
 
-bool ParameterModel::addParam( ParameterSource src, const std::vector<ParamValue>& args)
-  {
+bool ParameterModel::addParam( ParameterSource src, const std::vector<ParamValue>& args) {
+    std::cout << "ParameterModel::addParam " << std::endl;
     auto p = Parameter::create(args);
-    if(p->type() != PT_Invalid) {
+    std::cout << "ParameterModel::addParam p1" << std::endl;
+    if (p->type() != PT_Invalid) {
+        std::cout << "ParameterModel::addParam p2" << std::endl;
         parameters_[p->id()] = p;
         for ( auto i : listeners_) {
+            std::cout << "ParameterModel::addParam p3 : " << p->id() << std::endl;
             i->param(src, *p);
         }
         return true;
@@ -54,7 +58,7 @@ bool ParameterModel::addPage(
     const std::string& displayName,
     const std::vector<std::string> paramIds
 ) {
-
+    std::cout << "ParameterModel::addPage " << id << std::endl;
     auto p = std::make_shared<Page>(id, displayName, paramIds);
     pages_[id] = p;
     pageIds_.push_back(id);
@@ -93,10 +97,10 @@ bool ParameterModel::changeParam(ParameterSource src, const std::string& id, con
 
 void ParameterModel::publishMetaData() const {
     for ( auto i : listeners_) {
-        for(auto p: parameters_) {
+        for (auto p : parameters_) {
             i->param(PS_LOCAL,  *(p.second));
         }
-        for(auto p: pages_) {
+        for (auto p : pages_) {
             i->page(PS_LOCAL,  *(p.second));
         }
     }

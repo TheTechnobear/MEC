@@ -12,6 +12,7 @@ public:
         T_Float,
         T_String
     };
+    ParamValue(const char* value) { type_ = T_String; strValue_ = value; }
     ParamValue(const std::string& value) { type_ = T_String; strValue_ = value; }
     ParamValue(float value) { type_ = T_Float; floatValue_ = value;}
     Type type() const { return type_;}

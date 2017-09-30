@@ -9,9 +9,9 @@ namespace mec {
 
 ////////////////////////////////////////////////
 Kontrol::Kontrol(ICallback& cb) :
-    active_(false), callback_(cb), 
-    listenPort_(0), connectPort_(0), 
-    requestMetaData_(true) {
+    state_(S_UNCONNECTED),
+    active_(false), callback_(cb),
+    listenPort_(0), connectPort_(0)  {
     param_model_ = oKontrol::ParameterModel::model();
 }
 
@@ -28,17 +28,9 @@ bool Kontrol::init(void* arg) {
         deinit();
     }
     active_ = false;
+    state_ = S_UNCONNECTED;
 
     connectPort_ = prefs.getInt("connectPort", 9000);
-
-    if (connectPort_ > 0) {
-        auto p = std::make_shared<oKontrol::OSCBroadcaster>();
-        if (p->connect("localhost", (unsigned) connectPort_)) {
-            osc_broadcaster_ = p;
-            param_model_->addCallback(osc_broadcaster_);
-        }
-    }
-
 
     listenPort_ = prefs.getInt("listenPort", 9001);
     if (listenPort_ > 0) {
@@ -48,8 +40,19 @@ bool Kontrol::init(void* arg) {
         }
     }
 
+    if (connectPort_ > 0) {
+        auto p = std::make_shared<oKontrol::OSCBroadcaster>();
+        if (p->connect("localhost", (unsigned) connectPort_)) {
+            osc_broadcaster_ = p;
+            param_model_->addCallback(osc_broadcaster_);
+        }
+    }
+
+    if (osc_broadcaster_ && osc_receiver_) {
+        state_ = S_CONNECT_REQUEST;
+    }
+
     active_ = true;
-    requestMetaData_ = true;
 
     LOG_0("Kontrol::init - complete");
     return active_;
@@ -58,19 +61,32 @@ bool Kontrol::init(void* arg) {
 bool Kontrol::process() {
 
     // wait till after initialisatioin of all devices before requesting meta data
-    if(osc_broadcaster_ && requestMetaData_) {
-        osc_broadcaster_->requestMetaData();
-        requestMetaData_ = false;
+    if (osc_broadcaster_) {
+        switch (state_) {
+        case S_UNCONNECTED :
+        case S_CONNECTED:
+            break;
+        case S_CONNECT_REQUEST :
+            LOG_0("Kontrol::process request callback");
+            osc_broadcaster_->requestConnect(listenPort_);
+            state_ = S_METADATA_REQUEST;
+            break;
+        case S_METADATA_REQUEST :
+            LOG_0("Kontrol::process request meta data");
+            osc_broadcaster_->requestMetaData();
+            state_ = S_CONNECTED;
+            break;
+        }
     }
     // return queue_.process(callback_);
-    if(osc_receiver_) osc_receiver_->poll();
+    if (osc_receiver_) osc_receiver_->poll();
     return true;
 }
 
 void Kontrol::deinit() {
     LOG_0("Kontrol::deinit");
-    if(osc_broadcaster_) osc_broadcaster_->stop();
-    if(osc_receiver_) osc_receiver_->stop();
+    if (osc_broadcaster_) osc_broadcaster_->stop();
+    if (osc_receiver_) osc_receiver_->stop();
 
     active_ = false;
 }

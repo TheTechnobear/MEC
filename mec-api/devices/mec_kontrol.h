@@ -14,7 +14,6 @@
 namespace mec {
 
 class Kontrol : public Device {
-
 public:
     Kontrol(ICallback&);
     virtual ~Kontrol();
@@ -24,9 +23,15 @@ public:
     virtual bool isActive();
 
 private:
+    enum State {
+        S_UNCONNECTED,
+        S_CONNECT_REQUEST,
+        S_METADATA_REQUEST,
+        S_CONNECTED
+    } state_;
+
     ICallback& callback_;
     bool active_;
-    bool requestMetaData_;
     MsgQueue queue_;
     unsigned connectPort_;
     unsigned listenPort_;

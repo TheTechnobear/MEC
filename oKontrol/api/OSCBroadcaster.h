@@ -18,6 +18,7 @@ public:
     void stop();
 
     void requestMetaData();
+    void requestConnect(unsigned port);
 
     // ParameterCallback
     virtual void addClient(const std::string&, unsigned) {;}

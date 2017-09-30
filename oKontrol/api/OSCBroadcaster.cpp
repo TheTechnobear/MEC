@@ -46,6 +46,18 @@ void OSCBroadcaster::requestMetaData() {
 
 }
 
+void OSCBroadcaster::requestConnect(unsigned port) {
+    if (!socket_) return;
+    osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage( "/oKontrol/connect" )
+        << (int32_t) port
+        << osc::EndMessage
+        << osc::EndBundle;
+
+    socket_->Send( ops.Data(), ops.Size() );
+}
 
 
 void OSCBroadcaster::page(ParameterSource src, const Page& p) {

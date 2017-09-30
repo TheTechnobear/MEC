@@ -95,7 +95,7 @@ public:
     void publishMetaData() const;
 
 	unsigned 	getPageCount() { return pageIds_.size();}
-	std::string getPageId(unsigned pageNum) { return pageNum < pageIds_.size() ? pageIds_[pageNum] : nullptr;}
+	std::string getPageId(unsigned pageNum) { return pageNum < pageIds_.size() ? pageIds_[pageNum] : "";}
 	std::shared_ptr<Page> getPage(const std::string& pageId) { return pages_[pageId]; }
 
 	std::string getParamId(const std::string& pageId, unsigned paramNum);

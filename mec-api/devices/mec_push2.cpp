@@ -57,6 +57,7 @@ bool Push2::init(void* arg) {
     }
     active_ = false;
 
+    // midi setup
     midiDevice_.reset(new RtMidiIn());
 
     std::string portname = prefs.getString("device");
@@ -84,21 +85,22 @@ bool Push2::init(void* arg) {
         return false;
     }
 
-
     midiDevice_->ignoreTypes( true, true, true );
     midiDevice_->setCallback( Push2InCallback, this );
 
 
+    // push2 api setup
     push2Api_.reset(new Push2API::Push2());
     push2Api_->init();
 
-
+    // Kontrol setup
     param_model_ = oKontrol::ParameterModel::model();
     param_model_->addCallback(std::make_shared<Push2_OLED>(push2Api_));
 
+    push2Api_->clearDisplay();
+
     // // 'test for Push 1 compatibility mode'
     // int row = 2;
-    push2Api_->clearDisplay();
     // push2Api_->drawText(row, 10, "...01234567891234567......");
     // push2Api_->clearRow(row);
     // push2Api_->p1_drawCell(row, 0, "01234567891234567");
@@ -217,23 +219,44 @@ bool Push2::midiCallback(double deltatime, std::vector< unsigned char > *message
 }
 
 
+unsigned currentPage = 0;
 // Push2_OLED
-void Push2_OLED::addClient(const std::string&, unsigned ) {
-    ; // uninteresting
+void Push2_OLED::addClient(const std::string& host, unsigned port) {
+    LOG_0("Push2_OLED::addClient from:" << host << ":" << port);
 }
 
 void Push2_OLED::page(oKontrol::ParameterSource , const oKontrol::Page& page) {
+    LOG_0("Push2_OLED::page " << page.id());
+
     for (int i = 0; i < 8 && i < param_model_->getPageCount(); i++) {
         auto pageId = param_model_->getPageId(i);
+        if (pageId.empty()) return;
+    
         if (pageId == page.id()) {
             push2Api_->p1_drawCell(1, i, page.displayName().c_str());
             return;
+        }
+
+        if(i==currentPage) {
+            for (int j = 0; j < 8; i++) {
+                auto id = param_model_->getParamId(pageId, i);
+                if (!id.empty()) {
+                    auto param  = param_model_ -> getParam(id);
+                    if(param!=nullptr) {
+                        push2Api_->p1_drawCell(0, i, param->displayName().c_str());
+                        push2Api_->p1_drawCell(1, i, param->displayValue().c_str());
+                        push2Api_->p1_drawCell(2, i, param->displayUnit().c_str());
+                    }
+                }
+            }
         }
     }   
 }
 
 void Push2_OLED::param(oKontrol::ParameterSource, const oKontrol::Parameter& param) {
-    auto pageId = param_model_->getPageId(0);
+    LOG_0("Push2_OLED::param " << param.id());
+
+    auto pageId = param_model_->getPageId(currentPage);
     if (pageId.empty()) return;
 
     for (int i = 0; i < 8; i++) {
@@ -249,6 +272,8 @@ void Push2_OLED::param(oKontrol::ParameterSource, const oKontrol::Parameter& par
 }
 
 void Push2_OLED::changed(oKontrol::ParameterSource, const oKontrol::Parameter& param) {
+    LOG_0("Push2_OLED::change " << param.id());
+
     auto pageId = param_model_->getPageId(0);
     if (pageId.empty()) return;
 

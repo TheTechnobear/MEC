@@ -4,11 +4,9 @@
 #include "osc/OscPacketListener.h"
 
 #include <memory.h>
-// #include <iostream>
+#include <iostream>
 
 #define MAX_OSC_MESSAGE_SIZE 256
-
-
 
 namespace oKontrol {
 
@@ -41,6 +39,7 @@ public:
         (void) remoteEndpoint; // suppress unused parameter warning
 
         try {
+            std::cout << "recieved osc message: " << m.AddressPattern() << std::endl;
             if ( std::strcmp( m.AddressPattern(), "/oKontrol/changed" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char* id = (arg++)->AsString();
@@ -65,9 +64,11 @@ public:
                     }
                     arg++;
                 }
+
+                receiver_.addParam(PS_OSC,params);
             } else if ( std::strcmp( m.AddressPattern(), "/oKontrol/page" ) == 0 ) {
-                //param name page type displayname low high default
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                std::cout << "recieved page p1"<< std::endl;
 
                 const char* id = (arg++)->AsString();
                 const char* displayname = (arg++)->AsString();
@@ -76,6 +77,8 @@ public:
                 while ( arg != m.ArgumentsEnd() ) {
                     paramIds.push_back((arg++)->AsString());
                 }
+
+                std::cout << "recieved page " << id << std::endl;
                 receiver_.addPage(PS_OSC, id, displayname, paramIds);
             } else if ( std::strcmp( m.AddressPattern(), "/oKontrol/connect" ) == 0 ) {
                 osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
@@ -83,6 +86,7 @@ public:
                 args >> port >> osc::EndMessage;
                 char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
                 remoteEndpoint.AddressAsString(buf);
+
                 receiver_.addClient(std::string(buf), port);
             } else if ( std::strcmp( m.AddressPattern(), "/oKontrol/metaData" ) == 0 ) {
                 receiver_.publishMetaData();
