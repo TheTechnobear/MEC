@@ -38,6 +38,7 @@ add_subdirectory(external/portaudio portaudio)
 add_subdirectory(external/cJSON cjson)
 add_subdirectory(external/rtmidi rtmidi)
 
-add_subdirectory (mec-api) 
-add_subdirectory (mec-app)
+add_subdirectory(mec-api) 
+add_subdirectory(mec-app)
+add_subdirectory(oKontrol)
 
