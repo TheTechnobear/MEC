@@ -21,7 +21,8 @@ public:
 
     void drawText(unsigned row, unsigned col, const char* str, int ln);
     void drawText(unsigned row, unsigned col, const char* str);
-    void p1_drawCell(unsigned row, unsigned cell, const char* str);
+    void p1_drawCell4(unsigned row, unsigned cell, const char* str);
+    void p1_drawCell8(unsigned row, unsigned cell, const char* str);
     void clearDisplay();
     void clearRow(unsigned row);
 

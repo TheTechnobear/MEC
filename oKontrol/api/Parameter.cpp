@@ -83,7 +83,7 @@ void Parameter::createArgs(std::vector<ParamValue>& args) const {
             args.push_back("unsupported");
     }
     args.push_back(ParamValue(id_));
-    args.push_back(ParamValue(type_));
+    args.push_back(ParamValue(displayName_));
 }
 
 
@@ -195,7 +195,7 @@ void Parameter_Float::createArgs(std::vector<ParamValue>& args) const {
 
 std::string Parameter_Float::displayValue() const {
     char numbuf[11];
-    sprintf(numbuf, "%10.2f", current_.floatValue());
+    sprintf(numbuf, "%.2f", current_.floatValue());
     return std::string(numbuf);
 }
 

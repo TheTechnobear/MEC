@@ -131,13 +131,23 @@ void Push2::drawText(unsigned row, unsigned col, const char* str)
     Push2::drawText(row, col, str, strlen(str));
 }
 
-unsigned CELL_OFFSET[4] = { 3, 27, 51, 75 };
-void Push2::p1_drawCell(unsigned row, unsigned cell, const char* str)
+unsigned CELL_OFFSET_4[4] = { 3, 27, 51, 75 };
+void Push2::p1_drawCell4(unsigned row, unsigned cell, const char* str)
 {
     if (cell < 4) {
-        Push2::drawText(row, CELL_OFFSET[cell], str);
+        Push2::drawText(row, CELL_OFFSET_4[cell], str);
     }
 }
+
+
+unsigned CELL_OFFSET_8[8] = { 0, 12, 24, 36, 48, 60, 72, 84 };
+void Push2::p1_drawCell8(unsigned row, unsigned cell, const char* str)
+{
+    if (cell < 8) {
+        Push2::drawText(row, CELL_OFFSET_8[cell], str);
+    }
+}
+
 
 // void Push2::abletonShape() {
 //     // official ableton 'shaping'

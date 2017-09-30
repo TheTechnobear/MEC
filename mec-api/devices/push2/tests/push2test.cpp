@@ -13,10 +13,10 @@ int main(int argc, char** argv) {
     push2.clearDisplay();
     push2.drawText(row, 10, "...01234567891234567......");
     push2.clearRow(row);
-    push2.p1_drawCell(row, 0, "01234567891234567");
-    push2.p1_drawCell(row, 1, "01234567891234567");
-    push2.p1_drawCell(row, 2, "01234567891234567");
-    push2.p1_drawCell(row, 3, "01234567891234567");
+    push2.p1_drawCell4(row, 0, "01234567891234567");
+    push2.p1_drawCell4(row, 1, "01234567891234567");
+    push2.p1_drawCell4(row, 2, "01234567891234567");
+    push2.p1_drawCell4(row, 3, "01234567891234567");
 
     for (int i = 0; i < 60; i++) {
         push2.render();
