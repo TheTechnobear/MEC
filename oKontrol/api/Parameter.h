@@ -12,9 +12,18 @@ public:
         T_Float,
         T_String
     };
-    ParamValue(const char* value) { type_ = T_String; strValue_ = value; }
-    ParamValue(const std::string& value) { type_ = T_String; strValue_ = value; }
-    ParamValue(float value) { type_ = T_Float; floatValue_ = value;}
+
+    ParamValue(const ParamValue& p) : type_(p.type_), strValue_(p.strValue_), floatValue_(p.floatValue_) {;}
+    ParamValue& operator=(const ParamValue& p)  {
+        type_ = p.type_;
+        strValue_ = p.strValue_;
+        floatValue_ = p.floatValue_;
+        return *this;
+    }
+
+    ParamValue(const char* value) { type_ = T_String; strValue_ = value; floatValue_ = 0.0;}
+    ParamValue(const std::string& value) { type_ = T_String; strValue_ = value; floatValue_ = 0.0; }
+    ParamValue(float value) { type_ = T_Float; floatValue_ = value; strValue_ = "";}
     Type type() const { return type_;}
     const std::string& stringValue() const {return strValue_;}
     float  floatValue() const {return floatValue_;}
@@ -97,7 +106,7 @@ public:
     Parameter_Boolean(ParameterType type);
     virtual void createArgs(std::vector<ParamValue>& args) const;
     virtual std::string displayValue() const;
-    
+
     virtual bool change(const ParamValue& c);
     virtual ParamValue calcRelative(float f);
     virtual ParamValue calcMidi(int midi);

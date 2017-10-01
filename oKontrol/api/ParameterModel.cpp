@@ -94,10 +94,15 @@ bool ParameterModel::changeParam(ParameterSource src, const std::string& id, con
 void ParameterModel::publishMetaData() const {
     for ( auto i : listeners_) {
         for (auto p : parameters_) {
-            (i.second)->param(PS_LOCAL,  *(p.second));
+            const Parameter& param = *(p.second);
+            (i.second)->param(PS_LOCAL, param);
+            (i.second)->changed(PS_LOCAL, param);
         }
-        for (auto p : pages_) {
-            (i.second)->page(PS_LOCAL,  *(p.second));
+        for (auto pid : pageIds_) {
+            auto p = pages_.find(pid);
+            if(p!=pages_.end()) {
+                (i.second)->page(PS_LOCAL,  *(p->second));
+            }
         }
     }
 }

@@ -12,7 +12,6 @@ namespace oKontrol {
 // PT_Semis
 // PT_Boolean
 
-
 int operator>(const ParamValue& lhs, const ParamValue& rhs) {
     if (lhs.type() != rhs.type()) return lhs.type() > rhs.type();
     switch (lhs.type()) {
@@ -60,6 +59,23 @@ int operator==(const ParamValue& lhs, const ParamValue& rhs) {
 }
 
 
+static void throwError(const std::string id, const char* what) {
+    std::string w = id + std::string(what);
+    std::runtime_error(w.c_str()); 
+}
+
+
+
+// Parameter : type id displayname
+Parameter::Parameter(ParameterType type) : type_(type) , current_(0.0f) {
+   ;
+}
+
+void Parameter::init(const std::vector<ParamValue>& args, unsigned& pos) {
+    if ( args.size() > pos && args[pos].type() == ParamValue::T_String ) id_ = args[pos++].stringValue() ; else throwError("null", "missing id");
+    if ( args.size() > pos && args[pos].type() == ParamValue::T_String ) displayName_ = args[pos++].stringValue() ; else throwError(id(),"missing displayName");
+}
+
 std::shared_ptr<Parameter> createParameter(const std::string& t) {
             if (t == "float")  return std::make_shared<Parameter_Float>(PT_Float);
     else    if (t == "bool")   return std::make_shared<Parameter_Boolean>(PT_Boolean);
@@ -103,22 +119,6 @@ std::shared_ptr<Parameter> Parameter::create(const std::vector<ParamValue>& args
 
     return p;
 }
-
-static void throwError(const std::string id, const char* what) {
-    std::string w = id + std::string(what);
-    std::runtime_error(w.c_str()); 
-}
-
-// Parameter : type id displayname
-Parameter::Parameter(ParameterType type) : type_(type) , current_(0.0f) {
-   ;
-}
-
-void Parameter::init(const std::vector<ParamValue>& args, unsigned& pos) {
-    if ( args.size() > pos && args[pos].type() == ParamValue::T_String ) id_ = args[pos++].stringValue() ; else throwError("null", "missing id");
-    if ( args.size() > pos && args[pos].type() == ParamValue::T_String ) displayName_ = args[pos++].stringValue() ; else throwError(id(),"missing displayName");
-}
-
 
 const std::string& Parameter::displayName() const  {
     return displayName_;
@@ -183,7 +183,7 @@ void Parameter_Float::init(const std::vector<ParamValue>& args, unsigned& pos) {
     Parameter::init(args, pos);
     if ( args.size() > pos && args[pos].type() == ParamValue::T_Float  ) min_ = args[pos++].floatValue() ; else throwError(id(),"missing min");
     if ( args.size() > pos && args[pos].type() == ParamValue::T_Float  ) max_ = args[pos++].floatValue() ; else throwError(id(),"missing max");
-    if ( args.size() > pos && args[pos].type() == ParamValue::T_Float ) current_ = def_ = args[pos++].floatValue() ; else throwError(id(),"missing def");
+    if ( args.size() > pos && args[pos].type() == ParamValue::T_Float )  def_ = args[pos++].floatValue() ; else throwError(id(),"missing def");
 }
 
 void Parameter_Float::createArgs(std::vector<ParamValue>& args) const {
@@ -245,23 +245,17 @@ std::string Parameter_Boolean::displayValue() const {
     }
 }
 
-
-
 void Parameter_Boolean::init(const std::vector<ParamValue>& args, unsigned& pos) {
     Parameter::init(args, pos);
-    if ( args.size() > pos && args[pos].type() == ParamValue::T_String ) {
-        if (args[pos].stringValue() == "true")
-            current_ = def_ = true;
-        else
-            current_ = def_ = false;
-        pos++;
+    if ( args.size() > pos && args[pos].type() == ParamValue::T_Float ) {
+        def_ = args[pos++].floatValue() > 0.5;
     } else
         throwError(id(),"missing def");
 }
 
 void Parameter_Boolean::createArgs(std::vector<ParamValue>& args) const {
     Parameter::createArgs(args);
-    args.push_back(def_ ? ParamValue("true") : ParamValue("false"));
+    args.push_back((float) def_);
 }
 
 bool  Parameter_Boolean::change(const ParamValue& c) {
