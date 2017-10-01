@@ -66,10 +66,7 @@ void oKontrolOrganelle_tilde_free(t_oKontrolOrganelle* x)
 {
   if (x->osc_receiver_) x->osc_receiver_->stop();
   x->osc_receiver_.reset();
-  if (x->osc_broadcaster_) x->osc_broadcaster_->stop();
-  x->osc_broadcaster_.reset();
   x->param_model_->clearCallbacks();
-  // inlet_free(x->x_in_amount);
   // oKontrol::ParameterModel::free();
 }
 
@@ -78,18 +75,13 @@ void *oKontrolOrganelle_tilde_new(t_floatarg osc_in)
   t_oKontrolOrganelle *x = (t_oKontrolOrganelle *) pd_new(oKontrolOrganelle_tilde_class);
 
   x->osc_receiver_ = nullptr;
-  x->osc_broadcaster_ = nullptr;
 
   x->pollCount_ = 0;
   x->param_model_ = oKontrol::ParameterModel::model();
 
-  x->send_broadcaster_ = std::make_shared<SendBroadcaster>();
-  x->param_model_->addCallback(x->send_broadcaster_);
-
-  x->oled_broadcaster_ = std::make_shared<OrganelleOLED>(x);
-  x->param_model_->addCallback(x->oled_broadcaster_);
-  x->ciient_handler_ = std::make_shared<ClientHandler>();
-  x->param_model_->addCallback(x->ciient_handler_);
+  x->param_model_->addCallback("pd.send", std::make_shared<SendBroadcaster>());
+  x->param_model_->addCallback("pd.oled", std::make_shared<OrganelleOLED>(x));
+  x->param_model_->addCallback("pd.client", std::make_shared<ClientHandler>());
 
 
   oKontrolOrganelle_tilde_listen(x, osc_in); // if zero will ignore
@@ -159,17 +151,16 @@ void oKontrolOrganelle_tilde_setup(void) {
 
 
 void    oKontrolOrganelle_tilde_connect(t_oKontrolOrganelle *x, t_floatarg f) {
-  // currently only implementing one connection, should allow more
-  if (f) {
+  std::string host = "127.0.0.1";
+  unsigned port = (unsigned) f;
+  std::string id = "pd.osc:" + host + ":" + std::to_string(port);
+  x->param_model_->removeCallback(id);
+  if (port) {
     auto p = std::make_shared<oKontrol::OSCBroadcaster>();
-    if (p->connect("localhost", (unsigned) f)) {
-      x->osc_broadcaster_ = p;
-      x->param_model_->addCallback(x->osc_broadcaster_);
+    if (p->connect(host, port)) {
+      post("client connected %s" , id.c_str());
+      x->param_model_->addCallback(id, p);
     }
-  } else {
-    // treat as disconnect
-    x->param_model_->removeCallback(x->osc_broadcaster_);
-    x->osc_broadcaster_.reset();
   }
 }
 
@@ -252,16 +243,16 @@ void SendBroadcaster::changed(oKontrol::ParameterSource, const oKontrol::Paramet
   if (!sendobj) { post("no object found to send to"); return; }
 
   t_atom a;
-  switch(param.current().type()) {
-    case oKontrol::ParamValue::T_Float : {
-      SETFLOAT(&a, param.current().floatValue());
-      break;
-    }
-    case oKontrol::ParamValue::T_String:
-    default:  {
-      SETSYMBOL(&a, gensym(param.current().stringValue().c_str()));
-      break;
-    }
+  switch (param.current().type()) {
+  case oKontrol::ParamValue::T_Float : {
+    SETFLOAT(&a, param.current().floatValue());
+    break;
+  }
+  case oKontrol::ParamValue::T_String:
+  default:  {
+    SETSYMBOL(&a, gensym(param.current().stringValue().c_str()));
+    break;
+  }
   }
   pd_forwardmess(sendobj, 1, &a);
 }
@@ -269,10 +260,14 @@ void SendBroadcaster::changed(oKontrol::ParameterSource, const oKontrol::Paramet
 
 
 void ClientHandler::addClient(const std::string& host, unsigned port) {
-  auto p = std::make_shared<oKontrol::OSCBroadcaster>();
-  if (p->connect(host, port)) {
-    oKontrol::ParameterModel::model()->addCallback(p);
-    post("connected %s %d", host.c_str(), port);
+  std::string id = "pd.osc:" + host + ":" + std::to_string(port);
+  oKontrol::ParameterModel::model()->removeCallback(id);
+  if (port) {
+    auto p = std::make_shared<oKontrol::OSCBroadcaster>();
+    if (p->connect(host, port)) {
+      oKontrol::ParameterModel::model()->addCallback(id, p);
+      post("client handler : connected %s" , id.c_str());
+    }
   }
 }
 

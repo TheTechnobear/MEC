@@ -97,7 +97,7 @@ bool Push2::init(void* arg) {
 
     // Kontrol setup
     param_model_ = oKontrol::ParameterModel::model();
-    param_model_->addCallback(std::make_shared<Push2_OLED>(push2Api_));
+    param_model_->addCallback("push2.oled",std::make_shared<Push2_OLED>(push2Api_));
 
     push2Api_->clearDisplay();
 

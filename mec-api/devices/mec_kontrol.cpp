@@ -41,10 +41,13 @@ bool Kontrol::init(void* arg) {
     }
 
     if (connectPort_ > 0) {
+        std::string host = "127.0.0.1";
+        std::string id = "mec.osc:" + host + ":" + std::to_string(connectPort_);
+        param_model_->removeCallback(id);
         auto p = std::make_shared<oKontrol::OSCBroadcaster>();
-        if (p->connect("localhost", (unsigned) connectPort_)) {
+        if (p->connect(host, (unsigned) connectPort_)) {
             osc_broadcaster_ = p;
-            param_model_->addCallback(osc_broadcaster_);
+            param_model_->addCallback(id, osc_broadcaster_);
         }
     }
 

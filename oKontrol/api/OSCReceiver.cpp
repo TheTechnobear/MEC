@@ -6,8 +6,6 @@
 #include <memory.h>
 #include <iostream>
 
-#define MAX_OSC_MESSAGE_SIZE 256
-
 namespace oKontrol {
 
 class oKontrolPacketListener : public PacketListener {

@@ -49,8 +49,8 @@ namespace oKontrol {
 
 class oKontrolOSCListener;
 
-static const int MAX_N_OSC_MSGS = 16;
-static const int MAX_OSC_MESSAGE_SIZE = 256;
+static const int MAX_N_OSC_MSGS = 64;
+static const int MAX_OSC_MESSAGE_SIZE = 512;
 struct OscMsg {
     IpEndpointName origin_;    
     int  size_;

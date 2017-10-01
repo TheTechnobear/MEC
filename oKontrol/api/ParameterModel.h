@@ -52,7 +52,7 @@ public:
 	virtual ~ParameterCallback() {
 		;
 	}
-
+	virtual void stop() { ; }
 	virtual void addClient(const std::string& host, unsigned port) = 0;
 	virtual void page(ParameterSource src, const Page&) = 0 ;
 	virtual void param(ParameterSource src, const Parameter&) = 0;
@@ -78,8 +78,20 @@ public:
 	bool  changeParam(ParameterSource src, const std::string& id, const ParamValue& value);
 
 	void clearCallbacks() {
+		for(auto p : listeners_) {
+			(p.second)->stop();
+		}
+
 		listeners_.clear();
 	}
+	void removeCallback(const std::string& id) {
+		auto p = listeners_.find(id);
+		if(p!=listeners_.end()) {
+			(p->second)->stop();
+			listeners_.erase(id);
+		}
+	}
+
 	void removeCallback(std::shared_ptr<ParameterCallback>) {
 		// for(std::vector<std::shared_ptr<ParameterCallback> >::iterator i(listeners_) : listeners_) {
 		// 	if(*i == listener) {
@@ -88,8 +100,10 @@ public:
 		// 	}
 		// }
 	}
-	void addCallback(std::shared_ptr<ParameterCallback> listener) {
-		listeners_.push_back(listener);
+	void addCallback(const std::string& id, std::shared_ptr<ParameterCallback> listener) {
+		auto p = listeners_[id];
+		if(p!=nullptr) p->stop();
+		listeners_[id] = listener; 
 	}
 
     void publishMetaData() const;
@@ -106,8 +120,7 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<Parameter> >parameters_;
 	std::unordered_map<std::string, std::shared_ptr<Page> >pages_;
 	std::vector<std::string> pageIds_;
-
-	std::vector<std::shared_ptr<ParameterCallback> > listeners_;
+	std::unordered_map<std::string,std::shared_ptr<ParameterCallback> > listeners_;
 };
 
 } //namespace

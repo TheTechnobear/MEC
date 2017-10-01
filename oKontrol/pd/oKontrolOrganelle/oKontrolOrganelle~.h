@@ -8,6 +8,8 @@
 #include "OSCBroadcaster.h"
 
 #include <memory>
+#include <unordered_map>
+
 
 typedef struct _oKontrolOrganelle {
   t_object  x_obj;
@@ -20,10 +22,6 @@ typedef struct _oKontrolOrganelle {
   unsigned currentPage_;
   long pollCount_;
   std::shared_ptr<oKontrol::OSCReceiver> osc_receiver_;
-  std::shared_ptr<oKontrol::OSCBroadcaster> osc_broadcaster_;
-  std::shared_ptr<oKontrol::ParameterCallback> send_broadcaster_;
-  std::shared_ptr<oKontrol::ParameterCallback> oled_broadcaster_;
-  std::shared_ptr<oKontrol::ParameterCallback> ciient_handler_;
 } t_oKontrolOrganelle;
 
 

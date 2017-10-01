@@ -41,7 +41,7 @@ bool ParameterModel::addParam( ParameterSource src, const std::vector<ParamValue
     if (p->type() != PT_Invalid) {
         parameters_[p->id()] = p;
         for ( auto i : listeners_) {
-            i->param(src, *p);
+            (i.second)->param(src, *p);
         }
         return true;
     }
@@ -59,7 +59,7 @@ bool ParameterModel::addPage(
     pages_[id] = p;
     pageIds_.push_back(id);
     for ( auto i : listeners_) {
-        i->page(src, *p);
+        (i.second)->page(src, *p);
     }
     return true;
 }
@@ -73,7 +73,7 @@ std::string ParameterModel::getParamId(const std::string& pageId, unsigned param
 
 void ParameterModel::addClient(const std::string& host, unsigned port) {
     for ( auto i : listeners_) {
-        i->addClient(host, port);
+        (i.second)->addClient(host, port);
     }
 }
 
@@ -83,7 +83,7 @@ bool ParameterModel::changeParam(ParameterSource src, const std::string& id, con
     if (p != nullptr) {
         if (p->change(value)) {
             for ( auto i : listeners_) {
-                i->changed(src, *p);
+                (i.second)->changed(src, *p);
             }
             return true;
         }
@@ -94,10 +94,10 @@ bool ParameterModel::changeParam(ParameterSource src, const std::string& id, con
 void ParameterModel::publishMetaData() const {
     for ( auto i : listeners_) {
         for (auto p : parameters_) {
-            i->param(PS_LOCAL,  *(p.second));
+            (i.second)->param(PS_LOCAL,  *(p.second));
         }
         for (auto p : pages_) {
-            i->page(PS_LOCAL,  *(p.second));
+            (i.second)->page(PS_LOCAL,  *(p.second));
         }
     }
 }
