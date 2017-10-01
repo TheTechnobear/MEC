@@ -89,7 +89,7 @@ private:
     std::shared_ptr<PacketListener> packetListener_;
     std::shared_ptr<oKontrolOSCListener> oscListener_;
     PaUtilRingBuffer messageQueue_;
-    char* msgData_[sizeof(OscMsg) * MAX_N_OSC_MSGS];
+    char msgData_[sizeof(OscMsg) * MAX_N_OSC_MSGS];
 };
 
 } //namespace

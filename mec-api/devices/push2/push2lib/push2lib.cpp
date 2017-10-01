@@ -15,26 +15,20 @@ namespace Push2API {
 static uint16_t VID = 0x2982, PID = 0x1967;
 
 
-#define VSCALE 5
-#define HSCALE 2
-
-
-
 // see : https://github.com/Ableton/push-interface/blob/master/doc/AbletonPush2MIDIDisplayInterface.asc#usb-display-interface-access
 // //bbbbbggggggrrrrr
-#define RGB565(r,g,b)   ((((((int16_t) b & 0x0078)>> 3)   << 5) | (((int16_t) g & 0x00FC) >> 2 ) << 6 ) | (((int16_t) r & 0x00f8) >> 3))   //use top bits of colour input
+// #define RGB565(r,g,b)   ((((((int16_t) b & 0x0078)>> 3)   << 5) | (((int16_t) g & 0x00FC) >> 2 ) << 6 ) | (((int16_t) r & 0x00f8) >> 3))   //use top bits of colour input
+
+
 // #define RGB565(r,g,b) ((((((int16_t) b & 0x001F) << 5) | ((int16_t) g & 0x003F) ) << 6 ) | ((int16_t) r & 0x001f)) // uses lower bits of colour input
 // #define RGB565(r,g,b) ((((((int16_t) r & 0x001F) << 5) | ((int16_t) g & 0x003F) ) << 6 ) | ((int16_t) b & 0x001f)) // do as RGB , idea was too then reverse, didnt seem right
 
 
 #define F_HEIGHT    8
 #define F_WIDTH     5
-#define CH_COLS  (((LINE/2)  / F_WIDTH) / HSCALE)
-#define CH_ROWS  ((HEIGHT/F_HEIGHT) / VSCALE)
 
 // push 1
 #define MONOCHROME true
-#define MONO_CLR RGB565(255,60,0)
 
 #define HDR_PKT_SZ 0x10
 static uint8_t headerPkt[HDR_PKT_SZ] =
@@ -76,17 +70,35 @@ void Push2::clearDisplay() {
     memset(dataPkt_, 0, DATA_PKT_SZ);
 }
 
-void Push2::clearRow(unsigned row) {
+void Push2::clearRow(unsigned row,unsigned vscale) {
     for (int line = 0; line < F_HEIGHT; line++) {
-        for (int vs = 0; vs < VSCALE; vs++) {
-            int bl = (((((row * F_HEIGHT) + line )) * VSCALE) + vs ) * (LINE / 2);
+        for (int vs = 0; vs < vscale; vs++) {
+            int bl = (((((row * F_HEIGHT) + line )) * vscale) + vs ) * (LINE / 2);
             memset(& (dataPkt_[bl]), 0, LINE);
         }
     }
 }
 
-void Push2::drawText(unsigned row, unsigned col, const char* str, int ln)
+void Push2::drawCell8(unsigned row, unsigned cell, const char* str, unsigned vscale, unsigned hscale, int16_t clr)
 {
+    unsigned CH_COLS = (WIDTH / F_WIDTH)/ hscale;
+    // static const unsigned CELL_OFFSET_8[8] = { 0, 24, 48, 72, 96, 120, 144, 168 };
+    if (cell < 8) {
+        drawText(row, (CH_COLS / 8) * cell , str, vscale, hscale,clr);
+    }
+}
+void Push2::drawText(unsigned row, unsigned col, const char* str, unsigned vscale, unsigned hscale,int16_t clr)
+{
+    drawText(row, col, str, strlen(str),vscale,hscale,clr);
+}
+
+
+void Push2::drawText(unsigned row, unsigned col, const char* str, int ln, unsigned vscale, unsigned hscale,int16_t colour)
+{
+    unsigned CH_COLS = (WIDTH / F_WIDTH)/ hscale;
+    unsigned CH_ROWS = ((HEIGHT/F_HEIGHT) / vscale);
+    if(row > CH_ROWS) return;
+
     unsigned len = col + ln < CH_COLS ? ln : CH_COLS - col;
     for (int i = 0; i < len; i++) {
         int c = col + i;
@@ -96,8 +108,8 @@ void Push2::drawText(unsigned row, unsigned col, const char* str, int ln)
             int pchar = ch %  (GIMP_IMAGE_WIDTH / F_WIDTH);
             int pline = ((prow * F_HEIGHT) + line) * (GIMP_IMAGE_WIDTH * GIMP_IMAGE_BYTES_PER_PIXEL);
 
-            for (int vs = 0; vs < VSCALE; vs++) {
-                int bl = (((((row * F_HEIGHT) + line )) * VSCALE) + vs ) * (LINE / 2);
+            for (int vs = 0; vs < vscale; vs++) {
+                int bl = (((((row * F_HEIGHT) + line )) * vscale) + vs ) * (LINE / 2);
                 for (int pix = 0; pix < F_WIDTH ; pix++) {
                     int poffset = (pline) + (((pchar * F_WIDTH) + pix) * GIMP_IMAGE_BYTES_PER_PIXEL);
 
@@ -105,7 +117,7 @@ void Push2::drawText(unsigned row, unsigned col, const char* str, int ln)
                     unsigned red = GIMP_IMAGE_PIXEL_DATA[poffset];
                     if (MONOCHROME) {
                         if (red) {
-                            clr = MONO_CLR;
+                            clr = colour;
                         }
 
                     } else {
@@ -115,10 +127,12 @@ void Push2::drawText(unsigned row, unsigned col, const char* str, int ln)
                     }
 
 
-                    for (int hs = 0; hs < HSCALE; hs++) {
-                        int bpos = bl + ((((c * F_WIDTH) + pix) * HSCALE) + hs);
+                    for (int hs = 0; hs < hscale; hs++) {
+                        int bpos = bl + ((((c * F_WIDTH) + pix) * hscale) + hs);
                         // dataPkt_[bpos] = ( (clr & 0x00FF) << 8 ) | ( (clr & 0xFF00) >> 8);
-                        dataPkt_[bpos] = clr;
+                        if(bpos < (DATA_PKT_SZ / 2) ){
+                            dataPkt_[bpos] = clr;
+                        }
                     }
                 }
             }
@@ -126,27 +140,24 @@ void Push2::drawText(unsigned row, unsigned col, const char* str, int ln)
     }
 }
 
-void Push2::drawText(unsigned row, unsigned col, const char* str)
-{
-    Push2::drawText(row, col, str, strlen(str));
-}
-
-unsigned CELL_OFFSET_4[4] = { 3, 27, 51, 75 };
-void Push2::p1_drawCell4(unsigned row, unsigned cell, const char* str)
-{
-    if (cell < 4) {
-        Push2::drawText(row, CELL_OFFSET_4[cell], str);
-    }
-}
-
-
-unsigned CELL_OFFSET_8[8] = { 0, 12, 24, 36, 48, 60, 72, 84 };
 void Push2::p1_drawCell8(unsigned row, unsigned cell, const char* str)
 {
+    static const unsigned P1_CELL_OFFSET_8[8] = { 0, 12, 24, 36, 48, 60, 72, 84 };
     if (cell < 8) {
-        Push2::drawText(row, CELL_OFFSET_8[cell], str);
+        drawText(row, P1_CELL_OFFSET_8[cell], str,P1_VSCALE, P1_HSCALE,MONO_CLR);
     }
 }
+
+
+void Push2::p1_drawCell4(unsigned row, unsigned cell, const char* str)
+{
+    static const unsigned P1_CELL_OFFSET_4[4] = { 3, 27, 51, 75 };
+    if (cell < 4) {
+        drawText(row, P1_CELL_OFFSET_4[cell], str,strlen(str),P1_VSCALE, P1_HSCALE,MONO_CLR);
+    }
+}
+
+
 
 
 // void Push2::abletonShape() {

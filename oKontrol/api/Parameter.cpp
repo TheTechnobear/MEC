@@ -202,7 +202,10 @@ std::string Parameter_Float::displayValue() const {
 
 // Parameter_Float can assume float value
 ParamValue Parameter_Float::calcRelative(float f) {
-    return calcFloat(current().floatValue() + f);
+    float v = current().floatValue() + (f * (max() - min()));
+    v = std::max(v, min());
+    v = std::min(v, max());
+    return ParamValue(v);
 }
 
 ParamValue Parameter_Float::calcMidi(int midi) {
@@ -236,6 +239,8 @@ bool  Parameter_Float::change(const ParamValue& c) {
 Parameter_Boolean::Parameter_Boolean( ParameterType type) : Parameter (type) {
     ;
 }
+
+
 
 std::string Parameter_Boolean::displayValue() const {
     if (current_.floatValue() > 0.5) {
@@ -272,7 +277,13 @@ bool  Parameter_Boolean::change(const ParamValue& c) {
 }
 
 ParamValue Parameter_Boolean::calcRelative(float f) {
-    return calcFloat(current_.floatValue() + f);
+    if (current_.floatValue() > 0.5 && f < -0.0001) {
+        return ParamValue(0.0);
+    } 
+    if (current_.floatValue() <= 0.5 && f > 0.0001) {
+        return ParamValue(1.0);
+    }
+    return current_; 
 }
 
 ParamValue Parameter_Boolean::calcFloat(float f) {
