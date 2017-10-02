@@ -32,10 +32,14 @@ public:
 
 
 class ClientHandler : public oKontrol::ParameterCallback {
+public:
+  ClientHandler(t_oKontrolOrganelle* x) : x_(x) {;}
   virtual void addClient(const std::string&, unsigned );
   virtual void page(oKontrol::ParameterSource , const oKontrol::Page& ) { ; } // not interested
   virtual void param(oKontrol::ParameterSource, const oKontrol::Parameter&) { ; } // not interested
-  virtual void changed(oKontrol::ParameterSource, const oKontrol::Parameter& ) {;} // not interested
+  virtual void changed(oKontrol::ParameterSource, const oKontrol::Parameter& );
+private:
+  t_oKontrolOrganelle *x_;
 };
 
 
@@ -83,7 +87,7 @@ void *oKontrolOrganelle_tilde_new(t_floatarg osc_in)
 
   x->param_model_->addCallback("pd.send", std::make_shared<SendBroadcaster>());
   x->param_model_->addCallback("pd.oled", std::make_shared<OrganelleOLED>(x));
-  x->param_model_->addCallback("pd.client", std::make_shared<ClientHandler>());
+  x->param_model_->addCallback("pd.client", std::make_shared<ClientHandler>(x));
 
 
   oKontrolOrganelle_tilde_listen(x, osc_in); // if zero will ignore
@@ -269,6 +273,23 @@ void ClientHandler::addClient(const std::string& host, unsigned port) {
     if (p->connect(host, port)) {
       oKontrol::ParameterModel::model()->addCallback(id, p);
       post("client handler : connected %s" , id.c_str());
+    }
+  }
+}
+
+void ClientHandler::changed(oKontrol::ParameterSource src, const oKontrol::Parameter& param) {
+  if (src != oKontrol::PS_LOCAL) {
+    auto pageId = oKontrol::ParameterModel::model()->getPageId(x_->currentPage_);
+    if (pageId.empty()) return;
+    for (int i = 0; i < 4; i++) {
+      auto paramid = oKontrol::ParameterModel::model()->getParamId(pageId, i);
+      if (paramid.empty()) return;
+      if (paramid == param.id()) {
+        if (param.current() != x_->knobs_->value_[i]) {
+          x_->knobs_->locked_[i] = true;
+        }
+        return;
+      }
     }
   }
 }
