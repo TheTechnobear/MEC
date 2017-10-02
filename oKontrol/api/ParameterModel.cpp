@@ -66,9 +66,10 @@ bool ParameterModel::addPage(
 
 std::string ParameterModel::getParamId(const std::string& pageId, unsigned paramNum) {
     auto page = pages_[pageId];
-    if (page == nullptr) return "";
-    if (page->paramIds().size() < paramNum) return "";
-    return page->paramIds()[paramNum];
+    if (page !=nullptr && paramNum < page->paramIds().size()) {
+	    return page->paramIds()[paramNum];
+    }
+    return std::string("");
 }
 
 void ParameterModel::addClient(const std::string& host, unsigned port) {
