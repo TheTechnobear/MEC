@@ -49,6 +49,8 @@ set(MECAPI_SRC
     devices/morph/overlays/OverlayFunction.h
     devices/morph/overlays/XYZPlaneOverlay.cpp
     devices/morph/overlays/XYZPlaneOverlay.h
+    devices/morph/overlays/GridOverlay.cpp
+    devices/morph/overlays/GridOverlay.h
     devices/morph/morph_constants.h
     devices/morph/overlays/OverlayFactory.h
     devices/morph/overlays/OverlayFactory.cpp

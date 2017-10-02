@@ -1,0 +1,65 @@
+{
+    "mec" : {
+        "morph" : {
+            "panels" : {
+                "panel0" : {
+                    "_serial" : "SM01164910342",
+                    "orderBySerial" : 0,
+                    "_overlayId" : 0
+                },
+                "panel1" : {
+                    "_serial" : "SM01164910353",
+                    "orderBySerial" : 1,
+                    "_overlayId" : 0
+                },
+                "panel2" : {
+                    "_serial" : "SM01164910358",
+                    "orderBySerial" : 2,
+                    "_overlayId" : 0
+                },
+                "panel3" : {
+                    "_serial" : "SM01164910482",
+                    "orderBySerial" : 3,
+                    "_overlayId" : 0
+                }
+            },
+            "composite panels" : {
+                "4 panels" : {
+                    "panels" : [
+                        "panel0",
+                        "panel1",
+                        "panel2",
+                        "panel3"
+                    ],
+                    "transitionAreaWidth" : 20,
+                    "maxInterpolationSteps" : 2
+                }
+            },
+            "instruments" : {
+                "4 panel continuum" : {
+                    "panel" : "4 panels",
+                    "overlay" : {
+                        "name" : "xyzplane",
+                        "params" : {
+                            "semitones" : 48,
+                            "baseNote" : 32
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "mec-app" : {
+        "outputs" : {
+            "midi" : {
+                "virtual" : 1,
+                "voices" : 15,
+                "pitchbend range" : 48.0,
+                "device" : "MEC MIDI Out"
+            },
+            "console" : {
+                "throttle" : 0
+            }
+        }
+    }
+}

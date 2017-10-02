@@ -12,15 +12,15 @@ bool XYZPlaneOverlay::init(const Preferences &preferences) {
     if (preferences.exists("semitones")) {
         semitones_ = preferences.getDouble("semitones");
     } else {
-        semitones_ = 12;
-        LOG_1("morph::OverlayFunction::init - property semitones not defined, using default 12");
+        semitones_ = 18;
+        LOG_1("morph::XYZPlaneOverlay::init - property semitones not defined, using default 18");
     }
 
     if (preferences.exists("baseNote")) {
         baseNote_ = preferences.getDouble("baseNote");
     } else {
         baseNote_ = 32;
-        LOG_1("morph::OverlayFunction::init - property baseNote not defined, using default 32");
+        LOG_1("morph::XYZPlaneOverlay::init - property baseNote not defined, using default 32");
     }
     return true;
 }
