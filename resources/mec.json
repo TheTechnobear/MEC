@@ -12,19 +12,23 @@
         "morph" : {
             "panels" : {
                 "panel0" : {
-                    "serial" : "SM01164910358",
+                    "_serial" : "SM01164910342",
+                    "orderBySerial" : 0,
                     "_overlayId" : 0
                 },
                 "panel1" : {
-                    "serial" : "SM01164910353",
+                    "_serial" : "SM01164910353",
+                    "orderBySerial" : 1,
                     "_overlayId" : 0
                 },
                 "panel2" : {
-                    "serial" : "SM01164910482",
+                    "_serial" : "SM01164910358",
+                    "orderBySerial" : 2,
                     "_overlayId" : 0
                 },
                 "panel3" : {
-                    "serial" : "SM01164910342",
+                    "serial" : "SM01164910482",
+                    "orderBySerial" : 3,
                     "_overlayId" : 0
                 }
             },

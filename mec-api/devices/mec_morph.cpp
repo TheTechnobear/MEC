@@ -85,6 +85,27 @@ private:
     std::unordered_set<std::shared_ptr<Panel>> panels_;
     std::unordered_set<std::unique_ptr<Instrument>> instruments_;
 
+    void sortSerials(const SenselDeviceList& device_list, std::set<std::string>& sortedSerials) {
+        for(int i = 0; i < device_list.num_devices; ++i) {
+            std::string serial = reinterpret_cast<const char*>(device_list.devices[i].serial_num);
+            sortedSerials.insert(serial);
+        }
+    }
+
+    // get index of serial in sorted list of serials
+    int getIndexOfSerial(const unsigned char* serial, const std::set<std::string>& sortedSerials) {
+        const std::string serial_string = reinterpret_cast<const char*>(serial);
+        auto it = std::find(sortedSerials.begin(), sortedSerials.end(), serial_string);
+        if (it == sortedSerials.end())
+        {
+            return -2;
+        } else
+        {
+            auto index = std::distance(sortedSerials.begin(), it);
+            return index;
+        }
+    }
+
     int initPanels(Preferences& preferences) {
         Preferences panelsPrefs(preferences.getSubTree("panels"));
         if (!panelsPrefs.valid()) {
@@ -103,6 +124,9 @@ private:
             return 0;
         }
 
+        std::set<std::string> sortedSerials;
+        sortSerials(device_list, sortedSerials);
+
         int numPanels = 0;
         for (int i = 0; i < device_list.num_devices; ++i) {
             bool deviceFound = false;
@@ -115,7 +139,9 @@ private:
                 for (auto panelNameIter = remainingPanelNames.begin(); panelNameIter != remainingPanelNames.end() && !deviceFound;) {
                     Preferences panelPrefs(panelsPrefs.getSubTree(*panelNameIter));
                     const std::string &serial = panelPrefs.getString("serial", "NO_SERIAL");
-                    if (matchingPass > 1 || std::strcmp(serial.c_str(), (char *) device_list.devices[i].serial_num) == 0) {
+                    const int &order = panelPrefs.getInt("orderBySerial", -1);
+                    if (matchingPass > 1 || std::strcmp(serial.c_str(), (char *) device_list.devices[i].serial_num) == 0
+                        || order == getIndexOfSerial(device_list.devices[i].serial_num, sortedSerials)) {
                         const std::string &overlayId = panelPrefs.getString("overlayId", "NO_OVERLAY_ID");
                         //if(matchingPass > 0 || std::strcmp(overlayId.c_str(), (char*) device_list.devices[i].overlay_id) == 0) {} -- overlay id not retrievable yet via public API, always match for the moment
                         {
