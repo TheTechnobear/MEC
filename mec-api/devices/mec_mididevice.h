@@ -1,4 +1,4 @@
-#ifndef MecDeviceMidi_H 
+#ifndef MecDeviceMidi_H
 #define MecDeviceMidi_H
 
 #include "../mec_api.h"
@@ -24,28 +24,50 @@ public:
 
     virtual bool midiCallback(double deltatime, std::vector< unsigned char > *message);
 
-private:
+protected:
+    virtual RtMidiIn::RtMidiCallback getMidiCallback();
+
+    struct MidiMsg {
+        MidiMsg() { data[0] = 0; size = 0;}
+        MidiMsg(char status) { data[0] = status; size = 1;}
+        MidiMsg(char status, char d1) : MidiMsg(status) {data[1] = d1; size = 2;}
+        MidiMsg(char status, char d1, char d2) : MidiMsg(status, d1) {data[2] = d2; size = 3;}
+
+        char        data[3];
+        unsigned    size;
+    };
+
+    bool sendNoteOn(unsigned ch, unsigned note, unsigned vel) {        return send(MidiMsg(int(0x90 + ch), note, vel));}
+    bool sendNoteOff(unsigned ch, unsigned note, unsigned vel) {        return send(MidiMsg (int(0x80 + ch), note, vel));    }
+    bool sendCC(unsigned ch, unsigned cc, unsigned v) {      return send(MidiMsg(0xB0 + ch, cc, v)); }
+
+    bool isOutputOpen() { return (midiOutDevice_ && (virtualOpen_ || midiOutDevice_->isPortOpen())); }
+    bool send(const MidiMsg& msg);
 
     bool active_;
 
-	ICallback& callback_;
-    std::unique_ptr<RtMidiIn> midiDevice_; 
+    ICallback& callback_;
+    std::unique_ptr<RtMidiIn> midiInDevice_;
+    std::unique_ptr<RtMidiOut> midiOutDevice_;
+    bool virtualOpen_;
 
     MsgQueue queue_;
 
     struct VoiceData {
-            float startNote_;
-            float note_;
-            float x_;
-            float y_;
-            float z_;
-            bool  active_;
+        float startNote_;
+        float note_;
+        float x_;
+        float y_;
+        float z_;
+        bool  active_;
     };
     VoiceData   touches_[16];
 
     float       pitchbendRange_;
     bool        mpeMode_;
 };
+
+    
 
 }
 

@@ -73,3 +73,6 @@
 ## alpha
 - windows/threshold/warmup for strip(s)/breath
 
+## push2 
+- refactor to allow for different control/navigation modes
+

@@ -21,6 +21,10 @@ void MidiDeviceInCallback( double deltatime, std::vector< unsigned char > *messa
     MidiDevice* self = static_cast<MidiDevice*>(userData);
     self->midiCallback(deltatime, message);
 }
+RtMidiIn::RtMidiCallback MidiDevice::getMidiCallback() {
+
+    return MidiDeviceInCallback;
+}
 
 
 bool MidiDevice::init(void* arg) {
@@ -31,39 +35,101 @@ bool MidiDevice::init(void* arg) {
     }
     active_ = false;
 
-    midiDevice_.reset(new RtMidiIn());
-
-    std::string portname = prefs.getString("device");
-    mpeMode_ = prefs.getBool("mpe", true);
-    pitchbendRange_ = (float) prefs.getDouble("pitchbend range", 48.0);
-
     bool found = false;
-    for (int i = 0; i < midiDevice_->getPortCount() && !found; i++) {
-        if (portname.compare(midiDevice_->getPortName(i)) == 0) {
-            try {
-                midiDevice_->openPort(i);
-                found = true;
-                LOG_1("Midi input opened :" << portname);
-            } catch (RtMidiError  &error) {
-                LOG_0("Midi input open error:" << error.what());
-                return false;
+
+    std::string input_device = prefs.getString("input device");
+    if(!input_device.empty()) {
+
+        try {
+            midiInDevice_.reset(new RtMidiIn());
+        } catch (RtMidiError  &error) {
+            midiInDevice_.reset();
+            LOG_0("MidiDevice RtMidiIn ctor error:" << error.what());
+            return false;
+        }
+
+        mpeMode_ = prefs.getBool("mpe", true);
+        pitchbendRange_ = (float) prefs.getDouble("pitchbend range", 48.0);
+
+        for (int i = 0; i < midiInDevice_->getPortCount() && !found; i++) {
+            if (input_device.compare(midiInDevice_->getPortName(i)) == 0) {
+                try {
+                    midiInDevice_->openPort(i);
+                    found = true;
+                    LOG_1("Midi input opened :" << input_device);
+                } catch (RtMidiError  &error) {
+                    LOG_0("Midi input open error:" << error.what());
+                    midiInDevice_.reset();
+                    return false;
+                }
             }
         }
-    }
-    if (!found) {
-        LOG_0("input port not found : [" << portname << "]");
-        LOG_0("available ports:");
-        for (int i = 0; i < midiDevice_->getPortCount(); i++) {
-            LOG_0("[" << midiDevice_->getPortName(i) << "]");
+        if (!found) {
+            LOG_0("Input device not found : [" << input_device << "]");
+            LOG_0("available devices:");
+            for (int i = 0; i < midiInDevice_->getPortCount(); i++) {
+                LOG_0("[" << midiInDevice_->getPortName(i) << "]");
+            }
+            midiInDevice_.reset();
+            return false;
         }
-        return false;
-    }
 
 
-    midiDevice_->ignoreTypes( true, true, true );
-    midiDevice_->setCallback( MidiDeviceInCallback, this );
+        midiInDevice_->ignoreTypes( true, true, true );
+        midiInDevice_->setCallback( getMidiCallback(), this );
+    } //midi input
 
-    active_ = true;
+    std::string output_device = prefs.getString("output device");
+    if (!output_device.empty()) {
+        bool virt =  prefs.getBool("virtual output", false);
+        try {
+            midiOutDevice_.reset(new RtMidiOut( RtMidi::Api::UNSPECIFIED, "MEC MIDI"));
+        } catch (RtMidiError  &error) {
+            midiOutDevice_.reset();
+            LOG_0("MidiDevice RtMidiOut ctor error:" << error.what());
+            return false;
+        }
+        found = false;
+        if (virt) {
+            try {
+                midiOutDevice_->openVirtualPort(output_device);
+                LOG_0( "Midi virtual output created :" << output_device );
+                virtualOpen_ = true;
+                found = true;
+            } catch (RtMidiError  &error) {
+                LOG_0("Midi virtual output create error:" << error.what());
+                virtualOpen_ = false;
+                midiOutDevice_.reset();
+                return false;
+            }
+        } else {
+            for (int i = 0; i < midiOutDevice_->getPortCount() && !found ; i++) {
+                if (output_device.compare(midiOutDevice_->getPortName(i)) == 0) {
+                    try {
+                        midiOutDevice_->openPort(i);
+                        LOG_0( "Midi output opened :" << output_device );
+                        found = true;
+                    } catch (RtMidiError  &error) {
+                        LOG_0("Midi output create error:" << error.what());
+                        midiOutDevice_.reset();
+                        return false;
+                    }
+                }
+            }
+
+            if (!found) {
+                LOG_0("Output device not found : [" << output_device << "]");
+                LOG_0("available devices : ");
+                for (int i = 0; i < midiOutDevice_->getPortCount(); i++) {
+                    LOG_0("[" << midiOutDevice_->getPortName(i) << "]");
+                }
+                midiOutDevice_.reset();
+            }
+        }
+    } // midi output
+
+
+    active_ = midiInDevice_ || midiOutDevice_;
     LOG_0("MidiDevice::init - complete");
     return active_;
 }
@@ -74,8 +140,8 @@ bool MidiDevice::process() {
 
 void MidiDevice::deinit() {
     LOG_0("MidiDevice::deinit");
-    if (midiDevice_) midiDevice_->cancelCallback();
-    midiDevice_.reset();
+    if (midiInDevice_) midiInDevice_->cancelCallback();
+    midiInDevice_.reset();
     active_ = false;
 }
 
@@ -272,7 +338,27 @@ bool MidiDevice::midiCallback(double deltatime, std::vector< unsigned char > *me
     return true;
 }
 
+bool MidiDevice::send(const MidiMsg& m) {
+    if (midiOutDevice_ == nullptr || ! isOutputOpen()) return false;
+    std::vector<unsigned char> msg;
+
+    for (int i = 0; i < m.size; i++) {
+        msg.push_back(m.data[i]);
+    }
+
+    try {
+        midiOutDevice_->sendMessage( & msg );
+    } catch (RtMidiError  &error) {
+        LOG_0("MidiDevice output write error:" << error.what());
+        return false;
+    }
+    return true;
 }
+
+
+
+
+} //namespace
 
 
 

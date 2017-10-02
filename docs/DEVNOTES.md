@@ -29,9 +29,10 @@ two implementations:
 currently we use the soundplane model implementation with a new 
 
 *Push 2*
-only test code for now, showing display, and passing thru midi
-idea is to support a push1 compatibity mode, and also general controller mode.
-want to be able to display parameters etc on screen and also use pads for playing/sequencing
+Initial integration with new parameters system (oKontrol), also some navigation.
+this is going to need refactoring soon, as full navigation needs the push 2 to have moves,
+and the OLED/Pad colours all need to reflect the mode
+this currently inherit from mididevice
 
 *MIDI*
 supports MPE input, and also 'vanila midi' 
@@ -53,6 +54,8 @@ primary target, built on rtmidi or JUCE for VST/AU
 *OSC*
 now in t3d format
 
+** new ** 
+Ive justed added ouptut to mec_mididevice, this was primarily done for Push2, where it needs to be able to output midi to itself to update pad colours etc.... the question is, is this a more general use? or is this just an implementation detail like oled, or leds on an eigenharp?
 
 ## Mec API 
 provides interface to underlying input devices, with a common callback interface. the app using the mec api registers callbacks and then calls process().

@@ -20,7 +20,7 @@
 
 namespace mec {
 
-const unsigned P2_NOTE_PAD_START = 32;
+const unsigned P2_NOTE_PAD_START = 36;
 const unsigned P2_NOTE_PAD_END = P2_NOTE_PAD_START + 63;
 
 const unsigned P2_ENCODER_CC_TEMPO = 14;
@@ -35,10 +35,47 @@ const unsigned P2_DEV_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7 ;
 const unsigned P2_TRACK_SELECT_CC_START = 20;
 const unsigned P2_TRACK_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7 ;
 
+static const struct Scales {
+    char name[20];
+    int16_t value;
+} scales [] = {
+    {"Chromatic",        0b111111111111 },
+    {"Major",            0b101011010101 },
+    {"Harmonic Minor",   0b101101011001 },
+    {"Melodic Minor",    0b101101010101 },
+    {"Whole",            0b101010101010 },
+    {"Octatonic",        0b101101101101 }
+};
+
+const int scales_len = sizeof(scales) / sizeof(scales[0]);
+
+static const char tonics[12][3] = {
+    "C ",
+    "C#",
+    "D",
+    "D#",
+    "E ",
+    "F ",
+    "F#",
+    "G",
+    "G#",
+    "A ",
+    "A#",
+    "B"
+};
+static const char scaleModes [2][15] = {
+    "Chromatic",
+    "In Key"
+};
+
+
+
+
 
 class Push2_OLED : public oKontrol::ParameterCallback {
 public:
-    Push2_OLED(const std::shared_ptr<Push2API::Push2>& api) : push2Api_(api), currentPage_(0) {
+    Push2_OLED(Push2& parent, const std::shared_ptr<Push2API::Push2>& api) :
+        parent_(parent), push2Api_(api), currentPage_(0) {
         param_model_ = oKontrol::ParameterModel::model();
         ;
     }
@@ -52,14 +89,34 @@ public:
 private:
     void displayPage(const std::string& id);
     void drawParam(unsigned pos, const oKontrol::Parameter& param);
-
+    Push2& parent_;
     std::shared_ptr<Push2API::Push2> push2Api_;
     std::shared_ptr<oKontrol::ParameterModel> param_model_;
     unsigned currentPage_;
 };
 
+int NumNotesInScale(int16_t scale) {
+    int s = scale;
+    int n = 0;
+    for (int i = 0; i < 12; i++) {
+        if ( s & 0x01) {
+            n++;
+        }
+        s = s >> 1;
+    }
+    return n;
+}
+
 Push2::Push2(ICallback& cb) :
-    active_(false), callback_(cb) {
+    MidiDevice(cb),
+    scaleIdx_(1),
+    octave_(2),
+    chromatic_(true),
+    scale_(scales[scaleIdx_].value),
+    numNotesInScale_(0),
+    tonic_(0),
+    rowOffset_(5) {
+    numNotesInScale_ = NumNotesInScale(scale_);
     PaUtil_InitializeRingBuffer(& midiQueue_, sizeof(MidiMsg), MAX_N_MIDI_MSGS, msgData_);
 }
 
@@ -70,74 +127,48 @@ Push2::~Push2() {
 void Push2InCallback( double deltatime, std::vector< unsigned char > *message, void *userData )
 {
     Push2* self = static_cast<Push2*>(userData);
-    self->midiInCallback(deltatime, message);
+    self->midiCallback(deltatime, message);
+}
+
+RtMidiIn::RtMidiCallback Push2::getMidiCallback() {
+
+    return Push2InCallback;
 }
 
 
 bool Push2::init(void* arg) {
-    Preferences prefs(arg);
+    if (MidiDevice::init(arg)) {
 
-    if (active_) {
-        deinit();
+        Preferences prefs(arg);
+
+        // push2 api setup
+        push2Api_.reset(new Push2API::Push2());
+        push2Api_->init();
+
+        // Kontrol setup
+        param_model_ = oKontrol::ParameterModel::model();
+        oled_ = std::make_shared<Push2_OLED>(*this, push2Api_);
+        param_model_->addCallback("push2.oled", oled_);
+
+        push2Api_->clearDisplay();
+
+        // // 'test for Push 1 compatibility mode'
+        // int row = 2;
+        // push2Api_->drawText(row, 10, "...01234567891234567......");
+        // push2Api_->clearRow(row);
+        // push2Api_->p1_drawCell4(row, 0, "01234567891234567");
+        // push2Api_->p1_drawCell4(row, 1, "01234567891234567");
+        // push2Api_->p1_drawCell4(row, 2, "01234567891234567");
+        // push2Api_->p1_drawCell4(row, 3, "01234567891234567");
+
+
+        active_ = true;
+        updatePadColours();
+        LOG_0("Push2::init - complete");
+
+        return active_;
     }
-    active_ = false;
-
-    // midi setup
-    midiDevice_.reset(new RtMidiIn());
-
-    std::string portname = prefs.getString("device");
-    pitchbendRange_ = (float) prefs.getDouble("pitchbend range", 48.0);
-
-    bool found = false;
-    for (int i = 0; i < midiDevice_->getPortCount() && !found; i++) {
-        if (portname.compare(midiDevice_->getPortName(i)) == 0) {
-            try {
-                midiDevice_->openPort(i);
-                found = true;
-                LOG_1("Midi input opened :" << portname);
-            } catch (RtMidiError  &error) {
-                LOG_0("Midi input open error:" << error.what());
-                return false;
-            }
-        }
-    }
-    if (!found) {
-        LOG_0("input port not found : [" << portname << "]");
-        LOG_0("available ports:");
-        for (int i = 0; i < midiDevice_->getPortCount(); i++) {
-            LOG_0("[" << midiDevice_->getPortName(i) << "]");
-        }
-        return false;
-    }
-
-    midiDevice_->ignoreTypes( true, true, true );
-    midiDevice_->setCallback( Push2InCallback, this );
-
-
-    // push2 api setup
-    push2Api_.reset(new Push2API::Push2());
-    push2Api_->init();
-
-    // Kontrol setup
-    param_model_ = oKontrol::ParameterModel::model();
-    oled_ = std::make_shared<Push2_OLED>(push2Api_);
-    param_model_->addCallback("push2.oled", oled_);
-
-    push2Api_->clearDisplay();
-
-    // // 'test for Push 1 compatibility mode'
-    // int row = 2;
-    // push2Api_->drawText(row, 10, "...01234567891234567......");
-    // push2Api_->clearRow(row);
-    // push2Api_->p1_drawCell4(row, 0, "01234567891234567");
-    // push2Api_->p1_drawCell4(row, 1, "01234567891234567");
-    // push2Api_->p1_drawCell4(row, 2, "01234567891234567");
-    // push2Api_->p1_drawCell4(row, 3, "01234567891234567");
-
-
-    active_ = true;
-    LOG_0("Push2::init - complete");
-    return active_;
+    return false;
 }
 
 bool Push2::process() {
@@ -150,7 +181,7 @@ bool Push2::process() {
         processMidi(msg);
     }
 
-    return touchQueue_.process(callback_);
+    return MidiDevice::process();
 }
 
 void Push2::deinit() {
@@ -158,72 +189,68 @@ void Push2::deinit() {
 
     if (push2Api_)push2Api_->deinit();
     push2Api_.reset();
-
-    if (midiDevice_) midiDevice_->cancelCallback();
-    midiDevice_.reset();
-
-    active_ = false;
+    MidiDevice::deinit();
 }
 
-bool Push2::isActive() {
-    return active_;
-}
-
-bool Push2::midiInCallback(double deltatime, std::vector< unsigned char > *message)  {
+bool Push2::midiCallback(double deltatime, std::vector< unsigned char > *message)  {
     unsigned int n = message->size();
     if (n > 3)  LOG_0("midiCallback unexpect midi size" << n);
 
     MidiMsg m;
-    m.status_ = (int)message->at(0);
-    if (n > 1) m.data1_ = (int)message->at(1);
-    if (n > 2) m.data2_ = (int)message->at(2);
 
-    // LOG_0("midi: s " << std::hex << m.status_ << " "<< m.data1_ << " " << m.data2_);
+    m.data[0] = (int)message->at(0);
+    if (n > 1) m.data[1] = (int)message->at(1);
+    if (n > 2) m.data[2] = (int)message->at(2);
+
+    // LOG_0("midi: s " << std::hex << m.status_ << " "<< m.data[1] << " " << m.data[2]);
     PaUtil_WriteRingBuffer(&midiQueue_, (void*) &m, 1);
     return true;
 }
 
 bool Push2::processMidi(const MidiMsg& midimsg)  {
-    int ch = midimsg.status_ & 0x0F;
-    int type = midimsg.status_ & 0xF0;
+    //TODO... this can be rationalise with mec_mididevice.cpp
+    //be careful : push2 we want to process midi message in main thread
+    //since we are going to be handling some of the messages for OLED etc
+    int ch = midimsg.data[0] & 0x0F;
+    int type = midimsg.data[0] & 0xF0;
     MecMsg msg;
     switch (type) {
     case 0x90: { // note on
-        if (midimsg.data1_ >= P2_NOTE_PAD_START && midimsg.data1_ <= P2_NOTE_PAD_END) {
+        if (midimsg.data[1] >= P2_NOTE_PAD_START && midimsg.data[1] <= P2_NOTE_PAD_END) {
             // TODO: use voice, or make single ch midi
-            if (midimsg.data2_ > 0)
+            if (midimsg.data[2] > 0)
                 msg.type_ = MecMsg::TOUCH_ON;
             else
                 msg.type_ = MecMsg::TOUCH_OFF;
 
             msg.data_.touch_.touchId_ = ch;
-            msg.data_.touch_.note_ = (float) midimsg.data1_;
+            msg.data_.touch_.note_ = (float) midimsg.data[1];
             msg.data_.touch_.x_ = 0;
             msg.data_.touch_.y_ = 0;
-            msg.data_.touch_.z_ = float(midimsg.data2_) / 127.0;
-            touchQueue_.addToQueue(msg);
+            msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0;
+            queue_.addToQueue(msg);
         } else {
-            if (midimsg.data2_ > 0) {
-                processPushNoteOn(midimsg.data1_, midimsg.data2_);
+            if (midimsg.data[2] > 0) {
+                processPushNoteOn(midimsg.data[1], midimsg.data[2]);
             } else {
-                processPushNoteOff(midimsg.data1_, 100);
+                processPushNoteOff(midimsg.data[1], 100);
             }
         }
         break;
     }
 
     case 0x80: { // note off
-        if (midimsg.data1_ >= P2_NOTE_PAD_START && midimsg.data1_ <= P2_NOTE_PAD_END) {
+        if (midimsg.data[1] >= P2_NOTE_PAD_START && midimsg.data[1] <= P2_NOTE_PAD_END) {
             // TODO: use voice, or make single ch midi
             msg.type_ = MecMsg::TOUCH_OFF;
             msg.data_.touch_.touchId_ = ch;
-            msg.data_.touch_.note_ = (float) midimsg.data1_;
+            msg.data_.touch_.note_ = (float) midimsg.data[1];
             msg.data_.touch_.x_ = 0;
             msg.data_.touch_.y_ = 0;
-            msg.data_.touch_.z_ = float(midimsg.data2_) / 127.0;
-            touchQueue_.addToQueue(msg);
+            msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0;
+            queue_.addToQueue(msg);
         } else {
-            processPushNoteOff(midimsg.data1_, midimsg.data2_);
+            processPushNoteOff(midimsg.data[1], midimsg.data[2]);
         }
         break;
     }
@@ -231,31 +258,31 @@ bool Push2::processMidi(const MidiMsg& midimsg)  {
         // TODO: use voice, or make single ch midi
         msg.type_ = MecMsg::TOUCH_CONTINUE;
         msg.data_.touch_.touchId_ = ch;
-        msg.data_.touch_.note_ = (float) midimsg.data1_;
+        msg.data_.touch_.note_ = (float) midimsg.data[1];
         msg.data_.touch_.x_ = 0;
         msg.data_.touch_.y_ = 0;
-        msg.data_.touch_.z_ = float(midimsg.data2_) / 127.0;
-        touchQueue_.addToQueue(msg);
+        msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0;
+        queue_.addToQueue(msg);
     }
     case 0xB0: { // CC
-        processPushCC(midimsg.data1_, midimsg.data2_);
+        processPushCC(midimsg.data[1], midimsg.data[2]);
         break;
     }
     case 0xD0: { // channel pressure
-        // float v = float(midimsg.data1_) / 127.0f;
+        // float v = float(midimsg.data[1]) / 127.0f;
         // msg.type_ = MecMsg::CONTROL;
         // msg.data_.control_.controlId_ = type;
         // msg.data_.control_.value_ = v;
-        // touchQueue_.addToQueue(msg);
+        // queue_.addToQueue(msg);
         break;
     }
     case 0xE0: { // pitchbend
-        // float pb = (float) ((midimsg.data2_ << 7) + midimsg.data1_);
+        // float pb = (float) ((midimsg.data[2] << 7) + midimsg.data[1]);
         // float v = (pb / 8192.0f) - 1.0f;  // -1.0 to 1.0
         // msg.type_ = MecMsg::CONTROL;
         // msg.data_.control_.controlId_ = type;
         // msg.data_.control_.value_ = v;
-        // touchQueue_.addToQueue(msg);
+        // queue_.addToQueue(msg);
         break;
     }
     default: {
@@ -316,6 +343,32 @@ void Push2::processPushCC(unsigned cc, unsigned v) {
     }
 }
 
+#define PAD_NOTE_ON_CLR 127
+#define PAD_NOTE_OFF_CLR 0
+#define PAD_NOTE_ROOT_CLR 41
+#define PAD_NOTE_IN_KEY_CLR 3
+
+
+void Push2::updatePadColours() {
+    for (int r = 0; r < 8; r++) {
+        for (int c = 0; c < 8; c++) {
+            int8_t clr = determinePadScaleColour(r, c);
+            sendNoteOn(0, P2_NOTE_PAD_START + (r * 8) + c, clr);
+        }
+    }
+}
+
+int8_t Push2::determinePadScaleColour(int8_t r, int8_t c) {
+    int8_t note_s = (r * rowOffset_) + c;
+    if (chromatic_) {
+        int i = note_s % 12;
+        int v = scale_  & ( 1 << (11 - i) );
+
+        return i == 0 ? PAD_NOTE_ROOT_CLR :  (v > 0  ? PAD_NOTE_IN_KEY_CLR : PAD_NOTE_OFF_CLR);
+    } else {
+        return (note_s % numNotesInScale_) == 0 ? PAD_NOTE_ROOT_CLR : PAD_NOTE_IN_KEY_CLR;
+    }
+}
 
 
 // Push2_OLED
@@ -344,7 +397,7 @@ int16_t page_clrs[8] = {
     RGB565(0, 0xFF, 0),
     RGB565(0x7F, 0x7F, 0xFF),
     RGB565(0xFF, 0x7F, 0xFF)
- };
+};
 
 void Push2_OLED::drawParam(unsigned pos, const oKontrol::Parameter& param) {
     // #define MONO_CLR RGB565(255,60,0)
@@ -358,7 +411,9 @@ void Push2_OLED::drawParam(unsigned pos, const oKontrol::Parameter& param) {
 void Push2_OLED::displayPage(const std::string& pageId) {
     int16_t clr = page_clrs[currentPage_];
     push2Api_->clearDisplay();
-    push2Api_->drawCell8(0, 0, "Kontrol", VSCALE, HSCALE, RGB565(0x7F,0x7F,0x7F));
+    for (int i = P2_TRACK_SELECT_CC_START; i < P2_TRACK_SELECT_CC_END; i++) { parent_.sendCC(0, i, 0);}
+
+    push2Api_->drawCell8(0, 0, "Kontrol", VSCALE, HSCALE, RGB565(0x7F, 0x7F, 0x7F));
 
     for (int i = 0; i < 8 && i < param_model_->getPageCount(); i++) {
         auto pageId = param_model_->getPageId(i);
@@ -368,7 +423,7 @@ void Push2_OLED::displayPage(const std::string& pageId) {
         if (page == nullptr) continue;
 
         push2Api_->drawCell8(5, i, centreText(page->displayName()).c_str(), VSCALE, HSCALE, page_clrs[i]);
-
+        parent_.sendCC(0, P2_TRACK_SELECT_CC_START + i, i == currentPage_ ? 122 : 124);
         if (i == currentPage_) {
             for (int j = 0; j < 8; j++) {
                 auto id = param_model_->getParamId(pageId, j);

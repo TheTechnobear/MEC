@@ -5,6 +5,7 @@
 #include "../mec_device.h"
 #include "../mec_msg_queue.h"
 
+#include "mec_mididevice.h"
 
 #include "ParameterModel.h"
 
@@ -20,25 +21,22 @@ namespace mec {
 
 class Push2_OLED;
 
-class Push2 : public Device {
+class Push2 : public MidiDevice {
 
 public:
     Push2(ICallback&);
     virtual ~Push2();
+    //mididevice : device
     virtual bool init(void*);
     virtual bool process();
     virtual void deinit();
-    virtual bool isActive();
+    virtual RtMidiIn::RtMidiCallback getMidiCallback(); //override
 
-    virtual bool midiInCallback(double deltatime, std::vector< unsigned char > *message);
+    virtual bool midiCallback(double deltatime, std::vector< unsigned char > *message);
 
 private:
-    struct MidiMsg{
-        MidiMsg() : status_(0),data1_(0),data2_(0) {;}
-        unsigned status_;
-        unsigned data1_;
-        unsigned data2_;
-    };
+    friend class Push2_OLED;
+
     static const unsigned int MAX_N_MIDI_MSGS = 16;
 
     bool processMidi(const MidiMsg&);
@@ -46,8 +44,6 @@ private:
     void processPushNoteOff(unsigned n, unsigned v);
     void processPushCC(unsigned cc, unsigned v);
 
-    bool active_;
-	ICallback& callback_;
     // push display
     std::shared_ptr<Push2API::Push2> push2Api_;
     std::shared_ptr<Push2_OLED> oled_;
@@ -55,16 +51,26 @@ private:
     // kontrol interface
     std::shared_ptr<oKontrol::ParameterModel>       param_model_;
 
-    // midi
-    std::unique_ptr<RtMidiIn>        midiDevice_; 
 
-    MsgQueue    touchQueue_; //touches
     float       pitchbendRange_;
     PaUtilRingBuffer midiQueue_; // draw midi from P2
     char msgData_[sizeof(MidiMsg) * MAX_N_MIDI_MSGS];
 
     //navigation
     unsigned currentPage_ = 0;
+
+    // scales colour
+    void updatePadColours();
+    int8_t   determinePadScaleColour(int8_t r, int8_t c);
+    uint8_t  octave_;    // current octave
+    uint8_t  scaleIdx_;
+    uint16_t scale_;     // current scale
+    uint8_t  numNotesInScale_;   // number of notes in current scale
+    uint8_t  tonic_;     // current tonic
+    uint8_t  rowOffset_; // current tonic
+    bool     chromatic_; // are we in chromatic mode or not
+
+
 };
 
 }
