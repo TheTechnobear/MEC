@@ -13,15 +13,15 @@ bool GridOverlay::init(const Preferences &preferences) {
     if (preferences.exists("rows")) {
         rows_ = preferences.getInt("rows");
     } else {
-        rows_ = 18;
-        LOG_1("morph::GridOverlay::init - property rows not defined, using default 12");
+        rows_ = 10;
+        LOG_1("morph::GridOverlay::init - property rows not defined, using default 10");
     }
 
     if (preferences.exists("columns")) {
         columns_ = preferences.getInt("columns");
     } else {
-        columns_ = 10;
-        LOG_1("morph::GridOverlay::init - property columns not defined, using default 10");
+        columns_ = 18;
+        LOG_1("morph::GridOverlay::init - property columns not defined, using default 18");
     }
 
     if (preferences.exists("baseNote")) {
