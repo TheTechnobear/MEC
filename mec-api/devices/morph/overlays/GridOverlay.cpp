@@ -83,7 +83,7 @@ float GridOverlay::normalizeYPos(float yPos) {
     float invertedYPos = MEC_MORPH_PANEL_HEIGHT - yPos;
     int rowNumber = floor(invertedYPos / MEC_MORPH_PANEL_HEIGHT * rows_);
     float cellHeight = MEC_MORPH_PANEL_HEIGHT / rows_;
-    float yOffsetInCell = invertedYPos - rowNumber * cellHeight;
+    float yOffsetInCell = (invertedYPos - rowNumber * cellHeight) / cellHeight;
     return yOffsetInCell;
 }
 
