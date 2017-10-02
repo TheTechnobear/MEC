@@ -55,7 +55,7 @@ void OrganelleOLED::changed(oKontrol::ParameterSource src, const oKontrol::Param
     if (id.empty()) return;
     if ( id == param.id()) {
       if (src != oKontrol::PS_LOCAL) {
-        x_->locked_[i] = x_->knobValue_[i] != param.current();
+        x_->knobs_->locked_[i] = x_->knobs_->value_[i] != param.current();
       }
 
       const char* msg = oledLine1;

@@ -74,6 +74,8 @@ void *oKontrolOrganelle_tilde_new(t_floatarg osc_in)
 {
   t_oKontrolOrganelle *x = (t_oKontrolOrganelle *) pd_new(oKontrolOrganelle_tilde_class);
 
+  x->knobs_ = std::make_shared<Knobs>();
+
   x->osc_receiver_ = nullptr;
 
   x->pollCount_ = 0;
@@ -180,7 +182,7 @@ void    oKontrolOrganelle_tilde_page(t_oKontrolOrganelle *x, t_floatarg f) {
   page = std::min(page, x->param_model_->getPageCount() - 1);
   x->currentPage_ = page;
   for (int i = 0; i < 4; i++) {
-    x->locked_[i] = true;
+    x->knobs_->locked_[i] = true;
   }
 }
 
@@ -202,19 +204,19 @@ static void changeKnob(t_oKontrolOrganelle *x, t_floatarg f, unsigned knob) {
   if (param == nullptr) return;
   if (!id.empty())  {
     oKontrol::ParamValue calc = param->calcFloat(f / MAX_KNOB_VALUE);
-    if (x->locked_[knob]) {
+    if (x->knobs_->locked_[knob]) {
       //if knob is locked, determined if we can unlock it
       if (calc == param->current()) {
-        x->locked_[knob] = false;
+        x->knobs_->locked_[knob] = false;
       }
-      else if (x->knobValue_[knob] > param->current()) {
-        x->locked_[knob] = calc > param->current();
+      else if (x->knobs_->value_[knob] > param->current()) {
+        x->knobs_->locked_[knob] = calc > param->current();
       } else {
-        x->locked_[knob] = calc < param->current();
+        x->knobs_->locked_[knob] = calc < param->current();
       }
     }
-    if (!x->locked_[knob]) {
-      x->knobValue_[knob] = calc;
+    if (!x->knobs_->locked_[knob]) {
+      x->knobs_->value_[knob] = calc;
       x->param_model_->changeParam(oKontrol::PS_LOCAL, id, calc);
     }
   }

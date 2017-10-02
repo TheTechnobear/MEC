@@ -21,6 +21,7 @@ public:
         return *this;
     }
 
+    ParamValue() { type_ = T_Float; floatValue_ = 0.0f; strValue_ = "";}
     ParamValue(const char* value) { type_ = T_String; strValue_ = value; floatValue_ = 0.0;}
     ParamValue(const std::string& value) { type_ = T_String; strValue_ = value; floatValue_ = 0.0; }
     ParamValue(float value) { type_ = T_Float; floatValue_ = value; strValue_ = "";}

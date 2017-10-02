@@ -11,12 +11,15 @@
 #include <unordered_map>
 
 
+struct Knobs {
+  bool    locked_[4];
+  oKontrol::ParamValue   value_[4];
+};
+
 typedef struct _oKontrolOrganelle {
   t_object  x_obj;
 
-  bool    locked_[4];
-  oKontrol::ParamValue   knobValue_[4];
-
+  std::shared_ptr<Knobs> knobs_;
   std::shared_ptr<oKontrol::ParameterModel> param_model_;
 
   unsigned currentPage_;
