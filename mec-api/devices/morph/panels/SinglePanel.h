@@ -19,11 +19,14 @@ public:
 
     virtual bool readTouches(Touches &touches);
 
+    virtual const PanelDimensions& getDimensions();
+
 private:
     SENSEL_HANDLE handle_;
     SenselFrameData *frameData_;
     SenselDeviceID deviceID_;
     std::map<int, std::shared_ptr<TouchWithDeltas>> activeTouches_;
+    PanelDimensions dimensions_;
 
     void updateDeltas(const std::shared_ptr <TouchWithDeltas> &touch,
                       std::shared_ptr <TouchWithDeltas> foundTouch) const;

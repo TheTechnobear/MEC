@@ -1,3 +1,5 @@
+#include <src/sensel_device.h>
+#include <src/sensel.h>
 #include "SinglePanel.h"
 #include "../../../mec_log.h"
 
@@ -15,6 +17,10 @@ bool SinglePanel::init() {
         LOG_0("morph::Panel::init - unable to open device at com port " << deviceID_.com_port);
         return false;
     }
+    SenselDevice *device = (SenselDevice*) handle_;
+    dimensions_.width = device->sensor_info.width;
+    dimensions_.height = device->sensor_info.height;
+    dimensions_.max_pressure = 2048; //TODO
     SenselFirmwareInfo firmwareInfo;
     SenselStatus getFirmwareStatus = senselGetFirmwareInfo(&handle_, &firmwareInfo);
     if (getFirmwareStatus != SENSEL_OK) {
@@ -83,6 +89,10 @@ SinglePanel::~SinglePanel() {
     LOG_2("morph::Panel::destructor - panel " << getSurfaceID() << " freed");
 }
 
+const PanelDimensions& SinglePanel::getDimensions() {
+    return dimensions_;
+}
+
 bool SinglePanel::readTouches(Touches &touches) {
     LOG_3("morph::SinglePanel::readTouches - reading touches for panel " << getSurfaceID());
     bool sensorReadState = senselReadSensor(handle_);
@@ -118,7 +128,7 @@ bool SinglePanel::readTouches(Touches &touches) {
             int touchid = frameData_->contacts[current_contact].id;
             std::shared_ptr <TouchWithDeltas> touch;
             LOG_2("---");
-            LOG_2("mec::SinglePanel::readTouches(o): (id:" << touchid << ",x: " << x << ",y:" << y
+            LOG_2("mec::SinglePanel::readTouches(o): (id:" << touchid << ",x: " << x << ",y:" << y << ",z:" << z
                                                            << ",dx:" << x_delta
                                                            << ",dy:" << y_delta
                                                            << ",dz:" << z_delta
@@ -174,6 +184,7 @@ bool SinglePanel::readTouches(Touches &touches) {
             }
             LOG_2("mec::SinglePanel::readTouches(m): (id:" << touchid << ",x: " << foundTouch->x_ << ",y:"
                                                            << foundTouch->y_
+                                                           << ",z:" << foundTouch->z_
                                                            << ",dx:" << foundTouch->delta_x_
                                                            << ",dy:" << foundTouch->delta_y_
                                                            << ",dz:" << foundTouch->delta_z_

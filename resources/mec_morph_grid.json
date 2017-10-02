@@ -42,7 +42,7 @@
                         "name" : "grid",
                         "params" : {
                             "rows" : 10,
-                            "columns" : 18,
+                            "columns" : 72,
                             "baseNote" : 32,
                             "semitoneOffsetPerRow" : 5
                         }

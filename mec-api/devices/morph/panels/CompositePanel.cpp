@@ -24,7 +24,24 @@ CompositePanel::CompositePanel(SurfaceID surfaceID, const std::vector <std::shar
 }
 
 bool CompositePanel::init() {
+    dimensions_.max_pressure = 0;
+    dimensions_.height = 0;
+    dimensions_.width = 0;
+    for(auto panelIter = containedPanels_.begin(); panelIter != containedPanels_.end(); ++ panelIter) {
+        const PanelDimensions& panelDimensions = (*panelIter)->getDimensions();
+        dimensions_.width += panelDimensions.width;
+        if(panelDimensions.height > dimensions_.height) {
+            dimensions_.height = panelDimensions.height;
+        }
+        if(panelDimensions.max_pressure > dimensions_.max_pressure) {
+            dimensions_.max_pressure = panelDimensions.max_pressure;
+        }
+    }
     return true;
+}
+
+const PanelDimensions& CompositePanel::getDimensions() {
+    return dimensions_;
 }
 
 bool CompositePanel::readTouches(Touches &touches) {

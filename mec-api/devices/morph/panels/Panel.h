@@ -4,6 +4,7 @@
 
 #include "../../../mec_api.h"
 #include "../touches/Touches.h"
+#include "PanelDimensions.h"
 
 namespace mec {
 namespace morph {
@@ -16,6 +17,7 @@ class Panel {
         }
         virtual bool init() = 0;
         virtual bool readTouches(Touches &touches) = 0;
+        virtual const PanelDimensions& getDimensions() = 0;
 
     private:
         SurfaceID surfaceID_;

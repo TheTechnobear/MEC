@@ -8,7 +8,10 @@ namespace morph {
 XYZPlaneOverlay::XYZPlaneOverlay(const std::string name, ISurfaceCallback &surfaceCallback, ICallback &callback)
         : OverlayFunction(name, surfaceCallback, callback) {}
 
-bool XYZPlaneOverlay::init(const Preferences &preferences) {
+bool XYZPlaneOverlay::init(const Preferences &preferences, const PanelDimensions &dimensions) {
+
+    dimensions_ = dimensions;
+
     if (preferences.exists("semitones")) {
         semitones_ = preferences.getDouble("semitones");
     } else {
@@ -51,19 +54,19 @@ bool XYZPlaneOverlay::interpretTouches(const Touches &touches) {
 }
 
 float XYZPlaneOverlay::xPosToNote(float xPos) {
-    return (xPos / MEC_MORPH_PANEL_WIDTH * 12 + baseNote_); //TODO: semitones: get panel width for composite panels
+    return (xPos / dimensions_.width * semitones_ + baseNote_);
 }
 
 float XYZPlaneOverlay::normalizeXPos(float xPos) {
-    return (xPos / MEC_MORPH_PANEL_WIDTH * 12);
+    return (xPos / dimensions_.width * semitones_);
 }
 
 float XYZPlaneOverlay::normalizeYPos(float yPos) {
-    return 1.0 - yPos / MEC_MORPH_PANEL_HEIGHT;
+    return 1.0 - yPos / dimensions_.height;
 }
 
 float XYZPlaneOverlay::normalizeZPos(float zPos) {
-    float normalizedPressure = zPos / MEC_MORPH_MAX_Z_PRESSURE;
+    float normalizedPressure = zPos / dimensions_.max_pressure;
     if (normalizedPressure < 0.01) {
         normalizedPressure = 0.01;
     }

@@ -9,7 +9,10 @@ namespace morph {
 GridOverlay::GridOverlay(const std::string &name, mec::ISurfaceCallback &surfaceCallback,
                                      mec::ICallback &callback) : OverlayFunction(name, surfaceCallback, callback) {}
 
-bool GridOverlay::init(const Preferences &preferences) {
+bool GridOverlay::init(const Preferences &preferences, const PanelDimensions &dimensions) {
+
+    dimensions_ = dimensions;
+
     if (preferences.exists("rows")) {
         rows_ = preferences.getInt("rows");
     } else {
@@ -67,29 +70,29 @@ bool GridOverlay::interpretTouches(const Touches &touches) {
 }
 
 float GridOverlay::xyPosToNote(float xPos, float yPos) {
-    float invertedYPos = MEC_MORPH_PANEL_HEIGHT - yPos;
-    int rowNumber = floor(invertedYPos / MEC_MORPH_PANEL_HEIGHT * rows_);
+    float invertedYPos = dimensions_.height - yPos;
+    int rowNumber = floor(invertedYPos / dimensions_.height * rows_);
     float yBasedNoteOffset = rowNumber * semitoneOffsetPerRow_;
-    return xPos / MEC_MORPH_PANEL_WIDTH * 18 //TODO: columns: get panel width for composite panels
+    return xPos / dimensions_.width * columns_
            + yBasedNoteOffset
            + baseNote_;
 }
 
 float GridOverlay::normalizeXPos(float xPos) {
-    return (xPos / MEC_MORPH_PANEL_WIDTH * 18); //TODO: columns
+    return (xPos / dimensions_.width * columns_);
 }
 
 float GridOverlay::normalizeYPos(float yPos) {
-    float invertedYPos = MEC_MORPH_PANEL_HEIGHT - yPos;
-    int rowNumber = floor(invertedYPos / MEC_MORPH_PANEL_HEIGHT * rows_);
-    float cellHeight = MEC_MORPH_PANEL_HEIGHT / rows_;
+    float invertedYPos = dimensions_.height - yPos;
+    int rowNumber = floor(invertedYPos / dimensions_.height * rows_);
+    float cellHeight = dimensions_.height / rows_;
     float yOffsetInCell = invertedYPos - rowNumber * cellHeight;
     float normalizedYOffset = yOffsetInCell / cellHeight;
     return normalizedYOffset;
 }
 
 float GridOverlay::normalizeZPos(float zPos) {
-    float normalizedPressure = zPos / MEC_MORPH_MAX_Z_PRESSURE;
+    float normalizedPressure = zPos / dimensions_.max_pressure;
     if (normalizedPressure < 0.01) {
         normalizedPressure = 0.01;
     }

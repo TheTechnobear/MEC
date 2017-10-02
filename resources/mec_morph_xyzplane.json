@@ -41,7 +41,7 @@
                     "overlay" : {
                         "name" : "xyzplane",
                         "params" : {
-                            "semitones" : 48,
+                            "semitones" : 72,
                             "baseNote" : 32
                         }
                     }

@@ -18,6 +18,8 @@ public:
 
     virtual bool readTouches(Touches &touches);
 
+    virtual const PanelDimensions& getDimensions();
+
 private:
     struct MappedTouch : public TouchWithDeltas {
         int numInterpolationSteps_;
@@ -42,6 +44,7 @@ private:
     std::vector <std::shared_ptr<Panel>> containedPanels_;
     std::map<SurfaceID, int> containedPanelsPositions_;
     static std::shared_ptr <MappedTouch> NO_MAPPED_TOUCH;
+    PanelDimensions dimensions_;
 
     void remapTouches(Touches &collectedTouches, Touches &remappedTouches);
 

@@ -41,6 +41,7 @@ set(MECAPI_SRC
     devices/morph/touches/TouchWithDeltas.h
     devices/morph/touches/Touches.cpp
     devices/morph/touches/Touches.h
+    devices/morph/panels/PanelDimensions.h
     devices/morph/panels/Panel.h
     devices/morph/panels/SinglePanel.cpp
     devices/morph/panels/SinglePanel.h
