@@ -1,4 +1,4 @@
-#N canvas 622 257 1547 1060 10;
+#N canvas 622 257 1859 1084 10;
 #X obj 63 384 r r_mix;
 #X msg 7 53 \; pd dsp 1;
 #X obj 14 8 loadbang;
@@ -14,13 +14,13 @@
 #X obj 1059 159 r knob1Raw;
 #X msg 1059 195 knob1Raw \$1;
 #X obj 1065 33 hsl 128 15 0 1024 0 0 knob1Raw empty knob1 -2 -8 0 10
--262144 -1 -1 8800 1;
+-262144 -1 -1 0 1;
 #X obj 1063 65 hsl 128 15 0 1024 0 0 knob3Raw empty knob3 -2 -8 0 10
--262144 -1 -1 2800 1;
+-262144 -1 -1 0 1;
 #X obj 1218 32 hsl 128 15 0 1024 0 0 knob2Raw empty knob2 -2 -8 0 10
--262144 -1 -1 12700 1;
+-262144 -1 -1 0 1;
 #X obj 1218 66 hsl 128 15 0 1024 0 0 knob4Raw empty knob4 -2 -8 0 10
--262144 -1 -1 8400 1;
+-262144 -1 -1 0 1;
 #X obj 1141 158 r knob2Raw;
 #X obj 1225 157 r knob3Raw;
 #X obj 1314 157 r knob4Raw;
@@ -54,7 +54,7 @@ c_type, f 8;
 #X obj 153 465 print r active;
 #X obj 62 463 print r cutoff;
 #X obj 935 31 nbx 5 14 0 5 0 0 page empty page 0 -8 0 10 -262144 -1
--1 2 256;
+-1 0 256;
 #X obj 937 158 r page;
 #X msg 936 195 page \$1;
 #X obj 844 32 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
@@ -88,6 +88,10 @@ c_type, f 8;
 #X msg 274 624 param bool a_bool bool 0;
 #X msg 273 703 param msec a_time time 5 3000 1500;
 #X msg 274 654 param pct a_pct pct 10 100 50;
+#X obj 1402 157 r enc;
+#X msg 1402 193 enc \$1;
+#X msg 1491 193 encbut \$1;
+#X obj 1491 157 r encbut;
 #X connect 0 0 40 0;
 #X connect 2 0 1 0;
 #X connect 2 0 4 0;
@@ -160,3 +164,7 @@ c_type, f 8;
 #X connect 76 0 64 0;
 #X connect 77 0 64 0;
 #X connect 78 0 64 0;
+#X connect 79 0 80 0;
+#X connect 80 0 51 0;
+#X connect 81 0 51 0;
+#X connect 82 0 81 0;

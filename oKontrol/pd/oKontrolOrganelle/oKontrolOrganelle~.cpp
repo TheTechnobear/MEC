@@ -14,11 +14,6 @@ represents the device interface, of which there is always one
 
 static t_class *oKontrolOrganelle_tilde_class;
 
-static t_pd *get_object(const char *s) {
-  t_pd *x = gensym(s)->s_thing;
-  return x;
-}
-
 
 class SendBroadcaster : public  oKontrol::ParameterCallback {
 public:
@@ -47,9 +42,36 @@ private:
 static const int OSC_POLL_FREQUENCY  = 300;
 static const int OLED_POLL_FREQUENCY = 50;
 
-
 // puredata methods implementation - start
 
+// helpers
+
+static t_pd *get_object(const char *s) {
+  t_pd *x = gensym(s)->s_thing;
+  return x;
+}
+
+
+static void sendPdMessage(const char* obj, float f) {
+  t_pd* sendobj = get_object(obj);
+  if (!sendobj) { post("no object found to send to"); return; }
+
+  t_atom a;
+  SETFLOAT(&a, f);
+  pd_forwardmess(sendobj, 1, &a);
+}
+
+static std::string get_param_id(t_oKontrolOrganelle *x, unsigned paramnum) {
+  auto pageId = x->param_model_->getPageId(x->currentPage_);
+  if (pageId.empty()) return "";
+  auto page = x->param_model_->getPage(pageId);
+  if (page == nullptr) return "";
+  auto id = x->param_model_->getParamId(page->id(), paramnum);
+  return id;
+}
+
+
+/// main PD methods
 t_int* oKontrolOrganelle_tilde_render(t_int *w)
 {
   t_oKontrolOrganelle *x = (t_oKontrolOrganelle *)(w[1]);
@@ -95,6 +117,10 @@ void *oKontrolOrganelle_tilde_new(t_floatarg osc_in)
   x->param_model_->addCallback("pd.send", std::make_shared<SendBroadcaster>());
   x->param_model_->addCallback("pd.client", std::make_shared<ClientHandler>(x));
 
+  // setup mother.pd for reasonable behaviour, basically takeover
+  sendPdMessage("midiOutGate",0.0f);
+  // sendPdMessage("midiInGate",0.0f);
+  sendPdMessage("enableSubMenu",1.0f);
 
   oKontrolOrganelle_tilde_listen(x, osc_in); // if zero will ignore
   return (void *)x;
@@ -197,14 +223,6 @@ void    oKontrolOrganelle_tilde_page(t_oKontrolOrganelle *x, t_floatarg f) {
 }
 
 
-static std::string get_param_id(t_oKontrolOrganelle *x, unsigned paramnum) {
-  auto pageId = x->param_model_->getPageId(x->currentPage_);
-  if (pageId.empty()) return "";
-  auto page = x->param_model_->getPage(pageId);
-  if (page == nullptr) return "";
-  auto id = x->param_model_->getParamId(page->id(), paramnum);
-  return id;
-}
 
 
 static void changeEncoder(t_oKontrolOrganelle *x, t_floatarg f) {
