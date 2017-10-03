@@ -26,7 +26,7 @@ public:
   virtual void param(oKontrol::ParameterSource, const oKontrol::Parameter&) { ; } // not interested
   virtual void changed(oKontrol::ParameterSource src, const oKontrol::Parameter& p);
 private:
-  
+
   std::string asDisplayString(const oKontrol::Parameter& p, unsigned width) const;
   void displayParamLine(unsigned line, const oKontrol::Parameter& p);
 

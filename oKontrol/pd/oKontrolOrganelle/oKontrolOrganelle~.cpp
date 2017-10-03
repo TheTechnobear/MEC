@@ -141,7 +141,7 @@ void oKontrolOrganelle_tilde_setup(void) {
                   A_DEFFLOAT, A_NULL);
   class_addmethod(oKontrolOrganelle_tilde_class,
                   (t_method) oKontrolOrganelle_tilde_encbut, gensym("encbut"),
-              A_DEFFLOAT, A_NULL);
+                  A_DEFFLOAT, A_NULL);
   // class_addmethod(oKontrolOrganelle_tilde_class,
   //                 (t_method) oKontrolOrganelle_tilde_auxRaw, gensym("auxRaw"),
   //                 A_DEFFLOAT, A_NULL);
@@ -213,17 +213,17 @@ static void changeEncoder(t_oKontrolOrganelle *x, t_floatarg f) {
 
 static void encoderButton(t_oKontrolOrganelle *x, t_floatarg f) {
   post("encoder button %f", f);
-  if(f>0) {
-    if(x->oled_) x->oled_->displayPopup("test", 100);
+  if (f > 0) {
+    if (x->oled_) x->oled_->displayPopup("test", 100);
   }
 }
 
 void    oKontrolOrganelle_tilde_enc(t_oKontrolOrganelle *x, t_floatarg f) {
-  changeEncoder(x,f);
+  changeEncoder(x, f);
 }
 
 void    oKontrolOrganelle_tilde_encbut(t_oKontrolOrganelle *x, t_floatarg f) {
-  encoderButton(x,f);
+  encoderButton(x, f);
 }
 
 static const unsigned MAX_KNOB_VALUE = 1023;

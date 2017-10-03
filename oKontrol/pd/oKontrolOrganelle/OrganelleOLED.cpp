@@ -28,7 +28,7 @@ void OrganelleOLED::displayPopup(const std::string& text, unsigned time) {
   std::string pad = "                   ";
   int fillc = (SCREEN_WIDTH - text.length() - 4 ) / 2;
 
-  std::string disp = pad.substr(0,fillc) + "[ "+ text + +" ]"+pad.substr(0,fillc);
+  std::string disp = pad.substr(0, fillc) + "[ " + text + +" ]" + pad.substr(0, fillc);
   osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
 
   // CNMAT OSC used by mother exec, does not support bundles
@@ -54,7 +54,7 @@ void OrganelleOLED::poll() {
       auto id = x_->param_model_->getParamId(pageId, i - 1);
       if (id.empty()) return;
       auto param = x_->param_model_->getParam(id);
-      if(param!=nullptr) displayParamLine(i, *param);
+      if (param != nullptr) displayParamLine(i, *param);
     } // for
 
     // cancel timing
@@ -63,13 +63,11 @@ void OrganelleOLED::poll() {
 
 }
 
-
-
 std::string OrganelleOLED::asDisplayString(const oKontrol::Parameter& param, unsigned width) const {
   std::string pad = "";
   std::string ret;
   std::string value = param.displayValue();
-  std::string unit = param.displayUnit();
+  std::string unit = std::string(param.displayUnit() + "  ").substr(0, 2);
   const std::string& dName = param.displayName();
   int fillc = width - (dName.length() + value.length() + 1 + unit.length());
   for (; fillc > 0; fillc--) pad += " ";
@@ -77,6 +75,7 @@ std::string OrganelleOLED::asDisplayString(const oKontrol::Parameter& param, uns
   if (ret.length() > width) ret = ret.substr(width - ret.length(), width);
   return ret;
 }
+
 
 void OrganelleOLED::displayParamLine(unsigned line, const oKontrol::Parameter& param) {
   static const char* oledLine0 = "/oled/line/0";
