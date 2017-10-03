@@ -39,7 +39,7 @@ private:
 
 
 // number of dsp renders before poll osc
-static const int OSC_POLL_FREQUENCY  = 300;
+static const int OSC_POLL_FREQUENCY  = 50;
 static const int OLED_POLL_FREQUENCY = 50;
 
 
@@ -61,7 +61,7 @@ static t_pd *get_object(const char *s) {
 
 static void sendPdMessage(const char* obj, float f) {
   t_pd* sendobj = get_object(obj);
-  if (!sendobj) { post("no object found to send to"); return; }
+  if (!sendobj) { post("send to %s failed",obj); return; }
 
   t_atom a;
   SETFLOAT(&a, f);
@@ -314,7 +314,7 @@ void    oKontrolOrganelle_tilde_knob4Raw(t_oKontrolOrganelle *x, t_floatarg f) {
 
 void SendBroadcaster::changed(oKontrol::ParameterSource, const oKontrol::Parameter& param) {
   t_pd* sendobj = get_object(param.id().c_str());
-  if (!sendobj) { post("no object found to send to"); return; }
+  if (!sendobj) { post("send to %s failed",param.id().c_str()); return; }
 
   t_atom a;
   switch (param.current().type()) {
