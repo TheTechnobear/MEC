@@ -42,6 +42,13 @@ private:
 static const int OSC_POLL_FREQUENCY  = 300;
 static const int OLED_POLL_FREQUENCY = 50;
 
+
+// render count timeout
+static const int PAGE_SWITCH_TIMEOUT = 5;
+static const int PAGE_EXIT_TIMEOUT = 5;
+
+
+
 // puredata methods implementation - start
 
 // helpers
@@ -222,17 +229,35 @@ void    oKontrolOrganelle_tilde_page(t_oKontrolOrganelle *x, t_floatarg f) {
   }
 }
 
-
-
-
 static void changeEncoder(t_oKontrolOrganelle *x, t_floatarg f) {
-  post("encoder %f", f);
+  unsigned pagenum = x->currentPage_;
+  if(f>0) { 
+      // clockwise
+      pagenum++;
+      pagenum = std::min(pagenum, x->param_model_->getPageCount() - 1);
+  } else {
+      // anti clockwise
+      if(pagenum>0) pagenum--;
+  }
+
+  if(pagenum!=x->currentPage_) {
+      auto pageId = x->param_model_->getPageId(pagenum);
+      if (pageId.empty()) return;
+      auto page = x->param_model_->getPage(pageId);
+      if (page == nullptr) return;
+      if (x->oled_) x->oled_->displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
+
+      x->currentPage_ = pagenum;
+      for (int i = 0; i < 4; i++) {
+        x->knobs_->locked_[i] = true;
+      }
+  }
 }
 
 static void encoderButton(t_oKontrolOrganelle *x, t_floatarg f) {
   post("encoder button %f", f);
   if (f > 0) {
-    if (x->oled_) x->oled_->displayPopup("test", 100);
+    if (x->oled_) x->oled_->displayPopup("exit", PAGE_EXIT_TIMEOUT);
   }
 }
 

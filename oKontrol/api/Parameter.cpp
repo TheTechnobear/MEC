@@ -184,6 +184,7 @@ void Parameter_Float::init(const std::vector<ParamValue>& args, unsigned& pos) {
     if ( args.size() > pos && args[pos].type() == ParamValue::T_Float  ) min_ = args[pos++].floatValue() ; else throwError(id(),"missing min");
     if ( args.size() > pos && args[pos].type() == ParamValue::T_Float  ) max_ = args[pos++].floatValue() ; else throwError(id(),"missing max");
     if ( args.size() > pos && args[pos].type() == ParamValue::T_Float )  def_ = args[pos++].floatValue() ; else throwError(id(),"missing def");
+    change(def_);
 }
 
 void Parameter_Float::createArgs(std::vector<ParamValue>& args) const {
@@ -254,6 +255,7 @@ void Parameter_Boolean::init(const std::vector<ParamValue>& args, unsigned& pos)
     Parameter::init(args, pos);
     if ( args.size() > pos && args[pos].type() == ParamValue::T_Float ) {
         def_ = args[pos++].floatValue() > 0.5;
+        change(def_);
     } else
         throwError(id(),"missing def");
 }

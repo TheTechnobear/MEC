@@ -25,18 +25,46 @@ bool OrganelleOLED::connect() {
 
 void OrganelleOLED::displayPopup(const std::string& text, unsigned time) {
   popupTime_ = time;
-  std::string pad = "                   ";
-  int fillc = (SCREEN_WIDTH - text.length() - 4 ) / 2;
-
-  std::string disp = pad.substr(0, fillc) + "[ " + text + +" ]" + pad.substr(0, fillc);
-  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
 
   // CNMAT OSC used by mother exec, does not support bundles
-  ops << osc::BeginMessage( "/oled/line/0" )
+#if 0
+  std::string pad = "                   ";
+  int fillc = (SCREEN_WIDTH - text.length() - 4 ) / 2;
+  std::string disp = pad.substr(0, fillc) + "[ " + text + +" ]" + pad.substr(0, fillc);
+
+  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+  ops << osc::BeginMessage( "/oled/line/1" )
       << disp.c_str()
       << osc::EndMessage;
-
   socket_->Send( ops.Data(), ops.Size() );
+#else
+  {
+  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+  ops << osc::BeginMessage( "/oled/gFillArea" )
+      << 100 << 34 << 14 << 14 << 0
+      << osc::EndMessage;
+  socket_->Send( ops.Data(), ops.Size() );
+  }
+
+  {
+  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+  ops << osc::BeginMessage( "/oled/gBox" )
+      << 100 << 34 << 14 << 14 << 1
+      << osc::EndMessage;
+  socket_->Send( ops.Data(), ops.Size() );
+  }
+
+  {
+  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+  ops << osc::BeginMessage( "/oled/gPrintln" )
+      << 20 << 24 << 16 << 1
+      << text.c_str()
+      << osc::EndMessage;
+  socket_->Send( ops.Data(), ops.Size() );
+  }
+#endif
+
+
 }
 
 void OrganelleOLED::poll() {
