@@ -44,7 +44,8 @@ private:
 
 
 // number of dsp renders before poll osc
-static const int OSC_POLL_FREQUENCY = 300;
+static const int OSC_POLL_FREQUENCY  = 300;
+static const int OLED_POLL_FREQUENCY = 50;
 
 
 // puredata methods implementation - start
@@ -52,10 +53,13 @@ static const int OSC_POLL_FREQUENCY = 300;
 t_int* oKontrolOrganelle_tilde_render(t_int *w)
 {
   t_oKontrolOrganelle *x = (t_oKontrolOrganelle *)(w[1]);
-  if (x->osc_receiver_) {
-    if (++(x->pollCount_) % OSC_POLL_FREQUENCY == 0) {
-      x->osc_receiver_->poll();
-    }
+  x->pollCount_++;
+  if (x->osc_receiver_ && x->pollCount_ % OSC_POLL_FREQUENCY == 0) {
+    x->osc_receiver_->poll();
+  }
+
+  if (x->oled_ && x->pollCount_ % OLED_POLL_FREQUENCY == 0) {
+    x->oled_->poll();
   }
   return (w + 2); // # args + 1
 }
@@ -68,9 +72,11 @@ void oKontrolOrganelle_tilde_dsp(t_oKontrolOrganelle *x, t_signal **)
 
 void oKontrolOrganelle_tilde_free(t_oKontrolOrganelle* x)
 {
+  x->param_model_->clearCallbacks();
   if (x->osc_receiver_) x->osc_receiver_->stop();
   x->osc_receiver_.reset();
-  x->param_model_->clearCallbacks();
+  x->oled_.reset();
+  x->knobs_.reset();
   // oKontrol::ParameterModel::free();
 }
 
@@ -84,9 +90,9 @@ void *oKontrolOrganelle_tilde_new(t_floatarg osc_in)
 
   x->pollCount_ = 0;
   x->param_model_ = oKontrol::ParameterModel::model();
-
+  x->oled_ = std::make_shared<OrganelleOLED>(x);
+  x->param_model_->addCallback("pd.oled", x->oled_);
   x->param_model_->addCallback("pd.send", std::make_shared<SendBroadcaster>());
-  x->param_model_->addCallback("pd.oled", std::make_shared<OrganelleOLED>(x));
   x->param_model_->addCallback("pd.client", std::make_shared<ClientHandler>(x));
 
 
@@ -130,12 +136,12 @@ void oKontrolOrganelle_tilde_setup(void) {
                   (t_method) oKontrolOrganelle_tilde_knob4Raw, gensym("knob4Raw"),
                   A_DEFFLOAT, A_NULL);
 
-  // class_addmethod(oKontrolOrganelle_tilde_class,
-  //                 (t_method) oKontrolOrganelle_tilde_enc, gensym("enc"),
-  //                 A_DEFFLOAT, A_NULL);
-  // class_addmethod(oKontrolOrganelle_tilde_class,
-  //                 (t_method) oKontrolOrganelle_tilde_encbut, gensym("encbut"),
-  // A_DEFFLOAT, A_NULL);
+  class_addmethod(oKontrolOrganelle_tilde_class,
+                  (t_method) oKontrolOrganelle_tilde_enc, gensym("enc"),
+                  A_DEFFLOAT, A_NULL);
+  class_addmethod(oKontrolOrganelle_tilde_class,
+                  (t_method) oKontrolOrganelle_tilde_encbut, gensym("encbut"),
+              A_DEFFLOAT, A_NULL);
   // class_addmethod(oKontrolOrganelle_tilde_class,
   //                 (t_method) oKontrolOrganelle_tilde_auxRaw, gensym("auxRaw"),
   //                 A_DEFFLOAT, A_NULL);
@@ -200,8 +206,27 @@ static std::string get_param_id(t_oKontrolOrganelle *x, unsigned paramnum) {
   return id;
 }
 
-static const unsigned MAX_KNOB_VALUE = 1023;
 
+static void changeEncoder(t_oKontrolOrganelle *x, t_floatarg f) {
+  post("encoder %f", f);
+}
+
+static void encoderButton(t_oKontrolOrganelle *x, t_floatarg f) {
+  post("encoder button %f", f);
+  if(f>0) {
+    if(x->oled_) x->oled_->displayPopup("test", 100);
+  }
+}
+
+void    oKontrolOrganelle_tilde_enc(t_oKontrolOrganelle *x, t_floatarg f) {
+  changeEncoder(x,f);
+}
+
+void    oKontrolOrganelle_tilde_encbut(t_oKontrolOrganelle *x, t_floatarg f) {
+  encoderButton(x,f);
+}
+
+static const unsigned MAX_KNOB_VALUE = 1023;
 static void changeKnob(t_oKontrolOrganelle *x, t_floatarg f, unsigned knob) {
   auto id = get_param_id(x, knob);
   auto param = x->param_model_->getParam(id);

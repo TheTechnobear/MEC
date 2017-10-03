@@ -10,6 +10,7 @@
 #include <memory>
 #include <unordered_map>
 
+class OrganelleOLED;
 
 struct Knobs {
   bool    locked_[4];
@@ -21,6 +22,8 @@ typedef struct _oKontrolOrganelle {
 
   std::shared_ptr<Knobs> knobs_;
   std::shared_ptr<oKontrol::ParameterModel> param_model_;
+
+  std::shared_ptr<OrganelleOLED> oled_;
 
   unsigned currentPage_;
   long pollCount_;
@@ -41,8 +44,12 @@ extern "C"  {
 
   void    oKontrolOrganelle_tilde_page(t_oKontrolOrganelle *x, t_floatarg f);
 
+  void    oKontrolOrganelle_tilde_enc(t_oKontrolOrganelle *x, t_floatarg f);
+  void    oKontrolOrganelle_tilde_encbut(t_oKontrolOrganelle *x, t_floatarg f);
+
   void    oKontrolOrganelle_tilde_knob1Raw(t_oKontrolOrganelle *x, t_floatarg f);
   void    oKontrolOrganelle_tilde_knob2Raw(t_oKontrolOrganelle *x, t_floatarg f);
   void    oKontrolOrganelle_tilde_knob3Raw(t_oKontrolOrganelle *x, t_floatarg f);
   void    oKontrolOrganelle_tilde_knob4Raw(t_oKontrolOrganelle *x, t_floatarg f);
+
 }
