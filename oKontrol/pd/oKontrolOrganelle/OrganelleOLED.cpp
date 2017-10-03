@@ -27,7 +27,7 @@ std::string OrganelleOLED::asDisplayString(const oKontrol::Parameter& param, uns
     std::string pad="";
     std::string ret;
     std::string value = param.displayValue();
-    std::string unit = param.displayUnit();
+    std::string unit = std::string(param.displayUnit()+"  ").substr(0,2);
     const std::string& dName = param.displayName();
     int fillc = width - (dName.length() + value.length() + 1 +unit.length());
     for(;fillc>0;fillc--) pad += " ";
