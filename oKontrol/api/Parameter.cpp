@@ -6,10 +6,11 @@ namespace oKontrol {
 
 // PT_Invalid
 // PT_Float
+// PT_Int
 // PT_Pct
 // PT_LinHz
 // PT_mSec
-// PT_Semis
+// PT_Semi
 // PT_Boolean
 
 int operator>(const ParamValue& lhs, const ParamValue& rhs) {
@@ -78,10 +79,12 @@ void Parameter::init(const std::vector<ParamValue>& args, unsigned& pos) {
 
 std::shared_ptr<Parameter> createParameter(const std::string& t) {
             if (t == "float")  return std::make_shared<Parameter_Float>(PT_Float);
+    else    if (t == "int")   return std::make_shared<Parameter_Int>(PT_Int);
     else    if (t == "bool")   return std::make_shared<Parameter_Boolean>(PT_Boolean);
     else    if (t == "pct")   return std::make_shared<Parameter_Percent>(PT_Pct);
     else    if (t == "hz")   return std::make_shared<Parameter_LinearHz>(PT_LinHz);
     else    if (t == "msec")   return std::make_shared<Parameter_Time>(PT_mSec);
+    else    if (t == "semi")   return std::make_shared<Parameter_Semi>(PT_Semi);
 
     std::cerr << "parameter type not found: " << t << std::endl;
 
@@ -92,9 +95,11 @@ void Parameter::createArgs(std::vector<ParamValue>& args) const {
     switch(type_) {
         case PT_Float: args.push_back("float");break;
         case PT_Boolean: args.push_back("bool");break;
+        case PT_Int: args.push_back("int");break;
         case PT_Pct: args.push_back("pct");break;
         case PT_LinHz: args.push_back("hz");break;
         case PT_mSec: args.push_back("msec");break;
+        case PT_Semi: args.push_back("semi");break;
         default:
             args.push_back("unsupported");
     }
@@ -312,6 +317,74 @@ const std::string& Parameter_Time::displayUnit() const {
     static std::string sUnit="mSec";
     return sUnit;
 }
+
+
+
+//TODO : add a new T_Int type, wil be useful for ordinals too
+void Parameter_Int::init(const std::vector<ParamValue>& args, unsigned& pos) {
+    Parameter::init(args, pos);
+    if ( args.size() > pos && args[pos].type() == ParamValue::T_Float  ) min_ = args[pos++].floatValue() ; else throwError(id(),"missing min");
+    if ( args.size() > pos && args[pos].type() == ParamValue::T_Float  ) max_ = args[pos++].floatValue() ; else throwError(id(),"missing max");
+    if ( args.size() > pos && args[pos].type() == ParamValue::T_Float )  def_ = args[pos++].floatValue() ; else throwError(id(),"missing def");
+    change(def_);
+}
+
+void Parameter_Int::createArgs(std::vector<ParamValue>& args) const {
+    Parameter::createArgs(args);
+    args.push_back(ParamValue(min_));
+    args.push_back(ParamValue(max_));
+    args.push_back(ParamValue(def_));
+}
+
+std::string Parameter_Int::displayValue() const {
+    char numbuf[11];
+    sprintf(numbuf, "%d", (int) current_.floatValue());
+    return std::string(numbuf);
+}
+
+
+bool  Parameter_Int::change(const ParamValue& c) {
+    switch (current_.type()) {
+    case ParamValue::T_Float  : {
+        int v = c.floatValue();
+        v = std::max(v, min());
+        v = std::min(v, max());
+        return Parameter::change(ParamValue((float) v));
+    }
+    case ParamValue::T_String:
+    default:
+        ;
+    }
+    return false;
+}
+
+ParamValue Parameter_Int::calcRelative(float f) {
+    int v = current().floatValue() + (f * (max() - min()));
+    v = std::max(v, min());
+    v = std::min(v, max());
+    return ParamValue((float) v);
+}
+
+ParamValue Parameter_Int::calcMidi(int midi) {
+    float f = (float) midi / 127.0;
+    int v = (f * (max() - min())) + min();
+    v = std::max(v, min());
+    v = std::min(v, max());
+    return ParamValue((float) v);
+}
+
+ParamValue Parameter_Int::calcFloat(float f) {
+    int v = (f * (max() - min())) + min();
+    v = std::max(v, min());
+    v = std::min(v, max());
+    return ParamValue((float) v);
+}
+
+const std::string& Parameter_Semi::displayUnit() const {
+    static std::string sUnit="s";
+    return sUnit;
+}
+
 
 
 

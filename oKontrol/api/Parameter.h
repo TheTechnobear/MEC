@@ -44,10 +44,11 @@ enum ParameterType {
     PT_Invalid,
     PT_Float,
     PT_Boolean,
+    PT_Int,
     PT_Pct,
     PT_LinHz,
-    PT_mSec
-    // PT_Semis
+    PT_mSec,
+    PT_Semi
 };
 
 class Parameter {
@@ -79,6 +80,29 @@ protected:
     std::string displayName_;
     ParamValue current_;
 };
+
+
+class Parameter_Int : public Parameter  {
+public:
+    Parameter_Int(ParameterType type) : Parameter(type) { ; }
+    virtual void createArgs(std::vector<ParamValue>& args) const;
+    virtual std::string displayValue() const;
+
+    virtual bool change(const ParamValue& c);
+    virtual ParamValue calcRelative(float f);
+    virtual ParamValue calcMidi(int midi);
+    virtual ParamValue calcFloat(float f);
+protected:
+    virtual void init(const std::vector<ParamValue>& args, unsigned& pos);
+    int def() const { return def_;}
+    int min() const { return min_;}
+    int max() const { return max_;}
+
+    int min_;
+    int max_;
+    int def_;
+};
+
 
 class Parameter_Float : public Parameter {
 public:
@@ -137,6 +161,12 @@ public:
     virtual const std::string& displayUnit() const;
 };
 
+
+class Parameter_Semi : public Parameter_Int  {
+public:
+    Parameter_Semi(ParameterType type) : Parameter_Int(type) { ; }
+    virtual const std::string& displayUnit() const;
+};
 
 
 } //namespace
