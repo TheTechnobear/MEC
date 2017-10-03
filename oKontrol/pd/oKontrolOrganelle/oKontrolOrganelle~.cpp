@@ -130,6 +130,9 @@ void *oKontrolOrganelle_tilde_new(t_floatarg osc_in)
   sendPdMessage("enableSubMenu",1.0f);
 
   oKontrolOrganelle_tilde_listen(x, osc_in); // if zero will ignore
+  for(int i=0;i<4;i++) {
+        x->knobs_->locked_[i]=Knobs::K_UNLOCKED;
+  }
   return (void *)x;
 }
 
@@ -225,7 +228,7 @@ void    oKontrolOrganelle_tilde_page(t_oKontrolOrganelle *x, t_floatarg f) {
   page = std::min(page, x->param_model_->getPageCount() - 1);
   x->currentPage_ = page;
   for (int i = 0; i < 4; i++) {
-    x->knobs_->locked_[i] = true;
+    x->knobs_->locked_[i] = Knobs::K_LOCKED;
   }
 }
 
@@ -249,7 +252,7 @@ static void changeEncoder(t_oKontrolOrganelle *x, t_floatarg f) {
 
       x->currentPage_ = pagenum;
       for (int i = 0; i < 4; i++) {
-        x->knobs_->locked_[i] = true;
+        x->knobs_->locked_[i] = Knobs::K_LOCKED;
       }
   }
 }
@@ -258,6 +261,7 @@ static void encoderButton(t_oKontrolOrganelle *x, t_floatarg f) {
   post("encoder button %f", f);
   if (f > 0) {
     if (x->oled_) x->oled_->displayPopup("exit", PAGE_EXIT_TIMEOUT);
+    sendPdMessage("goHome",1.0);
   }
 }
 
@@ -276,19 +280,30 @@ static void changeKnob(t_oKontrolOrganelle *x, t_floatarg f, unsigned knob) {
   if (param == nullptr) return;
   if (!id.empty())  {
     oKontrol::ParamValue calc = param->calcFloat(f / MAX_KNOB_VALUE);
-    if (x->knobs_->locked_[knob]) {
+    if (x->knobs_->locked_[knob]!=Knobs::K_UNLOCKED) {
       //if knob is locked, determined if we can unlock it
       if (calc == param->current()) {
-        x->knobs_->locked_[knob] = false;
+        x->knobs_->locked_[knob] = Knobs::K_UNLOCKED;
       }
-      else if (x->knobs_->value_[knob] > param->current()) {
-        x->knobs_->locked_[knob] = calc > param->current();
-      } else {
-        x->knobs_->locked_[knob] = calc < param->current();
+      else if (x->knobs_->locked_[knob]==Knobs::K_GT) {
+        if(calc > param->current()) x->knobs_->locked_[knob] = Knobs::K_UNLOCKED;
+      }
+      else if (x->knobs_->locked_[knob]==Knobs::K_LT) {
+        if(calc < param->current()) x->knobs_->locked_[knob] = Knobs::K_UNLOCKED;
+      }
+      else if (x->knobs_->locked_[knob]==Knobs::K_LOCKED) {
+        // initial locked, determine unlock condition
+        if(calc > param->current()) {
+            // knob starts greater than param, so wait for it to go less than
+            x->knobs_->locked_[knob] = Knobs::K_LT;
+        } else {
+            // knob starts less than param, so wait for it to go greater than
+            x->knobs_->locked_[knob] = Knobs::K_GT;
+        }
       }
     }
-    if (!x->knobs_->locked_[knob]) {
-      x->knobs_->value_[knob] = calc;
+
+    if (x->knobs_->locked_[knob]==Knobs::K_UNLOCKED) {
       x->param_model_->changeParam(oKontrol::PS_LOCAL, id, calc);
     }
   }
@@ -353,9 +368,7 @@ void ClientHandler::changed(oKontrol::ParameterSource src, const oKontrol::Param
       auto paramid = oKontrol::ParameterModel::model()->getParamId(pageId, i);
       if (paramid.empty()) return;
       if (paramid == param.id()) {
-        if (param.current() != x_->knobs_->value_[i]) {
-          x_->knobs_->locked_[i] = true;
-        }
+        x_->knobs_->locked_[i] = Knobs::K_LOCKED;
         return;
       }
     }

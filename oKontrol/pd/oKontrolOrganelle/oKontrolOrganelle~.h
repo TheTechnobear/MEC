@@ -13,8 +13,12 @@
 class OrganelleOLED;
 
 struct Knobs {
-  bool    locked_[4];
-  oKontrol::ParamValue   value_[4];
+  enum {
+      K_UNLOCKED,
+      K_GT,
+      K_LT,
+      K_LOCKED
+  } locked_[4];
 };
 
 typedef struct _oKontrolOrganelle {
