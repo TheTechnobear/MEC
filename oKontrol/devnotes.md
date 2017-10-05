@@ -53,14 +53,80 @@ this might be a bit much? but it would be nice to move to a less rigid heirachy
 to stop loops, do we need to allow only the owner to make the change? but if so how do we get fast local feedback?
 (currently, we do the change locally, then its overwritten, we are using parameter source)
 
+the issue with forming a heirarchy is parameters are forced to be on one page... rather having arbitary grouping of parameters
+the current model, has parameters as a top level entity where, they pages are a container.
+
+however... what we need to do, is to have parameter ids unique for a particular device/patch....
+
+
+
 ## osc messaging format
 move to a message heirarcy 
 version osc messages (or clients?)
 
+/host/patch/parameterid
+/host/patch/page
 
-## preset file
+example:
+/kontrol/param/**organelle/wrpsbrds/o_transpose** "pitch" -24 24 0 
+/kontrol/page/**organelle/wrpsbrds/osc** "oscillator" o_transpose 
+/kontrol/changed/**organelle/wrpsbrds/o_transpose** 12
+
+note: the highlighted part is unique
+
+shorter names?
+/ok/pm/organelle/wrpsbrds/o_transpose pitch  -24 24 0 
+/ok/pg/organelle/wrpsbrds/osc "oscillator" o_transpose 
+/ok/ch/organelle/wrpsbrds/o_transpose 12
+
+in a modular system, then modules could take the place of patch, or suffixed.
+e.g. 
+/ok/pm/organelle/modpatch_slot1/o_pitch frequency "base pitch" 0 48000 440 
+
+
+## json parameter file 
+(pseudo only ;) )
+[code]
+patch : {
+    name : wrpsbrds,
+    parameters : {
+        o_transpose {
+            type : pitch, 
+            displayname : transpose,
+            min : -24,
+            max : 24,
+            default : 0
+        }
+        ...
+    }, 
+    pages : {
+        page_1 {
+            displayname: oscillator
+            parameters : [
+                o_transpose, 
+            ]
+        }
+    }
+}
+[/code]
+
+
+
+## json patch file (?)
 lets start with (e.g.) 10 presets, which can be saved/recalled
 store presets as param name , value
+preset {
+    0 : {
+        o_transpose : 12,
+        r_mix : 50
+    }
+}, 
+midi_mapping : {
+    cc : {
+        63 : o_transpose
+    }
+}
+
 
 
 # pure data messages:
