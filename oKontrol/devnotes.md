@@ -7,15 +7,12 @@ pre-alpha, development, code that is untested, and is likely not working - no **
 
 # TO DO
 stuff that is obviously outstanding
-- Parameter callback for local publishing of messages, updating of screens etc.
-- input system for encoders/pots
-- takeover functionality
 - refactor, many things are setup purely for testing concepts
-- receiving over osc needs to lock parameter for organelle
 
 # design
-layered : general -> pure data layer -> organelle layer (?)
+overall design is to allow for a peer to peer parameter system, essentially oKontrol is responsible for 'syncronising' parameters across a transport.
 
+software layers : general -> pure data layer -> organelle layer (?)
 general layer:
 - parameter data mapping
 - osc transmit/recieve of parameters
@@ -23,6 +20,8 @@ general layer:
 - map parameter scaled input (0..1, relative) to actual value
 - parameter takeover functionality (relates to active page/potentmeter type)
 - midi mapping/learn
+
+overall design is to allow for a peer to peer parameter system, essentially oKontrol is responsible for 'syncronising' parameters across a transport.
 
 pure data layer :
 - pure data messages
@@ -33,78 +32,54 @@ device layer - organelle :
 - pots
 - encoder reception
   
-## open questions
-general layer will allows parameters to be changed via osc at any time...
-is current page/takeover all part of device layer?
-(seems likely, as encoders vs pots for takeover)
-
-## takeover functionality
-when page becomes active, mark all parameters that input value != current value, as locked
-unlock when 
-if pot > param value , unlock when pot <= param value
-if pot < param value , unlock when pot >= param value
-
-## changing values
-organelle sends 0..1 which we need to map to 'real values', according to range.
-encoders send +/- , so need to have some kind of inc/dec scaling
-midi sends 0..127, scale to 0..1
-
-seems like layer above, should scale to common (0..1), then set via absoluteChange(), relativeChange()
+## parameter definitions
+currently, we define parameters in PD via messages to the external, however, there are advantages to moving to a parameter file, so the pd patch is only really bound by the usage of the external and the 'receive name'
 
 ## midi mapping / learn
 allow assignment of parameter to a midi cc
 device later could allow learn, e.g. activate learn, twist param, fire cc
 
-## slots
-we could potentially have same module in 2 different slots, 
-also parameter names cannot be considered unique across module.
 
-preset values: are not 'slot based'?, i.e. if i recall 'hall reverb', it doesnt matter what slot its in.
-messages sent out: are slot based, ie. the reverb in slot 1, is different from reverb in slot 4
+## heirarcy for parameters
+current implementation is page->params
+however, we need to also allow at least for multiple clients 
+e.g. 
+/device/page/parameter
+also do we need to even sub group these? 
+e.g. 
+/device/module/page/parameter
+this might be a bit much? but it would be nice to move to a less rigid heirachy
 
+to stop loops, do we need to allow only the owner to make the change? but if so how do we get fast local feedback?
+(currently, we do the change locally, then its overwritten, we are using parameter source)
 
-does this necessitate modules or slot?
-e.g.
-
-(module page param displayname min max def)
-param rngs gen r_mix pct "mix" 0 100 50 
-
-
-hmm, issue is the pd file with the definition wil be loaded multiple times, and potentially in different orders/times.
-
-(slot page param displayname min max def)
-param slot1 gen r_mix pct "mix" 0 100 50 
-
-do we really want a singleton?
-(i think so, just think it needs indexing correctly)
+## osc messaging format
+move to a message heirarcy 
+version osc messages (or clients?)
 
 
 ## preset file
 lets start with (e.g.) 10 presets, which can be saved/recalled
 store presets as param name , value
 
-## one pure data obect or many?
-if we want to send in encoders/midi etc, then we dont want this on multiple oKontrol objects, only 1,  preferable in a kind of mother patch. (this lends itself to extension later, to handle slots etc)
-
-oKontrol <- param <- page
-oKontrolCentral <-knobs -> screen
-
-or even
-oKcontrolDevice/Organelle <- knobs ->screen
-
-send/recieve in PD, need to scope to slots, but probably ok to be unique in patch?
-(this would mean, you need to have unique names, if you start sharing bits of patches)
-probaby ok for now.
-
 
 # pure data messages:
 
+
+currently we have:
 page page1 "reverb"  - adds a page called page1, displayed as reverb
 
 param r_mix page1 pct "mix" 0 100 50 - add parameter r_mix to page 1, displayed as mix, 0 to 100 percent, 50 default
 param r_active page1 bool "active" on 
 param r_time page1 msec "time"  
 param r_feedback page1 pct "feedback" on 
+
+connect port
+
+organelle messages... rawknob1-4 encoder, this is because we can't directly listen to mother host, since mother.pd is blocking us. 
+(this could change in teh future if we replace mother.pd)
+
+the idea is to move away from messages, and try to move to using a json configuration file
 
 ## notes
 types/range change depending on type.
@@ -149,23 +124,5 @@ Aux = blah      [Reverb]
 
 
 
-# things to check:
-pd - do quoted strings get brought in as single symbols, or do I need to read by looking for quotes? same for output?
-pd - special characters in symbols
 
-pd/organelle
-- can i open 2nd listen port for encoder/cc etc...
-- or have an pure data input for organelle for midi/pots/encoder
-- output - direct to mother exec, or go via mother.pd (screen)
 
-# osc interactions
-what do message send/recieve look like?
-
-setup - possible similar to pd
-
-/prefix/page page1 reverb
-/prefix/param r_mix page1 pct "mix" 0 100 50 
-
-commands
-/prefix/paramValue r_mix 1.0
-/prefix/requestMeta
