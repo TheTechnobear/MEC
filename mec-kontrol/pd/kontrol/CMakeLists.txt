@@ -1,5 +1,5 @@
 ###############################
-# oKontrol pure data external
+# kontrol pure data external
 project (kontrol)
 
 

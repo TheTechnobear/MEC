@@ -29,7 +29,7 @@ two implementations:
 currently we use the soundplane model implementation with a new 
 
 *Push 2*
-Initial integration with new parameters system (oKontrol), also some navigation.
+Initial integration with new parameters system (Kontrol), also some navigation.
 this is going to need refactoring soon, as full navigation needs the push 2 to have moves,
 and the OLED/Pad colours all need to reflect the mode
 this currently inherit from mididevice

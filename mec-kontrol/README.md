@@ -2,7 +2,6 @@
 This is currently being integrated into the MEC project, from being a standalone project.
 Once fully integrated the build/dev notes etc will all be part of the normal mec system.
 
-it is also likely to be renamed, probably something like mec-kontrol
 
 ## Windows note ##
 as I dont currently target mec at windows (but will do), its likely I'll keep the pd-lib-builder working for windows externals initially.
@@ -10,8 +9,8 @@ if you find its missing source files (i.e. doesn't link), check the CMakeFiles.t
 
 -----
 
-## Technobear's oKontrol
-oKontrol is a system for managing parameters, allowing abstraction of the input and display mechanism, and including navigatonal aids
+## Technobear's kontrol
+kontrol is a system for managing parameters, allowing abstraction of the input and display mechanism, and including navigatonal aids
 
 ## Status ##
 not released, development only - not working, do not use ;) 
@@ -20,19 +19,19 @@ not released, development only - not working, do not use ;)
 Its best for users if there is a single source for these externals, so if you wish to extend/fix/contribute, Im very happy to take Pull Requests for enhancements / bug fixes etc.
 
 ## Externals ##
-oKontrol - parameter control
-oKontrolOrganelle~ - interface to organelle, note DSP needs to be turned on to work
+kontrol - parameter control
+kontrolhost~ - interface to organelle, note DSP needs to be turned on to work
 
 ## Folder Structure ##
 api - core functionality, target independent
 pd - pure data externals
-pd/oKontrol - oKontrol pure data external for add params etc
-pd/oKontrolOrganelle - pure data external for interfacing to Organelle
+pd/kontrol - Kontrol pure data external for add params etc
+pd/kontrolhost - pure data external for interfacing to Organelle
 
 ## Building ##
-    cd oKontrol/pd/oKontrol
+    cd mec_kontrol/pd/kontrol
     make
-    cd oKontrol/pd/oKontrolOrganelle
+    cd mec_kontrol/pd/kontrolhost
     make
 
 Notes:

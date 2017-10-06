@@ -1,5 +1,5 @@
 ###############################
-# oKontrol pure data external
+# kontrol pure data external
 project (kontrolhost)
 
 set(KONTROL_HOST_SRC

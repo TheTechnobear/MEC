@@ -10,7 +10,7 @@ stuff that is obviously outstanding
 - refactor, many things are setup purely for testing concepts
 
 # design
-overall design is to allow for a peer to peer parameter system, essentially oKontrol is responsible for 'syncronising' parameters across a transport.
+overall design is to allow for a peer to peer parameter system, essentially Kontrol is responsible for 'syncronising' parameters across a transport.
 
 software layers : general -> pure data layer -> organelle layer (?)
 general layer:
@@ -21,7 +21,7 @@ general layer:
 - parameter takeover functionality (relates to active page/potentmeter type)
 - midi mapping/learn
 
-overall design is to allow for a peer to peer parameter system, essentially oKontrol is responsible for 'syncronising' parameters across a transport.
+overall design is to allow for a peer to peer parameter system, essentially Kontrol is responsible for 'syncronising' parameters across a transport.
 
 pure data layer :
 - pure data messages
