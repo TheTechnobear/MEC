@@ -13,10 +13,10 @@
 
 namespace mec {
 
-class Kontrol : public Device {
+class KontrolDevice : public Device {
 public:
-    Kontrol(ICallback&);
-    virtual ~Kontrol();
+    KontrolDevice(ICallback&);
+    virtual ~KontrolDevice();
     virtual bool init(void*);
     virtual bool process();
     virtual void deinit();
@@ -36,9 +36,9 @@ private:
     unsigned connectPort_;
     unsigned listenPort_;
 
-    std::shared_ptr<oKontrol::ParameterModel> param_model_;
-    std::shared_ptr<oKontrol::OSCReceiver> osc_receiver_;
-    std::shared_ptr<oKontrol::OSCBroadcaster> osc_broadcaster_;
+    std::shared_ptr<Kontrol::ParameterModel> param_model_;
+    std::shared_ptr<Kontrol::OSCReceiver> osc_receiver_;
+    std::shared_ptr<Kontrol::OSCBroadcaster> osc_broadcaster_;
 };
 
 }

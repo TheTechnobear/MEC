@@ -1,10 +1,11 @@
 ###############################
 # oKontrol pure data external
-project (oKontrolOrganelle)
+project (kontrol)
 
-set(OKONTROL_ORGANELLE_SRC
-    oKontrolOrganelle~.cpp
-    OrganelleOLED.cpp
+
+
+set(KONTROL_SRC
+    kontrol.cpp
 )
 
 
@@ -14,15 +15,12 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/../../../external/oscpack"
     )
 
-add_library(oKontrolOrganelle SHARED ${OKONTROL_ORGANELLE_SRC})
+add_library(kontrol SHARED ${KONTROL_SRC})
 
-target_link_libraries (oKontrolOrganelle mec-kontrol-api oscpack portaudio)
+target_link_libraries (kontrol mec-kontrol-api oscpack portaudio)
+
 
 ### setup for pure data
-
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "oKontrolOrganelle~")
-
-
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 if(${APPLE})
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
@@ -40,4 +38,3 @@ if(${MSVC})
     target_compile_definitions(${PROJECT_NAME} PRIVATE PD_INTERNAL)
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS /wd4091 /wd4996")
 endif()
-

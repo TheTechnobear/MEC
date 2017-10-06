@@ -32,8 +32,8 @@ set(MECAPI_SRC
     devices/mec_push2.h
     devices/mec_soundplane.cpp
     devices/mec_soundplane.h
-    devices/mec_kontrol.cpp
-    devices/mec_kontrol.h
+    devices/mec_kontroldevice.cpp
+    devices/mec_kontroldevice.h
     processors/mec_mpe_processor.cpp
     processors/mec_mpe_processor.h
 )
@@ -42,7 +42,7 @@ include_directories (
     "devices/push2" 
     "devices/eigenharp" 
     "devices/soundplanelite"
-    "${PROJECT_SOURCE_DIR}/../oKontrol/api"
+    "${PROJECT_SOURCE_DIR}/../mec-kontrol/api"
     "${PROJECT_SOURCE_DIR}/../external/cJSON"
     "${PROJECT_SOURCE_DIR}/../external/oscpack"
     "${PROJECT_SOURCE_DIR}/../external/rtmidi"

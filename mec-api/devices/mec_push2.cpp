@@ -72,26 +72,26 @@ static const char scaleModes [2][15] = {
 
 
 
-class Push2_OLED : public oKontrol::ParameterCallback {
+class Push2_OLED : public Kontrol::ParameterCallback {
 public:
     Push2_OLED(Push2& parent, const std::shared_ptr<Push2API::Push2>& api) :
         parent_(parent), push2Api_(api), currentPage_(0) {
-        param_model_ = oKontrol::ParameterModel::model();
+        param_model_ = Kontrol::ParameterModel::model();
         ;
     }
     void setCurrentPage(unsigned page);
     // ParameterCallback
     virtual void addClient(const std::string&, unsigned );
-    virtual void page(oKontrol::ParameterSource , const oKontrol::Page& );
-    virtual void param(oKontrol::ParameterSource, const oKontrol::Parameter&);
-    virtual void changed(oKontrol::ParameterSource src, const oKontrol::Parameter& p);
+    virtual void page(Kontrol::ParameterSource , const Kontrol::Page& );
+    virtual void param(Kontrol::ParameterSource, const Kontrol::Parameter&);
+    virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p);
 
 private:
     void displayPage(const std::string& id);
-    void drawParam(unsigned pos, const oKontrol::Parameter& param);
+    void drawParam(unsigned pos, const Kontrol::Parameter& param);
     Push2& parent_;
     std::shared_ptr<Push2API::Push2> push2Api_;
-    std::shared_ptr<oKontrol::ParameterModel> param_model_;
+    std::shared_ptr<Kontrol::ParameterModel> param_model_;
     unsigned currentPage_;
 };
 
@@ -146,7 +146,7 @@ bool Push2::init(void* arg) {
         push2Api_->init();
 
         // Kontrol setup
-        param_model_ = oKontrol::ParameterModel::model();
+        param_model_ = Kontrol::ParameterModel::model();
         oled_ = std::make_shared<Push2_OLED>(*this, push2Api_);
         param_model_->addCallback("push2.oled", oled_);
 
@@ -327,8 +327,8 @@ void Push2::processPushCC(unsigned cc, unsigned v) {
                 // LOG_0("vel = " << vel);
             }
 
-            oKontrol::ParamValue calc = param->calcRelative(vel);
-            param_model_->changeParam(oKontrol::PS_LOCAL, id, calc);
+            Kontrol::ParamValue calc = param->calcRelative(vel);
+            param_model_->changeParam(Kontrol::PS_LOCAL, id, calc);
         }
 
     } else if (cc >= P2_DEV_SELECT_CC_START && cc <= P2_DEV_SELECT_CC_END) {
@@ -399,7 +399,7 @@ int16_t page_clrs[8] = {
     RGB565(0xFF, 0x7F, 0xFF)
 };
 
-void Push2_OLED::drawParam(unsigned pos, const oKontrol::Parameter& param) {
+void Push2_OLED::drawParam(unsigned pos, const Kontrol::Parameter& param) {
     // #define MONO_CLR RGB565(255,60,0)
     int16_t clr = page_clrs[currentPage_];
 
@@ -448,12 +448,12 @@ void Push2_OLED::setCurrentPage(unsigned page) {
 }
 
 
-void Push2_OLED::page(oKontrol::ParameterSource , const oKontrol::Page& page) {
+void Push2_OLED::page(Kontrol::ParameterSource , const Kontrol::Page& page) {
     // LOG_0("Push2_OLED::page " << page.id());
     displayPage(page.id());
 }
 
-void Push2_OLED::param(oKontrol::ParameterSource, const oKontrol::Parameter& param) {
+void Push2_OLED::param(Kontrol::ParameterSource, const Kontrol::Parameter& param) {
 
     auto pageId = param_model_->getPageId(currentPage_);
     if (pageId.empty()) return;
@@ -468,7 +468,7 @@ void Push2_OLED::param(oKontrol::ParameterSource, const oKontrol::Parameter& par
     }
 }
 
-void Push2_OLED::changed(oKontrol::ParameterSource, const oKontrol::Parameter& param) {
+void Push2_OLED::changed(Kontrol::ParameterSource, const Kontrol::Parameter& param) {
     auto pageId = param_model_->getPageId(currentPage_);
     if (pageId.empty()) return;
 

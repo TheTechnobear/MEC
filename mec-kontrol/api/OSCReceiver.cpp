@@ -6,11 +6,11 @@
 #include <memory.h>
 #include <iostream>
 
-namespace oKontrol {
+namespace Kontrol {
 
-class oKontrolPacketListener : public PacketListener {
+class KontrolPacketListener : public PacketListener {
 public:
-    oKontrolPacketListener(PaUtilRingBuffer* queue) : queue_(queue) {
+    KontrolPacketListener(PaUtilRingBuffer* queue) : queue_(queue) {
     }
     virtual void ProcessPacket( const char *data, int size,
                                 const IpEndpointName& remoteEndpoint) {
@@ -26,9 +26,9 @@ private:
 };
 
 
-class oKontrolOSCListener : public osc::OscPacketListener {
+class KontrolOSCListener : public osc::OscPacketListener {
 public:
-    oKontrolOSCListener(const OSCReceiver& recv) : receiver_(recv) { ; }
+    KontrolOSCListener(const OSCReceiver& recv) : receiver_(recv) { ; }
 
 
     virtual void ProcessMessage( const osc::ReceivedMessage& m,
@@ -38,7 +38,7 @@ public:
 
         try {
             // std::cout << "recieved osc message: " << m.AddressPattern() << std::endl;
-            if ( std::strcmp( m.AddressPattern(), "/oKontrol/changed" ) == 0 ) {
+            if ( std::strcmp( m.AddressPattern(), "/Kontrol/changed" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char* id = (arg++)->AsString();
                 if ( arg != m.ArgumentsEnd() ) {
@@ -50,7 +50,7 @@ public:
                     }
                 }
 
-            } else if ( std::strcmp( m.AddressPattern(), "/oKontrol/param" ) == 0 ) {
+            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/param" ) == 0 ) {
                 std::vector<ParamValue> params;
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 while ( arg != m.ArgumentsEnd() ) {
@@ -64,7 +64,7 @@ public:
                 }
 
                 receiver_.addParam(PS_OSC,params);
-            } else if ( std::strcmp( m.AddressPattern(), "/oKontrol/page" ) == 0 ) {
+            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/page" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "recieved page p1"<< std::endl;
 
@@ -78,7 +78,7 @@ public:
 
                 // std::cout << "recieved page " << id << std::endl;
                 receiver_.addPage(PS_OSC, id, displayname, paramIds);
-            } else if ( std::strcmp( m.AddressPattern(), "/oKontrol/connect" ) == 0 ) {
+            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/connect" ) == 0 ) {
                 osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
                 osc::int32 port;
                 args >> port >> osc::EndMessage;
@@ -86,7 +86,7 @@ public:
                 remoteEndpoint.AddressAsString(buf);
 
                 receiver_.addClient(std::string(buf), port);
-            } else if ( std::strcmp( m.AddressPattern(), "/oKontrol/metaData" ) == 0 ) {
+            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/metaData" ) == 0 ) {
                 receiver_.publishMetaData();
             }
         } catch ( osc::Exception& e ) {
@@ -101,8 +101,8 @@ private:
 OSCReceiver::OSCReceiver(const std::shared_ptr<ParameterModel>& param)
     : param_model_(param), port_(0) {
     PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), MAX_N_OSC_MSGS, msgData_);
-    packetListener_ = std::make_shared<oKontrolPacketListener> (&messageQueue_);
-    oscListener_ = std::make_shared<oKontrolOSCListener> (*this);
+    packetListener_ = std::make_shared<KontrolPacketListener> (&messageQueue_);
+    oscListener_ = std::make_shared<KontrolOSCListener> (*this);
 }
 
 OSCReceiver::~OSCReceiver() {

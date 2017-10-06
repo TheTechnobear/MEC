@@ -1,7 +1,7 @@
 #include "OrganelleOLED.h"
 
 #include "osc/OscOutboundPacketStream.h"
-#include "oKontrolOrganelle~.h"
+#include "kontrolhost~.h"
 
 // #include <algorithm>
 // #include <limits>
@@ -91,7 +91,7 @@ void OrganelleOLED::poll() {
 
 }
 
-std::string OrganelleOLED::asDisplayString(const oKontrol::Parameter& param, unsigned width) const {
+std::string OrganelleOLED::asDisplayString(const Kontrol::Parameter& param, unsigned width) const {
   std::string pad = "";
   std::string ret;
   std::string value = param.displayValue();
@@ -105,7 +105,7 @@ std::string OrganelleOLED::asDisplayString(const oKontrol::Parameter& param, uns
 }
 
 
-void OrganelleOLED::displayParamLine(unsigned line, const oKontrol::Parameter& param) {
+void OrganelleOLED::displayParamLine(unsigned line, const Kontrol::Parameter& param) {
   static const char* oledLine0 = "/oled/line/0";
   static const char* oledLine1 = "/oled/line/1";
   static const char* oledLine2 = "/oled/line/2";
@@ -138,7 +138,7 @@ void OrganelleOLED::displayParamLine(unsigned line, const oKontrol::Parameter& p
 }
 
 
-void OrganelleOLED::changed(oKontrol::ParameterSource src, const oKontrol::Parameter& param) {
+void OrganelleOLED::changed(Kontrol::ParameterSource src, const Kontrol::Parameter& param) {
   if (popupTime_ > 0) return;
 
   auto pageId = x_->param_model_->getPageId(x_->currentPage_);

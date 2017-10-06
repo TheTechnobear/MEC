@@ -33,13 +33,13 @@ portaudio = ../../../external/portaudio
 cflags += -I $(portaudio)
 portaudio.sources = $(portaudio)/pa_ringbuffer.cpp
 
-okontrol = ../../api
-cflags += -I $(okontrol)
-okontrol.sources = \
-	$(okontrol)/ParameterModel.cpp \
-	$(okontrol)/Parameter.cpp \
-	$(okontrol)/OSCReceiver.cpp \
-	$(okontrol)/OSCBroadcaster.cpp 
+kontrol = ../../api
+cflags += -I $(kontrol)
+kontrol.sources = \
+	$(kontrol)/ParameterModel.cpp \
+	$(kontrol)/Parameter.cpp \
+	$(kontrol)/OSCReceiver.cpp \
+	$(kontrol)/OSCBroadcaster.cpp 
 
 
 define forLinux
@@ -58,13 +58,13 @@ endef
 common.sources = \
 	$(oscpack.sources) \
 	$(portaudio.sources) \
-	$(okontrol.sources)
+	$(kontrol.sources)
 
 
 # input source file (class name == source file basename)
 
 class.sources = \
-	oKontrol.cpp \
+	kontrol.cpp \
 			
 
 # all extra files to be included in binary distribution of the library

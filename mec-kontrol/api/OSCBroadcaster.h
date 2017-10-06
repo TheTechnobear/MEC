@@ -5,7 +5,7 @@
 
 #include "ip/UdpSocket.h"
 
-namespace oKontrol {
+namespace Kontrol {
 
 class OSCBroadcaster : public ParameterCallback {
 public:

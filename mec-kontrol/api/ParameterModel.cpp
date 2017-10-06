@@ -5,7 +5,7 @@
 #include <string.h>
 #include <iostream>
 
-namespace oKontrol {
+namespace Kontrol {
 
 
 

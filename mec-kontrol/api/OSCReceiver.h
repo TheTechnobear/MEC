@@ -43,11 +43,11 @@
 }
 #endif 
 
-namespace oKontrol {
+namespace Kontrol {
 
 
 
-class oKontrolOSCListener;
+class KontrolOSCListener;
 
 static const int MAX_N_OSC_MSGS = 64;
 static const int MAX_OSC_MESSAGE_SIZE = 512;
@@ -87,7 +87,7 @@ private:
     thread_t receive_thread_;
     std::shared_ptr<UdpListeningReceiveSocket> socket_;
     std::shared_ptr<PacketListener> packetListener_;
-    std::shared_ptr<oKontrolOSCListener> oscListener_;
+    std::shared_ptr<KontrolOSCListener> oscListener_;
     PaUtilRingBuffer messageQueue_;
     char msgData_[sizeof(OscMsg) * MAX_N_OSC_MSGS];
 };

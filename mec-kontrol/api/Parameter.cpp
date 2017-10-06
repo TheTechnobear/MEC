@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace oKontrol {
+namespace Kontrol {
 
 // PT_Invalid
 // PT_Float

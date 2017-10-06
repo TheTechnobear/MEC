@@ -7,7 +7,7 @@
 #include <vector>
 #include <memory>
 
-namespace oKontrol {
+namespace Kontrol {
 
 // todo: parameters probably need to be
 // slot:paramid

@@ -49,7 +49,7 @@ private:
     std::shared_ptr<Push2_OLED> oled_;
 
     // kontrol interface
-    std::shared_ptr<oKontrol::ParameterModel>       param_model_;
+    std::shared_ptr<Kontrol::ParameterModel>       param_model_;
 
 
     float       pitchbendRange_;

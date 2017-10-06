@@ -2,7 +2,7 @@
 
 #include "osc/OscOutboundPacketStream.h"
 
-namespace oKontrol {
+namespace Kontrol {
 
 
 const std::string OSCBroadcaster::ADDRESS = "127.0.0.1";
@@ -38,7 +38,7 @@ void OSCBroadcaster::requestMetaData() {
     osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage( "/oKontrol/metaData" )
+        << osc::BeginMessage( "/Kontrol/metaData" )
         << osc::EndMessage
         << osc::EndBundle;
 
@@ -51,7 +51,7 @@ void OSCBroadcaster::requestConnect(unsigned port) {
     osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage( "/oKontrol/connect" )
+        << osc::BeginMessage( "/Kontrol/connect" )
         << (int32_t) port
         << osc::EndMessage
         << osc::EndBundle;
@@ -67,7 +67,7 @@ void OSCBroadcaster::page(ParameterSource src, const Page& p) {
     osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage( "/oKontrol/page" )
+        << osc::BeginMessage( "/Kontrol/page" )
         << p.id().c_str()
         << p.displayName().c_str();
 
@@ -88,7 +88,7 @@ void OSCBroadcaster::param(ParameterSource src, const Parameter& p) {
     osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage( "/oKontrol/param" );
+        << osc::BeginMessage( "/Kontrol/param" );
     std::vector<ParamValue> values;
     p.createArgs(values);
     for (ParamValue v : values) {
@@ -116,7 +116,7 @@ void OSCBroadcaster::changed(ParameterSource src, const Parameter& p) {
     osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage( "/oKontrol/changed" )
+        << osc::BeginMessage( "/Kontrol/changed" )
         << p.id().c_str();
 
     switch (p.current().type()) {
