@@ -1,7 +1,7 @@
 #include "mec_push2.h"
 
-#include "../mec_log.h"
-#include "../mec_prefs.h"
+#include "mec_log.h"
+#include "mec_prefs.h"
 #include "../mec_voice.h"
 
 ////////////////////////////////////////////////

@@ -7,6 +7,10 @@
 #include <vector>
 #include <memory>
 
+namespace mec{
+class Preferences;
+}
+
 namespace Kontrol {
 
 // todo: parameters probably need to be
@@ -19,7 +23,6 @@ namespace Kontrol {
 // slots dont need order (here!?), pages do need an order, parameters need order in page
 // when broadcast, we will need slot/paramid
 // change will also need slotid/paramid
-
 
 
 enum ParameterSource {
@@ -114,9 +117,17 @@ public:
 
 	std::string getParamId(const std::string& pageId, unsigned paramNum);
 	std::shared_ptr<Parameter> getParam(const std::string paramId) { return parameters_[paramId]; }
+
+	bool loadParameterDefintions(const std::string& filename);
+	bool loadParameterDefintions(const mec::Preferences& prefs);
+	bool loadPatchSettings(const std::string& filename);
+	bool loadPatchSettings(const mec::Preferences& prefs);
 private:
 	ParameterModel();
+	std::shared_ptr<mec::Preferences> paramDefinitions_;
+	std::shared_ptr<mec::Preferences> patchSettings_;
 
+	std::string patchName_;
 	std::unordered_map<std::string, std::shared_ptr<Parameter> >parameters_;
 	std::unordered_map<std::string, std::shared_ptr<Page> >pages_;
 	std::vector<std::string> pageIds_;

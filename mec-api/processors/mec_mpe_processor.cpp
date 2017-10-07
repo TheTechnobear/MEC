@@ -1,7 +1,8 @@
 
 #include "mec_mpe_processor.h"
 
-#include "../mec_log.h"
+#include "mec_log.h"
+
 namespace mec {
 
 #define TIMBRE_CC 74

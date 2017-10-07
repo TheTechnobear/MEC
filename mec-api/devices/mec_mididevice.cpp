@@ -1,7 +1,7 @@
 #include "mec_mididevice.h"
 
-#include "../mec_log.h"
-#include "../mec_prefs.h"
+#include "mec_log.h"
+#include "mec_prefs.h"
 #include "../mec_voice.h"
 
 namespace mec {

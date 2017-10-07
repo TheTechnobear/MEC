@@ -1,7 +1,7 @@
 #include "mec_kontroldevice.h"
 
-#include "../mec_log.h"
-#include "../mec_prefs.h"
+#include "mec_log.h"
+#include "mec_prefs.h"
 
 #include "Parameter.h"
 

@@ -41,4 +41,5 @@ add_subdirectory(external/rtmidi rtmidi)
 add_subdirectory(mec-api) 
 add_subdirectory(mec-app)
 add_subdirectory(mec-kontrol)
+add_subdirectory(mec-utils) 
 

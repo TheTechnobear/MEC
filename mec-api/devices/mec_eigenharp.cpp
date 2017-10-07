@@ -1,7 +1,7 @@
 #include "mec_eigenharp.h"
 
-#include "../mec_log.h"
-#include "../mec_prefs.h"
+#include "mec_log.h"
+#include "mec_prefs.h"
 #include "../mec_surfacemapper.h"
 #include "../mec_voice.h"
 

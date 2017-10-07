@@ -1,5 +1,4 @@
-#ifndef MEC_LOG_H
-#define MEC_LOG_H
+#pragma once
 
 // this will be replaced with a logging method, that can be replaced by a platform
 // probably based on 'printf' type formating
@@ -20,5 +19,3 @@
 #define LOG_3(x) 
 
 
-
-#endif //MEC_LOG_H

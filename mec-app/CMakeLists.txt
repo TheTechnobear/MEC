@@ -21,6 +21,7 @@ set(MEC_SRC
 
 include_directories (
     "${PROJECT_SOURCE_DIR}/../mec-api" 
+    "${PROJECT_SOURCE_DIR}/../mec-utils" 
     "${PROJECT_SOURCE_DIR}/../external/oscpack"
     "${PROJECT_SOURCE_DIR}/../external/rtmidi"
 )

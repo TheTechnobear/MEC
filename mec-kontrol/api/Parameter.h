@@ -45,10 +45,10 @@ enum ParameterType {
     PT_Float,
     PT_Boolean,
     PT_Int,
-    PT_Pct,
-    PT_LinHz,
-    PT_mSec,
-    PT_Semi
+    PT_Percent,
+    PT_Frequency,
+    PT_Time,
+    PT_Pitch
 };
 
 class Parameter {
@@ -149,9 +149,9 @@ public:
     virtual const std::string& displayUnit() const;
 };
 
-class Parameter_LinearHz : public Parameter_Float  {
+class Parameter_Frequency : public Parameter_Float  {
 public:
-    Parameter_LinearHz(ParameterType type) : Parameter_Float(type) { ; }
+    Parameter_Frequency(ParameterType type) : Parameter_Float(type) { ; }
     virtual const std::string& displayUnit() const;
 };
 
@@ -162,9 +162,9 @@ public:
 };
 
 
-class Parameter_Semi : public Parameter_Int  {
+class Parameter_Pitch : public Parameter_Int  {
 public:
-    Parameter_Semi(ParameterType type) : Parameter_Int(type) { ; }
+    Parameter_Pitch(ParameterType type) : Parameter_Int(type) { ; }
     virtual const std::string& displayUnit() const;
 };
 
