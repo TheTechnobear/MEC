@@ -41,10 +41,11 @@
                     "overlay" : {
                         "name" : "grid",
                         "params" : {
-                            "rows" : 10,
+                            "rows" : 6,
                             "columns" : 72,
+                            "semitones" : 72,
                             "baseNote" : 32,
-                            "semitoneOffsetPerRow" : 5
+                            "semitoneOffsetForAllRows" : 5
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 #include <src/sensel_device.h>
 #include <src/sensel.h>
+#include <morph_constants.h>
 #include "SinglePanel.h"
 #include "../../../mec_log.h"
 
@@ -18,9 +19,9 @@ bool SinglePanel::init() {
         return false;
     }
     SenselDevice *device = (SenselDevice*) handle_;
-    dimensions_.width = device->sensor_info.width;
+    dimensions_.width = device->sensor_info.width + 10; // non-sensing 2 * 5 borders are also counted
     dimensions_.height = device->sensor_info.height;
-    dimensions_.max_pressure = 2048; //TODO
+    dimensions_.max_pressure = MEC_MORPH_MAX_Z_PRESSURE; //TODO
     SenselFirmwareInfo firmwareInfo;
     SenselStatus getFirmwareStatus = senselGetFirmwareInfo(&handle_, &firmwareInfo);
     if (getFirmwareStatus != SENSEL_OK) {
@@ -153,7 +154,7 @@ bool SinglePanel::readTouches(Touches &touches) {
                     // thus we have to calculate the deltas ourselves until this is fixed
                     // by memorizing the last (x,y,z) position per touchid
                     foundTouch = activeTouches_[touchid];
-                    updateDeltas(touch, foundTouch);
+                    copyAndUpdateDeltas(touch, foundTouch);
                     if (!foundTouch) {
                         foundTouch = touch;
                         LOG_0("mec::SinglePanel::readTouches CONTACT_MOVE - unable to find active touch for end event - this shouldn't happen.");
@@ -165,7 +166,7 @@ bool SinglePanel::readTouches(Touches &touches) {
                 case CONTACT_END: // 3
                 {
                     foundTouch = activeTouches_[touchid];
-                    updateDeltas(touch, foundTouch);
+                    copyAndUpdateDeltas(touch, foundTouch);
                     if (foundTouch) {
                         activeTouches_.erase(touchid);
                     } else {
@@ -195,8 +196,8 @@ bool SinglePanel::readTouches(Touches &touches) {
     return true;
 }
 
-void SinglePanel::updateDeltas(const std::shared_ptr <TouchWithDeltas> &touch,
-                  std::shared_ptr <TouchWithDeltas> foundTouch) const {
+void SinglePanel::copyAndUpdateDeltas(const std::shared_ptr<TouchWithDeltas> &touch,
+                                      std::shared_ptr<TouchWithDeltas> foundTouch) const {
     if (foundTouch) {
         foundTouch->delta_x_ = touch->x_ - foundTouch->x_;
         foundTouch->delta_y_ = touch->y_ - foundTouch->y_;
@@ -207,6 +208,7 @@ void SinglePanel::updateDeltas(const std::shared_ptr <TouchWithDeltas> &touch,
                                            << foundTouch->delta_y_);
         LOG_2("mec::updateDeltas - old z:" << foundTouch->z_ << ",new z:" << touch->x_ << ",delta_z:"
                                            << foundTouch->delta_z_);
+        foundTouch->quantizing_offset_x_ = touch->quantizing_offset_x_;
         foundTouch->x_ = touch->x_;
         foundTouch->y_ = touch->y_;
         foundTouch->z_ = touch->z_;

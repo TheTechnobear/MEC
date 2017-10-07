@@ -2,6 +2,7 @@
 #define MEC_GRIDOVERLAY_H
 
 #include <panels/PanelDimensions.h>
+#include <quantizers/XQuantizer.h>
 #include "OverlayFunction.h"
 
 namespace mec {
@@ -13,14 +14,21 @@ public:
 
     virtual bool init(const Preferences &preferences, const PanelDimensions &dimensions);
 
-    virtual bool interpretTouches(const Touches &touches);
+    virtual bool processTouches(Touches &touches);
 
 private:
     int rows_;
     int columns_;
-    float semitoneOffsetPerRow_;
+    float semitones_;
+    std::vector<float> semitoneOffsetForRow_;
+    std::vector<float> xOffsetForRow_;
     float baseNote_;
     PanelDimensions dimensions_;
+    float cellWidth_;
+    float cellHeight_;
+    XQuantizer quantizer_;
+    bool roundNotePitchWhenNotMoving_;
+    bool roundNoteOnPitch_;
 
     float xyPosToNote(float xPos, float yPos);
 
@@ -29,6 +37,8 @@ private:
     float normalizeYPos(float yPos);
 
     float normalizeZPos(float zPos);
+
+    void getCurrentCell(Rectangle &rectangle, const Touch &touch);
 };
 
 }

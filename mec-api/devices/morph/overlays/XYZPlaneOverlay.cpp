@@ -28,7 +28,7 @@ bool XYZPlaneOverlay::init(const Preferences &preferences, const PanelDimensions
     return true;
 }
 
-bool XYZPlaneOverlay::interpretTouches(const Touches &touches) {
+bool XYZPlaneOverlay::processTouches(Touches &touches) {
     const std::vector<std::shared_ptr<TouchWithDeltas>> &newTouches = touches.getNewTouches();
     for (auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
         surfaceCallback_.touchOn(**touchIter);

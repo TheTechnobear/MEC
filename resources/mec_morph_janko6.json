@@ -36,13 +36,21 @@
                 }
             },
             "instruments" : {
-                "4 panel continuum" : {
+                "4 panel grid" : {
                     "panel" : "4 panels",
                     "overlay" : {
-                        "name" : "xyzplane",
+                        "name" : "grid",
                         "params" : {
+                            "rows" : 6,
+                            "columns" : 36,
                             "semitones" : 72,
-                            "baseNote" : 24 
+                            "baseNote" : 24,
+                            "semitoneOffsetForAllRows" : 0,
+                            "xOffsetForRow2" : 0.5,
+                            "xOffsetForRow4" : 0.5,
+                            "xOffsetForRow6" : 0.5,
+                            "roundNoteOnPitch" : true,
+                            "roundNotePitchWhenNotMoving" : false 
                         }
                     }
                 }
@@ -52,10 +60,10 @@
     "mec-app" : {
         "outputs" : {
             "midi" : {
-                "virtual" : 1,
+                "virtual" : 0,
                 "voices" : 15,
                 "pitchbend range" : 48.0,
-                "device" : "MEC MIDI Out"
+                "device" : "IAC-Treiber To DAW"
             },
             "console" : {
                 "throttle" : 0

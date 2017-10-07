@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
         singlePanel.readTouches(touches);
         // exit when touching the lower 10th of the panel
         const std::vector<std::shared_ptr<mec::morph::TouchWithDeltas>> &newTouches = touches.getNewTouches();
-        if(newTouches.size() > 0 && newTouches[0]->y_ > (MEC_MORPH_PANEL_HEIGHT * 9.0) / 10.0) {
+        if(newTouches.size() > 0 && newTouches[0]->y_ > (singlePanel.getDimensions().height * 9.0) / 10.0) {
             return 0;
         }
         usleep(sleepTimeMS);

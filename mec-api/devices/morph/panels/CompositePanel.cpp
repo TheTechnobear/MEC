@@ -24,24 +24,27 @@ CompositePanel::CompositePanel(SurfaceID surfaceID, const std::vector <std::shar
 }
 
 bool CompositePanel::init() {
-    dimensions_.max_pressure = 0;
-    dimensions_.height = 0;
-    dimensions_.width = 0;
+    compositePanelDimensions_.max_pressure = 0;
+    compositePanelDimensions_.height = 0;
+    compositePanelDimensions_.width = 0;
     for(auto panelIter = containedPanels_.begin(); panelIter != containedPanels_.end(); ++ panelIter) {
         const PanelDimensions& panelDimensions = (*panelIter)->getDimensions();
-        dimensions_.width += panelDimensions.width;
-        if(panelDimensions.height > dimensions_.height) {
-            dimensions_.height = panelDimensions.height;
+        compositePanelDimensions_.width += panelDimensions.width;
+        if(panelDimensions.height > compositePanelDimensions_.height) {
+            compositePanelDimensions_.height = panelDimensions.height;
         }
-        if(panelDimensions.max_pressure > dimensions_.max_pressure) {
-            dimensions_.max_pressure = panelDimensions.max_pressure;
+        if(panelDimensions.max_pressure > compositePanelDimensions_.max_pressure) {
+            compositePanelDimensions_.max_pressure = panelDimensions.max_pressure;
         }
     }
+    singlePanelDimensions_.max_pressure = compositePanelDimensions_.max_pressure;
+    singlePanelDimensions_.height = compositePanelDimensions_.height;
+    singlePanelDimensions_.width = compositePanelDimensions_.width / containedPanels_.size();
     return true;
 }
 
 const PanelDimensions& CompositePanel::getDimensions() {
-    return dimensions_;
+    return compositePanelDimensions_;
 }
 
 bool CompositePanel::readTouches(Touches &touches) {
@@ -79,8 +82,8 @@ void CompositePanel::remapTouches(Touches &collectedTouches, Touches &remappedTo
 }
 
 bool CompositePanel::isInTransitionArea(TouchWithDeltas &touch) {
-    double xpos_on_panel = fmod(touch.x_, (float) MEC_MORPH_PANEL_WIDTH);
-    return xpos_on_panel >= MEC_MORPH_PANEL_WIDTH - transitionAreaWidth_ / 2 ||
+    double xpos_on_panel = fmod(touch.x_, (float) singlePanelDimensions_.width);
+    return xpos_on_panel >= singlePanelDimensions_.width - transitionAreaWidth_ / 2 ||
            xpos_on_panel <= transitionAreaWidth_ / 2;
 }
 
@@ -96,6 +99,7 @@ std::shared_ptr <CompositePanel::MappedTouch> CompositePanel::findCloseMappedTou
                       << (*touchIter)->x_ + (*touchIter)->delta_x_ << ",y:"
                       << (*touchIter)->y_ + (*touchIter)->delta_y_
                       << ",dx:" << (*touchIter)->delta_x_ << ",dy:" << (*touchIter)->delta_y_ << ")");
+        // find a mapped touch that would be expected to be at the approximate position of the current touch in the next step
         if (fabs((*touchIter)->x_ + (*touchIter)->delta_x_ - touch.x_) <= MAX_X_DELTA_TO_CONSIDER_TOUCHES_CLOSE &&
             fabs((*touchIter)->y_ + (*touchIter)->delta_y_ - touch.y_) <= MAX_Y_DELTA_TO_CONSIDER_TOUCHES_CLOSE) {
             LOG_2("map::CompositePanel::findCloseMappedTouch - mapped touch found");
@@ -119,6 +123,7 @@ std::shared_ptr <CompositePanel::MappedTouch> CompositePanel::findMappedTouch(To
                       << (*touchIter)->x_ + (*touchIter)->delta_x_
                       << ",y:" << (*touchIter)->y_ + (*touchIter)->delta_y_ << ",dx:" << (*touchIter)->delta_x_
                       << ",dy:" << (*touchIter)->delta_y_ << ")");
+        // find a mapped touch at the position where the current touch previously was
         if (fabs((*touchIter)->x_ - touch.x_ + touch.delta_x_) <= EXPECTED_MEASUREMENT_ERROR &&
             fabs((*touchIter)->y_ - touch.y_ + touch.delta_y_) <= EXPECTED_MEASUREMENT_ERROR) {
             LOG_2("map::CompositePanel::findMappedTouch - mapped touch found");
@@ -146,7 +151,7 @@ void CompositePanel::remapStartedTouches(Touches &collectedTouches, Touches &rem
         bool createNewMappingEntry = true;
         // a new touch in a transition area that is close to an existing touch in the transition area
         // moves that touch to the new position instead of creating a new touch.
-        //if(isInTransitionArea(transposedTouch)) {
+        if(isInTransitionArea(transposedTouch)) {
         std::shared_ptr <MappedTouch> closeMappedTouch = findCloseMappedTouch(transposedTouch);
         LOG_2("mec::CompositePanel::remapStartedTouches - in transition. num mapped touches: "
                       << mappedTouches_.size());
@@ -165,11 +170,10 @@ void CompositePanel::remapStartedTouches(Touches &collectedTouches, Touches &rem
         } else {
             LOG_2("mec::CompositePanel::remapStartedTouches - no close touch found");
         }
-        //}
+        }
         if (createNewMappingEntry) {
             std::shared_ptr <MappedTouch> mappedTouch;
-            mappedTouch.reset(new MappedTouch());
-            mappedTouch->update(transposedTouch);
+            mappedTouch.reset(new MappedTouch(transposedTouch));
             int touchID = *availableTouchIDs.begin();
             availableTouchIDs.erase(touchID);
             mappedTouch->id_ = touchID;
@@ -339,7 +343,7 @@ void CompositePanel::transposeTouch(const std::shared_ptr <TouchWithDeltas> &col
                                                                  << getSurfaceID()
                                                                  << "but still received a touch event from it");
     }
-    transposedTouch.x_ = collectedTouch->x_ + panelPosition * MEC_MORPH_PANEL_WIDTH;
+    transposedTouch.x_ = collectedTouch->x_ + panelPosition * singlePanelDimensions_.width;
     transposedTouch.y_ = collectedTouch->y_;
     transposedTouch.z_ = collectedTouch->z_;
     transposedTouch.surface_ = collectedTouch->surface_;
@@ -348,6 +352,7 @@ void CompositePanel::transposeTouch(const std::shared_ptr <TouchWithDeltas> &col
     transposedTouch.delta_x_ = collectedTouch->delta_x_;
     transposedTouch.delta_y_ = collectedTouch->delta_y_;
     transposedTouch.delta_z_ = collectedTouch->delta_z_;
+    transposedTouch.quantizing_offset_x_ = collectedTouch->quantizing_offset_x_;
     LOG_2("mec::CompositePanel::transposeTouch - transposedTouch: (x:" << transposedTouch.x_ << ",y:"
                                                                        << transposedTouch.y_
                                                                        << ",dx:" << transposedTouch.delta_x_

@@ -39,10 +39,10 @@
                 "4 panel continuum" : {
                     "panel" : "4 panels",
                     "overlay" : {
-                        "name" : "xyzplane",
+                        "name" : "continuano",
                         "params" : {
                             "semitones" : 72,
-                            "baseNote" : 24 
+                            "baseNote" : 12 
                         }
                     }
                 }
@@ -52,10 +52,10 @@
     "mec-app" : {
         "outputs" : {
             "midi" : {
-                "virtual" : 1,
+                "virtual" : 0,
                 "voices" : 15,
                 "pitchbend range" : 48.0,
-                "device" : "MEC MIDI Out"
+                "device" : "IAC-Treiber To DAW"
             },
             "console" : {
                 "throttle" : 0

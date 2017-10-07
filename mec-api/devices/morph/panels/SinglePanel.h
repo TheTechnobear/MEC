@@ -28,8 +28,8 @@ private:
     std::map<int, std::shared_ptr<TouchWithDeltas>> activeTouches_;
     PanelDimensions dimensions_;
 
-    void updateDeltas(const std::shared_ptr <TouchWithDeltas> &touch,
-                      std::shared_ptr <TouchWithDeltas> foundTouch) const;
+    void copyAndUpdateDeltas(const std::shared_ptr<TouchWithDeltas> &touch,
+                             std::shared_ptr<TouchWithDeltas> foundTouch) const;
 };
 
 }

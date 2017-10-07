@@ -16,7 +16,7 @@ public:
 
     virtual bool init(const Preferences &preferences, const PanelDimensions& dimensions) = 0;
 
-    virtual bool interpretTouches(const Touches &touches) = 0;
+    virtual bool processTouches(Touches &touches) = 0;
 
     const std::string &getName() const {
         return name_;

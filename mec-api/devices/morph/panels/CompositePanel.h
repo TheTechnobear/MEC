@@ -21,10 +21,16 @@ public:
     virtual const PanelDimensions& getDimensions();
 
 private:
-    struct MappedTouch : public TouchWithDeltas {
+    class MappedTouch : public TouchWithDeltas {
+    public:
+        MappedTouch(const TouchWithDeltas &touch) {
+            quantizing_offset_x_ = touch.quantizing_offset_x_;
+            update(touch);
+        }
         int numInterpolationSteps_;
 
-        void update(TouchWithDeltas &touch) {
+        void update(const TouchWithDeltas &touch) {
+            delta_z_ = touch.delta_z_;
             x_ = touch.x_;
             y_ = touch.y_;
             z_ = touch.z_;
@@ -32,8 +38,9 @@ private:
             r_ = touch.r_;
             delta_x_ = touch.delta_x_;
             delta_y_ = touch.delta_y_;
-            delta_z_ = touch.delta_z_;
         }
+    private:
+        MappedTouch() {}
     };
 
     float transitionAreaWidth_;
@@ -44,7 +51,8 @@ private:
     std::vector <std::shared_ptr<Panel>> containedPanels_;
     std::map<SurfaceID, int> containedPanelsPositions_;
     static std::shared_ptr <MappedTouch> NO_MAPPED_TOUCH;
-    PanelDimensions dimensions_;
+    PanelDimensions compositePanelDimensions_;
+    PanelDimensions singlePanelDimensions_;
 
     void remapTouches(Touches &collectedTouches, Touches &remappedTouches);
 

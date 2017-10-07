@@ -273,6 +273,10 @@ private:
             }
             std::unique_ptr<OverlayFunction> overlayFunction;
             overlayFunction = std::move(OverlayFactory::create(overlayName, surfaceCallback_, callback_));
+            if(!overlayFunction) {
+                LOG_0("unknown overlay " << overlayName);
+                continue;
+            }
             overlayFunction->init(overlayParamPrefs, panel->getDimensions());
             std::unique_ptr<Instrument> instrument;
             instrument.reset(new Instrument(*instrumentNameIter, panel, std::move(overlayFunction)));

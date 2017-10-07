@@ -13,7 +13,7 @@ public:
 
     virtual bool init(const Preferences &preferences, const PanelDimensions &dimensions);
 
-    virtual bool interpretTouches(const Touches &touches);
+    virtual bool processTouches(Touches &touches);
 
 private:
     float semitones_;

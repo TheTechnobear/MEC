@@ -52,12 +52,18 @@ set(MECAPI_SRC
     devices/morph/overlays/XYZPlaneOverlay.h
     devices/morph/overlays/GridOverlay.cpp
     devices/morph/overlays/GridOverlay.h
+    devices/morph/overlays/ContinuanoOverlay.cpp
+    devices/morph/overlays/ContinuanoOverlay.h
     devices/morph/morph_constants.h
     devices/morph/overlays/OverlayFactory.h
     devices/morph/overlays/OverlayFactory.cpp
     devices/morph/Instrument.cpp
     devices/morph/Instrument.h
-)
+        devices/morph/quantizers/Map2D.h
+        devices/morph/quantizers/Map2D.cpp
+    devices/morph/quantizers/Rectangle.h
+    devices/morph/quantizers/Quantizer.h
+        devices/morph/quantizers/XQuantizer.cpp devices/morph/quantizers/XQuantizer.h)
 
 include_directories (
     "devices/push2" 

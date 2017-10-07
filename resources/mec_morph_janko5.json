@@ -36,13 +36,16 @@
                 }
             },
             "instruments" : {
-                "4 panel continuum" : {
+                "4 panel grid" : {
                     "panel" : "4 panels",
                     "overlay" : {
-                        "name" : "xyzplane",
+                        "name" : "grid",
                         "params" : {
-                            "semitones" : 72,
-                            "baseNote" : 24 
+                            "rows" : 5,
+                            "columns" : 48,
+                            "semitones" : 96,
+                            "baseNote" : 12,
+                            "semitoneOffsetForAllRows" : 0
                         }
                     }
                 }

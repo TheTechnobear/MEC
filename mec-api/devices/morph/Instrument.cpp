@@ -19,7 +19,7 @@ bool Instrument::process() {
     }
     LOG_3("morph::Instrument::process - touches read");
     LOG_3("morph::Instrument::process - interpreting touches");
-    bool touchesInterpreted = overlayFunction_->interpretTouches(touches);
+    bool touchesInterpreted = overlayFunction_->processTouches(touches);
     LOG_3("morph::Instrument::process - touches interpreted");
     if (!touchesInterpreted) {
         LOG_0("morph::Instrument::process - unable to interpret touches from panel " << panel_->getSurfaceID()
