@@ -53,12 +53,12 @@ bool ContinuanoOverlay::processTouches(Touches &touches) {
         Rectangle key;
         KeyName keyName;
         bool keyFound = getKey(key, **touchIter, keyName);
-        //if(keyFound) {
-            //quantizer_.quantizeNewTouch(quantizedTouch, **touchIter, key);
-            //touch = &quantizedTouch;
-        //} else {
+        if(keyFound) {
+            quantizer_.quantizeNewTouch(quantizedTouch, **touchIter, key);
+            touch = &quantizedTouch;
+        } else {
             touch = &**touchIter;
-        //}
+        }
         //TODO: how should a downpath scaler know which parts to scale in which way?  (Probably the Continuano Overlay might have to be split into sub-overlays)
         surfaceCallback_.touchOn(*touch);
         if(quantizedTouch.y_ >= diatonicZoneUpperY_) {
@@ -75,11 +75,10 @@ bool ContinuanoOverlay::processTouches(Touches &touches) {
         KeyName keyName;
         bool keyFound = getKey(key, **touchIter, keyName);
         if(keyFound) {
-            //quantizer_.quantizeContinuedTouch(quantizedTouch, **touchIter, key, true);
+            quantizer_.quantizeContinuedTouch(quantizedTouch, **touchIter, key, true);
         } else {
-            //quantizer_.retuneToOriginalPitch(quantizedTouch, **touchIter);
+            quantizer_.retuneToOriginalPitch(quantizedTouch, **touchIter);
         }
-        quantizedTouch = **touchIter;
         surfaceCallback_.touchContinue(quantizedTouch);
         if(quantizedTouch.y_ >= diatonicZoneUpperY_) {
             applyDiatonicScale(quantizedTouch, keyName);
