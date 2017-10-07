@@ -54,13 +54,6 @@ public:
 
     void*       getArray(const std::string v) const;
 
-    // depreciatd move to array class
-    int         getArraySize(void*) const;
-    Type        getArrayType(const std::string& v) const;
-    int         getArrayInt(void*, int i,int def) const;
-    double      getArrayDouble(void*, int i,double def) const;
-    std::string getArrayString(void*,int i, const std::string def = "") const;
-
 private:
     bool        loadPreferences(const std::string& file);
 

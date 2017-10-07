@@ -26,10 +26,10 @@ int SurfaceMapper::noteFromKey(int key) {
 
 void SurfaceMapper::loadNoteArray(Preferences& prefs) {
 	mode_ = SM_Notes;
-	void* a = prefs.getArray("notes");
-	int sz = prefs.getArraySize(a);
+	Preferences::Array array(prefs.getArray("notes"));
+	int sz = array.getSize();
 	for(int i = 0; i < sz; i++) {
-		notes_[i] = prefs.getArrayInt(a,i,i);
+		notes_[i] = array.getInt(i);
 	}
 	for(int i=sz;i<MAX_KEYS;i++) {
 		notes_[i] = i;

@@ -22,9 +22,9 @@ bool    Scales::load(const Preferences& prefs) {
     std::vector<std::string> keys = prefs.getKeys();
     for (std::string k : keys) {
         ScaleArray scale;
-        void* a = prefs.getArray(k);
-        for (int i = 0; i < prefs.getArraySize(a); i++) {
-            float n = (float) prefs.getArrayDouble(a, i, 0.0f);
+        Preferences::Array array(prefs.getArray(k));
+        for (int i = 0; i < array.getSize(); i++) {
+            float n = (float) array.getDouble(i);
             scale.push_back(n);
         }
         if (scale.size() > 0) {

@@ -107,9 +107,9 @@ bool    SplitSurface::load(const Preferences& prefs) {
 
     splitPoint_ = (float) prefs.getDouble("split point", 0.5);
 
-    void* a = prefs.getArray("surfaces");
-    for (int i = 0; i < prefs.getArraySize(a); i++) {
-        SurfaceID n = prefs.getArrayString(a, i, "");
+    Preferences::Array array(prefs.getArray("surfaces"));
+    for (int i = 0; i < array.getSize(); i++) {
+        SurfaceID n = array.getString(i);
         if (n.size() > 0) {
             surfaces_.push_back(n);
         }
@@ -197,9 +197,9 @@ bool    JoinedSurface::load(const Preferences& prefs) {
     // temp, this will come from the source surface
     surfaceSize_ = (float) prefs.getDouble("surface size", 1.0);
 
-    void* a = prefs.getArray("surfaces");
-    for (int i = 0; i < prefs.getArraySize(a); i++) {
-        SurfaceID n = prefs.getArrayString(a, i, "");
+    Preferences::Array array(prefs.getArray("surfaces"));
+    for (int i = 0; i < array.getSize(); i++) {
+        SurfaceID n = array.getString(i);
         if (n.size() > 0) {
             surfaces_.push_back(n);
         }

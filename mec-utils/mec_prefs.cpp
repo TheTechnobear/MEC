@@ -252,44 +252,5 @@ void*       Preferences::Array::getObject(unsigned i) const {
     return nullptr;
 }
 
-
-///// deprecated !
-int Preferences::getArraySize(void* v) const {
-    cJSON *node = (cJSON*) v;
-    if (node != nullptr && node->type == cJSON_Array) {
-        return cJSON_GetArraySize(node);
-    }
-    return 0;
-}
-
-int Preferences::getArrayInt(void* v, int i, int def) const {
-    cJSON *array = (cJSON*) v;
-    cJSON *node = cJSON_GetArrayItem(array, i);
-    if (node != nullptr && node->type == cJSON_Number) {
-        return node->valueint;
-    }
-    return def;
-}
-
-double Preferences::getArrayDouble(void* v, int i, double def) const {
-    cJSON *array = (cJSON*) v;
-    cJSON *node = cJSON_GetArrayItem(array, i);
-    if (node != nullptr && node->type == cJSON_Number) {
-        return node->valuedouble;
-    }
-    return def;
-}
-
-std::string Preferences::getArrayString(void* v, int i, const std::string def) const {
-    cJSON *array = (cJSON*) v;
-    cJSON *node = cJSON_GetArrayItem(array, i);
-    if (node != nullptr && node->type == cJSON_String) {
-        return node->valuestring;
-    }
-    return def;
-}
-
-
-
 } // namespace
 
