@@ -42,7 +42,9 @@
                         "name" : "continuano",
                         "params" : {
                             "semitones" : 72,
-                            "baseNote" : 12 
+                            "baseNote" : 12,
+                            "roundNoteOnPitch" : true,
+                            "roundNotePitchWhenNotMoving" : true
                         }
                     }
                 }

@@ -45,7 +45,7 @@ void XQuantizer::quantizeContinuedTouch(TouchWithDeltas &quantizedTouch, TouchWi
 }
 
 void XQuantizer::retuneToOriginalPitch(TouchWithDeltas &quantizedTouch, TouchWithDeltas &originalTouch) {
-    if(fabs(quantizedTouch.quantizing_offset_x_) > PITCH_CORRECTION_STEP) {
+    if(fabs(originalTouch.quantizing_offset_x_) > PITCH_CORRECTION_STEP) {
         if(originalTouch.x_ > originalTouch.quantizing_offset_x_) {
             originalTouch.quantizing_offset_x_ -= PITCH_CORRECTION_STEP;
         } else {

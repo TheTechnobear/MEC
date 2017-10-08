@@ -30,6 +30,20 @@ bool ContinuanoOverlay::init(const Preferences &preferences, const PanelDimensio
         LOG_1("morph::ContinuanoOverlay::init - property baseNote not defined, using default 32");
     }
 
+    if (preferences.exists("roundNoteOnPitch")) {
+        roundNoteOnPitch_ = preferences.getBool("roundNoteOnPitch");
+    } else {
+        roundNoteOnPitch_ = true;
+        LOG_1("morph::GridOverlay::init - property roundNoteOnPitch not defined, using default true");
+    }
+
+    if (preferences.exists("roundNotePitchWhenNotMoving")) {
+        roundNotePitchWhenNotMoving_ = preferences.getBool("roundNotePitchWhenNotMoving");
+    } else {
+        roundNotePitchWhenNotMoving_ = true;
+        LOG_1("morph::GridOverlay::init - property roundNotePitchWhenNotMoving not defined, using default true");
+    }
+
     float buttonZoneHeight = BUTTONBAR_HEIGHT + BUTTONBAR_MARGIN;
     keyZoneHeight_ = (dimensions_.height - buttonZoneHeight) / 3; // same for all three keyzones
     freePitchZoneUpperY_ = buttonZoneHeight;
@@ -53,7 +67,7 @@ bool ContinuanoOverlay::processTouches(Touches &touches) {
         Rectangle key;
         KeyName keyName;
         bool keyFound = getKey(key, **touchIter, keyName);
-        if(keyFound) {
+        if(roundNoteOnPitch_ && keyFound) {
             quantizer_.quantizeNewTouch(quantizedTouch, **touchIter, key);
             touch = &quantizedTouch;
         } else {
@@ -61,8 +75,8 @@ bool ContinuanoOverlay::processTouches(Touches &touches) {
         }
         //TODO: how should a downpath scaler know which parts to scale in which way?  (Probably the Continuano Overlay might have to be split into sub-overlays)
         surfaceCallback_.touchOn(*touch);
-        if(quantizedTouch.y_ >= diatonicZoneUpperY_) {
-            applyDiatonicScale(quantizedTouch, keyName);
+        if(touch->y_ >= diatonicZoneUpperY_) {
+            applyDiatonicScale(*touch, keyName);
         }
         // remove as soon as surface support is fully implemented
         callback_.touchOn(touch->id_, xPosToNote(touch->x_), normalizeXPos(touch->x_),
@@ -75,7 +89,7 @@ bool ContinuanoOverlay::processTouches(Touches &touches) {
         KeyName keyName;
         bool keyFound = getKey(key, **touchIter, keyName);
         if(keyFound) {
-            quantizer_.quantizeContinuedTouch(quantizedTouch, **touchIter, key, true);
+            quantizer_.quantizeContinuedTouch(quantizedTouch, **touchIter, key, roundNotePitchWhenNotMoving_);
         } else {
             quantizer_.retuneToOriginalPitch(quantizedTouch, **touchIter);
         }

@@ -59,11 +59,11 @@ set(MECAPI_SRC
     devices/morph/overlays/OverlayFactory.cpp
     devices/morph/Instrument.cpp
     devices/morph/Instrument.h
-        devices/morph/quantizers/Map2D.h
-        devices/morph/quantizers/Map2D.cpp
     devices/morph/quantizers/Rectangle.h
     devices/morph/quantizers/Quantizer.h
-        devices/morph/quantizers/XQuantizer.cpp devices/morph/quantizers/XQuantizer.h)
+    devices/morph/quantizers/XQuantizer.cpp
+    devices/morph/quantizers/XQuantizer.h
+)
 
 include_directories (
     "devices/push2" 

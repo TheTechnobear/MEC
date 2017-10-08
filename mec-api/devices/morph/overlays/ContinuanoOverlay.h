@@ -18,6 +18,8 @@ public:
 private:
     float semitones_;
     float baseNote_;
+    bool roundNotePitchWhenNotMoving_;
+    bool roundNoteOnPitch_;
     PanelDimensions dimensions_;
     XQuantizer quantizer_;
     float diatonicZoneUpperY_;
