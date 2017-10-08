@@ -202,11 +202,11 @@ void SinglePanel::copyAndUpdateDeltas(const std::shared_ptr<TouchWithDeltas> &to
         foundTouch->delta_x_ = touch->x_ - foundTouch->x_;
         foundTouch->delta_y_ = touch->y_ - foundTouch->y_;
         foundTouch->delta_z_ = touch->z_ - foundTouch->z_;
-        LOG_2("mec::updateDeltas - old x:" << foundTouch->x_ << ",new x:" << touch->x_ << ",delta_x:"
+        LOG_2("mec::SinglePanel::updateDeltas - old x:" << foundTouch->x_ << ",new x:" << touch->x_ << ",delta_x:"
                                            << foundTouch->delta_x_);
-        LOG_2("mec::updateDeltas - old y:" << foundTouch->y_ << ",new y:" << touch->x_ << ",delta_y:"
+        LOG_2("mec::SinglePanel::updateDeltas - old y:" << foundTouch->y_ << ",new y:" << touch->x_ << ",delta_y:"
                                            << foundTouch->delta_y_);
-        LOG_2("mec::updateDeltas - old z:" << foundTouch->z_ << ",new z:" << touch->x_ << ",delta_z:"
+        LOG_2("mec::SinglePanel::updateDeltas - old z:" << foundTouch->z_ << ",new z:" << touch->x_ << ",delta_z:"
                                            << foundTouch->delta_z_);
         foundTouch->quantizing_offset_x_ = touch->quantizing_offset_x_;
         foundTouch->x_ = touch->x_;

@@ -25,7 +25,8 @@ void XQuantizer::quantizeContinuedTouch(TouchWithDeltas &quantizedTouch, TouchWi
                                         bool roundNotePitchWhenNotMoving) {
     float centerX = boundaries.x + boundaries.width / 2.0;
     if(roundNotePitchWhenNotMoving && fabs(originalTouch.delta_x_) < NO_MOVEMENT_THRESHOLD) {
-        float currentDistance = centerX - originalTouch.x_ - quantizedTouch.quantizing_offset_x_;
+        LOG_2("mec::XQuantizer::quantizeContinuedTouch: no movement");
+        float currentDistance = centerX - originalTouch.x_ - originalTouch.quantizing_offset_x_;
         if(fabs(currentDistance) > PITCH_CORRECTION_STEP) {
             if(originalTouch.x_ + originalTouch.quantizing_offset_x_ > centerX) {
                 originalTouch.quantizing_offset_x_ -= PITCH_CORRECTION_STEP;
@@ -35,6 +36,8 @@ void XQuantizer::quantizeContinuedTouch(TouchWithDeltas &quantizedTouch, TouchWi
         } else {
             originalTouch.quantizing_offset_x_ = currentDistance;
         }
+    } else {
+        LOG_2("mec::XQuantizer::quantizeContinuedTouch: movement");
     }
     quantizedTouch = originalTouch;
     quantizedTouch.x_ += originalTouch.quantizing_offset_x_;
