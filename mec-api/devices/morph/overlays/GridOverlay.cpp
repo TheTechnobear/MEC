@@ -103,7 +103,7 @@ bool GridOverlay::processTouches(Touches &touches) {
         }
         surfaceCallback_.touchOn(*touch);
         // remove as soon as surface support is fully implemented
-        callback_.touchOn(touch->id_, floor(xyPosToNote(touch->x_, touch->y_)), normalizeXPos(touch->x_),
+        callback_.touchOn(touch->id_, xyPosToNote(touch->x_, touch->y_), normalizeXPos(touch->x_),
                           normalizeYPos(touch->y_), normalizeZPos(touch->z_));
     }
     const std::vector<std::shared_ptr<TouchWithDeltas>> &continuedTouches = touches.getContinuedTouches();
@@ -147,7 +147,7 @@ float GridOverlay::xyPosToNote(float xPos, float yPos) {
     }
     return xPos / dimensions_.width * semitones_
            + yBasedNoteOffset
-           + baseNote_;
+           + baseNote_ - 0.5;
 }
 
 float GridOverlay::normalizeXPos(float xPos) {

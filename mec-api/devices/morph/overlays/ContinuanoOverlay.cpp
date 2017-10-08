@@ -79,7 +79,7 @@ bool ContinuanoOverlay::processTouches(Touches &touches) {
             applyDiatonicScale(*touch, keyName);
         }
         // remove as soon as surface support is fully implemented
-        callback_.touchOn(touch->id_, floor(xPosToNote(touch->x_)), normalizeXPos(touch->x_),
+        callback_.touchOn(touch->id_, xPosToNote(touch->x_), normalizeXPos(touch->x_),
                           normalizeYPos(touch->y_), normalizeZPos(touch->z_));
     }
     const std::vector<std::shared_ptr<TouchWithDeltas>> &continuedTouches = touches.getContinuedTouches();
@@ -213,7 +213,7 @@ bool ContinuanoOverlay::getChromaticKey(Rectangle &key, const Touch &touch) cons
 }
 
 float ContinuanoOverlay::xPosToNote(float xPos) const {
-    return xPos / dimensions_.width * semitones_ + baseNote_;
+    return xPos / dimensions_.width * semitones_ + baseNote_ - 0.5;
 }
 
 float ContinuanoOverlay::normalizeXPos(float xPos) const {

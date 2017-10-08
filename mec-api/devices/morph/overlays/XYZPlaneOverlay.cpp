@@ -34,7 +34,7 @@ bool XYZPlaneOverlay::processTouches(Touches &touches) {
     for (auto touchIter = newTouches.begin(); touchIter != newTouches.end(); ++touchIter) {
         surfaceCallback_.touchOn(**touchIter);
         // remove as soon as surface support is fully implemented
-        callback_.touchOn((*touchIter)->id_, floor(xPosToNote((*touchIter)->x_)), normalizeXPos((*touchIter)->x_),
+        callback_.touchOn((*touchIter)->id_, xPosToNote((*touchIter)->x_), normalizeXPos((*touchIter)->x_),
                           normalizeYPos((*touchIter)->y_), normalizeZPos((*touchIter)->z_));
     }
     const std::vector<std::shared_ptr<TouchWithDeltas>> &continuedTouches = touches.getContinuedTouches();
@@ -55,7 +55,7 @@ bool XYZPlaneOverlay::processTouches(Touches &touches) {
 }
 
 float XYZPlaneOverlay::xPosToNote(float xPos) {
-    return xPos / dimensions_.width * semitones_ + baseNote_;
+    return xPos / dimensions_.width * semitones_ + baseNote_ - 0.5;
 }
 
 float XYZPlaneOverlay::normalizeXPos(float xPos) {
