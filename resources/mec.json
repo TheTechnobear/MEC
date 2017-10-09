@@ -68,8 +68,10 @@
         },
 
         "_kontrol"  :  {
-            "connectPort" : 9000,
-            "listenPort" : 9001
+            "_parameter definitions" : "./kontrol-param.json",
+            "_patch settings" : "./kontrol-patch.json",
+            "connect port" : 9000,
+            "listen port" : 9001
         }
     },
 

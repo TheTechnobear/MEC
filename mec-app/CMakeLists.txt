@@ -29,7 +29,8 @@ include_directories (
 add_executable(mec-app ${MEC_SRC})
 
 #target_link_libraries (mec eigenharplib soundplanelite push2lib mecapi cjson rtmidi)
-target_link_libraries (mec-app mec-api mec-kontrol-api oscpack rtmidi)
+# target_link_libraries (mec-app mec-api mec-kontrol-api oscpack rtmidi)
+target_link_libraries (mec-app mec-api oscpack rtmidi)
 
 if(APPLE)
     target_link_libraries(mec-app "-framework CoreMIDI")

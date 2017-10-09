@@ -24,19 +24,38 @@ KontrolDevice::~KontrolDevice() {
 bool KontrolDevice::init(void* arg) {
     Preferences prefs(arg);
 
+    LOG_0("KontrolDevice::init");
+
     if (active_) {
         deinit();
     }
     active_ = false;
     state_ = S_UNCONNECTED;
 
-    connectPort_ = prefs.getInt("connectPort", 9000);
+    if(prefs.exists("parameter definitions")) {
+        std::string file = prefs.getString("parameter definitions","./kontrol-param.json");
+        if(!file.empty()) {
+            param_model_->loadParameterDefintions(file);
+        }
+        param_model_->dumpParameters();
+    }
 
-    listenPort_ = prefs.getInt("listenPort", 9001);
+    if(prefs.exists("patch settings")) {
+        std::string file = prefs.getString("patch settings","./kontrol-patch.json");
+        if(!file.empty()) {
+            param_model_->loadPatchSettings(file);
+        }
+        param_model_->dumpPatchSettings();
+    }
+
+    connectPort_ = prefs.getInt("connect port", 9000);
+
+    listenPort_ = prefs.getInt("listen port", 9001);
     if (listenPort_ > 0) {
         auto p = std::make_shared<Kontrol::OSCReceiver>(param_model_);
         if (p->listen(listenPort_)) {
             osc_receiver_ = p;
+            LOG_0("kontrol device : listening on " << listenPort_);
         }
     }
 
@@ -48,6 +67,7 @@ bool KontrolDevice::init(void* arg) {
         if (p->connect(host, (unsigned) connectPort_)) {
             osc_broadcaster_ = p;
             param_model_->addCallback(id, osc_broadcaster_);
+            LOG_0("kontrol device : connected to " << connectPort_);
         }
     }
 

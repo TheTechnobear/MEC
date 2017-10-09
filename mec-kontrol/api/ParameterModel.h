@@ -40,6 +40,7 @@ public:
 	const std::string& id() const { return id_;};
 	const std::string& displayName() const { return displayName_;};
 	const std::vector<std::string>& paramIds() const { return paramIds_;}
+
 private:
 
 	std::string id_;
@@ -61,6 +62,19 @@ public:
 	virtual void param(ParameterSource src, const Parameter&) = 0;
 	virtual void changed(ParameterSource src, const Parameter&) = 0;
 };
+
+
+class Preset {
+public:
+    Preset(const std::string& id, const ParamValue& v) : paramId_(id), value_(v) {;}
+    std::string paramId() { return paramId_;}
+    ParamValue value() { return value_;}
+private:
+    std::string paramId_;
+    ParamValue value_;
+};
+
+
 
 class ParameterModel;
 
@@ -122,16 +136,30 @@ public:
 	bool loadParameterDefintions(const mec::Preferences& prefs);
 	bool loadPatchSettings(const std::string& filename);
 	bool loadPatchSettings(const mec::Preferences& prefs);
+
+	void dumpParameters();
+	void dumpCurrentValues();
+	void dumpPatchSettings();
+
+	bool applyPreset(std::string presetId);
+	bool changeMidiCC(unsigned midiCC, unsigned midiValue);
+
 private:
 	ParameterModel();
+	std::string patchName_; // temp
+
 	std::shared_ptr<mec::Preferences> paramDefinitions_;
 	std::shared_ptr<mec::Preferences> patchSettings_;
 
-	std::string patchName_;
-	std::unordered_map<std::string, std::shared_ptr<Parameter> >parameters_;
-	std::unordered_map<std::string, std::shared_ptr<Page> >pages_;
-	std::vector<std::string> pageIds_;
-	std::unordered_map<std::string,std::shared_ptr<ParameterCallback> > listeners_;
+	std::unordered_map<unsigned, std::string> midi_mapping_; // key CC id, value = paramId
+	std::unordered_map<std::string, std::vector<Preset>> presets_; // key = presetid
+
+	std::vector<std::string> pageIds_; // ordered list of page id, for presentation
+	
+	std::unordered_map<std::string, std::shared_ptr<Parameter> >parameters_; // key = paramId
+	std::unordered_map<std::string, std::shared_ptr<Page> >pages_; // key = pageId
+
+	std::unordered_map<std::string,std::shared_ptr<ParameterCallback> > listeners_; // key = source : host:ip
 };
 
 } //namespace

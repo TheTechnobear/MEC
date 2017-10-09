@@ -72,6 +72,8 @@ public:
     virtual ParamValue calcFloat(float f);
     virtual ParamValue calcMidi(int midi);
 
+    void dump();
+
 protected:
     virtual void init(const std::vector<ParamValue>& args, unsigned& pos);
 

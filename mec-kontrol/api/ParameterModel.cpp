@@ -31,6 +31,9 @@ std::shared_ptr<ParameterModel> ParameterModel::model() {
     return model_;
 }
 
+
+
+
 // void ParameterModel::free() {
 //     model_.reset();
 // }
@@ -111,6 +114,37 @@ void ParameterModel::publishMetaData() const {
     }
 }
 
+bool ParameterModel::applyPreset(std::string presetId) {
+    auto presetvalues = presets_[presetId];
+    bool ret = false;
+    for (auto presetvalue : presetvalues) {
+        auto param = parameters_[presetvalue.paramId()];
+        if (param != nullptr) {
+            if (presetvalue.value().type() == ParamValue::T_Float) {
+                if (presetvalue.value() != param->current()) {
+                    ret |= changeParam(PS_LOCAL, presetvalue.paramId(), presetvalue.value());
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+bool ParameterModel::changeMidiCC(unsigned midiCC, unsigned midiValue) {
+    auto paramId = midi_mapping_[midiCC];
+    if (!paramId.empty()) {
+        auto param = parameters_[paramId];
+        if (param != nullptr) {
+            ParamValue pv = param->calcMidi(midiValue);
+            if (pv != param->current()) {
+                return changeParam(PS_LOCAL, paramId, pv);
+            }
+        }
+    }
+
+    return false;
+}
+
 bool ParameterModel::loadParameterDefintions(const std::string& filename) {
     paramDefinitions_ = std::make_shared<mec::Preferences>(filename);
     return loadParameterDefintions(*paramDefinitions_);
@@ -128,52 +162,55 @@ bool ParameterModel::loadParameterDefintions(const mec::Preferences& prefs) {
         return false;
     }
 
-    // load parameters
-    mec::Preferences::Array params(patch.getArray("parameters"));
-    if (!params.valid()) return false;
-    for (int i = 0; i < params.getSize(); i++) {
+    if (patch.exists("parameters")) {
+        // load parameters
+        mec::Preferences::Array params(patch.getArray("parameters"));
+        if (!params.valid()) return false;
+        for (int i = 0; i < params.getSize(); i++) {
 
-        mec::Preferences::Array pargs(params.getArray(i));
-        if (!pargs.valid()) return false;
+            mec::Preferences::Array pargs(params.getArray(i));
+            if (!pargs.valid()) return false;
 
-        std::vector<ParamValue> args;
+            std::vector<ParamValue> args;
 
-        for (int j = 0; j < pargs.getSize(); j++) {
-            mec::Preferences::Type t = pargs.getType(i);
-            switch (t ) {
-            case mec::Preferences::P_BOOL: args.push_back(ParamValue(pargs.getBool(j) ? 1.0f : 0.0f )); break;
-            case mec::Preferences::P_NUMBER: args.push_back(ParamValue((float) pargs.getDouble(j))); break;
-            case mec::Preferences::P_STRING: args.push_back(ParamValue(pargs.getString(j))); break;
-            //ignore
-            case mec::Preferences::P_NULL:
-            case mec::Preferences::P_ARRAY:
-            case mec::Preferences::P_OBJECT:
-            default:
-                break;
+            for (int j = 0; j < pargs.getSize(); j++) {
+                mec::Preferences::Type t = pargs.getType(j);
+                switch (t ) {
+                case mec::Preferences::P_BOOL:      args.push_back(ParamValue(pargs.getBool(j) ? 1.0f : 0.0f )); break;
+                case mec::Preferences::P_NUMBER:    args.push_back(ParamValue((float) pargs.getDouble(j))); break;
+                case mec::Preferences::P_STRING:    args.push_back(ParamValue(pargs.getString(j))); break;
+                //ignore
+                case mec::Preferences::P_NULL:
+                case mec::Preferences::P_ARRAY:
+                case mec::Preferences::P_OBJECT:
+                default:
+                    break;
+                }
             }
+            addParam(PS_LOCAL, args);
         }
-        addParam(PS_LOCAL, args);
     }
 
-    // load pages
-    mec::Preferences::Array pages(patch.getArray("pages"));
+    if (patch.exists("pages")) {
+        // load pages
+        mec::Preferences::Array pages(patch.getArray("pages"));
 
-    if (!pages.valid()) return false;
-    for (int i = 0; i < pages.getSize(); i++) {
-        mec::Preferences::Array page(params.getArray(i));
-        if (!page.valid()) return false;
+        if (!pages.valid()) return false;
+        for (int i = 0; i < pages.getSize(); i++) {
+            mec::Preferences::Array page(pages.getArray(i));
+            if (!page.valid()) return false;
 
-        if (page.getSize() < 2) return false; // need id, displayname
-        int j = 0;
-        std::string id = page.getString(j++);
-        std::string displayname = page.getString(j++);
-        std::vector<std::string> paramIds;
-        for ( ; j < page.getSize(); j++) {
-            paramIds.push_back(pages.getString(i));
+            if (page.getSize() < 2) return false; // need id, displayname
+            std::string id = page.getString(0);
+            std::string displayname = page.getString(1);
+            std::vector<std::string> paramIds;
+            mec::Preferences::Array paramArray(page.getArray(2));
+            for ( int j = 0; j < paramArray.getSize(); j++) {
+                paramIds.push_back(paramArray.getString(j));
+            }
+            addPage(PS_LOCAL, id, displayname, paramIds);
         }
-        addPage(PS_LOCAL, id, displayname, paramIds);
     }
-
 
     return true;
 
@@ -183,58 +220,144 @@ bool ParameterModel::loadPatchSettings(const std::string& filename) {
     return loadPatchSettings(*patchSettings_);
 }
 
-//TODO
-class Preset {
-public:
-    Preset(const std::string& id, const ParamValue& v) : paramId_(id), value_(v) {;}
-    std::string paramId_;
-    ParamValue value_;
-};
 
 bool ParameterModel::loadPatchSettings(const mec::Preferences& prefs) {
     mec::Preferences presets(prefs.getSubTree("presets"));
     if (presets.valid()) { // just ignore if not present
-        std::map<std::string, std::vector<Preset>> presets_;//TODO
 
-        for(std::string presetId: presets.getKeys()) {
+        for (std::string presetId : presets.getKeys()) {
 
-            mec::Preferences params(presets);
+            mec::Preferences params(presets.getSubTree(presetId));
             std::vector<Preset> preset;
 
-            for(std::string paramID: params.getKeys()) {
+            for (std::string paramID : params.getKeys()) {
                 mec::Preferences::Type t = params.getType(paramID);
                 switch (t) {
-                case mec::Preferences::P_BOOL:   preset.push_back(Preset(paramID,ParamValue(params.getBool(paramID)? 1.0f : 0.0f ))); break;
-                case mec::Preferences::P_NUMBER: preset.push_back(Preset(paramID,ParamValue((float) params.getDouble(paramID)))); break;
-                case mec::Preferences::P_STRING: preset.push_back(Preset(paramID,ParamValue(params.getString(paramID)))); break;
+                case mec::Preferences::P_BOOL:   preset.push_back(Preset(paramID, ParamValue(params.getBool(paramID) ? 1.0f : 0.0f ))); break;
+                case mec::Preferences::P_NUMBER: preset.push_back(Preset(paramID, ParamValue((float) params.getDouble(paramID)))); break;
+                case mec::Preferences::P_STRING: preset.push_back(Preset(paramID, ParamValue(params.getString(paramID)))); break;
                 //ignore
-                case mec::Preferences::P_NULL: 
-                case mec::Preferences::P_ARRAY: 
-                case mec::Preferences::P_OBJECT: 
+                case mec::Preferences::P_NULL:
+                case mec::Preferences::P_ARRAY:
+                case mec::Preferences::P_OBJECT:
                 default:
                     break;
                 }
             } //for param
             presets_[presetId] = preset;
-
         }
     }
 
     mec::Preferences midimapping(prefs.getSubTree("midi-mapping"));
     if (midimapping.valid()) { // just ignore if not present
         mec::Preferences cc(midimapping.getSubTree("cc"));
-        if(cc.valid()) {
-            for(std::string ccstr: cc.getKeys()) {
-                int ccnum = std::stoi(ccstr);
+        // only currently handling CC midi learn
+        if (cc.valid()) {
+            for (std::string ccstr : cc.getKeys()) {
+                unsigned ccnum = std::stoi(ccstr);
                 std::string paramId = cc.getString(ccstr);
-                //TODO
-                // auto p=getParam(paramId);
-                // p->setMidiCC(ccnum);
+                midi_mapping_[ccnum] = paramId;
             }
         }
     }
 
     return true;
 }
+
+void ParameterModel::dumpParameters() {
+    const char* IND = "    ";
+    // print by page , this will miss anything not on a page, but gives a clear way of setting things
+    LOG_1("Parameter Dump");
+    LOG_1("--------------");
+    for (std::string pageId : pageIds_) {
+        auto page = pages_[pageId];
+        if (page == nullptr) { LOG_1("Page not found: " << pageId); continue;}
+        LOG_1(page->id());
+        LOG_1(page->displayName());
+        for (std::string paramId : page->paramIds()) {
+            auto param = parameters_[paramId];
+            if (param == nullptr) { LOG_1("Parameter not found:" << paramId); continue;}
+            std::vector<ParamValue> args;
+            param->createArgs(args);
+            std::string d = IND;
+            for (auto pv : args) {
+                switch (pv.type()) {
+                case ParamValue::T_Float :
+                    d += "  " + std::to_string(pv.floatValue()) + " [F],";
+                    break;
+                case ParamValue::T_String :
+                default:
+                    d += pv.stringValue() + " [S],";
+                    break;
+                }
+            }
+            LOG_1(d);
+        }
+        LOG_1("--------------");
+    }
+}
+
+void ParameterModel::dumpCurrentValues() {
+    const char* IND = "    ";
+    // print by page , this will miss anything not on a page, but gives a clear way of setting things
+    LOG_1("Current Values Dump");
+    LOG_1("-------------------");
+    for (std::string pageId : pageIds_) {
+        auto page = pages_[pageId];
+        if (page == nullptr) { LOG_1("Page not found: " << pageId); continue;}
+        LOG_1(page->id());
+        LOG_1(page->displayName());
+        for (std::string paramId : page->paramIds()) {
+            auto param = parameters_[paramId];
+            if (param == nullptr) { LOG_1("Parameter not found:" << paramId); continue;}
+            std::string d = IND + paramId + " : ";
+            ParamValue cv = param->current();
+            switch (cv.type()) {
+            case ParamValue::T_Float :
+                d += "  " + std::to_string(cv.floatValue()) + " [F],";
+                break;
+            case ParamValue::T_String :
+            default:
+                d += cv.stringValue() + " [S],";
+                break;
+            }
+            LOG_1(d);
+        }
+        LOG_1("--------------");
+    }
+}
+
+
+
+
+void ParameterModel::dumpPatchSettings() {
+    LOG_1("Patch Settings Dump");
+    LOG_1("-------------------");
+    LOG_1("Presets");
+    for (auto preset : presets_) {
+        LOG_1(preset.first);
+        for (auto presetvalue : preset.second) {
+            std::string d = presetvalue.paramId();
+            ParamValue pv = presetvalue.value();
+            switch (pv.type()) {
+            case ParamValue::T_Float :
+                d += "  " + std::to_string(pv.floatValue()) + " [F],";
+                break;
+            case ParamValue::T_String :
+            default:
+                d += pv.stringValue() + " [S],";
+                break;
+            }
+            LOG_1(d);
+        }
+    }
+    LOG_1("Midi Mapping");
+    for (auto cc : midi_mapping_) {
+        LOG_1("CC : " <<  cc.first  << " to " << cc.second);
+    }
+}
+
+
+
 
 } //namespace

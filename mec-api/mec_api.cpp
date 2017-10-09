@@ -270,7 +270,6 @@ void MecApi_Impl::initDevices() {
         LOG_1("MecApi_Impl :: invalid preferences file");
         return;
     } 
-
     if (prefs_->exists("eigenharp")) {
         LOG_1("eigenharp initialise ");
         std::shared_ptr<Device> device;
@@ -357,7 +356,7 @@ void MecApi_Impl::initDevices() {
         }
     }
 
-    if (prefs_->exists("KontrolDevice")) {
+    if (prefs_->exists("kontrol")) {
         LOG_1("KontrolDevice initialise ");
         std::shared_ptr<Device> device;
         device.reset(new KontrolDevice(*this));
