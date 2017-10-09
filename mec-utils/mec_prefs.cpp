@@ -44,6 +44,12 @@ bool Preferences::loadPreferences(const std::string& file) {
         if (jsonData_) {
             return true;
         }
+
+        LOG_0("unable to parse preferences file : " << file);
+        std::string eptr=cJSON_GetErrorPtr();
+        if(eptr.length()>60)  eptr=eptr.substr(0,60);
+        LOG_0("error around : " << eptr);
+        return false;
     }
     LOG_0("unable to load preferences file : " << file);
     return false;

@@ -35,7 +35,7 @@ bool KontrolDevice::init(void* arg) {
     if(prefs.exists("parameter definitions")) {
         std::string file = prefs.getString("parameter definitions","./kontrol-param.json");
         if(!file.empty()) {
-            param_model_->loadParameterDefintions(file);
+            param_model_->loadParameterDefinitions(file);
         }
         param_model_->dumpParameters();
     }

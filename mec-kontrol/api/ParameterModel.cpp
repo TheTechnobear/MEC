@@ -145,12 +145,12 @@ bool ParameterModel::changeMidiCC(unsigned midiCC, unsigned midiValue) {
     return false;
 }
 
-bool ParameterModel::loadParameterDefintions(const std::string& filename) {
+bool ParameterModel::loadParameterDefinitions(const std::string& filename) {
     paramDefinitions_ = std::make_shared<mec::Preferences>(filename);
-    return loadParameterDefintions(*paramDefinitions_);
+    return loadParameterDefinitions(*paramDefinitions_);
 }
 
-bool ParameterModel::loadParameterDefintions(const mec::Preferences& prefs) {
+bool ParameterModel::loadParameterDefinitions(const mec::Preferences& prefs) {
     if (!prefs.valid()) return false;
 
     mec::Preferences patch(prefs.getSubTree("patch"));

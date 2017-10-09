@@ -132,8 +132,8 @@ public:
 	std::string getParamId(const std::string& pageId, unsigned paramNum);
 	std::shared_ptr<Parameter> getParam(const std::string paramId) { return parameters_[paramId]; }
 
-	bool loadParameterDefintions(const std::string& filename);
-	bool loadParameterDefintions(const mec::Preferences& prefs);
+	bool loadParameterDefinitions(const std::string& filename);
+	bool loadParameterDefinitions(const mec::Preferences& prefs);
 	bool loadPatchSettings(const std::string& filename);
 	bool loadPatchSettings(const mec::Preferences& prefs);
 
