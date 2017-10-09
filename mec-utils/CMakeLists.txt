@@ -12,7 +12,7 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/../external/cJSON"
 )
 
-add_library(mec-utils ${MECUTILS_SRC})
+add_library(mec-utils SHARED ${MECUTILS_SRC})
 
 target_link_libraries (mec-utils cjson)
 

@@ -1,7 +1,7 @@
 #include "OrganelleOLED.h"
 
 #include "osc/OscOutboundPacketStream.h"
-#include "kontrolhost~.h"
+#include "KontrolHost~.h"
 
 // #include <algorithm>
 // #include <limits>

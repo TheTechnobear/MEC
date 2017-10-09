@@ -1,11 +1,11 @@
 ###############################
 # kontrol pure data external
-project (kontrol)
+project (Kontrol)
 
 
 
 set(KONTROL_SRC
-    kontrol.cpp
+    Kontrol.cpp
 )
 
 
@@ -15,9 +15,9 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/../../../external/oscpack"
     )
 
-add_library(kontrol SHARED ${KONTROL_SRC})
+add_library(Kontrol SHARED ${KONTROL_SRC})
 
-target_link_libraries (kontrol mec-kontrol-api oscpack portaudio)
+target_link_libraries (Kontrol mec-kontrol-api oscpack portaudio)
 
 
 ### setup for pure data

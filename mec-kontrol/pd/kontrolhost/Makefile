@@ -65,12 +65,12 @@ common.sources = \
 # input source file (class name == source file basename)
 
 class.sources = \
-	kontrolhost~.cpp 
+	KontrolHost~.cpp 
 				
 
 # all extra files to be included in binary distribution of the library
 datafiles = \
-			kontrolhost~-help.pd \
+			KontrolHost~-help.pd \
 			../README.md 
 
 
