@@ -24,7 +24,7 @@ enum OrganelleModes {
 
 class OBaseMode : public DeviceMode {
 public:
-  OBaseMode(std::shared_ptr<Organelle> p) : parent_(p), popupTime_(-1) {;}
+  OBaseMode(Organelle& p) : parent_(p), popupTime_(-1) {;}
   virtual bool init() { return true;}
   virtual void poll();
 
@@ -38,8 +38,8 @@ public:
 
   void displayPopup(const std::string& text, unsigned time);
 protected:
-  std::shared_ptr<Organelle> parent_;
-  std::shared_ptr<Kontrol::ParameterModel> model() { return parent_->model();}
+  Organelle& parent_;
+  std::shared_ptr<Kontrol::ParameterModel> model() { return parent_.model();}
   int popupTime_;
 };
 
@@ -56,7 +56,7 @@ struct Pots {
 
 class OParamMode : public OBaseMode {
 public:
-  OParamMode(std::shared_ptr<Organelle> p) : OBaseMode(p), currentPage_(0) {;}
+  OParamMode(Organelle& p) : OBaseMode(p), currentPage_(0) {;}
   virtual bool init();
   virtual void poll();
   virtual void changePot(unsigned pot, float value);
@@ -71,7 +71,7 @@ private:
 
 void OBaseMode::displayPopup(const std::string& text, unsigned time) {
   popupTime_ = time;
-  parent_->displayPopup(text);
+  parent_.displayPopup(text);
 }
 
 void OBaseMode::poll() {
@@ -102,7 +102,7 @@ void OParamMode::poll() {
       auto id = model()->getParamId(pageId, i - 1);
       if (id.empty()) return;
       auto param = model()->getParam(id);
-      if (param != nullptr) parent_->displayParamLine(i, *param);
+      if (param != nullptr) parent_.displayParamLine(i, *param);
     } // for
 
     // cancel timing
@@ -188,7 +188,7 @@ void OParamMode::encoderButton(unsigned enc, bool value) {
   post("encoder button %f", value);
   if (value > 0) {
     displayPopup("exit", PAGE_EXIT_TIMEOUT);
-    parent_->sendPdMessage("goHome", 1.0);
+    parent_.sendPdMessage("goHome", 1.0);
   }
 }
 
@@ -206,7 +206,7 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Parameter&
     auto id = model()->getParamId(pageId, i - 1);
     if (id.empty()) return;
     if ( id == param.id()) {
-      parent_->displayParamLine(i, param);
+      parent_.displayParamLine(i, param);
       if (src != Kontrol::PS_LOCAL) {
         pots_->locked_[i - 1] = Pots::K_LOCKED;
       }
@@ -227,7 +227,7 @@ Organelle::Organelle() {
 
 bool Organelle::init() {
   // add modes before KD init
-  addMode(OM_PARAMETER, std::make_shared<OParamMode>(std::shared_ptr<Organelle>(this)));
+  addMode(OM_PARAMETER, std::make_shared<OParamMode>(*this));
   changeMode(OM_PARAMETER);
 
   if (KontrolDevice::init()) {

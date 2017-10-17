@@ -3,6 +3,7 @@
 #include "ParameterModel.h"
 #include "Parameter.h"
 
+#include <map>
 #include <memory>
 
 
@@ -45,6 +46,6 @@ public:
     std::shared_ptr<Kontrol::ParameterModel> model() { return param_model_;}
 protected:
       std::shared_ptr<Kontrol::ParameterModel> param_model_;
-      std::vector<std::shared_ptr<DeviceMode>> modes_;
+      std::map<unsigned, std::shared_ptr<DeviceMode>> modes_;
       unsigned currentMode_;
 };

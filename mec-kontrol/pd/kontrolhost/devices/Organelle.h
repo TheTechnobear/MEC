@@ -14,10 +14,6 @@ public:
 
   //KontrolDevice
   virtual bool init();
-  virtual void poll();
-  virtual void changePot(unsigned pot, float value);
-  virtual void changeEncoder(unsigned encoder, float value);
-  virtual void encoderButton(unsigned encoder, bool value);
 
   void displayPopup(const std::string& text);
   void displayParamLine(unsigned line, const Kontrol::Parameter& p);
