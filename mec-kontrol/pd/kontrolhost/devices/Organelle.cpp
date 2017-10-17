@@ -2,6 +2,7 @@
 
 #include "osc/OscOutboundPacketStream.h"
 
+#include <iostream>
 #include "m_pd.h"
 // #include <algorithm>
 // #include <limits>
@@ -10,6 +11,7 @@ const unsigned int SCREEN_WIDTH = 21;
 
 static const int PAGE_SWITCH_TIMEOUT = 5;
 static const int PAGE_EXIT_TIMEOUT = 5;
+static const int MENU_TIMEOUT = 50;
 
 
 static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
@@ -76,6 +78,7 @@ class OMenuMode : public OBaseMode {
 public:
   OMenuMode(Organelle& p) : OBaseMode(p), cur_(0), top_(0) {;}
   virtual bool init();
+  virtual void poll();
   virtual void activate();
   virtual void changeEncoder(unsigned encoder, float value);
   virtual void encoderButton(unsigned encoder, bool value);
@@ -216,9 +219,6 @@ void OParamMode::encoderButton(unsigned enc, bool value) {
   OBaseMode::encoderButton(enc, value);
   if (value < 1.0) {
     parent_.changeMode(OM_MENU);
-
-    // displayPopup("exit", PAGE_EXIT_TIMEOUT);
-    // parent_.sendPdMessage("goHome", 1.0);
   }
 }
 
@@ -247,23 +247,38 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Parameter&
 
 
 bool OMenuMode::init() {
+  items_.push_back("Main Menu");
   items_.push_back("Midi Learn");
   items_.push_back("Save Preset");
   items_.push_back("Load Preset");
-  items_.push_back("Exit");
+  items_.push_back("Test1");
+  items_.push_back("Test2");
+  items_.push_back("Test3");
   return true;
 }
 
 
 void OMenuMode::activate() {
   display();
+  unsigned line = cur_ - top_;
+  if (line >= 0 && line <= 3) parent_.invertLine(line);
+  popupTime_ = MENU_TIMEOUT;
+}
+
+void OMenuMode::poll() {
+  OBaseMode::poll();
+  if (popupTime_ == 0) {
+    parent_.changeMode(OM_PARAMETER);
+    popupTime_ = -1;
+  }
 }
 
 void OMenuMode::display() {
   for (unsigned i = top_; i < top_ + 4; i++) {
-    if (i > items_.size() - 1) return;
-    std::string item = items_[i];
-    parent_.displayLine(i + 1, item.c_str());
+    if (i < items_.size()) {
+        std::string item = items_[i];
+        parent_.displayLine(i - top_ + 1, item.c_str());
+    }
   }
 }
 
@@ -279,18 +294,33 @@ void OMenuMode::changeEncoder(unsigned encoder, float value) {
     if (cur > 0) cur--;
   }
   if (cur != cur_) {
-    int line = 0;
-    line = cur_ - top_;
-    if (line >= 0 && line <= 3) parent_.invertLine(line);
+      int line = 0;
+      if (cur < top_ ) {
+          top_ = cur;
+          display();
+      } else if(cur >= top_+4) {
+          top_ = cur-3;
+          display();
+      }
+      else {
+        line = cur_ - top_;
+        if (line >= 0 && line <= 3) parent_.invertLine(line);
+      }
     cur_ = cur;
     line = cur_ - top_;
     if (line >= 0 && line <= 3) parent_.invertLine(line);
   }
+  popupTime_ = MENU_TIMEOUT;
   // display();
 }
 
 void OMenuMode::encoderButton(unsigned encoder, bool value) {
-  if (value < 1.0) parent_.changeMode(OM_PARAMETER);
+  if (value < 1.0)  {
+      parent_.changeMode(OM_PARAMETER);
+      if(cur_==0) {
+        parent_.sendPdMessage("goHome", 1.0);
+      }
+  }
 }
 
 
@@ -306,7 +336,7 @@ Organelle::Organelle() {
 bool Organelle::init() {
   // add modes before KD init
   addMode(OM_PARAMETER, std::make_shared<OParamMode>(*this));
-  // addMode(OM_MENU, std::make_shared<OMenuMode>(*this));
+  addMode(OM_MENU, std::make_shared<OMenuMode>(*this));
  
   if (KontrolDevice::init()) {
 
