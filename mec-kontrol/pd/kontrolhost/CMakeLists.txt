@@ -4,7 +4,8 @@ project (KontrolHost)
 
 set(KONTROL_HOST_SRC
     KontrolHost~.cpp
-    OrganelleOLED.cpp
+    devices/KontrolDevice.cpp
+    devices/Organelle.cpp
 )
 
 

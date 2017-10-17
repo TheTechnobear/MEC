@@ -16,9 +16,7 @@ Page::Page(
     const std::string& id,
     const std::string& displayName,
     const std::vector<std::string> paramIds
-) :
-    id_(id),
-    displayName_(displayName),
+) : Entity(id,displayName),
     paramIds_(paramIds) {
     ;
 }
@@ -44,7 +42,7 @@ ParameterModel::ParameterModel() {
 
 bool ParameterModel::addParam( ParameterSource src, const std::vector<ParamValue>& args) {
     auto p = Parameter::create(args);
-    if (p->type() != PT_Invalid) {
+    if (p->valid()) {
         parameters_[p->id()] = p;
         for ( auto i : listeners_) {
             (i.second)->param(src, *p);

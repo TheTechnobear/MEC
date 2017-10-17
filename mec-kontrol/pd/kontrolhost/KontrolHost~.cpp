@@ -1,6 +1,6 @@
 #include "KontrolHost~.h"
 
-#include "OrganelleOLED.h"
+#include "devices/Organelle.h"
 #include "ip/UdpSocket.h"
 #include "osc/OscOutboundPacketStream.h"
 
@@ -40,12 +40,8 @@ private:
 
 // number of dsp renders before poll osc
 static const int OSC_POLL_FREQUENCY  = 50;
-static const int OLED_POLL_FREQUENCY = 50;
+static const int DEVICE_POLL_FREQUENCY = 50;
 
-
-// render count timeout
-static const int PAGE_SWITCH_TIMEOUT = 5;
-static const int PAGE_EXIT_TIMEOUT = 5;
 
 
 
@@ -61,20 +57,11 @@ static t_pd *get_object(const char *s) {
 
 static void sendPdMessage(const char* obj, float f) {
   t_pd* sendobj = get_object(obj);
-  if (!sendobj) { post("send to %s failed",obj); return; }
+  if (!sendobj) { post("KontrolHost~::sendPdMessage to %s failed", obj); return; }
 
   t_atom a;
   SETFLOAT(&a, f);
   pd_forwardmess(sendobj, 1, &a);
-}
-
-static std::string get_param_id(t_KontrolHost *x, unsigned paramnum) {
-  auto pageId = x->param_model_->getPageId(x->currentPage_);
-  if (pageId.empty()) return "";
-  auto page = x->param_model_->getPage(pageId);
-  if (page == nullptr) return "";
-  auto id = x->param_model_->getParamId(page->id(), paramnum);
-  return id;
 }
 
 
@@ -87,8 +74,8 @@ t_int* KontrolHost_tilde_render(t_int *w)
     x->osc_receiver_->poll();
   }
 
-  if (x->oled_ && x->pollCount_ % OLED_POLL_FREQUENCY == 0) {
-    x->oled_->poll();
+  if (x->device_ && x->pollCount_ % DEVICE_POLL_FREQUENCY == 0) {
+    x->device_->poll();
   }
   return (w + 2); // # args + 1
 }
@@ -104,8 +91,7 @@ void KontrolHost_tilde_free(t_KontrolHost* x)
   x->param_model_->clearCallbacks();
   if (x->osc_receiver_) x->osc_receiver_->stop();
   x->osc_receiver_.reset();
-  x->oled_.reset();
-  x->knobs_.reset();
+  x->device_.reset();
   // Kontrol::ParameterModel::free();
 }
 
@@ -113,36 +99,29 @@ void *KontrolHost_tilde_new(t_floatarg osc_in)
 {
   t_KontrolHost *x = (t_KontrolHost *) pd_new(KontrolHost_tilde_class);
 
-  x->knobs_ = std::make_shared<Knobs>();
 
   x->osc_receiver_ = nullptr;
 
   x->pollCount_ = 0;
   x->param_model_ = Kontrol::ParameterModel::model();
-  x->oled_ = std::make_shared<OrganelleOLED>(x);
-  x->param_model_->addCallback("pd.oled", x->oled_);
+
+  x->device_ = std::make_shared<Organelle>();
+  x->device_->init();
+
   x->param_model_->addCallback("pd.send", std::make_shared<SendBroadcaster>());
   x->param_model_->addCallback("pd.client", std::make_shared<ClientHandler>(x));
 
-  // setup mother.pd for reasonable behaviour, basically takeover
-  sendPdMessage("midiOutGate",0.0f);
-  // sendPdMessage("midiInGate",0.0f);
-  sendPdMessage("enableSubMenu",1.0f);
-
   KontrolHost_tilde_listen(x, osc_in); // if zero will ignore
-  for(int i=0;i<4;i++) {
-        x->knobs_->locked_[i]=Knobs::K_UNLOCKED;
-  }
   return (void *)x;
 }
 
 void KontrolHost_tilde_setup(void) {
   KontrolHost_tilde_class = class_new(gensym("KontrolHost~"),
-                                  (t_newmethod) KontrolHost_tilde_new,
-                                  (t_method) KontrolHost_tilde_free,
-                                  sizeof(t_KontrolHost),
-                                  CLASS_DEFAULT,
-                                  A_DEFFLOAT, A_NULL);
+                                      (t_newmethod) KontrolHost_tilde_new,
+                                      (t_method) KontrolHost_tilde_free,
+                                      sizeof(t_KontrolHost),
+                                      CLASS_DEFAULT,
+                                      A_DEFFLOAT, A_NULL);
   class_addmethod(  KontrolHost_tilde_class,
                     (t_method) KontrolHost_tilde_dsp,
                     gensym("dsp"), A_NULL);
@@ -153,10 +132,6 @@ void KontrolHost_tilde_setup(void) {
                   A_DEFFLOAT, A_NULL);
   class_addmethod(KontrolHost_tilde_class,
                   (t_method) KontrolHost_tilde_connect, gensym("connect"),
-                  A_DEFFLOAT, A_NULL);
-
-  class_addmethod(KontrolHost_tilde_class,
-                  (t_method) KontrolHost_tilde_page, gensym("page"),
                   A_DEFFLOAT, A_NULL);
 
   class_addmethod(KontrolHost_tilde_class,
@@ -223,113 +198,36 @@ void    KontrolHost_tilde_listen(t_KontrolHost *x, t_floatarg f) {
   }
 }
 
-void    KontrolHost_tilde_page(t_KontrolHost *x, t_floatarg f) {
-  unsigned page = (unsigned) f;
-  page = std::min(page, x->param_model_->getPageCount() - 1);
-  x->currentPage_ = page;
-  for (int i = 0; i < 4; i++) {
-    x->knobs_->locked_[i] = Knobs::K_LOCKED;
-  }
+void    KontrolHost_tilde_enc(t_KontrolHost* x, t_floatarg f) {
+  if (x->device_) x->device_->changeEncoder(0, f);
 }
 
-static void changeEncoder(t_KontrolHost *x, t_floatarg f) {
-  unsigned pagenum = x->currentPage_;
-  if(f>0) { 
-      // clockwise
-      pagenum++;
-      pagenum = std::min(pagenum, x->param_model_->getPageCount() - 1);
-  } else {
-      // anti clockwise
-      if(pagenum>0) pagenum--;
-  }
-
-  if(pagenum!=x->currentPage_) {
-      auto pageId = x->param_model_->getPageId(pagenum);
-      if (pageId.empty()) return;
-      auto page = x->param_model_->getPage(pageId);
-      if (page == nullptr) return;
-      if (x->oled_) x->oled_->displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
-
-      x->currentPage_ = pagenum;
-      for (int i = 0; i < 4; i++) {
-        x->knobs_->locked_[i] = Knobs::K_LOCKED;
-      }
-  }
-}
-
-static void encoderButton(t_KontrolHost *x, t_floatarg f) {
-  post("encoder button %f", f);
-  if (f > 0) {
-    if (x->oled_) x->oled_->displayPopup("exit", PAGE_EXIT_TIMEOUT);
-    sendPdMessage("goHome",1.0);
-  }
-}
-
-void    KontrolHost_tilde_enc(t_KontrolHost *x, t_floatarg f) {
-  changeEncoder(x, f);
-}
-
-void    KontrolHost_tilde_encbut(t_KontrolHost *x, t_floatarg f) {
-  encoderButton(x, f);
-}
-
-static const unsigned MAX_KNOB_VALUE = 1023;
-static void changeKnob(t_KontrolHost *x, t_floatarg f, unsigned knob) {
-  auto id = get_param_id(x, knob);
-  auto param = x->param_model_->getParam(id);
-  if (param == nullptr) return;
-  if (!id.empty())  {
-    Kontrol::ParamValue calc = param->calcFloat(f / MAX_KNOB_VALUE);
-    if (x->knobs_->locked_[knob]!=Knobs::K_UNLOCKED) {
-      //if knob is locked, determined if we can unlock it
-      if (calc == param->current()) {
-        x->knobs_->locked_[knob] = Knobs::K_UNLOCKED;
-      }
-      else if (x->knobs_->locked_[knob]==Knobs::K_GT) {
-        if(calc > param->current()) x->knobs_->locked_[knob] = Knobs::K_UNLOCKED;
-      }
-      else if (x->knobs_->locked_[knob]==Knobs::K_LT) {
-        if(calc < param->current()) x->knobs_->locked_[knob] = Knobs::K_UNLOCKED;
-      }
-      else if (x->knobs_->locked_[knob]==Knobs::K_LOCKED) {
-        // initial locked, determine unlock condition
-        if(calc > param->current()) {
-            // knob starts greater than param, so wait for it to go less than
-            x->knobs_->locked_[knob] = Knobs::K_LT;
-        } else {
-            // knob starts less than param, so wait for it to go greater than
-            x->knobs_->locked_[knob] = Knobs::K_GT;
-        }
-      }
-    }
-
-    if (x->knobs_->locked_[knob]==Knobs::K_UNLOCKED) {
-      x->param_model_->changeParam(Kontrol::PS_LOCAL, id, calc);
-    }
-  }
+void    KontrolHost_tilde_encbut(t_KontrolHost* x, t_floatarg f) {
+  if (x->device_) x->device_->encoderButton(0, f);
 }
 
 
-void    KontrolHost_tilde_knob1Raw(t_KontrolHost *x, t_floatarg f) {
-  changeKnob(x, f, 0);
+
+void    KontrolHost_tilde_knob1Raw(t_KontrolHost* x, t_floatarg f) {
+  if (x->device_) x->device_->changePot(0, f);
 }
 
-void    KontrolHost_tilde_knob2Raw(t_KontrolHost *x, t_floatarg f) {
-  changeKnob(x, f, 1);
+void    KontrolHost_tilde_knob2Raw(t_KontrolHost* x, t_floatarg f) {
+  if (x->device_) x->device_->changePot(1, f);
 }
 
-void    KontrolHost_tilde_knob3Raw(t_KontrolHost *x, t_floatarg f) {
-  changeKnob(x, f, 2);
+void    KontrolHost_tilde_knob3Raw(t_KontrolHost* x, t_floatarg f) {
+  if (x->device_) x->device_->changePot(2, f);
 }
 
-void    KontrolHost_tilde_knob4Raw(t_KontrolHost *x, t_floatarg f) {
-  changeKnob(x, f, 3);
+void    KontrolHost_tilde_knob4Raw(t_KontrolHost* x, t_floatarg f) {
+  if (x->device_) x->device_->changePot(3, f);
 }
 
 
 void SendBroadcaster::changed(Kontrol::ParameterSource, const Kontrol::Parameter& param) {
   t_pd* sendobj = get_object(param.id().c_str());
-  if (!sendobj) { post("send to %s failed",param.id().c_str()); return; }
+  if (!sendobj) { post("send to %s failed", param.id().c_str()); return; }
 
   t_atom a;
   switch (param.current().type()) {
@@ -361,18 +259,7 @@ void ClientHandler::addClient(const std::string& host, unsigned port) {
 }
 
 void ClientHandler::changed(Kontrol::ParameterSource src, const Kontrol::Parameter& param) {
-  if (src != Kontrol::PS_LOCAL) {
-    auto pageId = Kontrol::ParameterModel::model()->getPageId(x_->currentPage_);
-    if (pageId.empty()) return;
-    for (int i = 0; i < 4; i++) {
-      auto paramid = Kontrol::ParameterModel::model()->getParamId(pageId, i);
-      if (paramid.empty()) return;
-      if (paramid == param.id()) {
-        x_->knobs_->locked_[i] = Knobs::K_LOCKED;
-        return;
-      }
-    }
-  }
+  ;
 }
 
 

@@ -65,7 +65,7 @@ static void throwError(const std::string id, const char* what) {
 
 
 // Parameter : type id displayname
-Parameter::Parameter(ParameterType type) : type_(type) , current_(0.0f) {
+Parameter::Parameter(ParameterType type) : Entity("", ""), type_(type) , current_(0.0f) {
     ;
 }
 
@@ -130,9 +130,6 @@ std::shared_ptr<Parameter> Parameter::create(const std::vector<ParamValue>& args
     return p;
 }
 
-const std::string& Parameter::displayName() const  {
-    return displayName_;
-}
 
 std::string Parameter::displayValue() const {
     static std::string sNullString = "";

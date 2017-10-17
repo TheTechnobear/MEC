@@ -59,7 +59,8 @@ common.sources = \
 	$(oscpack.sources) \
 	$(portaudio.sources) \
 	$(kontrol.sources) \
-	OrganelleOLED.cpp \
+	devices/KontrolDevice.cpp \
+	devices/Organelle.cpp \
 
 
 # input source file (class name == source file basename)

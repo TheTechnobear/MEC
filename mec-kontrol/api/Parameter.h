@@ -1,10 +1,27 @@
 #pragma once
 
-
 #include <string>
 #include <memory>
 #include <vector>
 namespace Kontrol {
+
+class Entity {
+public:
+    Entity(const std::string& id, const std::string& displayName) 
+        : id_(id), displayName_(displayName) {
+            ;
+    }
+
+    const std::string& id() const { return id_;};
+
+    virtual const std::string& displayName() const { return displayName_;};
+    virtual bool valid() { return !id_.empty();}
+protected:
+    Entity() {;}
+    virtual ~Entity() {;}
+    std::string id_;
+    std::string displayName_;
+};
 
 class ParamValue {
 public:
@@ -51,7 +68,7 @@ enum ParameterType {
     PT_Pitch
 };
 
-class Parameter {
+class Parameter : public Entity {
 public:
     static std::shared_ptr<Parameter> create(const std::vector<ParamValue>& args);
 
@@ -59,9 +76,7 @@ public:
     virtual void createArgs(std::vector<ParamValue>& args) const;
 
     ParameterType type() const { return type_;};
-    const std::string& id() const { return id_;};
 
-    virtual const std::string& displayName() const;
     virtual std::string displayValue() const;
     virtual const std::string& displayUnit() const;
 
@@ -71,6 +86,8 @@ public:
     virtual ParamValue calcRelative(float f);
     virtual ParamValue calcFloat(float f);
     virtual ParamValue calcMidi(int midi);
+
+    virtual bool valid() { return Entity::valid() && type_ != PT_Invalid;}
 
     void dump();
 

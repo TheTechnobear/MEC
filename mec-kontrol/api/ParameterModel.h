@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Parameter.h"
-
 #include <unordered_map>
 #include <string>
 #include <vector>
 #include <memory>
+
+#include "Parameter.h"
 
 namespace mec{
 class Preferences;
@@ -30,21 +30,37 @@ enum ParameterSource {
 	PS_OSC
 };
 
-class Page {
+
+
+class Device : public Entity {
+public:
+	Device(const std::string& id, const std::string& displayName) 
+		: Entity(id,displayName) {
+			;
+	}
+private:
+};
+
+class Patch : public Entity {
+public:
+	Patch(const std::string& id, const std::string& displayName) 
+		: Entity(id,displayName) {
+			;
+	}
+private:
+};
+
+
+class Page : public Entity {
 public:
 	Page(
 	    const std::string& id,
 	    const std::string& displayName,
 	    const std::vector<std::string> paramIds
 	);
-	const std::string& id() const { return id_;};
-	const std::string& displayName() const { return displayName_;};
 	const std::vector<std::string>& paramIds() const { return paramIds_;}
 
 private:
-
-	std::string id_;
-	std::string displayName_;
 	std::vector<std::string> paramIds_;
 };
 
@@ -73,8 +89,6 @@ private:
     std::string paramId_;
     ParamValue value_;
 };
-
-
 
 class ParameterModel;
 
