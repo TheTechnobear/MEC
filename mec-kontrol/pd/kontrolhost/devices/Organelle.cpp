@@ -276,8 +276,8 @@ void OMenuMode::poll() {
 void OMenuMode::display() {
   for (unsigned i = top_; i < top_ + 4; i++) {
     if (i < items_.size()) {
-        std::string item = items_[i];
-        parent_.displayLine(i - top_ + 1, item.c_str());
+      std::string item = items_[i];
+      parent_.displayLine(i - top_ + 1, item.c_str());
     }
   }
 }
@@ -294,18 +294,18 @@ void OMenuMode::changeEncoder(unsigned encoder, float value) {
     if (cur > 0) cur--;
   }
   if (cur != cur_) {
-      int line = 0;
-      if (cur < top_ ) {
-          top_ = cur;
-          display();
-      } else if(cur >= top_+4) {
-          top_ = cur-3;
-          display();
-      }
-      else {
-        line = cur_ - top_;
-        if (line >= 0 && line <= 3) parent_.invertLine(line);
-      }
+    int line = 0;
+    if (cur < top_ ) {
+      top_ = cur;
+      display();
+    } else if (cur >= top_ + 4) {
+      top_ = cur - 3;
+      display();
+    }
+    else {
+      line = cur_ - top_;
+      if (line >= 0 && line <= 3) parent_.invertLine(line);
+    }
     cur_ = cur;
     line = cur_ - top_;
     if (line >= 0 && line <= 3) parent_.invertLine(line);
@@ -316,10 +316,10 @@ void OMenuMode::changeEncoder(unsigned encoder, float value) {
 
 void OMenuMode::encoderButton(unsigned encoder, bool value) {
   if (value < 1.0)  {
-      parent_.changeMode(OM_PARAMETER);
-      if(cur_==0) {
-        parent_.sendPdMessage("goHome", 1.0);
-      }
+    parent_.changeMode(OM_PARAMETER);
+    if (cur_ == 0) {
+      parent_.sendPdMessage("goHome", 1.0);
+    }
   }
 }
 
@@ -337,7 +337,7 @@ bool Organelle::init() {
   // add modes before KD init
   addMode(OM_PARAMETER, std::make_shared<OParamMode>(*this));
   addMode(OM_MENU, std::make_shared<OMenuMode>(*this));
- 
+
   if (KontrolDevice::init()) {
 
     // setup mother.pd for reasonable behaviour, basically takeover
@@ -412,7 +412,7 @@ void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter& param)
 }
 
 void Organelle::displayLine(unsigned line, const char* disp) {
-  if(socket_==nullptr) return;
+  if (socket_ == nullptr) return;
 
   static const char* oledLine0 = "/oled/line/0";
   static const char* oledLine1 = "/oled/line/1";
