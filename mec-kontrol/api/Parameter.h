@@ -95,8 +95,6 @@ protected:
     virtual void init(const std::vector<ParamValue>& args, unsigned& pos);
 
     ParameterType type_;
-    std::string id_;
-    std::string displayName_;
     ParamValue current_;
 };
 

@@ -29,6 +29,7 @@ void *Kontrol_new(t_symbol* name)
   if(name && name->s_name) {
     std::string sname = name->s_name;
     Kontrol::ParameterModel::model()->loadParameterDefinitions(sname + ".json");
+    Kontrol::ParameterModel::model()->dumpParameters();
   }
   return (void *)x;
 }

@@ -44,6 +44,7 @@ bool ParameterModel::addParam( ParameterSource src, const std::vector<ParamValue
     auto p = Parameter::create(args);
     if (p->valid()) {
         parameters_[p->id()] = p;
+        // LOG_1("addParam " << p->id());
         for ( auto i : listeners_) {
             (i.second)->param(src, *p);
         }
