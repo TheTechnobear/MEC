@@ -17,6 +17,8 @@ public:
 
   void displayPopup(const std::string& text);
   void displayParamLine(unsigned line, const Kontrol::Parameter& p);
+  void displayLine(unsigned line, const char*);
+  void invertLine(unsigned line);
 private:
   bool connect();
 

@@ -14,6 +14,7 @@ public:
     virtual ~DeviceMode() {;}
     virtual bool init() = 0;
     virtual void poll() = 0;
+    virtual void activate() = 0;
     virtual void changePot(unsigned pot, float value) = 0;
     virtual void changeEncoder(unsigned encoder, float value) = 0;
     virtual void encoderButton(unsigned encoder, bool value) = 0;

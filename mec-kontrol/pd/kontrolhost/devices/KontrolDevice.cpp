@@ -12,6 +12,8 @@ KontrolDevice::~KontrolDevice() {
 
 void KontrolDevice::changeMode(unsigned mode) {
     currentMode_ = mode;
+    auto m = modes_[mode];
+    if(m!=nullptr) m->activate();
 }
 
 void KontrolDevice::addMode(unsigned mode, std::shared_ptr<DeviceMode> handler) {

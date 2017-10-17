@@ -18,7 +18,8 @@ static char screenosc[OUTPUT_BUFFER_SIZE];
 static const unsigned MAX_POT_VALUE = 1023;
 
 enum OrganelleModes {
-  OM_PARAMETER
+  OM_PARAMETER,
+  OM_MENU
 };
 
 
@@ -59,15 +60,33 @@ public:
   OParamMode(Organelle& p) : OBaseMode(p), currentPage_(0) {;}
   virtual bool init();
   virtual void poll();
+  virtual void activate();
   virtual void changePot(unsigned pot, float value);
   virtual void changeEncoder(unsigned encoder, float value);
   virtual void encoderButton(unsigned encoder, bool value);
   virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p);
 private:
+  void display();
   std::string get_param_id(unsigned paramnum);
   std::shared_ptr<Pots> pots_;
   unsigned currentPage_;
 };
+
+class OMenuMode : public OBaseMode {
+public:
+  OMenuMode(Organelle& p) : OBaseMode(p), cur_(0), top_(0) {;}
+  virtual bool init();
+  virtual void activate();
+  virtual void changeEncoder(unsigned encoder, float value);
+  virtual void encoderButton(unsigned encoder, bool value);
+
+private:
+  void display();
+  unsigned cur_;
+  unsigned top_;
+  std::vector<std::string> items_;
+};
+
 
 void OBaseMode::displayPopup(const std::string& text, unsigned time) {
   popupTime_ = time;
@@ -90,20 +109,30 @@ bool OParamMode::init() {
   return true;
 }
 
+void OParamMode::display() {
+  auto pageId = model()->getPageId(currentPage_);
+  if (pageId.empty()) return;
+  for (int i = 1; i < 5; i++) {
+    // parameters start from 0 on page, but line 1 is oled line
+    // note: currently line 0 is unavailable, and 5 used for AUX
+    auto id = model()->getParamId(pageId, i - 1);
+    if (id.empty()) return;
+    auto param = model()->getParam(id);
+    if (param != nullptr) parent_.displayParamLine(i, *param);
+  } // for
+}
+
+
+void OParamMode::activate()  {
+  display();
+}
+
+
 void OParamMode::poll() {
   OBaseMode::poll();
   // release pop, redraw display
   if (popupTime_ == 0) {
-    auto pageId = model()->getPageId(currentPage_);
-    if (pageId.empty()) return;
-    for (int i = 1; i < 5; i++) {
-      // parameters start from 0 on page, but line 1 is oled line
-      // note: currently line 0 is unavailable, and 5 used for AUX
-      auto id = model()->getParamId(pageId, i - 1);
-      if (id.empty()) return;
-      auto param = model()->getParam(id);
-      if (param != nullptr) parent_.displayParamLine(i, *param);
-    } // for
+    display();
 
     // cancel timing
     popupTime_ = -1;
@@ -185,10 +214,11 @@ void OParamMode::changeEncoder(unsigned enc, float value) {
 
 void OParamMode::encoderButton(unsigned enc, bool value) {
   OBaseMode::encoderButton(enc, value);
-  post("encoder button %f", value);
-  if (value > 0) {
-    displayPopup("exit", PAGE_EXIT_TIMEOUT);
-    parent_.sendPdMessage("goHome", 1.0);
+  if (value < 1.0) {
+    parent_.changeMode(OM_MENU);
+
+    // displayPopup("exit", PAGE_EXIT_TIMEOUT);
+    // parent_.sendPdMessage("goHome", 1.0);
   }
 }
 
@@ -216,6 +246,54 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Parameter&
 }
 
 
+bool OMenuMode::init() {
+  items_.push_back("Midi Learn");
+  items_.push_back("Save Preset");
+  items_.push_back("Load Preset");
+  items_.push_back("Exit");
+  return true;
+}
+
+
+void OMenuMode::activate() {
+  display();
+}
+
+void OMenuMode::display() {
+  for (unsigned i = top_; i < top_ + 4; i++) {
+    if (i > items_.size() - 1) return;
+    std::string item = items_[i];
+    parent_.displayLine(i + 1, item.c_str());
+  }
+}
+
+
+void OMenuMode::changeEncoder(unsigned encoder, float value) {
+  unsigned cur = cur_;
+  if (value > 0) {
+    // clockwise
+    cur++;
+    cur = std::min(cur, (unsigned) items_.size() - 1);
+  } else {
+    // anti clockwise
+    if (cur > 0) cur--;
+  }
+  if (cur != cur_) {
+    int line = 0;
+    line = cur_ - top_;
+    if (line >= 0 && line <= 3) parent_.invertLine(line);
+    cur_ = cur;
+    line = cur_ - top_;
+    if (line >= 0 && line <= 3) parent_.invertLine(line);
+  }
+  // display();
+}
+
+void OMenuMode::encoderButton(unsigned encoder, bool value) {
+  if (value < 1.0) parent_.changeMode(OM_PARAMETER);
+}
+
+
 
 // Organelle implmentation
 
@@ -228,14 +306,17 @@ Organelle::Organelle() {
 bool Organelle::init() {
   // add modes before KD init
   addMode(OM_PARAMETER, std::make_shared<OParamMode>(*this));
-  changeMode(OM_PARAMETER);
-
+  // addMode(OM_MENU, std::make_shared<OMenuMode>(*this));
+ 
   if (KontrolDevice::init()) {
+
     // setup mother.pd for reasonable behaviour, basically takeover
     sendPdMessage("midiOutGate", 0.0f);
     // sendPdMessage("midiInGate",0.0f);
     sendPdMessage("enableSubMenu", 1.0f);
-    return connect();
+    connect();
+    changeMode(OM_PARAMETER);
+    return true;
   }
   return false;
 }
@@ -296,6 +377,13 @@ std::string Organelle::asDisplayString(const Kontrol::Parameter& param, unsigned
 
 
 void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter& param) {
+  std::string disp = asDisplayString(param, SCREEN_WIDTH);
+  displayLine(line, disp.c_str());
+}
+
+void Organelle::displayLine(unsigned line, const char* disp) {
+  if(socket_==nullptr) return;
+
   static const char* oledLine0 = "/oled/line/0";
   static const char* oledLine1 = "/oled/line/1";
   static const char* oledLine2 = "/oled/line/2";
@@ -315,19 +403,27 @@ void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter& param)
     msg = oledLine1;
   }
 
-  std::string disp = asDisplayString(param, SCREEN_WIDTH);
   osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
 
   // CNMAT OSC used by mother exec, does not support bundles
   ops << osc::BeginMessage( msg )
-      << disp.c_str()
+      << disp
+      << osc::EndMessage;
+
+  socket_->Send( ops.Data(), ops.Size() );
+}
+
+void Organelle::invertLine(unsigned line) {
+  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+
+  // CNMAT OSC used by mother exec, does not support bundles
+  ops << osc::BeginMessage( "/oled/invertline" )
+      << (int32_t) line
       << osc::EndMessage;
 
   socket_->Send( ops.Data(), ops.Size() );
 
 }
-
-
 
 
 
