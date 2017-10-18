@@ -1,4 +1,4 @@
-#N canvas 1394 156 1859 1084 10;
+#N canvas 504 151 1859 1084 10;
 #X msg 7 53 \; pd dsp 1;
 #X obj 14 8 loadbang;
 #X obj 1059 159 r knob1Raw;
@@ -62,6 +62,9 @@
 #X obj 323 382 print r_diff;
 #X obj 441 364 r r_cutoff;
 #X obj 441 386 print r_cutoff;
+#X obj 1587 157 pack f f;
+#X obj 1587 114 ctlin;
+#X msg 1587 195 midiCC \$2 \$1;
 #X connect 1 0 0 0;
 #X connect 2 0 3 0;
 #X connect 3 0 24 0;
@@ -94,3 +97,7 @@
 #X connect 51 0 52 0;
 #X connect 53 0 54 0;
 #X connect 55 0 56 0;
+#X connect 57 0 59 0;
+#X connect 58 0 57 0;
+#X connect 58 1 57 1;
+#X connect 59 0 24 0;
