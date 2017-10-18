@@ -191,19 +191,27 @@ void OParamMode::changePot(unsigned pot, float value) {
         pots_->locked_[pot] = Pots::K_UNLOCKED;
       }
       else if (pots_->locked_[pot] == Pots::K_GT) {
-        if (calc > param->current()) pots_->locked_[pot] = Pots::K_UNLOCKED;
+        if (calc > param->current()) {
+            pots_->locked_[pot] = Pots::K_UNLOCKED;
+            //std::cout << "unlock condition met gt " << pot << std::endl;
+        }
       }
       else if (pots_->locked_[pot] == Pots::K_LT) {
-        if (calc < param->current()) pots_->locked_[pot] = Pots::K_UNLOCKED;
+        if (calc < param->current()) {
+            pots_->locked_[pot] = Pots::K_UNLOCKED;
+            //std::cout << "unlock condition met lt " << pot << std::endl;
+        }
       }
       else if (pots_->locked_[pot] == Pots::K_LOCKED) {
         // initial locked, determine unlock condition
         if (calc > param->current()) {
           // pot starts greater than param, so wait for it to go less than
           pots_->locked_[pot] = Pots::K_LT;
+          //std::cout << "set unlock condition lt " << pot << std::endl;
         } else {
           // pot starts less than param, so wait for it to go greater than
           pots_->locked_[pot] = Pots::K_GT;
+          //std::cout << "set unlock condition gt " << pot << std::endl;
         }
       }
     }
@@ -264,6 +272,7 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Parameter&
     if ( id == param.id()) {
       parent_.displayParamLine(i, param);
       if (src != Kontrol::PS_LOCAL) {
+        //std::cout << "locking " << param.id() << " src " << src << std::endl;
         pots_->locked_[i - 1] = Pots::K_LOCKED;
       }
       return;
@@ -273,8 +282,6 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Parameter&
 
 void OMenuMode::activate() {
   display();
-  unsigned line = cur_ - top_;
-  if (line <= 3) parent_.invertLine(line);
   popupTime_ = MENU_TIMEOUT;
 }
 
@@ -295,7 +302,11 @@ void OMenuMode::display() {
 void OMenuMode::displayItem(unsigned i) {
   if (i < getSize()) {
     std::string item = getItemText(i);
-    parent_.displayLine(i - top_ + 1, item.c_str());
+    unsigned line = i - top_ + 1;
+    parent_.displayLine(line, item.c_str());
+    if( i==cur_) {
+        parent_.invertLine(line);
+    }
   }
 }
 
@@ -320,15 +331,14 @@ void OMenuMode::changeEncoder(unsigned encoder, float value) {
       display();
     }
     else {
-      line = cur_ - top_;
-      if (line >= 0 && line <= 3) parent_.invertLine(line);
+      line = cur_ - top_ + 1;
+      if (line >= 0 && line <= 4) parent_.invertLine(line);
     }
     cur_ = cur;
-    line = cur_ - top_;
-    if (line >= 0 && line <= 3) parent_.invertLine(line);
+    line = cur_ - top_ + 1;
+    if (line >= 0 && line <= 4) parent_.invertLine(line);
   }
   popupTime_ = MENU_TIMEOUT;
-  // display();
 }
 
 
@@ -525,8 +535,9 @@ void Organelle::invertLine(unsigned line) {
   osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
 
   // CNMAT OSC used by mother exec, does not support bundles
+  // BUG : invertline is incorrectly offset
   ops << osc::BeginMessage( "/oled/invertline" )
-      << (int32_t) line
+      << (int32_t) (line - 1)
       << osc::EndMessage;
 
   socket_->Send( ops.Data(), ops.Size() );
@@ -537,6 +548,7 @@ void Organelle::changed(Kontrol::ParameterSource src, const Kontrol::Parameter &
   if (midiLearnActive_) {
     lastParamId_ = p.id();
   }
+  KontrolDevice::changed(src,p);
 }
 
 void Organelle::midiLearn(bool b) {
@@ -546,6 +558,7 @@ void Organelle::midiLearn(bool b) {
 
 
 void Organelle::midiCC(unsigned num, unsigned value) {
+  //std::cout << "midiCC " << num << " " << value << std::endl;
   if (midiLearnActive_) {
     if (!lastParamId_.empty()) {
       if (value > 0) {

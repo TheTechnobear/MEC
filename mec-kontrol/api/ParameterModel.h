@@ -27,6 +27,7 @@ namespace Kontrol {
 
 enum ParameterSource {
 	PS_LOCAL,
+	PS_MIDI,
 	PS_OSC
 };
 

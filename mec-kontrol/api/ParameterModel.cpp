@@ -136,7 +136,7 @@ bool ParameterModel::changeMidiCC(unsigned midiCC, unsigned midiValue) {
         if (param != nullptr) {
             ParamValue pv = param->calcMidi(midiValue);
             if (pv != param->current()) {
-                return changeParam(PS_LOCAL, paramId, pv);
+                return changeParam(PS_MIDI, paramId, pv);
             }
         }
     }
