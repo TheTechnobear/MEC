@@ -26,16 +26,12 @@ public:
   bool midiLearn() { return midiLearnActive_;}
   virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p); 
 
-  std::string currentPreset() { return currentPreset_;}
-  void currentPreset(const std::string& p) { currentPreset_ = p;}
-
   std::string currentModule() { return currentModule_;}
   void currentModule(const std::string& p) { currentModule_ = p;}
 
 
 private:
   bool connect();
-  std::string currentPreset_;
   std::string currentModule_;
   std::string lastParamId_; // for midi learn
   bool midiLearnActive_;

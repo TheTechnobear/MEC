@@ -28,7 +28,7 @@
 #X msg 1402 193 enc \$1;
 #X msg 1491 193 encbut \$1;
 #X obj 1491 157 r encbut;
-#X obj 120 82 Kontrol kontrolhost-param;
+#X obj 120 82 Kontrol kontrolhost;
 #X obj 1117 447 KontrolHost~ 9000;
 #X obj 82 149 r o_shape;
 #X obj 184 150 r o_colour;

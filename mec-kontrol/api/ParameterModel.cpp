@@ -5,10 +5,13 @@
 #include <string.h>
 #include <iostream>
 #include <map>
+#include <fstream>
 
 #include "mec_prefs.h"
 #include "mec_log.h"
 
+// for saving presets only , later moved to Preferences
+#include <cJSON.h>
 
 namespace Kontrol {
 
@@ -16,7 +19,7 @@ Page::Page(
     const std::string& id,
     const std::string& displayName,
     const std::vector<std::string> paramIds
-) : Entity(id,displayName),
+) : Entity(id, displayName),
     paramIds_(paramIds) {
     ;
 }
@@ -114,6 +117,7 @@ void ParameterModel::publishMetaData() const {
 }
 
 bool ParameterModel::applyPreset(std::string presetId) {
+    currentPreset_ = presetId;
     auto presetvalues = presets_[presetId];
     bool ret = false;
     for (auto presetvalue : presetvalues) {
@@ -216,6 +220,7 @@ bool ParameterModel::loadParameterDefinitions(const mec::Preferences& prefs) {
 }
 bool ParameterModel::loadPatchSettings(const std::string& filename) {
     patchSettings_ = std::make_shared<mec::Preferences>(filename);
+    patchSettingsFile_ = filename;
     return loadPatchSettings(*patchSettings_);
 }
 
@@ -259,10 +264,76 @@ bool ParameterModel::loadPatchSettings(const mec::Preferences& prefs) {
             }
         }
     }
+    return true;
+}
+
+
+bool ParameterModel::savePatchSettings() {
+    // save to original patch settings file
+    // note: we do not save back to an preferences file, as this would not be complete
+    if (!patchSettingsFile_.empty()) {
+        savePatchSettings(patchSettingsFile_);
+    }
+    return false;
+}
+
+bool ParameterModel::savePatchSettings(const std::string& filename) {
+    // do in cJSON for now
+    std::ofstream outfile(filename);
+    cJSON *root = cJSON_CreateObject();
+    cJSON *presets = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "presets", presets);
+    for (auto p : presets_) {
+        cJSON* preset = cJSON_CreateObject();
+        cJSON_AddItemToObject(presets, p.first.c_str(), preset);
+        for (auto v : p.second) {
+            switch (v.value().type()) {
+            case ParamValue::T_String: {
+                cJSON_AddStringToObject(preset, v.paramId().c_str(), v.value().stringValue().c_str());
+                break;
+            }
+            case ParamValue::T_Float: {
+                cJSON_AddNumberToObject(preset, v.paramId().c_str(), v.value().floatValue());
+                break;
+            }
+            }//switch
+        }
+    }
+    cJSON *midi = cJSON_CreateObject();
+    cJSON *ccs = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "midi-mapping", midi);
+    cJSON_AddItemToObject(midi, "cc", ccs);
+    for (auto c : midi_mapping_) {
+        std::string ccstr = std::to_string(c.first);
+        cJSON_AddStringToObject(ccs, ccstr.c_str(), c.second.c_str());
+    }
+
+    // const char* text = cJSON_PrintUnformatted(root);
+    const char* text = cJSON_Print(root);
+    outfile << text << std::endl;
+    outfile.close();
 
     return true;
 }
 
+
+bool ParameterModel::savePreset(std::string presetId) {
+    currentPreset_ = presetId;
+    std::vector<Preset> presets;
+    for (auto p : parameters_) {
+        presets.push_back(Preset(p.first, p.second->current()));
+    }
+    presets_[presetId] = presets;
+    return true;
+}
+
+std::vector<std::string> ParameterModel::getPresetList() {
+    std::vector<std::string> presets;
+    for (auto p : presets_) {
+        presets.push_back(p.first);
+    }
+    return presets;
+}
 
 void ParameterModel::addMidiCCMapping(unsigned ccnum, std::string paramId) {
     midi_mapping_[ccnum] = paramId;

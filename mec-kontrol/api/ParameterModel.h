@@ -149,20 +149,30 @@ public:
 
 	bool loadParameterDefinitions(const std::string& filename);
 	bool loadParameterDefinitions(const mec::Preferences& prefs);
+	
 	bool loadPatchSettings(const std::string& filename);
 	bool loadPatchSettings(const mec::Preferences& prefs);
+
+	bool savePatchSettings();
+	bool savePatchSettings(const std::string& filename);
 
 	void dumpParameters();
 	void dumpCurrentValues();
 	void dumpPatchSettings();
 
 	bool applyPreset(std::string presetId);
+	bool savePreset(std::string presetId);
 	bool changeMidiCC(unsigned midiCC, unsigned midiValue);
 	void addMidiCCMapping(unsigned midiCC, std::string paramId);
+	std::string currentPreset() { return currentPreset_;}
+	std::vector<std::string> getPresetList();
+
 
 private:
 	ParameterModel();
 	std::string patchName_; // temp
+	std::string patchSettingsFile_;
+	std::string currentPreset_;
 
 	std::shared_ptr<mec::Preferences> paramDefinitions_;
 	std::shared_ptr<mec::Preferences> patchSettings_;

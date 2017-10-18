@@ -28,7 +28,8 @@ void *Kontrol_new(t_symbol* name)
   t_Kontrol *x = (t_Kontrol *) pd_new(Kontrol_class);
   if(name && name->s_name) {
     std::string sname = name->s_name;
-    Kontrol::ParameterModel::model()->loadParameterDefinitions(sname + ".json");
+    Kontrol::ParameterModel::model()->loadParameterDefinitions(sname + "-param.json");
+    Kontrol::ParameterModel::model()->loadPatchSettings(sname + "-patch.json");
     Kontrol::ParameterModel::model()->dumpParameters();
   }
   return (void *)x;

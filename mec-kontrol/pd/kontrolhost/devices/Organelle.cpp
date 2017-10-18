@@ -11,7 +11,7 @@ const unsigned int SCREEN_WIDTH = 21;
 
 static const int PAGE_SWITCH_TIMEOUT = 5;
 static const int PAGE_EXIT_TIMEOUT = 5;
-static const int MENU_TIMEOUT = 50;
+static const int MENU_TIMEOUT = 35;
 
 
 static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
@@ -21,7 +21,8 @@ static const unsigned MAX_POT_VALUE = 1023;
 
 enum OrganelleModes {
   OM_PARAMETER,
-  OM_MAINMENU
+  OM_MAINMENU,
+  OM_PRESETMENU
 };
 
 
@@ -114,6 +115,16 @@ public:
   virtual void clicked(unsigned idx);
 };
 
+class OPresetMenu : public OMenuMode {
+public:
+  OPresetMenu(Organelle& p) : OMenuMode(p) {;}
+  virtual bool init();
+  virtual unsigned getSize();
+  virtual std::string getItemText(unsigned idx);
+  virtual void clicked(unsigned idx);
+private:
+  std::vector<std::string> presets_;
+};
 
 
 
@@ -193,14 +204,14 @@ void OParamMode::changePot(unsigned pot, float value) {
       }
       else if (pots_->locked_[pot] == Pots::K_GT) {
         if (calc > param->current()) {
-            pots_->locked_[pot] = Pots::K_UNLOCKED;
-            //std::cout << "unlock condition met gt " << pot << std::endl;
+          pots_->locked_[pot] = Pots::K_UNLOCKED;
+          //std::cout << "unlock condition met gt " << pot << std::endl;
         }
       }
       else if (pots_->locked_[pot] == Pots::K_LT) {
         if (calc < param->current()) {
-            pots_->locked_[pot] = Pots::K_UNLOCKED;
-            //std::cout << "unlock condition met lt " << pot << std::endl;
+          pots_->locked_[pot] = Pots::K_UNLOCKED;
+          //std::cout << "unlock condition met lt " << pot << std::endl;
         }
       }
       else if (pots_->locked_[pot] == Pots::K_LOCKED) {
@@ -306,8 +317,8 @@ void OMenuMode::displayItem(unsigned i) {
     std::string item = getItemText(i);
     unsigned line = i - top_ + 1;
     parent_.displayLine(line, item.c_str());
-    if( i==cur_) {
-        parent_.invertLine(line);
+    if ( i == cur_) {
+      parent_.invertLine(line);
     }
   }
 }
@@ -344,20 +355,22 @@ void OMenuMode::changeEncoder(unsigned encoder, float value) {
 }
 
 
-enum MainMenuItms {
-  MMI_HOME,
-  MMI_MODULE,
-  MMI_PRESET,
-  MMI_LEARN,
-  MMI_SIZE
-};
-
 void OMenuMode::encoderButton(unsigned encoder, bool value) {
   if (value < 1.0)  {
     clicked(cur_);
   }
 }
 
+
+/// main menu
+enum MainMenuItms {
+  MMI_HOME,
+  MMI_MODULE,
+  MMI_PRESET,
+  MMI_LEARN,
+  MMI_SAVE,
+  MMI_SIZE
+};
 
 bool OMainMenu::init() {
   return true;
@@ -372,7 +385,8 @@ std::string OMainMenu::getItemText(unsigned idx) {
   switch (idx) {
   case MMI_HOME:   return "Home";
   case MMI_MODULE: return parent_.currentModule();
-  case MMI_PRESET: return parent_.currentPreset();
+  case MMI_PRESET: return model()->currentPreset();
+  case MMI_SAVE:   return "Save Settings";
   case MMI_LEARN:  {
     if (parent_.midiLearn()) {
       return "Midi Learn        [X]";
@@ -393,7 +407,7 @@ void OMainMenu::clicked(unsigned idx) {
     break;
   }
   case MMI_MODULE: {
-    parent_.changeMode(OM_PARAMETER);
+    parent_.changeMode(OM_PRESETMENU);
     break;
   }
   case MMI_PRESET: {
@@ -404,10 +418,63 @@ void OMainMenu::clicked(unsigned idx) {
     parent_.midiLearn(!parent_.midiLearn());
     displayItem(MMI_LEARN);
     // parent_.changeMode(OM_PARAMETER);
+    break;
+  }
+  case MMI_SAVE:  {
+    model()->savePatchSettings();
+    parent_.changeMode(OM_PARAMETER);
+    break;
   }
   default: break;
   }
 }
+
+// preset menu
+enum PresetMenuItms {
+  PMI_SAVE,
+  PMI_SEP,
+  PMI_LAST
+};
+
+
+bool OPresetMenu::init() {
+  presets_ = model()->getPresetList();
+  return true;
+}
+
+
+unsigned OPresetMenu::getSize() {
+  return (unsigned) PMI_LAST + presets_.size();
+}
+
+std::string OPresetMenu::getItemText(unsigned idx) {
+  switch (idx) {
+  case PMI_SAVE:  return "Save Preset";
+  case PMI_SEP:   return "--------------------";
+  default:
+    return presets_[idx - PMI_LAST];
+  }
+  return "";
+}
+
+
+void OPresetMenu::clicked(unsigned idx) {
+  switch (idx) {
+  case PMI_SAVE:   {
+    model()->savePreset(model()->currentPreset());
+    parent_.changeMode(OM_MAINMENU);
+    break;
+  }
+  case PMI_SEP: {
+    break;
+  }
+  default: {
+    model()->applyPreset(presets_[idx - PMI_LAST]);
+    break;
+  }
+  }
+}
+
 
 
 
@@ -423,9 +490,9 @@ bool Organelle::init() {
   // add modes before KD init
   addMode(OM_PARAMETER, std::make_shared<OParamMode>(*this));
   addMode(OM_MAINMENU, std::make_shared<OMainMenu>(*this));
+  addMode(OM_PRESETMENU, std::make_shared<OPresetMenu>(*this));
 
   if (KontrolDevice::init()) {
-    currentPreset("Preset 1");
     currentModule("Module 1");
     midiLearn(false);
     lastParamId_ = "";
@@ -500,9 +567,9 @@ void Organelle::clearDisplay() {
   //ops << osc::BeginMessage( "/oled/gClear" )
   //    << 1
   //    << osc::EndMessage;
-    ops << osc::BeginMessage( "/oled/gFillArea" )
-        << 127 << 45 << 0 << 8 << 0
-        << osc::EndMessage;
+  ops << osc::BeginMessage( "/oled/gFillArea" )
+      << 127 << 45 << 0 << 8 << 0
+      << osc::EndMessage;
   socket_->Send( ops.Data(), ops.Size() );
 }
 
@@ -514,21 +581,21 @@ void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter & param
 void Organelle::displayLine(unsigned line, const char* disp) {
   if (socket_ == nullptr) return;
 
-  int x =  ((line-1) * 11) + ((line>0) *9 );
+  int x =  ((line - 1) * 11) + ((line > 0) * 9 );
   {
-  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+    osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
     ops << osc::BeginMessage( "/oled/gFillArea" )
         << 127 << 10 << 0 << x << 0
         << osc::EndMessage;
     socket_->Send( ops.Data(), ops.Size() );
   }
   {
-  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
-  ops << osc::BeginMessage( "/oled/gPrintln" )
-      << 2 << x << 8 << 1
-      << disp
-      << osc::EndMessage;
-  socket_->Send( ops.Data(), ops.Size() );
+    osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+    ops << osc::BeginMessage( "/oled/gPrintln" )
+        << 2 << x << 8 << 1
+        << disp
+        << osc::EndMessage;
+    socket_->Send( ops.Data(), ops.Size() );
   }
 
 
@@ -538,9 +605,9 @@ void Organelle::displayLine(unsigned line, const char* disp) {
 void Organelle::invertLine(unsigned line) {
   osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
 
-  int x =  ((line-1) * 11) + ((line>0) *9 );
+  int x =  ((line - 1) * 11) + ((line > 0) * 9 );
   ops << osc::BeginMessage( "/oled/gInvertArea" )
-      << 127 << 10 << 0 << x-1 
+      << 127 << 10 << 0 << x - 1
       << osc::EndMessage;
 
   socket_->Send( ops.Data(), ops.Size() );
@@ -551,7 +618,7 @@ void Organelle::changed(Kontrol::ParameterSource src, const Kontrol::Parameter &
   if (midiLearnActive_) {
     lastParamId_ = p.id();
   }
-  KontrolDevice::changed(src,p);
+  KontrolDevice::changed(src, p);
 }
 
 void Organelle::midiLearn(bool b) {
@@ -574,7 +641,7 @@ void Organelle::midiCC(unsigned num, unsigned value) {
     }
   }
   // update param model
-  KontrolDevice::midiCC(num,value);
+  KontrolDevice::midiCC(num, value);
 }
 
 
