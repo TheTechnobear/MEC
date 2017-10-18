@@ -141,6 +141,7 @@ bool OParamMode::init() {
 void OParamMode::display() {
   auto pageId = model()->getPageId(currentPage_);
   if (pageId.empty()) return;
+  parent_.clearDisplay();
   for (int i = 1; i < 5; i++) {
     // parameters start from 0 on page, but line 1 is oled line
     // note: currently line 0 is unavailable, and 5 used for AUX
@@ -294,6 +295,7 @@ void OMenuMode::poll() {
 }
 
 void OMenuMode::display() {
+  parent_.clearDisplay();
   for (unsigned i = top_; i < top_ + 4; i++) {
     displayItem(i);
   }
@@ -493,6 +495,16 @@ std::string Organelle::asDisplayString(const Kontrol::Parameter & param, unsigne
   return ret;
 }
 
+void Organelle::clearDisplay() {
+  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+  //ops << osc::BeginMessage( "/oled/gClear" )
+  //    << 1
+  //    << osc::EndMessage;
+    ops << osc::BeginMessage( "/oled/gFillArea" )
+        << 127 << 45 << 0 << 8 << 0
+        << osc::EndMessage;
+  socket_->Send( ops.Data(), ops.Size() );
+}
 
 void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter & param) {
   std::string disp = asDisplayString(param, SCREEN_WIDTH);
@@ -502,42 +514,33 @@ void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter & param
 void Organelle::displayLine(unsigned line, const char* disp) {
   if (socket_ == nullptr) return;
 
-  static const char* oledLine0 = "/oled/line/0";
-  static const char* oledLine1 = "/oled/line/1";
-  static const char* oledLine2 = "/oled/line/2";
-  static const char* oledLine3 = "/oled/line/3";
-  static const char* oledLine4 = "/oled/line/4";
-  static const char* oledLine5 = "/oled/line/5";
-
-  const char* msg = oledLine1;
-  switch (line) {
-  case 0: msg = oledLine0; break;
-  case 1: msg = oledLine1; break;
-  case 2: msg = oledLine2; break;
-  case 3: msg = oledLine3; break;
-  case 4: msg = oledLine4; break;
-  case 5: msg = oledLine5; break;
-  default:
-    msg = oledLine1;
-  }
-
+  int x =  ((line-1) * 11) + ((line>0) *9 );
+  {
   osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
-
-  // CNMAT OSC used by mother exec, does not support bundles
-  ops << osc::BeginMessage( msg )
+    ops << osc::BeginMessage( "/oled/gFillArea" )
+        << 127 << 10 << 0 << x << 0
+        << osc::EndMessage;
+    socket_->Send( ops.Data(), ops.Size() );
+  }
+  {
+  osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
+  ops << osc::BeginMessage( "/oled/gPrintln" )
+      << 2 << x << 8 << 1
       << disp
       << osc::EndMessage;
-
   socket_->Send( ops.Data(), ops.Size() );
+  }
+
+
+
 }
 
 void Organelle::invertLine(unsigned line) {
   osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
 
-  // CNMAT OSC used by mother exec, does not support bundles
-  // BUG : invertline is incorrectly offset
-  ops << osc::BeginMessage( "/oled/invertline" )
-      << (int32_t) (line - 1)
+  int x =  ((line-1) * 11) + ((line>0) *9 );
+  ops << osc::BeginMessage( "/oled/gInvertArea" )
+      << 127 << 10 << 0 << x-1 
       << osc::EndMessage;
 
   socket_->Send( ops.Data(), ops.Size() );

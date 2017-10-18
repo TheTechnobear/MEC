@@ -19,7 +19,7 @@ public:
   void displayParamLine(unsigned line, const Kontrol::Parameter& p);
   void displayLine(unsigned line, const char*);
   void invertLine(unsigned line);
-
+  void clearDisplay();
 
   void midiCC(unsigned num, unsigned value);
   void midiLearn(bool b);
