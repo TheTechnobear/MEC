@@ -30,6 +30,7 @@ void *Kontrol_new(t_symbol* name)
     std::string sname = name->s_name;
     Kontrol::ParameterModel::model()->loadParameterDefinitions(sname + "-param.json");
     Kontrol::ParameterModel::model()->loadPatchSettings(sname + "-patch.json");
+    Kontrol::ParameterModel::model()->applyPreset("default");
     Kontrol::ParameterModel::model()->dumpParameters();
   }
   return (void *)x;

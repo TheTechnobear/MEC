@@ -125,7 +125,7 @@ bool ParameterModel::applyPreset(std::string presetId) {
         if (param != nullptr) {
             if (presetvalue.value().type() == ParamValue::T_Float) {
                 if (presetvalue.value() != param->current()) {
-                    ret |= changeParam(PS_LOCAL, presetvalue.paramId(), presetvalue.value());
+                    ret |= changeParam(PS_PRESET, presetvalue.paramId(), presetvalue.value());
                 }
             }
         }

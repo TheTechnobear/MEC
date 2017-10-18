@@ -119,6 +119,7 @@ class OPresetMenu : public OMenuMode {
 public:
   OPresetMenu(Organelle& p) : OMenuMode(p) {;}
   virtual bool init();
+  virtual void activate();
   virtual unsigned getSize();
   virtual std::string getItemText(unsigned idx);
   virtual void clicked(unsigned idx);
@@ -338,18 +339,20 @@ void OMenuMode::changeEncoder(unsigned encoder, float value) {
     int line = 0;
     if (cur < top_ ) {
       top_ = cur;
+      cur_ = cur;
       display();
     } else if (cur >= top_ + 4) {
       top_ = cur - 3;
+      cur_ = cur;
       display();
     }
     else {
       line = cur_ - top_ + 1;
       if (line >= 0 && line <= 4) parent_.invertLine(line);
+      cur_ = cur;
+      line = cur_ - top_ + 1;
+      if (line >= 0 && line <= 4) parent_.invertLine(line);
     }
-    cur_ = cur;
-    line = cur_ - top_ + 1;
-    if (line >= 0 && line <= 4) parent_.invertLine(line);
   }
   popupTime_ = MENU_TIMEOUT;
 }
@@ -407,11 +410,11 @@ void OMainMenu::clicked(unsigned idx) {
     break;
   }
   case MMI_MODULE: {
-    parent_.changeMode(OM_PRESETMENU);
+    parent_.changeMode(OM_PARAMETER);
     break;
   }
   case MMI_PRESET: {
-    parent_.changeMode(OM_PARAMETER);
+    parent_.changeMode(OM_PRESETMENU);
     break;
   }
   case MMI_LEARN:  {
@@ -432,6 +435,7 @@ void OMainMenu::clicked(unsigned idx) {
 // preset menu
 enum PresetMenuItms {
   PMI_SAVE,
+  PMI_NEW,
   PMI_SEP,
   PMI_LAST
 };
@@ -442,6 +446,11 @@ bool OPresetMenu::init() {
   return true;
 }
 
+void OPresetMenu::activate() {
+  presets_ = model()->getPresetList();
+  OMenuMode::activate();
+}
+
 
 unsigned OPresetMenu::getSize() {
   return (unsigned) PMI_LAST + presets_.size();
@@ -450,6 +459,7 @@ unsigned OPresetMenu::getSize() {
 std::string OPresetMenu::getItemText(unsigned idx) {
   switch (idx) {
   case PMI_SAVE:  return "Save Preset";
+  case PMI_NEW:   return "New Preset";
   case PMI_SEP:   return "--------------------";
   default:
     return presets_[idx - PMI_LAST];
@@ -462,6 +472,11 @@ void OPresetMenu::clicked(unsigned idx) {
   switch (idx) {
   case PMI_SAVE:   {
     model()->savePreset(model()->currentPreset());
+    parent_.changeMode(OM_MAINMENU);
+    break;
+  }
+  case PMI_NEW:   {
+    model()->savePreset("New " + std::to_string(presets_.size()));
     parent_.changeMode(OM_MAINMENU);
     break;
   }
