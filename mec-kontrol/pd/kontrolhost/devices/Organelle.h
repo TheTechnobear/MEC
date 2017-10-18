@@ -19,8 +19,26 @@ public:
   void displayParamLine(unsigned line, const Kontrol::Parameter& p);
   void displayLine(unsigned line, const char*);
   void invertLine(unsigned line);
+
+
+  void midiCC(unsigned num, unsigned value);
+  void midiLearn(bool b);
+  bool midiLearn() { return midiLearnActive_;}
+  virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p); 
+
+  std::string currentPreset() { return currentPreset_;}
+  void currentPreset(const std::string& p) { currentPreset_ = p;}
+
+  std::string currentModule() { return currentModule_;}
+  void currentModule(const std::string& p) { currentModule_ = p;}
+
+
 private:
   bool connect();
+  std::string currentPreset_;
+  std::string currentModule_;
+  std::string lastParamId_; // for midi learn
+  bool midiLearnActive_;
 
   std::string asDisplayString(const Kontrol::Parameter& p, unsigned width) const;
   std::shared_ptr<UdpTransmitSocket> socket_;

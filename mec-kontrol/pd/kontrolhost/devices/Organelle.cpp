@@ -21,7 +21,7 @@ static const unsigned MAX_POT_VALUE = 1023;
 
 enum OrganelleModes {
   OM_PARAMETER,
-  OM_MENU
+  OM_MAINMENU
 };
 
 
@@ -77,18 +77,44 @@ private:
 class OMenuMode : public OBaseMode {
 public:
   OMenuMode(Organelle& p) : OBaseMode(p), cur_(0), top_(0) {;}
-  virtual bool init();
+  virtual unsigned getSize() = 0;
+  virtual std::string getItemText(unsigned idx) = 0;
+  virtual void clicked(unsigned idx) = 0;
+
+  virtual bool init() { return true;}
   virtual void poll();
   virtual void activate();
   virtual void changeEncoder(unsigned encoder, float value);
   virtual void encoderButton(unsigned encoder, bool value);
 
-private:
+protected:
   void display();
+  void displayItem(unsigned idx);
   unsigned cur_;
   unsigned top_;
+};
+
+
+class OFixedMenuMode : public OMenuMode {
+public:
+  OFixedMenuMode(Organelle& p) : OMenuMode(p) {;}
+  virtual unsigned getSize() { return items_.size(); };
+  virtual std::string getItemText(unsigned i)  { return items_[i];}
+
+protected:
   std::vector<std::string> items_;
 };
+
+class OMainMenu : public OMenuMode {
+public:
+  OMainMenu(Organelle& p) : OMenuMode(p) {;}
+  virtual bool init();
+  virtual unsigned getSize();
+  virtual std::string getItemText(unsigned idx);
+  virtual void clicked(unsigned idx);
+};
+
+
 
 
 void OBaseMode::displayPopup(const std::string& text, unsigned time) {
@@ -218,7 +244,7 @@ void OParamMode::changeEncoder(unsigned enc, float value) {
 void OParamMode::encoderButton(unsigned enc, bool value) {
   OBaseMode::encoderButton(enc, value);
   if (value < 1.0) {
-    parent_.changeMode(OM_MENU);
+    parent_.changeMode(OM_MAINMENU);
   }
 }
 
@@ -245,23 +271,10 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Parameter&
   } // for
 }
 
-
-bool OMenuMode::init() {
-  items_.push_back("Main Menu");
-  items_.push_back("Midi Learn");
-  items_.push_back("Save Preset");
-  items_.push_back("Load Preset");
-  items_.push_back("Test1");
-  items_.push_back("Test2");
-  items_.push_back("Test3");
-  return true;
-}
-
-
 void OMenuMode::activate() {
   display();
   unsigned line = cur_ - top_;
-  if (line >= 0 && line <= 3) parent_.invertLine(line);
+  if (line <= 3) parent_.invertLine(line);
   popupTime_ = MENU_TIMEOUT;
 }
 
@@ -275,10 +288,14 @@ void OMenuMode::poll() {
 
 void OMenuMode::display() {
   for (unsigned i = top_; i < top_ + 4; i++) {
-    if (i < items_.size()) {
-      std::string item = items_[i];
-      parent_.displayLine(i - top_ + 1, item.c_str());
-    }
+    displayItem(i);
+  }
+}
+
+void OMenuMode::displayItem(unsigned i) {
+  if (i < getSize()) {
+    std::string item = getItemText(i);
+    parent_.displayLine(i - top_ + 1, item.c_str());
   }
 }
 
@@ -288,7 +305,7 @@ void OMenuMode::changeEncoder(unsigned encoder, float value) {
   if (value > 0) {
     // clockwise
     cur++;
-    cur = std::min(cur, (unsigned) items_.size() - 1);
+    cur = std::min(cur, (unsigned) getSize() - 1);
   } else {
     // anti clockwise
     if (cur > 0) cur--;
@@ -314,12 +331,69 @@ void OMenuMode::changeEncoder(unsigned encoder, float value) {
   // display();
 }
 
+
+enum MainMenuItms {
+  MMI_HOME,
+  MMI_MODULE,
+  MMI_PRESET,
+  MMI_LEARN,
+  MMI_SIZE
+};
+
 void OMenuMode::encoderButton(unsigned encoder, bool value) {
   if (value < 1.0)  {
-    parent_.changeMode(OM_PARAMETER);
-    if (cur_ == 0) {
-      parent_.sendPdMessage("goHome", 1.0);
+    clicked(cur_);
+  }
+}
+
+
+bool OMainMenu::init() {
+  return true;
+}
+
+
+unsigned OMainMenu::getSize() {
+  return (unsigned) MMI_SIZE;
+}
+
+std::string OMainMenu::getItemText(unsigned idx) {
+  switch (idx) {
+  case MMI_HOME:   return "Home";
+  case MMI_MODULE: return parent_.currentModule();
+  case MMI_PRESET: return parent_.currentPreset();
+  case MMI_LEARN:  {
+    if (parent_.midiLearn()) {
+      return "Midi Learn        [X]";
     }
+    return "Midi Learn        [ ]";
+  }
+  default: break;
+  }
+  return "";
+}
+
+
+void OMainMenu::clicked(unsigned idx) {
+  switch (idx) {
+  case MMI_HOME:   {
+    parent_.changeMode(OM_PARAMETER);
+    parent_.sendPdMessage("goHome", 1.0);
+    break;
+  }
+  case MMI_MODULE: {
+    parent_.changeMode(OM_PARAMETER);
+    break;
+  }
+  case MMI_PRESET: {
+    parent_.changeMode(OM_PARAMETER);
+    break;
+  }
+  case MMI_LEARN:  {
+    parent_.midiLearn(!parent_.midiLearn());
+    displayItem(MMI_LEARN);
+    // parent_.changeMode(OM_PARAMETER);
+  }
+  default: break;
   }
 }
 
@@ -336,9 +410,13 @@ Organelle::Organelle() {
 bool Organelle::init() {
   // add modes before KD init
   addMode(OM_PARAMETER, std::make_shared<OParamMode>(*this));
-  addMode(OM_MENU, std::make_shared<OMenuMode>(*this));
+  addMode(OM_MAINMENU, std::make_shared<OMainMenu>(*this));
 
   if (KontrolDevice::init()) {
+    currentPreset("Preset 1");
+    currentModule("Module 1");
+    midiLearn(false);
+    lastParamId_ = "";
 
     // setup mother.pd for reasonable behaviour, basically takeover
     sendPdMessage("midiOutGate", 0.0f);
@@ -363,7 +441,7 @@ bool Organelle::connect() {
   return true;
 }
 
-void Organelle::displayPopup(const std::string& text) {
+void Organelle::displayPopup(const std::string & text) {
   {
     osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
     ops << osc::BeginMessage( "/oled/gFillArea" )
@@ -392,7 +470,7 @@ void Organelle::displayPopup(const std::string& text) {
 
 
 
-std::string Organelle::asDisplayString(const Kontrol::Parameter& param, unsigned width) const {
+std::string Organelle::asDisplayString(const Kontrol::Parameter & param, unsigned width) const {
   std::string pad = "";
   std::string ret;
   std::string value = param.displayValue();
@@ -406,7 +484,7 @@ std::string Organelle::asDisplayString(const Kontrol::Parameter& param, unsigned
 }
 
 
-void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter& param) {
+void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter & param) {
   std::string disp = asDisplayString(param, SCREEN_WIDTH);
   displayLine(line, disp.c_str());
 }
@@ -453,6 +531,34 @@ void Organelle::invertLine(unsigned line) {
 
   socket_->Send( ops.Data(), ops.Size() );
 
+}
+
+void Organelle::changed(Kontrol::ParameterSource src, const Kontrol::Parameter & p) {
+  if (midiLearnActive_) {
+    lastParamId_ = p.id();
+  }
+}
+
+void Organelle::midiLearn(bool b) {
+  lastParamId_ = "";
+  midiLearnActive_ = b;
+}
+
+
+void Organelle::midiCC(unsigned num, unsigned value) {
+  if (midiLearnActive_) {
+    if (!lastParamId_.empty()) {
+      if (value > 0) {
+        model()->addMidiCCMapping(num, lastParamId_);
+        lastParamId_ = "";
+      }
+      else {
+        model()->addMidiCCMapping(num, "");
+      }
+    }
+  }
+  // update param model
+  KontrolDevice::midiCC(num,value);
 }
 
 

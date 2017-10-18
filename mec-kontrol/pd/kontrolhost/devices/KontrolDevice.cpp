@@ -73,6 +73,12 @@ void KontrolDevice::changed(Kontrol::ParameterSource src, const Kontrol::Paramet
     if(m!=nullptr) m->changed(src,p);
 }
 
+
+void KontrolDevice::midiCC(unsigned num, unsigned value) {
+    model()->changeMidiCC(num,value);
+}
+
+
 static t_pd *get_object(const char *s) {
   t_pd *x = gensym(s)->s_thing;
   return x;

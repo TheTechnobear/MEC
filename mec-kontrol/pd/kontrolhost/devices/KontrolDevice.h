@@ -43,6 +43,8 @@ public:
     virtual void param(Kontrol::ParameterSource, const Kontrol::Parameter&);
     virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p);
 
+    virtual void midiCC(unsigned num, unsigned value);
+
     void sendPdMessage(const char* obj, float f); 
     std::shared_ptr<Kontrol::ParameterModel> model() { return param_model_;}
 protected:

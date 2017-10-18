@@ -255,13 +255,19 @@ bool ParameterModel::loadPatchSettings(const mec::Preferences& prefs) {
             for (std::string ccstr : cc.getKeys()) {
                 unsigned ccnum = std::stoi(ccstr);
                 std::string paramId = cc.getString(ccstr);
-                midi_mapping_[ccnum] = paramId;
+                addMidiCCMapping(ccnum, paramId);
             }
         }
     }
 
     return true;
 }
+
+
+void ParameterModel::addMidiCCMapping(unsigned ccnum, std::string paramId) {
+    midi_mapping_[ccnum] = paramId;
+}
+
 
 void ParameterModel::dumpParameters() {
     const char* IND = "    ";

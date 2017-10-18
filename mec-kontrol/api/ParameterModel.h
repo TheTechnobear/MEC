@@ -157,6 +157,7 @@ public:
 
 	bool applyPreset(std::string presetId);
 	bool changeMidiCC(unsigned midiCC, unsigned midiValue);
+	void addMidiCCMapping(unsigned midiCC, std::string paramId);
 
 private:
 	ParameterModel();

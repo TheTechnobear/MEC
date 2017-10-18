@@ -153,6 +153,12 @@ void KontrolHost_tilde_setup(void) {
   class_addmethod(KontrolHost_tilde_class,
                   (t_method) KontrolHost_tilde_encbut, gensym("encbut"),
                   A_DEFFLOAT, A_NULL);
+
+
+  class_addmethod(KontrolHost_tilde_class,
+                  (t_method) KontrolHost_tilde_midiCC, gensym("midiCC"),
+                  A_DEFFLOAT, A_DEFFLOAT, A_NULL);
+
   // class_addmethod(KontrolHost_tilde_class,
   //                 (t_method) KontrolHost_tilde_auxRaw, gensym("auxRaw"),
   //                 A_DEFFLOAT, A_NULL);
@@ -221,6 +227,11 @@ void    KontrolHost_tilde_knob3Raw(t_KontrolHost* x, t_floatarg f) {
 
 void    KontrolHost_tilde_knob4Raw(t_KontrolHost* x, t_floatarg f) {
   if (x->device_) x->device_->changePot(3, f);
+}
+
+
+void    KontrolHost_tilde_midiCC(t_KontrolHost *x, t_floatarg cc, t_floatarg value) {
+  if (x->device_) x->device_->midiCC((unsigned) cc, (unsigned) value);
 }
 
 

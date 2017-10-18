@@ -41,4 +41,5 @@ extern "C"  {
   void    KontrolHost_tilde_knob2Raw(t_KontrolHost *x, t_floatarg f);
   void    KontrolHost_tilde_knob3Raw(t_KontrolHost *x, t_floatarg f);
   void    KontrolHost_tilde_knob4Raw(t_KontrolHost *x, t_floatarg f);
+  void    KontrolHost_tilde_midiCC(t_KontrolHost *x, t_floatarg cc, t_floatarg value);
 }
