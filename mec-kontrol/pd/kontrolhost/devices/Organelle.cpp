@@ -14,6 +14,9 @@ static const int PAGE_EXIT_TIMEOUT = 5;
 static const int MENU_TIMEOUT = 35;
 
 
+const int8_t PATCH_SCREEN = 3;
+
+
 static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
 static char screenosc[OUTPUT_BUFFER_SIZE];
 
@@ -539,7 +542,10 @@ void Organelle::displayPopup(const std::string & text) {
   {
     osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
     ops << osc::BeginMessage( "/oled/gFillArea" )
-        << 100 << 34 << 14 << 14 << 0
+        << PATCH_SCREEN
+        << 14 << 14 
+        << 100 << 34 
+        << 0
         << osc::EndMessage;
     socket_->Send( ops.Data(), ops.Size() );
   }
@@ -547,7 +553,10 @@ void Organelle::displayPopup(const std::string & text) {
   {
     osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
     ops << osc::BeginMessage( "/oled/gBox" )
-        << 100 << 34 << 14 << 14 << 1
+        << PATCH_SCREEN
+        << 14 << 14 
+        << 100 << 34 
+        << 1
         << osc::EndMessage;
     socket_->Send( ops.Data(), ops.Size() );
   }
@@ -555,7 +564,9 @@ void Organelle::displayPopup(const std::string & text) {
   {
     osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
     ops << osc::BeginMessage( "/oled/gPrintln" )
-        << 20 << 24 << 16 << 1
+        << PATCH_SCREEN
+        << 20 << 24 
+        << 16 << 1
         << text.c_str()
         << osc::EndMessage;
     socket_->Send( ops.Data(), ops.Size() );
@@ -583,7 +594,10 @@ void Organelle::clearDisplay() {
   //    << 1
   //    << osc::EndMessage;
   ops << osc::BeginMessage( "/oled/gFillArea" )
-      << 127 << 45 << 0 << 8 << 0
+      << PATCH_SCREEN
+      << 0 << 8 
+      << 128 << 45 
+      << 0
       << osc::EndMessage;
   socket_->Send( ops.Data(), ops.Size() );
 }
@@ -600,14 +614,19 @@ void Organelle::displayLine(unsigned line, const char* disp) {
   {
     osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
     ops << osc::BeginMessage( "/oled/gFillArea" )
-        << 127 << 10 << 0 << x << 0
+        << PATCH_SCREEN
+        << 0 << x 
+        << 128 << 10
+        << 0
         << osc::EndMessage;
     socket_->Send( ops.Data(), ops.Size() );
   }
   {
     osc::OutboundPacketStream ops( screenosc, OUTPUT_BUFFER_SIZE );
     ops << osc::BeginMessage( "/oled/gPrintln" )
-        << 2 << x << 8 << 1
+        << PATCH_SCREEN
+        << 2 << x 
+        << 8 << 1
         << disp
         << osc::EndMessage;
     socket_->Send( ops.Data(), ops.Size() );
@@ -622,7 +641,9 @@ void Organelle::invertLine(unsigned line) {
 
   int x =  ((line - 1) * 11) + ((line > 0) * 9 );
   ops << osc::BeginMessage( "/oled/gInvertArea" )
-      << 127 << 10 << 0 << x - 1
+      << PATCH_SCREEN
+      << 0 << x - 1
+      << 128 << 10
       << osc::EndMessage;
 
   socket_->Send( ops.Data(), ops.Size() );
