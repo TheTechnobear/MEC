@@ -7,6 +7,7 @@ mec-app - standalone app, built on mec-api
 mec-vst - VST/AU, built on mec-api
 mec-app - bela app, built on mec-api
 mec-max - max external, built on mec-api
+mec-kontrol - patch and parameter system, also with pd support
 
 SoundplaneLite - stripped down soundplane software, all in one folder (in use)
 cease to exist in other forms(!?) (have to think about Max external here)
@@ -62,3 +63,5 @@ provides interface to underlying input devices, with a common callback interface
 the callbacks are processed syncronoushly to the process() call, which is expected to be in the audio thread (i.e no blocking etc)
 
 
+## MEC Kontrol
+still in development , see mec-kontrol/devnotes.md

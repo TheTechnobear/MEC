@@ -8,10 +8,10 @@ namespace mec {
 class Device {
 public:
     virtual ~Device() {};
-    virtual bool init(void*)=0;
-    virtual bool process()=0 ;
-    virtual void deinit()=0;
-    virtual bool isActive()=0;
+    virtual bool init(void*) = 0;
+    virtual bool process() = 0 ;
+    virtual void deinit() = 0;
+    virtual bool isActive() = 0;
 };
 
 }

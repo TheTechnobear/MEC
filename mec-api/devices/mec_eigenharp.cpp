@@ -21,7 +21,7 @@ public:
             voices_(p.getInt("voices", 15), p.getInt("velocity count", 5)),
             pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
             stealVoices_(p.getBool("steal voices", true)),
-            throttle_(p.getInt("throttle",0) == 0 ? 0 : 1000000 / p.getInt("throttle",0) )
+            throttle_(p.getInt("throttle", 0) == 0 ? 0 : 1000000 / p.getInt("throttle", 0) )
     {
         if (valid_) {
             LOG_0("EigenharpHandler enabling for mecapi");
@@ -70,10 +70,10 @@ public:
             LOG_3(" mn: " << mn << " mx: "  << mx       << " my: "  << my   << " mz: " << mz);
 
             if (!voice) {
-                if(stolenKeys_.find(key) != stolenKeys_.end()) {
+                if (stolenKeys_.find(key) != stolenKeys_.end()) {
                     // this key has been stolen, must be released to reactivate it
                     return;
-                } 
+                }
 
                 voice = voices_.startVoice(key);
 
@@ -100,7 +100,7 @@ public:
                     // dont send to callbacks until we have the minimum pressures for velocity
                 }
                 else {
-                    if(throttle_ == 0 || (t - voice->t_) >= throttle_) {
+                    if (throttle_ == 0 || (t - voice->t_) >= throttle_) {
                         LOG_2("continue voice for " << key << " ch " << voice->i_);
                         callback_.touchContinue(voice->i_, mn, mx, my, mz);
                         voice->t_ = t;
@@ -145,7 +145,7 @@ private:
     float   unipolar(int val) { return std::min( float(val) / 4096.0f, 1.0f); }
     float   bipolar(int val) { return clamp(float(val) / 4096.0f, -1.0f, 1.0f);}
     //float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + (mx  * pitchbendRange_) ; }
-    float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + ((mx>0.0 ? mx*mx : -mx*mx)  * pitchbendRange_) ; }
+    float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + ((mx > 0.0 ? mx*mx : -mx * mx)  * pitchbendRange_) ; }
 
     Preferences prefs_;
     ICallback& callback_;

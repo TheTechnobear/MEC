@@ -5,9 +5,10 @@
 #include <vector>
 #include <memory>
 
+#include "Entity.h"
 #include "Parameter.h"
 
-namespace mec{
+namespace mec {
 class Preferences;
 }
 
@@ -25,47 +26,6 @@ namespace Kontrol {
 // change will also need slotid/paramid
 
 
-enum ParameterSource {
-	PS_LOCAL,
-	PS_MIDI,
-	PS_PRESET,
-	PS_OSC
-};
-
-
-
-class Device : public Entity {
-public:
-	Device(const std::string& id, const std::string& displayName) 
-		: Entity(id,displayName) {
-			;
-	}
-private:
-};
-
-class Patch : public Entity {
-public:
-	Patch(const std::string& id, const std::string& displayName) 
-		: Entity(id,displayName) {
-			;
-	}
-private:
-};
-
-
-class Page : public Entity {
-public:
-	Page(
-	    const std::string& id,
-	    const std::string& displayName,
-	    const std::vector<std::string> paramIds
-	);
-	const std::vector<std::string>& paramIds() const { return paramIds_;}
-
-private:
-	std::vector<std::string> paramIds_;
-};
-
 class ParameterCallback {
 public:
 	ParameterCallback() {
@@ -81,16 +41,6 @@ public:
 	virtual void changed(ParameterSource src, const Parameter&) = 0;
 };
 
-
-class Preset {
-public:
-    Preset(const std::string& id, const ParamValue& v) : paramId_(id), value_(v) {;}
-    std::string paramId() { return paramId_;}
-    ParamValue value() { return value_;}
-private:
-    std::string paramId_;
-    ParamValue value_;
-};
 
 class ParameterModel;
 
@@ -111,7 +61,7 @@ public:
 	bool  changeParam(ParameterSource src, const std::string& id, const ParamValue& value);
 
 	void clearCallbacks() {
-		for(auto p : listeners_) {
+		for (auto p : listeners_) {
 			(p.second)->stop();
 		}
 
@@ -119,7 +69,7 @@ public:
 	}
 	void removeCallback(const std::string& id) {
 		auto p = listeners_.find(id);
-		if(p!=listeners_.end()) {
+		if (p != listeners_.end()) {
 			(p->second)->stop();
 			listeners_.erase(id);
 		}
@@ -135,11 +85,11 @@ public:
 	}
 	void addCallback(const std::string& id, std::shared_ptr<ParameterCallback> listener) {
 		auto p = listeners_[id];
-		if(p!=nullptr) p->stop();
-		listeners_[id] = listener; 
+		if (p != nullptr) p->stop();
+		listeners_[id] = listener;
 	}
 
-    void publishMetaData() const;
+	void publishMetaData() const;
 
 	unsigned 	getPageCount() { return pageIds_.size();}
 	std::string getPageId(unsigned pageNum) { return pageNum < pageIds_.size() ? pageIds_[pageNum] : "";}
@@ -150,7 +100,7 @@ public:
 
 	bool loadParameterDefinitions(const std::string& filename);
 	bool loadParameterDefinitions(const mec::Preferences& prefs);
-	
+
 	bool loadPatchSettings(const std::string& filename);
 	bool loadPatchSettings(const mec::Preferences& prefs);
 
@@ -171,7 +121,6 @@ public:
 
 private:
 	ParameterModel();
-	std::string patchName_; // temp
 	std::string patchSettingsFile_;
 	std::string currentPreset_;
 
@@ -182,11 +131,11 @@ private:
 	std::unordered_map<std::string, std::vector<Preset>> presets_; // key = presetid
 
 	std::vector<std::string> pageIds_; // ordered list of page id, for presentation
-	
+
 	std::unordered_map<std::string, std::shared_ptr<Parameter> >parameters_; // key = paramId
 	std::unordered_map<std::string, std::shared_ptr<Page> >pages_; // key = pageId
 
-	std::unordered_map<std::string,std::shared_ptr<ParameterCallback> > listeners_; // key = source : host:ip
+	std::unordered_map<std::string, std::shared_ptr<ParameterCallback> > listeners_; // key = source : host:ip
 };
 
 } //namespace

@@ -38,7 +38,7 @@ bool MidiDevice::init(void* arg) {
     bool found = false;
 
     std::string input_device = prefs.getString("input device");
-    if(!input_device.empty()) {
+    if (!input_device.empty()) {
 
         try {
             midiInDevice_.reset(new RtMidiIn());

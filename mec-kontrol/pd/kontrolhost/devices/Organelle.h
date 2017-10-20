@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ParameterModel.h"
-
 #include "KontrolDevice.h"
-#include "ip/UdpSocket.h"
+
+#include <ParameterModel.h>
+#include <ip/UdpSocket.h>
 #include <string>
 
 
@@ -24,7 +24,7 @@ public:
   void midiCC(unsigned num, unsigned value);
   void midiLearn(bool b);
   bool midiLearn() { return midiLearnActive_;}
-  virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p); 
+  virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p);
 
   std::string currentModule() { return currentModule_;}
   void currentModule(const std::string& p) { currentModule_ = p;}

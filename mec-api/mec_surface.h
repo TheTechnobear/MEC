@@ -6,9 +6,9 @@
 
 
 // NOT USED YET INTERFACE EXPERIMENT ONLY
-// 
+//
 // mapping between surfaces
-// 
+//
 
 
 #include <map>
@@ -21,20 +21,20 @@ namespace mec {
 class Surface;
 
 class SurfaceManager {
-public: 
+public:
     SurfaceManager();
     virtual ~SurfaceManager();
     bool init(const Preferences& prefs);
 
     std::shared_ptr<Surface> getSurface(SurfaceID id);
 private:
-    std::map<SurfaceID,std::shared_ptr<Surface>> surfaces_;
+    std::map<SurfaceID, std::shared_ptr<Surface>> surfaces_;
 };
 
 
 class Surface {
 public:
-            Surface(SurfaceID surfaceId);
+    Surface(SurfaceID surfaceId);
     virtual ~Surface();
 
     SurfaceID       getId();
@@ -48,7 +48,7 @@ protected:
 // simple split with even split division
 class SplitSurface : public Surface {
 public:
-            SplitSurface(SurfaceID surfaceId);
+    SplitSurface(SurfaceID surfaceId);
     virtual ~SplitSurface();
 
     virtual bool    load(const Preferences& prefs) override;
@@ -56,8 +56,8 @@ public:
 
 private:
     enum {
-        C_X, 
-        C_Y, 
+        C_X,
+        C_Y,
         C_Z,
         C_R,
         C_C
@@ -71,7 +71,7 @@ private:
 // (later surfaceSize will be taken from originating surface)
 class JoinedSurface : public Surface {
 public:
-            JoinedSurface(SurfaceID surfaceId);
+    JoinedSurface(SurfaceID surfaceId);
     virtual ~JoinedSurface();
 
     virtual bool  load(const Preferences& prefs) override;
@@ -79,14 +79,14 @@ public:
 
 private:
     enum {
-        C_X, 
-        C_Y, 
+        C_X,
+        C_Y,
         C_Z,
         C_R,
         C_C
     } axis_;
     std::vector<SurfaceID> surfaces_;
-    float surfaceSize_; 
+    float surfaceSize_;
 };
 
 }

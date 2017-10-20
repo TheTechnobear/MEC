@@ -1,9 +1,9 @@
 #pragma once
 
 #include "ParameterModel.h"
-#include <memory>
 
-#include "ip/UdpSocket.h"
+#include <memory>
+#include <ip/UdpSocket.h>
 
 namespace Kontrol {
 
@@ -14,7 +14,7 @@ public:
 
     OSCBroadcaster();
     ~OSCBroadcaster();
-    bool connect(const std::string& host=ADDRESS, unsigned port = 9001);
+    bool connect(const std::string& host = ADDRESS, unsigned port = 9001);
     void stop();
 
     void requestMetaData();
@@ -22,8 +22,8 @@ public:
 
     // ParameterCallback
     virtual void addClient(const std::string&, unsigned) {;}
-    virtual void page(ParameterSource src, const Page& p); 
-    virtual void param(ParameterSource src, const Parameter&); 
+    virtual void page(ParameterSource src, const Page& p);
+    virtual void param(ParameterSource src, const Parameter&);
     virtual void changed(ParameterSource src, const Parameter& p);
 private:
     unsigned int port_;

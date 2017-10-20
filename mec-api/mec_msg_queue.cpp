@@ -5,7 +5,7 @@
 
 namespace mec {
 
-const int RING_BUFFER_SIZE=30;
+const int RING_BUFFER_SIZE = 30;
 
 
 class MsgQueue_impl {
@@ -32,7 +32,7 @@ private:
 /////////// Public Interface
 MsgQueue::MsgQueue () {
     impl_.reset(new MsgQueue_impl());
-} 
+}
 
 MsgQueue::~MsgQueue() {
 }
@@ -62,31 +62,31 @@ int  MsgQueue::pending() {
 }
 
 
-/////////// Implementation 
+/////////// Implementation
 MsgQueue_impl::MsgQueue_impl () {
     writePtr_ = readPtr_  = 0;
 }
 
 MsgQueue_impl::~MsgQueue_impl() {
-    
+
 }
 
 bool MsgQueue_impl::addToQueue(MecMsg& msg) {
     unsigned next = (writePtr_ + 1) % RING_BUFFER_SIZE;
 
-    if(next == readPtr_) {
+    if (next == readPtr_) {
         LOG_0("MsgQueue_impl : ring buffer overflow");
         return false;
     }
     queue_[writePtr_] = msg;
-    writePtr_=next;
-    return true; 
+    writePtr_ = next;
+    return true;
 }
 
 bool MsgQueue_impl::nextMsg(MecMsg& msg) {
     if (readPtr_ != writePtr_ ) {
         msg = queue_[readPtr_];
-        readPtr_ =(readPtr_ + 1) % RING_BUFFER_SIZE;
+        readPtr_ = (readPtr_ + 1) % RING_BUFFER_SIZE;
         return true;
     }
     return false;
@@ -97,16 +97,16 @@ bool MsgQueue_impl::isEmpty() {
 }
 
 bool MsgQueue_impl::isFull() {
-    return available()==0;    
+    return available() == 0;
 }
 
 int  MsgQueue_impl::available() {
     return RING_BUFFER_SIZE - pending();
-    
+
 }
 
 int MsgQueue_impl::pending() {
-        if(writePtr_ >= readPtr_) {
+    if (writePtr_ >= readPtr_) {
         return writePtr_ - readPtr_;
     }
 
@@ -148,9 +148,9 @@ bool  MsgQueue::process(ICallback& c) {
             break;
 
         case MecMsg::MEC_CONTROL :
-            if(msg.data_.mec_control_.cmd_==MecMsg::SHUTDOWN) {
+            if (msg.data_.mec_control_.cmd_ == MecMsg::SHUTDOWN) {
                 LOG_1( "posting shutdown request");
-                c.mec_control(ICallback::SHUTDOWN,nullptr);
+                c.mec_control(ICallback::SHUTDOWN, nullptr);
             }
         default:
             LOG_0("MsgQueue::process unhandled message type");

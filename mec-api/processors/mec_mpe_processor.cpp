@@ -108,7 +108,7 @@ void MPE_Processor::control(int attr, float v) {
 
     if (global_[attr] != v ) {
         global_[attr] = v;
-         cc(0, attr, unipolar7bit(v));
+        cc(0, attr, unipolar7bit(v));
         // cc(ch, attr, isBipolar ? bipolar7bit(v) : unipolar7bit(v));
     }
 }

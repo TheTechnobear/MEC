@@ -147,7 +147,7 @@ public:
             // else no voice available
 
         } else {
-            
+
             if (voice) {
                 // LOG_1("stop voice for " << tId << " ch " << voice->i_);
                 MecMsg msg;

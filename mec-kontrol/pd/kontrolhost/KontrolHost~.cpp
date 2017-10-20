@@ -1,8 +1,9 @@
 #include "KontrolHost~.h"
 
 #include "devices/Organelle.h"
-#include "ip/UdpSocket.h"
-#include "osc/OscOutboundPacketStream.h"
+
+#include <ip/UdpSocket.h>
+#include <osc/OscOutboundPacketStream.h>
 
 #include <string>
 #include <algorithm>
@@ -215,7 +216,8 @@ void    KontrolHost_tilde_encbut(t_KontrolHost* x, t_floatarg f) {
 
 
 void    KontrolHost_tilde_knob1Raw(t_KontrolHost* x, t_floatarg f) {
-  if (x->device_) x->device_->changePot(0, f);}
+  if (x->device_) x->device_->changePot(0, f);
+}
 
 void    KontrolHost_tilde_knob2Raw(t_KontrolHost* x, t_floatarg f) {
   if (x->device_) x->device_->changePot(1, f);

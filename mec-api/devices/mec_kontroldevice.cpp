@@ -32,17 +32,17 @@ bool KontrolDevice::init(void* arg) {
     active_ = false;
     state_ = S_UNCONNECTED;
 
-    if(prefs.exists("parameter definitions")) {
-        std::string file = prefs.getString("parameter definitions","./kontrol-param.json");
-        if(!file.empty()) {
+    if (prefs.exists("parameter definitions")) {
+        std::string file = prefs.getString("parameter definitions", "./kontrol-param.json");
+        if (!file.empty()) {
             param_model_->loadParameterDefinitions(file);
         }
         param_model_->dumpParameters();
     }
 
-    if(prefs.exists("patch settings")) {
-        std::string file = prefs.getString("patch settings","./kontrol-patch.json");
-        if(!file.empty()) {
+    if (prefs.exists("patch settings")) {
+        std::string file = prefs.getString("patch settings", "./kontrol-patch.json");
+        if (!file.empty()) {
             param_model_->loadPatchSettings(file);
         }
         param_model_->dumpPatchSettings();

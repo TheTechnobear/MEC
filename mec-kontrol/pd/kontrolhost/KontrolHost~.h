@@ -1,11 +1,11 @@
 #pragma once
 
-#include "m_pd.h"
+#include "../m_pd.h"
 
-#include "ParameterModel.h"
-#include "Parameter.h"
-#include "OSCReceiver.h"
-#include "OSCBroadcaster.h"
+#include <ParameterModel.h>
+#include <Parameter.h>
+#include <OSCReceiver.h>
+#include <OSCBroadcaster.h>
 
 #include "devices/KontrolDevice.h"
 

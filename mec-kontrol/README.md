@@ -28,14 +28,16 @@ pd - pure data externals
 pd/kontrol - Kontrol pure data external for add params etc
 pd/kontrolhost - pure data external for interfacing to Organelle
 
-## Building ##
+## Building external , without MEC##
+(only use for Windows, use normal 'cmake' mec build for linux/macOS... these hardcoded makefiles will be removed once mec is available for windows)
+
     cd mec_kontrol/pd/kontrol
     make
     cd mec_kontrol/pd/kontrolhost
     make
 
-Notes:
 
+Notes:
 you will need a copy of pure data installed.
 By default, pd-lib-builder will attempt to auto-locate an install of Pure Data, to find the appropriate header files.
 If your puredata setup is non-standard, you can use PDINCLUDEDIR and PDLIBDIR

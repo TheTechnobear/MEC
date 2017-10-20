@@ -7,15 +7,15 @@
 #include <iostream>
 
 #define LOG_0(x) std::cerr << x << std::endl
-// #define LOG_0(x) 
+// #define LOG_0(x)
 
 #define LOG_1(x) std::cout << x << std::endl
-// #define LOG_1(x) 
+// #define LOG_1(x)
 
 // #define LOG_2(x) std::cout << x << std::endl
-#define LOG_2(x) 
+#define LOG_2(x)
 
 // #define LOG_3(x) std::cout << x << std::endl
-#define LOG_3(x) 
+#define LOG_3(x)
 
 

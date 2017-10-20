@@ -45,11 +45,11 @@ typedef std::string SurfaceID;
 // each active touch has a unique id, which is reused, often relates to a 'voice'
 // x/y continuous across the entire surface
 // r/c the surface is split into cells, defined by a row/column, the row can be considerd like a string on a stringed instrument
-// the column is the position along that string (like a fret position , but fretless ;) 
+// the column is the position along that string (like a fret position , but fretless ;)
 // there is therefore a relationship between X-C , and R-Y
 
 // touches originate from a device, and then are passed thru surfaces to allow there coordinates to be translated.
-// a simple exampe is a device surfaces may be 'split' into 2 halfs, a 'split surface' will take the device touches and translate into touches for that 
+// a simple exampe is a device surfaces may be 'split' into 2 halfs, a 'split surface' will take the device touches and translate into touches for that
 // split... to the application these touches will be the same as if they came from different devices
 struct Touch {
     Touch() {

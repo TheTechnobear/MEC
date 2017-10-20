@@ -1,6 +1,6 @@
 #include "OSCBroadcaster.h"
 
-#include "osc/OscOutboundPacketStream.h"
+#include <osc/OscOutboundPacketStream.h>
 
 namespace Kontrol {
 

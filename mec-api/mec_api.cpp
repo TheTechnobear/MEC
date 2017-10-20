@@ -71,12 +71,12 @@ private:
 MecApi::MecApi(void* prefs) {
     LOG_1("MecApi::MecApi");
     impl_ = new MecApi_Impl(prefs);
-} 
+}
 
 MecApi::MecApi(const std::string& configFile) {
     LOG_1("MecApi::MecApi");
     impl_ = new MecApi_Impl(configFile);
-} 
+}
 
 MecApi::~MecApi() {
     LOG_1("MecApi::~MecApi");
@@ -126,7 +126,7 @@ MecApi_Impl::MecApi_Impl(void* prefs) {
 MecApi_Impl::MecApi_Impl(const std::string& configFile) {
     fileprefs_.reset(new Preferences(configFile));
     prefs_.reset(new Preferences(fileprefs_->getSubTree("mec")));
-} 
+}
 
 MecApi_Impl::~MecApi_Impl() {
     LOG_1("MecApi_Impl::~MecApi_Impl");
@@ -157,7 +157,7 @@ void MecApi_Impl::subscribe(ICallback* p) {
 
 void MecApi_Impl::unsubscribe(ICallback* p) {
     for (std::vector<ICallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
-        if(p==(*it)) {
+        if (p == (*it)) {
             callbacks_.erase(it);
             return;
         }
@@ -170,7 +170,7 @@ void MecApi_Impl::subscribe(ISurfaceCallback* p) {
 
 void MecApi_Impl::unsubscribe(ISurfaceCallback* p) {
     for (std::vector<ISurfaceCallback*>::iterator it = surfaces_.begin() ; it != surfaces_.end(); ++it) {
-        if(p==(*it)) {
+        if (p == (*it)) {
             surfaces_.erase(it);
             return;
         }
@@ -183,7 +183,7 @@ void MecApi_Impl::subscribe(IMusicalCallback* p) {
 
 void MecApi_Impl::unsubscribe(IMusicalCallback* p) {
     for (std::vector<IMusicalCallback*>::iterator it = musicalsurfaces_.begin() ; it != musicalsurfaces_.end(); ++it) {
-        if(p==(*it)) {
+        if (p == (*it)) {
             musicalsurfaces_.erase(it);
             return;
         }
@@ -193,31 +193,31 @@ void MecApi_Impl::unsubscribe(IMusicalCallback* p) {
 
 void MecApi_Impl::touchOn(int touchId, float note, float x, float y, float z) {
     for (std::vector<ICallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
-        (*it)->touchOn(touchId,note,x,y,z);
+        (*it)->touchOn(touchId, note, x, y, z);
     }
 }
 
 void MecApi_Impl::touchContinue(int touchId, float note, float x, float y, float z) {
     for (std::vector<ICallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
-        (*it)->touchContinue(touchId,note,x,y,z);
+        (*it)->touchContinue(touchId, note, x, y, z);
     }
 }
 
 void MecApi_Impl::touchOff(int touchId, float note, float x, float y, float z) {
     for (std::vector<ICallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
-        (*it)->touchOff(touchId,note,x,y,z);
+        (*it)->touchOff(touchId, note, x, y, z);
     }
 }
 
 void MecApi_Impl::control(int ctrlId, float v) {
     for (std::vector<ICallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
-        (*it)->control(ctrlId,v);
+        (*it)->control(ctrlId, v);
     }
 }
 
 void MecApi_Impl::mec_control(int cmd, void* other) {
     for (std::vector<ICallback*>::iterator it = callbacks_.begin() ; it != callbacks_.end(); ++it) {
-        (*it)->mec_control(cmd,other);
+        (*it)->mec_control(cmd, other);
     }
 }
 
@@ -266,16 +266,16 @@ void MecApi_Impl::touchOff(const MusicalTouch& t) {
 
 
 void MecApi_Impl::initDevices() {
-    if(fileprefs_==nullptr || prefs_==nullptr) {
+    if (fileprefs_ == nullptr || prefs_ == nullptr) {
         LOG_1("MecApi_Impl :: invalid preferences file");
         return;
-    } 
+    }
     if (prefs_->exists("eigenharp")) {
         LOG_1("eigenharp initialise ");
         std::shared_ptr<Device> device;
         device.reset(new mec::Eigenharp(*this));
-        if(device->init(prefs_->getSubTree("eigenharp"))) {
-            if(device->isActive()) {
+        if (device->init(prefs_->getSubTree("eigenharp"))) {
+            if (device->isActive()) {
                 devices_.push_back(device);
             } else {
                 LOG_1("eigenharp init inactive ");
@@ -291,8 +291,8 @@ void MecApi_Impl::initDevices() {
         LOG_1("soundplane initialise");
         std::shared_ptr<Device> device;
         device.reset(new Soundplane(*this));
-        if(device->init(prefs_->getSubTree("soundplane"))) {
-            if(device->isActive()) {
+        if (device->init(prefs_->getSubTree("soundplane"))) {
+            if (device->isActive()) {
                 devices_.push_back(device);
                 LOG_1("soundplane init active ");
             } else {
@@ -309,8 +309,8 @@ void MecApi_Impl::initDevices() {
         LOG_1("midi initialise ");
         std::shared_ptr<Device> device;
         device.reset(new MidiDevice(*this));
-        if(device->init(prefs_->getSubTree("midi"))) {
-            if(device->isActive()) {
+        if (device->init(prefs_->getSubTree("midi"))) {
+            if (device->isActive()) {
                 devices_.push_back(device);
             } else {
                 LOG_1("midi init inactive ");
@@ -326,8 +326,8 @@ void MecApi_Impl::initDevices() {
         LOG_1("push2 initialise ");
         std::shared_ptr<Device> device;
         device.reset(new Push2(*this));
-        if(device->init(prefs_->getSubTree("push2"))) {
-            if(device->isActive()) {
+        if (device->init(prefs_->getSubTree("push2"))) {
+            if (device->isActive()) {
                 devices_.push_back(device);
             } else {
                 LOG_1("push2 init inactive ");
@@ -343,8 +343,8 @@ void MecApi_Impl::initDevices() {
         LOG_1("osct3d initialise ");
         std::shared_ptr<Device> device;
         device.reset(new OscT3D(*this));
-        if(device->init(prefs_->getSubTree("osct3d"))) {
-            if(device->isActive()) {
+        if (device->init(prefs_->getSubTree("osct3d"))) {
+            if (device->isActive()) {
                 devices_.push_back(device);
             } else {
                 LOG_1("osct3d init inactive ");
@@ -360,8 +360,8 @@ void MecApi_Impl::initDevices() {
         LOG_1("KontrolDevice initialise ");
         std::shared_ptr<Device> device;
         device.reset(new KontrolDevice(*this));
-        if(device->init(prefs_->getSubTree("Kontrol"))) {
-            if(device->isActive()) {
+        if (device->init(prefs_->getSubTree("Kontrol"))) {
+            if (device->isActive()) {
                 devices_.push_back(device);
             } else {
                 LOG_1("KontrolDevice init inactive ");

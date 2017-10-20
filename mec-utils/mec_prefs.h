@@ -22,7 +22,7 @@ public:
 
     std::vector<std::string> getKeys() const;
 
-    bool        getBool(const std::string& v, bool def = false) const; 
+    bool        getBool(const std::string& v, bool def = false) const;
     int         getInt(const std::string& v, int def = 0) const;
     double      getDouble(const std::string& v, double def = 0.0) const;
     std::string getString(const std::string& v, const std::string def = "") const;
@@ -36,18 +36,18 @@ public:
     bool        valid() const;
 
     class Array {
-    public: 
-            Array(void*);
-            ~Array();
-            int getSize();
-            bool        getBool(unsigned i) const; 
-            int         getInt(unsigned i) const;
-            double      getDouble(unsigned i) const;
-            std::string getString(unsigned i) const;
-            Type        getType(unsigned i) const;
-            void*       getArray(unsigned i) const; 
-            void*       getObject(unsigned i) const; 
-            bool        valid() const;
+    public:
+        Array(void*);
+        ~Array();
+        int getSize();
+        bool        getBool(unsigned i) const;
+        int         getInt(unsigned i) const;
+        double      getDouble(unsigned i) const;
+        std::string getString(unsigned i) const;
+        Type        getType(unsigned i) const;
+        void*       getArray(unsigned i) const;
+        void*       getObject(unsigned i) const;
+        bool        valid() const;
     private:
         void* jsonData_;
     };

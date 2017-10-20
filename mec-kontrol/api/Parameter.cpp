@@ -2,10 +2,7 @@
 
 #include <iostream>
 
-
-#define LOG_0(x)
-#define LOG_1(x)
-#define LOG_2(x)
+#include <mec_log.h>
 
 namespace Kontrol {
 

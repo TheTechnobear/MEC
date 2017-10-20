@@ -77,7 +77,7 @@ int main(int ac, char **av) {
     LOG_0("mec_app initialise ");
 
     const char *pref_file = "./mec.json";
-    if( ac > 1 ) pref_file = av[1]; 
+    if ( ac > 1 ) pref_file = av[1];
     mec::Preferences prefs(pref_file);
     if (!prefs.valid()) return -1;
 
@@ -114,7 +114,7 @@ int main(int ac, char **av) {
         pthread_cond_wait(&waitCond, &waitMtx);
     }
 
-    // been told to stop, block SIGINT, to allow clean termination 
+    // been told to stop, block SIGINT, to allow clean termination
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGINT);
     pthread_sigmask(SIG_BLOCK, &sigset, &oldset);

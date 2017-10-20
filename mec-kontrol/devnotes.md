@@ -6,8 +6,8 @@ it is **not** definitive, things are still in a state of flux.
 pre-alpha, development, code that is untested, and is likely not working - no **not** use.
 
 # TO DO
-stuff that is obviously outstanding
-- refactor, many things are setup purely for testing concepts
+- new data model, device->patch->page/parameters
+- update osc comms model
 
 # design
 overall design is to allow for a peer to peer parameter system, essentially Kontrol is responsible for 'syncronising' parameters across a transport.
@@ -15,7 +15,7 @@ overall design is to allow for a peer to peer parameter system, essentially Kont
 software layers : general -> pure data layer -> organelle layer (?)
 general layer:
 - parameter data mapping
-- osc transmit/recieve of parameters
+- osc transmit/recieve of parameters 
 - file storage - for presets
 - map parameter scaled input (0..1, relative) to actual value
 - parameter takeover functionality (relates to active page/potentmeter type)
@@ -33,12 +33,13 @@ device layer - organelle :
 - encoder reception
   
 ## parameter definitions
+(done)
 currently, we define parameters in PD via messages to the external, however, there are advantages to moving to a parameter file, so the pd patch is only really bound by the usage of the external and the 'receive name'
 
 ## midi mapping / learn
+(done)
 allow assignment of parameter to a midi cc
 device later could allow learn, e.g. activate learn, twist param, fire cc
-
 
 ## heirarcy for parameters
 current implementation is page->params

@@ -7,22 +7,14 @@
 #include <map>
 #include <fstream>
 
-#include "mec_prefs.h"
-#include "mec_log.h"
+#include <mec_prefs.h>
+#include <mec_log.h>
 
 // for saving presets only , later moved to Preferences
 #include <cJSON.h>
 
 namespace Kontrol {
 
-Page::Page(
-    const std::string& id,
-    const std::string& displayName,
-    const std::vector<std::string> paramIds
-) : Entity(id, displayName),
-    paramIds_(paramIds) {
-    ;
-}
 
 std::shared_ptr<ParameterModel> ParameterModel::model() {
     static std::shared_ptr<ParameterModel> model_;
@@ -31,9 +23,6 @@ std::shared_ptr<ParameterModel> ParameterModel::model() {
     }
     return model_;
 }
-
-
-
 
 // void ParameterModel::free() {
 //     model_.reset();
@@ -158,12 +147,6 @@ bool ParameterModel::loadParameterDefinitions(const mec::Preferences& prefs) {
 
     mec::Preferences patch(prefs.getSubTree("patch"));
     if (!patch.valid()) return false;
-
-    patchName_ = patch.getString("name");
-    if (patchName_.empty()) {
-        LOG_0("invalid parameter file : patch name missing" );
-        return false;
-    }
 
     if (patch.exists("parameters")) {
         // load parameters

@@ -1,6 +1,5 @@
 {
     "patch" : {
-        "name" : "wrpsbrds",
         "parameters" :  [ 
             [ "pitch", "o_transpose", "transpose", -24, 24, 0 ],
             [ "pct", "o_level", "level", 0, 100, 100 ], 

@@ -21,21 +21,21 @@
 #define PB_RANGE 2.0f
 #define MPE_PB_RANGE 48.0f
 
-class MecCmdCallback : public mec::ICallback 
+class MecCmdCallback : public mec::ICallback
 {
 public:
-    virtual void mec_control(int cmd, void* other) 
+    virtual void mec_control(int cmd, void* other)
     {
-        switch(cmd) {
-            case mec::ICallback::SHUTDOWN: {
-                LOG_0( "mec requesting shutdown");
-                keepRunning = 0;
-                pthread_cond_broadcast(&waitCond);
-                break;
-            }
-            default: {
-                break;
-            }
+        switch (cmd) {
+        case mec::ICallback::SHUTDOWN: {
+            LOG_0( "mec requesting shutdown");
+            keepRunning = 0;
+            pthread_cond_broadcast(&waitCond);
+            break;
+        }
+        default: {
+            break;
+        }
         }
     }
 };
@@ -67,7 +67,7 @@ public:
         count++;
         static std::string topic = "touchContinue";
         //optionally display only every N continue messages
-        if(throttle_==0 || (count % throttle_)== 0) {
+        if (throttle_ == 0 || (count % throttle_) == 0) {
             outputMsg(topic, touchId, note, x, y, z);
         }
     }
@@ -193,10 +193,10 @@ public:
     bool isValid() { return output_.isOpen();}
 
     void  process(mec::MPE_Processor::MidiMsg& m) {
-        if(output_.isOpen()) {
+        if (output_.isOpen()) {
             std::vector<unsigned char> msg;
 
-            for(int i=0;i<m.size;i++) {
+            for (int i = 0; i < m.size; i++) {
                 msg.push_back(m.data[i]);
             }
             output_.sendMsg( msg );

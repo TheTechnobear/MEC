@@ -46,8 +46,8 @@ bool Preferences::loadPreferences(const std::string& file) {
         }
 
         LOG_0("unable to parse preferences file : " << file);
-        std::string eptr=cJSON_GetErrorPtr();
-        if(eptr.length()>60)  eptr=eptr.substr(0,60);
+        std::string eptr = cJSON_GetErrorPtr();
+        if (eptr.length() > 60)  eptr = eptr.substr(0, 60);
         LOG_0("error around : " << eptr);
         return false;
     }
@@ -69,16 +69,16 @@ std::vector<std::string> Preferences::getKeys() const {
 
 static Preferences::Type convertJsonType(int t) {
     switch (t) {
-        case cJSON_False :  return Preferences::P_BOOL;
-        case cJSON_True :   return Preferences::P_BOOL;
-        case cJSON_NULL :   return Preferences::P_NULL;
-        case cJSON_Number : return Preferences::P_NUMBER;
-        case cJSON_String : return Preferences::P_STRING;
-        case cJSON_Array :  return Preferences::P_ARRAY;
-        case cJSON_Object : return Preferences::P_OBJECT;
-        
-        default:
-            return Preferences::P_NULL;
+    case cJSON_False :  return Preferences::P_BOOL;
+    case cJSON_True :   return Preferences::P_BOOL;
+    case cJSON_NULL :   return Preferences::P_NULL;
+    case cJSON_Number : return Preferences::P_NUMBER;
+    case cJSON_String : return Preferences::P_STRING;
+    case cJSON_Array :  return Preferences::P_ARRAY;
+    case cJSON_Object : return Preferences::P_OBJECT;
+
+    default:
+        return Preferences::P_NULL;
     }
     return Preferences::P_NULL;
 }
@@ -193,7 +193,7 @@ int Preferences::Array::getSize() {
 }
 
 bool        Preferences::Array::valid() const {
-    return jsonData_!=nullptr;
+    return jsonData_ != nullptr;
 }
 
 bool        Preferences::Array::getBool(unsigned i) const {

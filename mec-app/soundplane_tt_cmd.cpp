@@ -1,6 +1,6 @@
 /**
 ** This class handles the soundplane by using the low level touch tracking classes
-** This is currently NOT USED 
+** This is currently NOT USED
 **/
 
 #include <unistd.h>

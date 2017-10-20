@@ -1,4 +1,4 @@
-#ifndef MecOscT3D_H 
+#ifndef MecOscT3D_H
 #define MecOscT3D_H
 
 #include "../mec_api.h"
@@ -26,7 +26,7 @@ public:
     void listenProc();
 
 private:
-	ICallback& callback_;
+    ICallback& callback_;
     bool active_;
     MsgQueue queue_;
     std::unique_ptr<UdpListeningReceiveSocket> socket_;

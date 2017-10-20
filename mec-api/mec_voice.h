@@ -106,7 +106,7 @@ public:
                 voice->vel_.vcount_ ++;
                 voice->vel_.x_ ++;
 
-                if(p <= 1.0 ) {
+                if (p <= 1.0 ) {
                     return;
                 }
                 // else max pressure, so consider 'complete'
@@ -124,8 +124,8 @@ public:
             // LOG_1("sumxy " <<voice->vel_.sumxy_ << " sumxsq " << voice->vel_.sumxsq_);
             // LOG_1("sumx  " << voice->vel_.sumx_ << " sumy " << voice->vel_.sumy_ );
 
-            if(voice->v_>1.0) voice->v_ = 1.0;
-            if(voice->v_< 0.01) voice->v_ = 0.01;
+            if (voice->v_ > 1.0) voice->v_ = 1.0;
+            if (voice->v_ < 0.01) voice->v_ = 0.01;
         }
     }
 

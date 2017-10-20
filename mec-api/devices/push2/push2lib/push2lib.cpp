@@ -57,7 +57,7 @@ static int perr(char const *format, ...)
 #define ERR_EXIT(errcode) do { perr("   %s\n", libusb_strerror((enum libusb_error)errcode)); return -1; } while (0)
 #define CALL_CHECK(fcall) do { r=fcall; if (r < 0) ERR_EXIT(r); } while (0);
 
-Push2::Push2() : headerPkt_(headerPkt),handle_(NULL) {
+Push2::Push2() : headerPkt_(headerPkt), handle_(NULL) {
     ;
 }
 
@@ -70,7 +70,7 @@ void Push2::clearDisplay() {
     memset(dataPkt_, 0, DATA_PKT_SZ);
 }
 
-void Push2::clearRow(unsigned row,unsigned vscale) {
+void Push2::clearRow(unsigned row, unsigned vscale) {
     for (int line = 0; line < F_HEIGHT; line++) {
         for (int vs = 0; vs < vscale; vs++) {
             int bl = (((((row * F_HEIGHT) + line )) * vscale) + vs ) * (LINE / 2);
@@ -81,23 +81,23 @@ void Push2::clearRow(unsigned row,unsigned vscale) {
 
 void Push2::drawCell8(unsigned row, unsigned cell, const char* str, unsigned vscale, unsigned hscale, int16_t clr)
 {
-    unsigned CH_COLS = (WIDTH / F_WIDTH)/ hscale;
+    unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
     // static const unsigned CELL_OFFSET_8[8] = { 0, 24, 48, 72, 96, 120, 144, 168 };
     if (cell < 8) {
-        drawText(row, (CH_COLS / 8) * cell , str, vscale, hscale,clr);
+        drawText(row, (CH_COLS / 8) * cell , str, vscale, hscale, clr);
     }
 }
-void Push2::drawText(unsigned row, unsigned col, const char* str, unsigned vscale, unsigned hscale,int16_t clr)
+void Push2::drawText(unsigned row, unsigned col, const char* str, unsigned vscale, unsigned hscale, int16_t clr)
 {
-    drawText(row, col, str, strlen(str),vscale,hscale,clr);
+    drawText(row, col, str, strlen(str), vscale, hscale, clr);
 }
 
 
-void Push2::drawText(unsigned row, unsigned col, const char* str, int ln, unsigned vscale, unsigned hscale,int16_t colour)
+void Push2::drawText(unsigned row, unsigned col, const char* str, int ln, unsigned vscale, unsigned hscale, int16_t colour)
 {
-    unsigned CH_COLS = (WIDTH / F_WIDTH)/ hscale;
-    unsigned CH_ROWS = ((HEIGHT/F_HEIGHT) / vscale);
-    if(row > CH_ROWS) return;
+    unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
+    unsigned CH_ROWS = ((HEIGHT / F_HEIGHT) / vscale);
+    if (row > CH_ROWS) return;
 
     unsigned len = col + ln < CH_COLS ? ln : CH_COLS - col;
     for (int i = 0; i < len; i++) {
@@ -130,7 +130,7 @@ void Push2::drawText(unsigned row, unsigned col, const char* str, int ln, unsign
                     for (int hs = 0; hs < hscale; hs++) {
                         int bpos = bl + ((((c * F_WIDTH) + pix) * hscale) + hs);
                         // dataPkt_[bpos] = ( (clr & 0x00FF) << 8 ) | ( (clr & 0xFF00) >> 8);
-                        if(bpos < (DATA_PKT_SZ / 2) ){
+                        if (bpos < (DATA_PKT_SZ / 2) ) {
                             dataPkt_[bpos] = clr;
                         }
                     }
@@ -144,7 +144,7 @@ void Push2::p1_drawCell8(unsigned row, unsigned cell, const char* str)
 {
     static const unsigned P1_CELL_OFFSET_8[8] = { 0, 12, 24, 36, 48, 60, 72, 84 };
     if (cell < 8) {
-        drawText(row, P1_CELL_OFFSET_8[cell], str,P1_VSCALE, P1_HSCALE,MONO_CLR);
+        drawText(row, P1_CELL_OFFSET_8[cell], str, P1_VSCALE, P1_HSCALE, MONO_CLR);
     }
 }
 
@@ -153,7 +153,7 @@ void Push2::p1_drawCell4(unsigned row, unsigned cell, const char* str)
 {
     static const unsigned P1_CELL_OFFSET_4[4] = { 3, 27, 51, 75 };
     if (cell < 4) {
-        drawText(row, P1_CELL_OFFSET_4[cell], str,strlen(str),P1_VSCALE, P1_HSCALE,MONO_CLR);
+        drawText(row, P1_CELL_OFFSET_4[cell], str, strlen(str), P1_VSCALE, P1_HSCALE, MONO_CLR);
     }
 }
 

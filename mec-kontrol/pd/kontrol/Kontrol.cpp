@@ -1,6 +1,6 @@
-#include "m_pd.h"
+#include "../m_pd.h"
 
-#include "ParameterModel.h"
+#include <ParameterModel.h>
 #include <string>
 #include <vector>
 
@@ -26,7 +26,7 @@ void Kontrol_free(t_Kontrol* x)
 void *Kontrol_new(t_symbol* name)
 {
   t_Kontrol *x = (t_Kontrol *) pd_new(Kontrol_class);
-  if(name && name->s_name) {
+  if (name && name->s_name) {
     std::string sname = name->s_name;
     Kontrol::ParameterModel::model()->loadParameterDefinitions(sname + "-param.json");
     Kontrol::ParameterModel::model()->loadPatchSettings(sname + "-patch.json");
@@ -38,11 +38,11 @@ void *Kontrol_new(t_symbol* name)
 
 void Kontrol_setup(void) {
   Kontrol_class = class_new(gensym("Kontrol"),
-                                   (t_newmethod) Kontrol_new,
-                                   (t_method) Kontrol_free,
-                                   sizeof(t_Kontrol),
-                                   CLASS_DEFAULT,
-                                   A_SYMBOL, A_NULL);
+                            (t_newmethod) Kontrol_new,
+                            (t_method) Kontrol_free,
+                            sizeof(t_Kontrol),
+                            CLASS_DEFAULT,
+                            A_SYMBOL, A_NULL);
 }
 
 // puredata methods implementation - end

@@ -3,25 +3,13 @@
 #include <string>
 #include <memory>
 #include <vector>
+
+
+#include "Entity.h"
+
 namespace Kontrol {
 
-class Entity {
-public:
-    Entity(const std::string& id, const std::string& displayName) 
-        : id_(id), displayName_(displayName) {
-            ;
-    }
 
-    const std::string& id() const { return id_;};
-
-    virtual const std::string& displayName() const { return displayName_;};
-    virtual bool valid() { return !id_.empty();}
-protected:
-    Entity() {;}
-    virtual ~Entity() {;}
-    std::string id_;
-    std::string displayName_;
-};
 
 class ParamValue {
 public:
@@ -51,6 +39,20 @@ private:
     std::string strValue_;
     float floatValue_;
 };
+
+
+
+class Preset {
+public:
+    Preset(const std::string& id, const ParamValue& v) : paramId_(id), value_(v) {;}
+    std::string paramId() { return paramId_;}
+    ParamValue value() { return value_;}
+private:
+    std::string paramId_;
+    ParamValue value_;
+};
+
+
 
 int operator>(const ParamValue&, const ParamValue&);
 int operator<(const ParamValue&, const ParamValue&);

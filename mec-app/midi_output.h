@@ -10,7 +10,7 @@ public:
     MidiOutput();
     virtual ~MidiOutput();
 
-    bool create(const std::string& portname,bool virt=false);
+    bool create(const std::string& portname, bool virt = false);
 
     bool isOpen() { return (output_ && (virtualOpen_ || output_->isPortOpen())); }
 

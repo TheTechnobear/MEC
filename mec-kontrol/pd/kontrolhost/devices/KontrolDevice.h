@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ParameterModel.h"
-#include "Parameter.h"
+#include <ParameterModel.h>
+#include <Parameter.h>
 
 #include <map>
 #include <memory>
@@ -22,7 +22,7 @@ public:
 protected:
     std::shared_ptr<KontrolDevice> parent_;
 };
- 
+
 
 class KontrolDevice : public Kontrol::ParameterCallback  {
 public:
@@ -37,7 +37,7 @@ public:
     virtual void changePot(unsigned pot, float value);
     virtual void changeEncoder(unsigned encoder, float value);
     virtual void encoderButton(unsigned encoder, bool value);
-    //Kontrol::ParameterCallback 
+    //Kontrol::ParameterCallback
     virtual void addClient(const std::string&, unsigned );
     virtual void page(Kontrol::ParameterSource , const Kontrol::Page& );
     virtual void param(Kontrol::ParameterSource, const Kontrol::Parameter&);
@@ -45,10 +45,10 @@ public:
 
     virtual void midiCC(unsigned num, unsigned value);
 
-    void sendPdMessage(const char* obj, float f); 
+    void sendPdMessage(const char* obj, float f);
     std::shared_ptr<Kontrol::ParameterModel> model() { return param_model_;}
 protected:
-      std::shared_ptr<Kontrol::ParameterModel> param_model_;
-      std::map<unsigned, std::shared_ptr<DeviceMode>> modes_;
-      unsigned currentMode_;
+    std::shared_ptr<Kontrol::ParameterModel> param_model_;
+    std::map<unsigned, std::shared_ptr<DeviceMode>> modes_;
+    unsigned currentMode_;
 };

@@ -28,7 +28,7 @@ int main (int argc, char** argv) {
 
     // simple split
     std::shared_ptr<mec::Surface> split1 = mgr.getSurface("1");
-    assert(split1!=nullptr);
+    assert(split1 != nullptr);
     t.surface_ = "a1";
     t.x_ = 0.1f;
     out = split1->map(t);
@@ -43,7 +43,7 @@ int main (int argc, char** argv) {
 
     // simple join
     std::shared_ptr<mec::Surface> join1 = mgr.getSurface("2");
-    assert(join1!=nullptr);
+    assert(join1 != nullptr);
     t.x_ = 0.1f;
     t.surface_ = "20";
     out = join1->map(t);
@@ -55,5 +55,5 @@ int main (int argc, char** argv) {
     assert(out.surface_ == "2");
 
     LOG_0("test completed");
-    return 0;    
+    return 0;
 }

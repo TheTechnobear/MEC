@@ -6,7 +6,7 @@
 #include <mec_log.h>
 
 void dumpScale(const mec::ScaleArray& a) {
-    for(float n : a) {
+    for (float n : a) {
         std::cout << n << "," ;
     }
     std::cout << std::endl;
@@ -32,13 +32,13 @@ int main (int argc, char** argv) {
 
     // mec::ScaleArray scale = mec::Scales::getScale("major");
     // dumpScale(scale);
- 
+
     mec::Scaler scaler;
     // dumpScale(scaler.getScale());
     mec::ScaleArray odd = mec::ScaleArray( {0.0f, 2.5f, 3.1f, 5.2f, 7.5f, 8.6f, 10.0f, 12.2f} );
     scaler.setScale(odd);
     // dumpScale(scaler.getScale());
-    assert(scaler.getScale().size()==8);
+    assert(scaler.getScale().size() == 8);
     assert(scaler.getScale()[2] == 3.1f);
 
 
@@ -76,7 +76,7 @@ int main (int argc, char** argv) {
 
     mec::Preferences s1(mec_prefs.getSubTree("scaler 1"));
     assert(scaler.load(s1));
-    assert(scaler.getRowOffset() ==4.0f);
+    assert(scaler.getRowOffset() == 4.0f);
     t.r_ = 1;
     t.c_ = 8.5f;
     mt = scaler.map(t);
@@ -85,5 +85,5 @@ int main (int argc, char** argv) {
 
 
     LOG_0("test completed");
-    return 0;    
+    return 0;
 }

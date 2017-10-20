@@ -3,12 +3,12 @@
 #include "ParameterModel.h"
 #include <memory>
 
-#include "ip/UdpSocket.h"
-#include "pa_ringbuffer.h"
+#include <ip/UdpSocket.h>
+#include <pa_ringbuffer.h>
 
 
 #ifndef __WINDOWS__
-// pthread 
+// pthread
 #include <pthread.h>
 #define thread_t pthread_t
 #define thread_create(thp,func,argp) { \
@@ -23,13 +23,13 @@
         t_error = true; \
     } \
 }
-#else 
-// Windows 
+#else
+// Windows
 #include <windows.h>
 #define thread_t HANDLE
 #define thread_create(thp,func,argp) { \
     bool t_error = false; \
-    bool thread_
+    bool thread_; \
     DWORD thid; \
     *(thp) = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, (LPVOID) argp, 0, &thid); \
     if (*(thp) == 0) { \
@@ -41,7 +41,7 @@
     WaitForSingleObject(th, INFINITE); \
     CloseHandle(th); \
 }
-#endif 
+#endif
 
 namespace Kontrol {
 
@@ -52,7 +52,7 @@ class KontrolOSCListener;
 static const int MAX_N_OSC_MSGS = 64;
 static const int MAX_OSC_MESSAGE_SIZE = 512;
 struct OscMsg {
-    IpEndpointName origin_;    
+    IpEndpointName origin_;
     int  size_;
     char buffer_[MAX_OSC_MESSAGE_SIZE];
 };

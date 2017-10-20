@@ -3,8 +3,9 @@
 project (mec-kontrol-api)
 
 set(KONTROL_API_SRC 
-    ParameterModel.cpp
+    Entity.cpp
     Parameter.cpp 
+    ParameterModel.cpp
     OSCReceiver.cpp 
     OSCBroadcaster.cpp )
 

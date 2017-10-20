@@ -1,10 +1,10 @@
 #include "OSCReceiver.h"
 
-#include "osc/OscReceivedElements.h"
-#include "osc/OscPacketListener.h"
+#include <osc/OscReceivedElements.h>
+#include <osc/OscPacketListener.h>
 
 #include <memory.h>
-#include <iostream>
+#include <mec_log.h>
 
 namespace Kontrol {
 
@@ -63,7 +63,7 @@ public:
                     arg++;
                 }
 
-                receiver_.addParam(PS_OSC,params);
+                receiver_.addParam(PS_OSC, params);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/page" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "recieved page p1"<< std::endl;

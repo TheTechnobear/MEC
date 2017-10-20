@@ -16,7 +16,7 @@ int main (int argc, char** argv) {
     mec::Preferences mec_prefs(prefs.getSubTree("mec"));
     assert(mec_prefs.valid());
 
-    std::shared_ptr<Kontrol::ParameterModel> param_model=Kontrol::ParameterModel::model();
+    std::shared_ptr<Kontrol::ParameterModel> param_model = Kontrol::ParameterModel::model();
     LOG_1("default values");
     param_model->dumpCurrentValues();
 
@@ -29,10 +29,10 @@ int main (int argc, char** argv) {
     param_model->dumpCurrentValues();
 
     LOG_1("cc 62, 80 : rmix 50");
-    param_model->changeMidiCC(1,16); // do nothing, check doesnt crash ;)
-    param_model->changeMidiCC(62,64); 
+    param_model->changeMidiCC(1, 16); // do nothing, check doesnt crash ;)
+    param_model->changeMidiCC(62, 64);
     param_model->dumpCurrentValues();
 
     LOG_0("test completed");
-    return 0;    
+    return 0;
 }

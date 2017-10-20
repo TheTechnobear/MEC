@@ -1,6 +1,5 @@
 {
     "patch" : {
-        "name" : "test",
         "parameters" :  [ 
             ["float","o_shape","Shape",0,47,0],
             ["pct","o_colour","Colour",0,100,50],

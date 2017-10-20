@@ -35,9 +35,11 @@ portaudio.sources = $(portaudio)/pa_ringbuffer.cpp
 
 kontrol = ../../api
 cflags += -I $(kontrol)
+
 kontrol.sources = \
 	$(kontrol)/ParameterModel.cpp \
 	$(kontrol)/Parameter.cpp \
+	$(kontrol)/Entity.cpp \
 	$(kontrol)/OSCReceiver.cpp \
 	$(kontrol)/OSCBroadcaster.cpp 
 

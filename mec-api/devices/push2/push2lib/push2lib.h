@@ -25,10 +25,10 @@ public:
 
 
     void clearDisplay();
-    void clearRow(unsigned row,unsigned vscale);
+    void clearRow(unsigned row, unsigned vscale);
 
-    static const unsigned P1_VSCALE=5;
-    static const unsigned P1_HSCALE=2;
+    static const unsigned P1_VSCALE = 5;
+    static const unsigned P1_HSCALE = 2;
     void drawText(unsigned row, unsigned col, const char* str,  int ln, unsigned vscale, unsigned hscale, int16_t clr);
     void drawText(unsigned row, unsigned col, const char* str,  unsigned vscale, unsigned hscale, int16_t clr);
     void drawCell8(unsigned row, unsigned cell, const char* str, unsigned vscale, unsigned hscale, int16_t clr);

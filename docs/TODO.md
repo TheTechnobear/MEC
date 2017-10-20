@@ -17,11 +17,11 @@
 - eh led control via osc
 - push 2 display via osc
 - better surface mapping
-- runtime configuration changes (properties)
-- push 2 support, using properties/runtime config
 - runtime connect/disconnect of devices
 - multiple instances of devices
 - allow api to say which devices to start... so can run multiple instances using same mec.json
+- runtime configuration changes (properties)        (mec-kontrol will implement this)
+- push 2 support, using properties/runtime config   (mec-kontrol will implement this)
 
 # mec-api , windows support
 - perhaps check with MGwin build (allows pthread)
@@ -42,6 +42,7 @@
 # work in progress
 - scales
 - splits/combining of surfaces
+- mec-kontrol
 
 # refactor/generalising
 - voices data, a few places where I do similar things to collect the data

@@ -5,7 +5,7 @@
 
 
 
-// SURFACE MAPPING 
+// SURFACE MAPPING
 // this class will be superceded by mec::surface
 
 const int MAX_KEYS = 256;
@@ -23,9 +23,9 @@ namespace mec {
 
 class SurfaceMapper {
 public:
-	SurfaceMapper();
-	int  noteFromKey(int key);
-	void load(Preferences& prefs);
+    SurfaceMapper();
+    int  noteFromKey(int key);
+    void load(Preferences& prefs);
 private:
     void loadNoteArray(Preferences& prefs);
     void loadCalcDefinition(Preferences& prefs);
@@ -37,14 +37,14 @@ private:
     } mode_;
 
     //note mode
-	int	notes_[MAX_KEYS];
+    int notes_[MAX_KEYS];
 
     //calc mode
-    // r = k % keyInCol , c = k / keyInCol, note = (r * rowM) + (c * colM) + offset  
+    // r = k % keyInCol , c = k / keyInCol, note = (r * rowM) + (c * colM) + offset
     int keyInCol_;
     int rowMult_;
     int colMult_;
-    int noteOffset_; 
+    int noteOffset_;
 };
 }
 

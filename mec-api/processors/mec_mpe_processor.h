@@ -13,14 +13,14 @@ namespace mec {
 
 class MPE_Processor : public ICallback {
 public:
-    MPE_Processor(float pbr=48.0);
+    MPE_Processor(float pbr = 48.0);
     virtual ~MPE_Processor();
 
     struct MidiMsg {
-        MidiMsg() { data[0]=0;size=0;}
-        MidiMsg(char status) { data[0] = status; size=1;}
-        MidiMsg(char status, char d1) : MidiMsg(status) {data[1]=d1;size=2;}
-        MidiMsg(char status, char d1, char d2) : MidiMsg(status,d1) {data[2]=d2;size=3;}
+        MidiMsg() { data[0] = 0; size = 0;}
+        MidiMsg(char status) { data[0] = status; size = 1;}
+        MidiMsg(char status, char d1) : MidiMsg(status) {data[1] = d1; size = 2;}
+        MidiMsg(char status, char d1, char d2) : MidiMsg(status, d1) {data[2] = d2; size = 3;}
 
         char        data[3];
         unsigned    size;
@@ -36,7 +36,7 @@ public:
     virtual void touchOff(int touchId, float note, float x, float y, float z);
     virtual void control(int ctrlId, float v);
     virtual void mec_control(int cmd, void* other); //ignores
-  
+
 private:
 
     // low level midi, open unchecked
@@ -51,17 +51,17 @@ private:
     int unipolar7bit(float v) {return v * 127;}
 
     struct VoiceData {
-            unsigned    startNote_;
-            unsigned    note_;      //0
-            int         pitchbend_; //1
-            int         timbre_;    //2
-            unsigned    pressure_;  //3
+        unsigned    startNote_;
+        unsigned    note_;      //0
+        int         pitchbend_; //1
+        int         timbre_;    //2
+        unsigned    pressure_;  //3
     };
 
     VoiceData voices_[16];
     float global_[127];
     float pitchbendRange_;
-};    
+};
 
 }
 
