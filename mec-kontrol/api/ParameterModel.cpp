@@ -1,17 +1,5 @@
 #include "ParameterModel.h"
 
-#include <algorithm>
-#include <limits>
-#include <string.h>
-#include <iostream>
-#include <map>
-#include <fstream>
-
-#include <mec_prefs.h>
-#include <mec_log.h>
-
-// for saving presets only , later moved to Preferences
-#include <cJSON.h>
 
 namespace Kontrol {
 
@@ -31,392 +19,197 @@ std::shared_ptr<ParameterModel> ParameterModel::model() {
 ParameterModel::ParameterModel() {
 }
 
-
-bool ParameterModel::addParam( ParameterSource src, const std::vector<ParamValue>& args) {
-    auto p = Parameter::create(args);
-    if (p->valid()) {
-        parameters_[p->id()] = p;
-        // LOG_1("addParam " << p->id());
-        for ( auto i : listeners_) {
-            (i.second)->param(src, *p);
-        }
-        return true;
-    }
-    return false;
-}
-
-bool ParameterModel::addPage(
-    ParameterSource src,
-    const std::string& id,
-    const std::string& displayName,
-    const std::vector<std::string> paramIds
-) {
-    // std::cout << "ParameterModel::addPage " << id << std::endl;
-    auto p = std::make_shared<Page>(id, displayName, paramIds);
-    pages_[id] = p;
-    pageIds_.push_back(id);
-    for ( auto i : listeners_) {
-        (i.second)->page(src, *p);
-    }
-    return true;
-}
-
-std::string ParameterModel::getParamId(const std::string& pageId, unsigned paramNum) {
-    auto page = pages_[pageId];
-    if (page != nullptr && paramNum < page->paramIds().size()) {
-        return page->paramIds()[paramNum];
-    }
-    return std::string("");
-}
-
-void ParameterModel::addClient(const std::string& host, unsigned port) {
-    for ( auto i : listeners_) {
-        (i.second)->addClient(host, port);
-    }
-}
-
-
-bool ParameterModel::changeParam(ParameterSource src, const std::string& id, const ParamValue& value) {
-    auto p = parameters_[id];
-    if (p != nullptr) {
-        if (p->change(value)) {
-            for ( auto i : listeners_) {
-                (i.second)->changed(src, *p);
-            }
-            return true;
-        }
-    }
-    return false;
-}
-
 void ParameterModel::publishMetaData() const {
-    for ( auto i : listeners_) {
-        for (auto p : parameters_) {
-            const Parameter& param = *(p.second);
-            (i.second)->param(PS_LOCAL, param);
-            (i.second)->changed(PS_LOCAL, param);
-        }
-        for (auto pid : pageIds_) {
-            auto p = pages_.find(pid);
-            if (p != pages_.end()) {
-                (i.second)->page(PS_LOCAL,  *(p->second));
-            }
-        }
+    publishMetaData(localDevice_);
+}
+
+void ParameterModel::publishMetaData(const std::shared_ptr<Device>& device) const {
+    std::vector<std::shared_ptr<Patch>> patches = getPatches(device);
+    for (auto p : patches) {
+        if (p != nullptr) p->publishMetaData();
     }
 }
 
-bool ParameterModel::applyPreset(std::string presetId) {
-    currentPreset_ = presetId;
-    auto presetvalues = presets_[presetId];
-    bool ret = false;
-    for (auto presetvalue : presetvalues) {
-        auto param = parameters_[presetvalue.paramId()];
-        if (param != nullptr) {
-            if (presetvalue.value().type() == ParamValue::T_Float) {
-                if (presetvalue.value() != param->current()) {
-                    ret |= changeParam(PS_PRESET, presetvalue.paramId(), presetvalue.value());
-                }
-            }
-        }
+//access
+std::shared_ptr<Device> ParameterModel::getLocalDevice() const {
+    return localDevice_;
+}
+
+std::shared_ptr<Device>  ParameterModel::getDevice(const EntityId& deviceId) const {
+    try {
+        return devices_.at(deviceId);
+    } catch (const std::out_of_range&) {
+        return nullptr;
+    }
+}
+
+std::shared_ptr<Patch> ParameterModel::getPatch(const std::shared_ptr<Device>& device, const EntityId& patchId) const {
+    if (device != nullptr) return device->getPatch(patchId);
+    return nullptr;
+}
+
+std::shared_ptr<Page>  ParameterModel::getPage(const std::shared_ptr<Patch>& patch, const EntityId& pageId) const {
+    if (patch != nullptr) return patch->getPage(pageId);
+    return nullptr;
+}
+
+std::shared_ptr<Parameter>  ParameterModel::getParam(const std::shared_ptr<Patch>& patch, const EntityId& paramId) const {
+    if (patch != nullptr) return patch->getParam(paramId);
+    return nullptr;
+}
+
+
+std::vector<std::shared_ptr<Device>>    ParameterModel::getDevices() const {
+    std::vector<std::shared_ptr<Device>> ret;
+    for (auto p : devices_) {
+        if (p.second != nullptr) ret.push_back(p.second);
     }
     return ret;
 }
 
-bool ParameterModel::changeMidiCC(unsigned midiCC, unsigned midiValue) {
-    auto paramId = midi_mapping_[midiCC];
-    if (!paramId.empty()) {
-        auto param = parameters_[paramId];
-        if (param != nullptr) {
-            ParamValue pv = param->calcMidi(midiValue);
-            if (pv != param->current()) {
-                return changeParam(PS_MIDI, paramId, pv);
-            }
+std::vector<std::shared_ptr<Patch>>     ParameterModel::getPatches(const std::shared_ptr<Device>& device) const {
+    std::vector<std::shared_ptr<Patch>> ret;
+    if (device != nullptr) ret = device->getPatches();
+    return ret;
+}
+
+std::vector<std::shared_ptr<Page>>      ParameterModel::getPages(const std::shared_ptr<Patch>& patch) const {
+    std::vector<std::shared_ptr<Page>> ret;
+    if (patch != nullptr) ret = patch->getPages();
+    return ret;
+}
+
+std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::shared_ptr<Patch>& patch) const {
+    std::vector<std::shared_ptr<Parameter>> ret;
+    if (patch != nullptr) ret = patch->getParams();
+    return ret;
+}
+
+std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::shared_ptr<Patch>& patch, const std::shared_ptr<Page>& page) const {
+    std::vector<std::shared_ptr<Parameter>> ret;
+    if (patch != nullptr && page != nullptr) ret = patch->getParams(page);
+    return ret;
+}
+
+
+// listener model
+void ParameterModel::clearCallbacks() {
+    for (auto p : listeners_) {
+        (p.second)->stop();
+    }
+
+    listeners_.clear();
+}
+void ParameterModel::removeCallback(const std::string& id) {
+    auto p = listeners_.find(id);
+    if (p != listeners_.end()) {
+        (p->second)->stop();
+        listeners_.erase(id);
+    }
+}
+
+void ParameterModel::removeCallback(std::shared_ptr<ParameterCallback>) {
+    // for(std::vector<std::shared_ptr<ParameterCallback> >::iterator i(listeners_) : listeners_) {
+    //  if(*i == listener) {
+    //      i.remove();
+    //      return;
+    //  }
+    // }
+}
+void ParameterModel::addCallback(const std::string& id, std::shared_ptr<ParameterCallback> listener) {
+    auto p = listeners_[id];
+    if (p != nullptr) p->stop();
+    listeners_[id] = listener;
+}
+
+
+void ParameterModel::createDevice(
+    const EntityId& deviceId,
+    const std::string& host,
+    unsigned port
+) const {
+    std::string desc = host;
+    auto device = std::make_shared<Device>(host, port, desc);
+    devices_[d->id()] = device;
+
+    for ( auto i : listeners_) {
+        (i.second)->device(src, *device);
+    }
+}
+
+void ParameterModel::createPatch(
+    ParameterSource src,
+    const EntityId& deviceId,
+    const EntityId& patchId
+) const {
+
+    auto device = getDevice(deviceId);
+ 
+    if (device == nullptr) return;
+
+    auto patch == make_shared<Patch>(patchId,patchId);
+    device->addPatch(patch);
+
+    for ( auto i : listeners_) {
+        (i.second)->patch(src, *device, *patch);
+    }
+}
+
+void ParameterModel::createPage(
+    ParameterSource src,
+    const EntityId& deviceId,
+    const EntityId& patchId,
+    const EntityId& pageId,
+    const std::string& displayName,
+    const std::vector<EntityId> paramIds
+) const {
+    auto device = getDevice(deviceId);
+    auto patch = getPatch(device, patchId);
+    if (patch == nullptr) return;
+
+    auto page = patch->createPage(pageId, displayName, paramIds)
+    if (page != nullptr) {
+        auto patch = getPage(patch, pageId);
+        for ( auto i : listeners_) {
+            (i.second)->page(src, *device, *patch, *page);
         }
     }
-
-    return false;
 }
 
-bool ParameterModel::loadParameterDefinitions(const std::string& filename) {
-    paramDefinitions_ = std::make_shared<mec::Preferences>(filename);
-    return loadParameterDefinitions(*paramDefinitions_);
-}
+void ParameterModel::createParam(
+    ParameterSource src,
+    const EntityId& deviceId,
+    const EntityId& patchId,
+    const std::vector<ParamValue>& args
+) const {
+    auto device = getDevice(deviceId);
+    auto patch = getPatch(device, patchId);
+    if (patch == nullptr) return;
 
-bool ParameterModel::loadParameterDefinitions(const mec::Preferences& prefs) {
-    if (!prefs.valid()) return false;
-
-    mec::Preferences patch(prefs.getSubTree("patch"));
-    if (!patch.valid()) return false;
-
-    if (patch.exists("parameters")) {
-        // load parameters
-        mec::Preferences::Array params(patch.getArray("parameters"));
-        if (!params.valid()) return false;
-        for (int i = 0; i < params.getSize(); i++) {
-
-            mec::Preferences::Array pargs(params.getArray(i));
-            if (!pargs.valid()) return false;
-
-            std::vector<ParamValue> args;
-
-            for (int j = 0; j < pargs.getSize(); j++) {
-                mec::Preferences::Type t = pargs.getType(j);
-                switch (t ) {
-                case mec::Preferences::P_BOOL:      args.push_back(ParamValue(pargs.getBool(j) ? 1.0f : 0.0f )); break;
-                case mec::Preferences::P_NUMBER:    args.push_back(ParamValue((float) pargs.getDouble(j))); break;
-                case mec::Preferences::P_STRING:    args.push_back(ParamValue(pargs.getString(j))); break;
-                //ignore
-                case mec::Preferences::P_NULL:
-                case mec::Preferences::P_ARRAY:
-                case mec::Preferences::P_OBJECT:
-                default:
-                    break;
-                }
-            }
-            addParam(PS_LOCAL, args);
+    auto param = patch->createParam(args);
+    if (param != nullptr) {
+        for ( auto i : listeners_) {
+            (i.second)->param(src, *device, *patch, *param);
         }
     }
+}
 
-    if (patch.exists("pages")) {
-        // load pages
-        mec::Preferences::Array pages(patch.getArray("pages"));
+void ParameterModel::changeParam(
+    ParameterSource src,
+    const EntityId& deviceId,
+    const EntityId& patchId,
+    const EntityId& paramId,
+    ParamValue v) const {
+    auto device = getDevice(deviceId);
+    auto patch = getPatch(device, patchId);
+    auto param = getParam(device, paramId);
+    if (param == nullptr) return;
 
-        if (!pages.valid()) return false;
-        for (int i = 0; i < pages.getSize(); i++) {
-            mec::Preferences::Array page(pages.getArray(i));
-            if (!page.valid()) return false;
-
-            if (page.getSize() < 2) return false; // need id, displayname
-            std::string id = page.getString(0);
-            std::string displayname = page.getString(1);
-            std::vector<std::string> paramIds;
-            mec::Preferences::Array paramArray(page.getArray(2));
-            for ( int j = 0; j < paramArray.getSize(); j++) {
-                paramIds.push_back(paramArray.getString(j));
-            }
-            addPage(PS_LOCAL, id, displayname, paramIds);
+    if(patch->changeParam(paramId, v)) {
+        for ( auto i : listeners_) {
+            (i.second)->changed(src, *device, *patch, *param);
         }
     }
-
-    return true;
-
 }
-bool ParameterModel::loadPatchSettings(const std::string& filename) {
-    patchSettings_ = std::make_shared<mec::Preferences>(filename);
-    patchSettingsFile_ = filename;
-    return loadPatchSettings(*patchSettings_);
-}
-
-
-bool ParameterModel::loadPatchSettings(const mec::Preferences& prefs) {
-    mec::Preferences presets(prefs.getSubTree("presets"));
-    if (presets.valid()) { // just ignore if not present
-
-        for (std::string presetId : presets.getKeys()) {
-
-            mec::Preferences params(presets.getSubTree(presetId));
-            std::vector<Preset> preset;
-
-            for (std::string paramID : params.getKeys()) {
-                mec::Preferences::Type t = params.getType(paramID);
-                switch (t) {
-                case mec::Preferences::P_BOOL:   preset.push_back(Preset(paramID, ParamValue(params.getBool(paramID) ? 1.0f : 0.0f ))); break;
-                case mec::Preferences::P_NUMBER: preset.push_back(Preset(paramID, ParamValue((float) params.getDouble(paramID)))); break;
-                case mec::Preferences::P_STRING: preset.push_back(Preset(paramID, ParamValue(params.getString(paramID)))); break;
-                //ignore
-                case mec::Preferences::P_NULL:
-                case mec::Preferences::P_ARRAY:
-                case mec::Preferences::P_OBJECT:
-                default:
-                    break;
-                }
-            } //for param
-            presets_[presetId] = preset;
-        }
-    }
-
-    mec::Preferences midimapping(prefs.getSubTree("midi-mapping"));
-    if (midimapping.valid()) { // just ignore if not present
-        mec::Preferences cc(midimapping.getSubTree("cc"));
-        // only currently handling CC midi learn
-        if (cc.valid()) {
-            for (std::string ccstr : cc.getKeys()) {
-                unsigned ccnum = std::stoi(ccstr);
-                std::string paramId = cc.getString(ccstr);
-                addMidiCCMapping(ccnum, paramId);
-            }
-        }
-    }
-    return true;
-}
-
-
-bool ParameterModel::savePatchSettings() {
-    // save to original patch settings file
-    // note: we do not save back to an preferences file, as this would not be complete
-    if (!patchSettingsFile_.empty()) {
-        savePatchSettings(patchSettingsFile_);
-    }
-    return false;
-}
-
-bool ParameterModel::savePatchSettings(const std::string& filename) {
-    // do in cJSON for now
-    std::ofstream outfile(filename);
-    cJSON *root = cJSON_CreateObject();
-    cJSON *presets = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "presets", presets);
-    for (auto p : presets_) {
-        cJSON* preset = cJSON_CreateObject();
-        cJSON_AddItemToObject(presets, p.first.c_str(), preset);
-        for (auto v : p.second) {
-            switch (v.value().type()) {
-            case ParamValue::T_String: {
-                cJSON_AddStringToObject(preset, v.paramId().c_str(), v.value().stringValue().c_str());
-                break;
-            }
-            case ParamValue::T_Float: {
-                cJSON_AddNumberToObject(preset, v.paramId().c_str(), v.value().floatValue());
-                break;
-            }
-            }//switch
-        }
-    }
-    cJSON *midi = cJSON_CreateObject();
-    cJSON *ccs = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "midi-mapping", midi);
-    cJSON_AddItemToObject(midi, "cc", ccs);
-    for (auto c : midi_mapping_) {
-        std::string ccstr = std::to_string(c.first);
-        cJSON_AddStringToObject(ccs, ccstr.c_str(), c.second.c_str());
-    }
-
-    // const char* text = cJSON_PrintUnformatted(root);
-    const char* text = cJSON_Print(root);
-    outfile << text << std::endl;
-    outfile.close();
-
-    return true;
-}
-
-
-bool ParameterModel::savePreset(std::string presetId) {
-    currentPreset_ = presetId;
-    std::vector<Preset> presets;
-    for (auto p : parameters_) {
-        presets.push_back(Preset(p.first, p.second->current()));
-    }
-    presets_[presetId] = presets;
-    return true;
-}
-
-std::vector<std::string> ParameterModel::getPresetList() {
-    std::vector<std::string> presets;
-    for (auto p : presets_) {
-        presets.push_back(p.first);
-    }
-    return presets;
-}
-
-void ParameterModel::addMidiCCMapping(unsigned ccnum, std::string paramId) {
-    midi_mapping_[ccnum] = paramId;
-}
-
-
-void ParameterModel::dumpParameters() {
-    const char* IND = "    ";
-    // print by page , this will miss anything not on a page, but gives a clear way of setting things
-    LOG_1("Parameter Dump");
-    LOG_1("--------------");
-    for (std::string pageId : pageIds_) {
-        auto page = pages_[pageId];
-        if (page == nullptr) { LOG_1("Page not found: " << pageId); continue;}
-        LOG_1(page->id());
-        LOG_1(page->displayName());
-        for (std::string paramId : page->paramIds()) {
-            auto param = parameters_[paramId];
-            if (param == nullptr) { LOG_1("Parameter not found:" << paramId); continue;}
-            std::vector<ParamValue> args;
-            param->createArgs(args);
-            std::string d = IND;
-            for (auto pv : args) {
-                switch (pv.type()) {
-                case ParamValue::T_Float :
-                    d += "  " + std::to_string(pv.floatValue()) + " [F],";
-                    break;
-                case ParamValue::T_String :
-                default:
-                    d += pv.stringValue() + " [S],";
-                    break;
-                }
-            }
-            LOG_1(d);
-        }
-        LOG_1("--------------");
-    }
-}
-
-void ParameterModel::dumpCurrentValues() {
-    const char* IND = "    ";
-    // print by page , this will miss anything not on a page, but gives a clear way of setting things
-    LOG_1("Current Values Dump");
-    LOG_1("-------------------");
-    for (std::string pageId : pageIds_) {
-        auto page = pages_[pageId];
-        if (page == nullptr) { LOG_1("Page not found: " << pageId); continue;}
-        LOG_1(page->id());
-        LOG_1(page->displayName());
-        for (std::string paramId : page->paramIds()) {
-            auto param = parameters_[paramId];
-            if (param == nullptr) { LOG_1("Parameter not found:" << paramId); continue;}
-            std::string d = IND + paramId + " : ";
-            ParamValue cv = param->current();
-            switch (cv.type()) {
-            case ParamValue::T_Float :
-                d += "  " + std::to_string(cv.floatValue()) + " [F],";
-                break;
-            case ParamValue::T_String :
-            default:
-                d += cv.stringValue() + " [S],";
-                break;
-            }
-            LOG_1(d);
-        }
-        LOG_1("--------------");
-    }
-}
-
-
-
-
-void ParameterModel::dumpPatchSettings() {
-    LOG_1("Patch Settings Dump");
-    LOG_1("-------------------");
-    LOG_1("Presets");
-    for (auto preset : presets_) {
-        LOG_1(preset.first);
-        for (auto presetvalue : preset.second) {
-            std::string d = presetvalue.paramId();
-            ParamValue pv = presetvalue.value();
-            switch (pv.type()) {
-            case ParamValue::T_Float :
-                d += "  " + std::to_string(pv.floatValue()) + " [F],";
-                break;
-            case ParamValue::T_String :
-            default:
-                d += pv.stringValue() + " [S],";
-                break;
-            }
-            LOG_1(d);
-        }
-    }
-    LOG_1("Midi Mapping");
-    for (auto cc : midi_mapping_) {
-        LOG_1("CC : " <<  cc.first  << " to " << cc.second);
-    }
-}
-
-
-
 
 } //namespace

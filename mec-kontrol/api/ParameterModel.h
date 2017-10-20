@@ -2,139 +2,106 @@
 
 #include <unordered_map>
 #include <string>
-#include <vector>
 #include <memory>
 
 #include "Entity.h"
+#include "Patch.h"
 #include "Parameter.h"
-
-namespace mec {
-class Preferences;
-}
 
 namespace Kontrol {
 
-// todo: parameters probably need to be
-// slot:paramid
-// do we need pageid? probably not
-
-// possibly
-// map<slotId, vector<page.vector<paramid>>
-// map<slotId, map<paramid,parameter>
-// slots dont need order (here!?), pages do need an order, parameters need order in page
-// when broadcast, we will need slot/paramid
-// change will also need slotid/paramid
-
+class ParameterModel;
 
 class ParameterCallback {
 public:
-	ParameterCallback() {
-		;
-	}
-	virtual ~ParameterCallback() {
-		;
-	}
-	virtual void stop() { ; }
-	virtual void addClient(const std::string& host, unsigned port) = 0;
-	virtual void page(ParameterSource src, const Page&) = 0 ;
-	virtual void param(ParameterSource src, const Parameter&) = 0;
-	virtual void changed(ParameterSource src, const Parameter&) = 0;
+    ParameterCallback() {
+        ;
+    }
+    virtual ~ParameterCallback() {
+        ;
+    }
+    virtual void stop() { ; }
+
+    virtual void device(ParameterSource, const Device&) = 0;
+    virtual void patch(ParameterSource, const Device&, const Patch&) = 0;
+    virtual void page(ParameterSource src, const Device&, const Patch&, const Page&) = 0 ;
+    virtual void param(ParameterSource src, const Device&, const Patch&, const Parameter&) = 0;
+    virtual void changed(ParameterSource src, const Device&, const Patch&, const Parameter&) = 0;
 };
 
 
-class ParameterModel;
 
-class ParameterModel {
+class ParameterModel : public ParameterCallback {
 public:
 	static std::shared_ptr<ParameterModel> model();
 	// static void free();
 
-	void addClient(const std::string& host, unsigned port);
-	bool addParam(ParameterSource src, const std::vector<ParamValue>& args);
-	bool addPage(
-	    ParameterSource src,
-	    const std::string& id,
-	    const std::string& displayName,
-	    const std::vector<std::string> paramIds
-	);
-
-	bool  changeParam(ParameterSource src, const std::string& id, const ParamValue& value);
-
-	void clearCallbacks() {
-		for (auto p : listeners_) {
-			(p.second)->stop();
-		}
-
-		listeners_.clear();
-	}
-	void removeCallback(const std::string& id) {
-		auto p = listeners_.find(id);
-		if (p != listeners_.end()) {
-			(p->second)->stop();
-			listeners_.erase(id);
-		}
-	}
-
-	void removeCallback(std::shared_ptr<ParameterCallback>) {
-		// for(std::vector<std::shared_ptr<ParameterCallback> >::iterator i(listeners_) : listeners_) {
-		// 	if(*i == listener) {
-		// 		i.remove();
-		// 		return;
-		// 	}
-		// }
-	}
-	void addCallback(const std::string& id, std::shared_ptr<ParameterCallback> listener) {
-		auto p = listeners_[id];
-		if (p != nullptr) p->stop();
-		listeners_[id] = listener;
-	}
-
 	void publishMetaData() const;
+	void publishMetaData(const std::shared_ptr<Device>& device) const;
 
-	unsigned 	getPageCount() { return pageIds_.size();}
-	std::string getPageId(unsigned pageNum) { return pageNum < pageIds_.size() ? pageIds_[pageNum] : "";}
-	std::shared_ptr<Page> getPage(const std::string& pageId) { return pages_[pageId]; }
+	// observer functionality
+	void clearCallbacks();
+	void removeCallback(const std::string& id);
+	void removeCallback(std::shared_ptr<ParameterCallback>);
+	void addCallback(const std::string& id, std::shared_ptr<ParameterCallback> listener);
 
-	std::string getParamId(const std::string& pageId, unsigned paramNum);
-	std::shared_ptr<Parameter> getParam(const std::string paramId) { return parameters_[paramId]; }
 
-	bool loadParameterDefinitions(const std::string& filename);
-	bool loadParameterDefinitions(const mec::Preferences& prefs);
+	// access
+	std::shared_ptr<Device> 		getLocalDevice() const;
+	std::shared_ptr<Device> 		getDevice(const EntityId& deviceId) const;
+	std::shared_ptr<Patch>  		getPatch(const std::shared_ptr<Device>&, const EntityId& patchId) const;
+	std::shared_ptr<Page>     		getPage(const std::shared_ptr<Patch>&, const EntityId& pageId) const;
+	std::shared_ptr<Parameter>  	getParam(const std::shared_ptr<Patch>&, const EntityId& paramId) const;
 
-	bool loadPatchSettings(const std::string& filename);
-	bool loadPatchSettings(const mec::Preferences& prefs);
+	std::vector<std::shared_ptr<Device>> 	getDevices() const;
+	std::vector<std::shared_ptr<Patch>>  	getPatches(const std::shared_ptr<Device>&) const;
+	std::vector<std::shared_ptr<Page>> 		getPages(const std::shared_ptr<Patch>&) const;
+	std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Patch>&) const;
+	std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Patch>&, const std::shared_ptr<Page>&) const;
 
-	bool savePatchSettings();
-	bool savePatchSettings(const std::string& filename);
 
-	void dumpParameters();
-	void dumpCurrentValues();
-	void dumpPatchSettings();
+	//ParameterCallback , publish to all registered listeners
+	virtual void stop();
 
-	bool applyPreset(std::string presetId);
-	bool savePreset(std::string presetId);
-	bool changeMidiCC(unsigned midiCC, unsigned midiValue);
-	void addMidiCCMapping(unsigned midiCC, std::string paramId);
-	std::string currentPreset() { return currentPreset_;}
-	std::vector<std::string> getPresetList();
 
+    void createDevice(
+    	const EntityId& deviceId, 
+    	const std::string& host, 
+    	unsigned port) const;
+
+    void createPatch(
+        ParameterSource src, 
+        const EntityId& deviceId,
+        const EntityId& patchId
+    ) const;
+
+    void createParam(
+        ParameterSource src, 
+        const EntityId& deviceId,
+        const EntityId& patchId,
+        const std::vector<ParamValue>& args
+    ) const;
+
+    void createPage(
+        ParameterSource src,
+        const EntityId& deviceId,
+        const EntityId& patchId,
+        const EntityId& pageId,
+        const std::string& displayName,
+        const std::vector<EntityId> paramIds
+    ) const;
+
+    void changeParam(
+        ParameterSource src, 
+        const EntityId& deviceId,
+        const EntityId& patchId,
+        const EntityId& paramId, 
+        ParamValue v) const;
 
 private:
 	ParameterModel();
-	std::string patchSettingsFile_;
-	std::string currentPreset_;
-
-	std::shared_ptr<mec::Preferences> paramDefinitions_;
-	std::shared_ptr<mec::Preferences> patchSettings_;
-
-	std::unordered_map<unsigned, std::string> midi_mapping_; // key CC id, value = paramId
-	std::unordered_map<std::string, std::vector<Preset>> presets_; // key = presetid
-
-	std::vector<std::string> pageIds_; // ordered list of page id, for presentation
-
-	std::unordered_map<std::string, std::shared_ptr<Parameter> >parameters_; // key = paramId
-	std::unordered_map<std::string, std::shared_ptr<Page> >pages_; // key = pageId
-
+	std::shared_ptr<Device>  localDevice_;
+	std::unordered_map<EntityId, std::shared_ptr<Device>> devices_;
 	std::unordered_map<std::string, std::shared_ptr<ParameterCallback> > listeners_; // key = source : host:ip
 };
 

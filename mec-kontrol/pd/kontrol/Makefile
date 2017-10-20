@@ -37,9 +37,10 @@ kontrol = ../../api
 cflags += -I $(kontrol)
 
 kontrol.sources = \
-	$(kontrol)/ParameterModel.cpp \
-	$(kontrol)/Parameter.cpp \
 	$(kontrol)/Entity.cpp \
+	$(kontrol)/Parameter.cpp \
+	$(kontrol)/Patch.cpp \
+	$(kontrol)/ParameterModel.cpp \
 	$(kontrol)/OSCReceiver.cpp \
 	$(kontrol)/OSCBroadcaster.cpp 
 

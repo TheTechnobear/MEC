@@ -64,19 +64,40 @@ public:
     ~OSCReceiver();
     bool listen(unsigned port = 9000);
     void poll();
+    
     void stop();
 
-    void addClient(const std::string& host, unsigned port) const;
+    void createDevice(const std::string& host, unsigned port) const;
 
-    void addParam(ParameterSource src, const std::vector<ParamValue>& args) const;
-    void addPage(
-        ParameterSource src,
-        const std::string& id,
-        const std::string& displayName,
-        const std::vector<std::string> paramIds
+    void createPatch(
+        ParameterSource src, 
+        const EntityId& deviceId,
+        const EntityId& patchId
     ) const;
 
-    void changeParam(ParameterSource src, const std::string& id, ParamValue v) const;
+    void createParam(
+        ParameterSource src, 
+        const EntityId& deviceId,
+        const EntityId& patchId,
+        const std::vector<ParamValue>& args
+    ) const;
+
+    void createPage(
+        ParameterSource src,
+        const EntityId& deviceId,
+        const EntityId& patchId,
+        const EntityId& pageId,
+        const std::string& displayName,
+        const std::vector<EntityId> paramIds
+    ) const;
+
+    void changeParam(
+        ParameterSource src, 
+        const EntityId& deviceId,
+        const EntityId& patchId,
+        const EntityId& paramId, 
+        ParamValue v) const;
+
     void publishMetaData() const;
 
     std::shared_ptr<UdpListeningReceiveSocket> socket() { return socket_;}

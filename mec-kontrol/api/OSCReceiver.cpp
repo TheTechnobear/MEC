@@ -40,19 +40,23 @@ public:
             // std::cout << "recieved osc message: " << m.AddressPattern() << std::endl;
             if ( std::strcmp( m.AddressPattern(), "/Kontrol/changed" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                const char* id = (arg++)->AsString();
+                const char* deviceId = (arg++)->AsString();
+                const char* patchId = (arg++)->AsString();
+                const char* paramId = (arg++)->AsString();
                 if ( arg != m.ArgumentsEnd() ) {
                     if (arg->IsString()) {
-                        receiver_.changeParam(PS_OSC, std::string(id), ParamValue(std::string(arg->AsString())));
+                        receiver_.changeParam(PS_OSC, deviceId, patchId, paramId, ParamValue(std::string(arg->AsString())));
 
                     } else if (arg->IsFloat()) {
-                        receiver_.changeParam(PS_OSC, std::string(id), ParamValue(arg->AsFloat()));
+                        receiver_.changeParam(PS_OSC, deviceId, patchId, paramId, ParamValue(arg->AsFloat()));
                     }
                 }
 
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/param" ) == 0 ) {
                 std::vector<ParamValue> params;
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char* deviceId = (arg++)->AsString();
+                const char* patchId = (arg++)->AsString();
                 while ( arg != m.ArgumentsEnd() ) {
                     if (arg->IsString()) {
                         params.push_back(ParamValue(std::string(arg->AsString())));
@@ -63,21 +67,40 @@ public:
                     arg++;
                 }
 
-                receiver_.addParam(PS_OSC, params);
+                receiver_.createParam(PS_OSC, deviceId, patchId, params);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/page" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "recieved page p1"<< std::endl;
+                const char* deviceId = (arg++)->AsString();
+                const char* patchId = (arg++)->AsString();
+                const char* pageId = (arg++)->AsString();
 
-                const char* id = (arg++)->AsString();
                 const char* displayname = (arg++)->AsString();
 
-                std::vector<std::string> paramIds;
+                std::vector<EntityId> paramIds;
                 while ( arg != m.ArgumentsEnd() ) {
                     paramIds.push_back((arg++)->AsString());
                 }
 
                 // std::cout << "recieved page " << id << std::endl;
-                receiver_.addPage(PS_OSC, id, displayname, paramIds);
+                receiver_.createPage(PS_OSC, deviceId, patchId, pageId, displayname, paramIds);
+            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/patch" ) == 0 ) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                // std::cout << "recieved page p1"<< std::endl;
+                const char* deviceId = (arg++)->AsString();
+                const char* patchId = (arg++)->AsString();
+
+                // std::cout << "recieved patch " << patchId << std::endl;
+                receiver_.createPatch(PS_OSC, deviceId, patchId);
+            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/device" ) == 0 ) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                // std::cout << "recieved page p1"<< std::endl;
+                const char* deviceId = (arg++)->AsString();
+                const char* host = (arg++)->AsString();
+                unsigned port = (arg++)->AsInteger();
+
+                // std::cout << "recieved patch " << patchId << std::endl;
+                receiver_.createDevice(PS_OSC, deviceId, host, port);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/connect" ) == 0 ) {
                 osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
                 osc::int32 port;
@@ -85,7 +108,7 @@ public:
                 char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
                 remoteEndpoint.AddressAsString(buf);
 
-                receiver_.addClient(std::string(buf), port);
+                receiver_.createDevice(buf, port);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/metaData" ) == 0 ) {
                 receiver_.publishMetaData();
             }
@@ -149,27 +172,47 @@ void OSCReceiver::poll() {
     }
 }
 
-void OSCReceiver::addClient(const std::string& host, unsigned port) const {
-    param_model_->addClient(host, port);
+void OSCReceiver::createDevice(const std::string& host, unsigned port) const {
+    param_model_->createDevice(host, port);
 }
 
-void OSCReceiver::addParam(ParameterSource src, const std::vector<ParamValue>& args) const {
-    param_model_->addParam(src, args);
-}
-
-
-void OSCReceiver::addPage(
+void OSCReceiver::createPatch(
     ParameterSource src,
-    const std::string& id,
-    const std::string& displayName,
-    const std::vector<std::string> paramIds
+    const EntityId& deviceId,
+    const EntityId& patchId
 ) const {
-    param_model_->addPage(src, id, displayName, paramIds);
+    param_model_->createPatch(src, deviceId, patchId);
 }
 
-void OSCReceiver::changeParam(ParameterSource src, const std::string& id, ParamValue f) const {
-    param_model_->changeParam(src, id, f);
+
+void OSCReceiver::createParam(
+    ParameterSource src,
+    const EntityId& deviceId,
+    const EntityId& patchId,
+    const std::vector<ParamValue>& args) const {
+    param_model_->createParam(src, deviceId, patchId, args);
 }
+
+void OSCReceiver::changeParam(
+    ParameterSource src,
+    const EntityId& deviceId,
+    const EntityId& patchId,
+    const EntityId& paramId,
+    ParamValue f) const {
+    param_model_->changeParam(src, deviceId, patchId, paramId, f);
+}
+
+void OSCReceiver::createPage(
+    ParameterSource src,
+    const EntityId& deviceId,
+    const EntityId& patchId,
+    const EntityId& pageId,
+    const std::string& displayName,
+    const std::vector<EntityId> paramIds
+) const {
+    param_model_->createPage(src, deviceId, patchId, pageId, displayName, paramIds);
+}
+
 
 void OSCReceiver::publishMetaData() const {
     param_model_->publishMetaData();

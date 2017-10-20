@@ -60,7 +60,45 @@ void OSCBroadcaster::requestConnect(unsigned port) {
 }
 
 
-void OSCBroadcaster::page(ParameterSource src, const Page& p) {
+void OSCBroadcaster::device(ParameterSource, const Device& p) {
+    if (!socket_) return;
+    if (src != PS_LOCAL) return;
+
+    osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage( "/Kontrol/device" )
+        << p.id().c_str()
+        << p.host().c_str()
+        << p.port();
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    socket_->Send( ops.Data(), ops.Size() );
+}
+
+
+void OSCBroadcaster::patch(ParameterSource, const Device& device, const Patch& p) {
+    if (!socket_) return;
+    if (src != PS_LOCAL) return;
+
+    osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage( "/Kontrol/patch" )
+        << device.id().c_str()
+        << p.id().c_str()
+
+        ops << osc::EndMessage
+        << osc::EndBundle;
+
+    socket_->Send( ops.Data(), ops.Size() );
+}
+
+
+
+void OSCBroadcaster::page(ParameterSource src, const Device& device, const Patch& patch, cconst Page& p) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;
 
@@ -68,6 +106,8 @@ void OSCBroadcaster::page(ParameterSource src, const Page& p) {
 
     ops << osc::BeginBundleImmediate
         << osc::BeginMessage( "/Kontrol/page" )
+        << device.id().c_str()
+        << patch.id().c_str()
         << p.id().c_str()
         << p.displayName().c_str();
 
@@ -81,14 +121,17 @@ void OSCBroadcaster::page(ParameterSource src, const Page& p) {
     socket_->Send( ops.Data(), ops.Size() );
 }
 
-void OSCBroadcaster::param(ParameterSource src, const Parameter& p) {
+void OSCBroadcaster::param(ParameterSource src, const Device& device, const Patch& patch,  const Parameter& p) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;
 
     osc::OutboundPacketStream ops( buffer_, OUTPUT_BUFFER_SIZE );
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage( "/Kontrol/param" );
+        << osc::BeginMessage( "/Kontrol/param" )
+        << device.id().c_str()
+        << patch.id().c_str();
+
     std::vector<ParamValue> values;
     p.createArgs(values);
     for (ParamValue v : values) {
@@ -109,7 +152,7 @@ void OSCBroadcaster::param(ParameterSource src, const Parameter& p) {
     socket_->Send( ops.Data(), ops.Size() );
 }
 
-void OSCBroadcaster::changed(ParameterSource src, const Parameter& p) {
+void OSCBroadcaster::changed(ParameterSource src, const Device& device, const Patch& patch, cconst Parameter& p) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;
 
@@ -117,6 +160,8 @@ void OSCBroadcaster::changed(ParameterSource src, const Parameter& p) {
 
     ops << osc::BeginBundleImmediate
         << osc::BeginMessage( "/Kontrol/changed" )
+        << device.id().c_str()
+        << patch.id().c_str()
         << p.id().c_str();
 
     switch (p.current().type()) {
