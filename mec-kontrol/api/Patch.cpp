@@ -33,9 +33,6 @@ std::string Patch::getParamId(const EntityId& pageId, unsigned paramNum) {
 
 
 
-inline std::shared_ptr<ParameterModel> Patch::model() {
-    return ParameterModel::model();
-}
 
 
 // Patch
@@ -108,56 +105,7 @@ std::vector<std::shared_ptr<Parameter>> Patch::getParams(const std::shared_ptr<P
     return ret;
 }
 
-void Patch::publishMetaData() const {
-    // for (auto p : parameters_) {
-    //     const Parameter& param = *(p.second);
-    //     model()->param(PS_LOCAL, param);
-    //     model()->changed(PS_LOCAL, param);
-    // }
-    // for (auto pid : pageIds_) {
-    //     auto p = pages_.find(pid);
-    //     if (p != pages_.end()) {
-    //         model()->page(PS_LOCAL,  *(p->second));
-    //     }
-    // }
-}
 
-bool Patch::applyPreset(std::string presetId) {
-    currentPreset_ = presetId;
-    auto presetvalues = presets_[presetId];
-    bool ret = false;
-    for (auto presetvalue : presetvalues) {
-        auto param = parameters_[presetvalue.paramId()];
-        if (param != nullptr) {
-            if (presetvalue.value().type() == ParamValue::T_Float) {
-                if (presetvalue.value() != param->current()) {
-                    ret |= model()->changeParam(PS_PRESET, presetvalue.paramId(), presetvalue.value());
-                }
-            }
-        }
-    }
-    return ret;
-}
-
-bool Patch::changeMidiCC(unsigned midiCC, unsigned midiValue) {
-    auto paramId = midi_mapping_[midiCC];
-    if (!paramId.empty()) {
-        auto param = parameters_[paramId];
-        if (param != nullptr) {
-            ParamValue pv = param->calcMidi(midiValue);
-            if (pv != param->current()) {
-                return model()->changeParam(PS_MIDI, paramId, pv);
-            }
-        }
-    }
-
-    return false;
-}
-
-bool Patch::loadParameterDefinitions(const std::string& filename) {
-    paramDefinitions_ = std::make_shared<mec::Preferences>(filename);
-    return loadParameterDefinitions(*paramDefinitions_);
-}
 
 bool Patch::loadParameterDefinitions(const mec::Preferences& prefs) {
     if (!prefs.valid()) return false;
@@ -190,7 +138,7 @@ bool Patch::loadParameterDefinitions(const mec::Preferences& prefs) {
                     break;
                 }
             }
-            model()->createParam(PS_LOCAL, args);
+            createParam(args);
         }
     }
 
@@ -211,132 +159,12 @@ bool Patch::loadParameterDefinitions(const mec::Preferences& prefs) {
             for ( int j = 0; j < paramArray.getSize(); j++) {
                 paramIds.push_back(paramArray.getString(j));
             }
-            model()->createPage(PS_LOCAL, id, displayname, paramIds);
+            createPage(id, displayname, paramIds);
         }
     }
 
     return true;
 
-}
-bool Patch::loadPatchSettings(const std::string& filename) {
-    patchSettings_ = std::make_shared<mec::Preferences>(filename);
-    patchSettingsFile_ = filename;
-    return loadPatchSettings(*patchSettings_);
-}
-
-
-bool Patch::loadPatchSettings(const mec::Preferences& prefs) {
-    mec::Preferences presets(prefs.getSubTree("presets"));
-    if (presets.valid()) { // just ignore if not present
-
-        for (std::string presetId : presets.getKeys()) {
-
-            mec::Preferences params(presets.getSubTree(presetId));
-            std::vector<Preset> preset;
-
-            for (std::string paramID : params.getKeys()) {
-                mec::Preferences::Type t = params.getType(paramID);
-                switch (t) {
-                case mec::Preferences::P_BOOL:   preset.push_back(Preset(paramID, ParamValue(params.getBool(paramID) ? 1.0f : 0.0f ))); break;
-                case mec::Preferences::P_NUMBER: preset.push_back(Preset(paramID, ParamValue((float) params.getDouble(paramID)))); break;
-                case mec::Preferences::P_STRING: preset.push_back(Preset(paramID, ParamValue(params.getString(paramID)))); break;
-                //ignore
-                case mec::Preferences::P_NULL:
-                case mec::Preferences::P_ARRAY:
-                case mec::Preferences::P_OBJECT:
-                default:
-                    break;
-                }
-            } //for param
-            presets_[presetId] = preset;
-        }
-    }
-
-    mec::Preferences midimapping(prefs.getSubTree("midi-mapping"));
-    if (midimapping.valid()) { // just ignore if not present
-        mec::Preferences cc(midimapping.getSubTree("cc"));
-        // only currently handling CC midi learn
-        if (cc.valid()) {
-            for (std::string ccstr : cc.getKeys()) {
-                unsigned ccnum = std::stoi(ccstr);
-                std::string paramId = cc.getString(ccstr);
-                addMidiCCMapping(ccnum, paramId);
-            }
-        }
-    }
-    return true;
-}
-
-
-bool Patch::savePatchSettings() {
-    // save to original patch settings file
-    // note: we do not save back to an preferences file, as this would not be complete
-    if (!patchSettingsFile_.empty()) {
-        savePatchSettings(patchSettingsFile_);
-    }
-    return false;
-}
-
-bool Patch::savePatchSettings(const std::string& filename) {
-    // do in cJSON for now
-    std::ofstream outfile(filename);
-    cJSON *root = cJSON_CreateObject();
-    cJSON *presets = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "presets", presets);
-    for (auto p : presets_) {
-        cJSON* preset = cJSON_CreateObject();
-        cJSON_AddItemToObject(presets, p.first.c_str(), preset);
-        for (auto v : p.second) {
-            switch (v.value().type()) {
-            case ParamValue::T_String: {
-                cJSON_AddStringToObject(preset, v.paramId().c_str(), v.value().stringValue().c_str());
-                break;
-            }
-            case ParamValue::T_Float: {
-                cJSON_AddNumberToObject(preset, v.paramId().c_str(), v.value().floatValue());
-                break;
-            }
-            }//switch
-        }
-    }
-    cJSON *midi = cJSON_CreateObject();
-    cJSON *ccs = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "midi-mapping", midi);
-    cJSON_AddItemToObject(midi, "cc", ccs);
-    for (auto c : midi_mapping_) {
-        std::string ccstr = std::to_string(c.first);
-        cJSON_AddStringToObject(ccs, ccstr.c_str(), c.second.c_str());
-    }
-
-    // const char* text = cJSON_PrintUnformatted(root);
-    const char* text = cJSON_Print(root);
-    outfile << text << std::endl;
-    outfile.close();
-
-    return true;
-}
-
-
-bool Patch::savePreset(std::string presetId) {
-    currentPreset_ = presetId;
-    std::vector<Preset> presets;
-    for (auto p : parameters_) {
-        presets.push_back(Preset(p.first, p.second->current()));
-    }
-    presets_[presetId] = presets;
-    return true;
-}
-
-std::vector<std::string> Patch::getPresetList() {
-    std::vector<std::string> presets;
-    for (auto p : presets_) {
-        presets.push_back(p.first);
-    }
-    return presets;
-}
-
-void Patch::addMidiCCMapping(unsigned ccnum, std::string paramId) {
-    midi_mapping_[ccnum] = paramId;
 }
 
 
@@ -403,32 +231,6 @@ void Patch::dumpCurrentValues() {
     }
 }
 
-void Patch::dumpPatchSettings() {
-    LOG_1("Patch Settings Dump");
-    LOG_1("-------------------");
-    LOG_1("Presets");
-    for (auto preset : presets_) {
-        LOG_1(preset.first);
-        for (auto presetvalue : preset.second) {
-            std::string d = presetvalue.paramId();
-            ParamValue pv = presetvalue.value();
-            switch (pv.type()) {
-            case ParamValue::T_Float :
-                d += "  " + std::to_string(pv.floatValue()) + " [F],";
-                break;
-            case ParamValue::T_String :
-            default:
-                d += pv.stringValue() + " [S],";
-                break;
-            }
-            LOG_1(d);
-        }
-    }
-    LOG_1("Midi Mapping");
-    for (auto cc : midi_mapping_) {
-        LOG_1("CC : " <<  cc.first  << " to " << cc.second);
-    }
-}
 
 
 } //namespace

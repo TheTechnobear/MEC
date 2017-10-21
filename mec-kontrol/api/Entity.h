@@ -49,31 +49,7 @@ protected:
 
 class Patch;
 
-class Device : public Entity {
-public:
-    Device( const std::string& host,
-            unsigned port,
-            const std::string& displayName)
-        : Entity(createId(host, port), displayName) {
-        ;
-    }
-
-    static EntityId createId(const std::string& host, unsigned port) {
-        return (host + ":" + std::to_string(port));
-    }
-
-    std::vector<std::shared_ptr<Patch>>  getPatches();
-    std::shared_ptr<Patch> getPatch(const EntityId& patchId);
-
-    void addPatch(const std::shared_ptr<Patch>& patch);
-
-private:
-    std::string host_;
-    unsigned port_;
-
-    std::unordered_map<EntityId,std::shared_ptr<Patch>> patches_;
-};
-
+class Device;
 
 class Page : public Entity {
 public:

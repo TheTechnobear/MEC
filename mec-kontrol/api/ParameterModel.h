@@ -31,13 +31,12 @@ public:
 
 
 
-class ParameterModel : public ParameterCallback {
+class ParameterModel {
 public:
 	static std::shared_ptr<ParameterModel> model();
 	// static void free();
 
 	void publishMetaData() const;
-	void publishMetaData(const std::shared_ptr<Device>& device) const;
 
 	// observer functionality
 	void clearCallbacks();
@@ -60,14 +59,11 @@ public:
 	std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Patch>&, const std::shared_ptr<Page>&) const;
 
 
-	//ParameterCallback , publish to all registered listeners
-	virtual void stop();
-
-
     void createDevice(
+        ParameterSource src,
     	const EntityId& deviceId, 
     	const std::string& host, 
-    	unsigned port) const;
+    	unsigned port) ;
 
     void createPatch(
         ParameterSource src, 
@@ -98,7 +94,14 @@ public:
         const EntityId& paramId, 
         ParamValue v) const;
 
-private:
+
+    bool loadParameterDefinitions(const EntityId& deviceId, const EntityId& patchId, const std::string& filename);
+    bool loadParameterDefinitions(const EntityId& deviceId, const EntityId& patchId, const mec::Preferences& prefs);
+
+private:    
+    void publishMetaData(const std::shared_ptr<Device>& device) const;
+    void publishMetaData(const std::shared_ptr<Device>& device, const std::shared_ptr<Patch>& patch);
+
 	ParameterModel();
 	std::shared_ptr<Device>  localDevice_;
 	std::unordered_map<EntityId, std::shared_ptr<Device>> devices_;

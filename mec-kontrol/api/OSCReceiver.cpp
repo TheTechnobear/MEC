@@ -6,6 +6,8 @@
 #include <memory.h>
 #include <mec_log.h>
 
+#include"Device.h"
+
 namespace Kontrol {
 
 class KontrolPacketListener : public PacketListener {
@@ -97,7 +99,7 @@ public:
                 // std::cout << "recieved page p1"<< std::endl;
                 const char* deviceId = (arg++)->AsString();
                 const char* host = (arg++)->AsString();
-                unsigned port = (arg++)->AsInteger();
+                unsigned port = (arg++)->AsInt32();
 
                 // std::cout << "recieved patch " << patchId << std::endl;
                 receiver_.createDevice(PS_OSC, deviceId, host, port);
@@ -108,7 +110,7 @@ public:
                 char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
                 remoteEndpoint.AddressAsString(buf);
 
-                receiver_.createDevice(buf, port);
+                receiver_.createDevice(PS_OSC, Device::createId(buf,port), buf, port);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/metaData" ) == 0 ) {
                 receiver_.publishMetaData();
             }
@@ -172,8 +174,12 @@ void OSCReceiver::poll() {
     }
 }
 
-void OSCReceiver::createDevice(const std::string& host, unsigned port) const {
-    param_model_->createDevice(host, port);
+void OSCReceiver::createDevice(
+    ParameterSource src,
+    const EntityId& deviceId,
+    const std::string& host, 
+    unsigned port) const {
+    param_model_->createDevice(src, deviceId, host, port);
 }
 
 void OSCReceiver::createPatch(

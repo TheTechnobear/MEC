@@ -1,5 +1,6 @@
 #include "ParameterModel.h"
 
+#include "Device.h"
 
 namespace Kontrol {
 
@@ -26,9 +27,10 @@ void ParameterModel::publishMetaData() const {
 void ParameterModel::publishMetaData(const std::shared_ptr<Device>& device) const {
     std::vector<std::shared_ptr<Patch>> patches = getPatches(device);
     for (auto p : patches) {
-        if (p != nullptr) p->publishMetaData();
+        if (p != nullptr) publishMetaData(device);
     }
 }
+
 
 //access
 std::shared_ptr<Device> ParameterModel::getLocalDevice() const {
@@ -124,13 +126,14 @@ void ParameterModel::addCallback(const std::string& id, std::shared_ptr<Paramete
 
 
 void ParameterModel::createDevice(
+    ParameterSource src,
     const EntityId& deviceId,
     const std::string& host,
     unsigned port
-) const {
+) {
     std::string desc = host;
     auto device = std::make_shared<Device>(host, port, desc);
-    devices_[d->id()] = device;
+    devices_[device->id()] = device;
 
     for ( auto i : listeners_) {
         (i.second)->device(src, *device);
@@ -144,10 +147,10 @@ void ParameterModel::createPatch(
 ) const {
 
     auto device = getDevice(deviceId);
- 
+
     if (device == nullptr) return;
 
-    auto patch == make_shared<Patch>(patchId,patchId);
+    auto patch = std::make_shared<Patch>(patchId, patchId);
     device->addPatch(patch);
 
     for ( auto i : listeners_) {
@@ -167,9 +170,8 @@ void ParameterModel::createPage(
     auto patch = getPatch(device, patchId);
     if (patch == nullptr) return;
 
-    auto page = patch->createPage(pageId, displayName, paramIds)
+    auto page = patch->createPage(pageId, displayName, paramIds);
     if (page != nullptr) {
-        auto patch = getPage(patch, pageId);
         for ( auto i : listeners_) {
             (i.second)->page(src, *device, *patch, *page);
         }
@@ -202,14 +204,30 @@ void ParameterModel::changeParam(
     ParamValue v) const {
     auto device = getDevice(deviceId);
     auto patch = getPatch(device, patchId);
-    auto param = getParam(device, paramId);
+    auto param = getParam(patch, paramId);
     if (param == nullptr) return;
 
-    if(patch->changeParam(paramId, v)) {
+    if (patch->changeParam(paramId, v)) {
         for ( auto i : listeners_) {
             (i.second)->changed(src, *device, *patch, *param);
         }
     }
 }
+
+
+
+bool ParameterModel::loadParameterDefinitions(const EntityId& deviceId, const EntityId& patchId, const std::string& filename) {
+    auto device = getDevice(deviceId);
+    if (device == nullptr) return false;
+    return device->loadParameterDefinitions(patchId, filename);
+}
+
+bool ParameterModel::loadParameterDefinitions(const EntityId& deviceId, const EntityId& patchId, const mec::Preferences& prefs) {
+    auto device = getDevice(deviceId);
+    if (device == nullptr) return false;
+    return device->loadParameterDefinitions(patchId, prefs);
+}
+
+
 
 } //namespace

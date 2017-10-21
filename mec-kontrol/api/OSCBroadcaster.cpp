@@ -2,6 +2,8 @@
 
 #include <osc/OscOutboundPacketStream.h>
 
+#include "Device.h"
+
 namespace Kontrol {
 
 
@@ -60,7 +62,7 @@ void OSCBroadcaster::requestConnect(unsigned port) {
 }
 
 
-void OSCBroadcaster::device(ParameterSource, const Device& p) {
+void OSCBroadcaster::device(ParameterSource src, const Device& p) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;
 
@@ -70,7 +72,7 @@ void OSCBroadcaster::device(ParameterSource, const Device& p) {
         << osc::BeginMessage( "/Kontrol/device" )
         << p.id().c_str()
         << p.host().c_str()
-        << p.port();
+        << (int32_t) p.port();
 
     ops << osc::EndMessage
         << osc::EndBundle;
@@ -79,7 +81,7 @@ void OSCBroadcaster::device(ParameterSource, const Device& p) {
 }
 
 
-void OSCBroadcaster::patch(ParameterSource, const Device& device, const Patch& p) {
+void OSCBroadcaster::patch(ParameterSource src, const Device& device, const Patch& p) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;
 
@@ -88,7 +90,7 @@ void OSCBroadcaster::patch(ParameterSource, const Device& device, const Patch& p
     ops << osc::BeginBundleImmediate
         << osc::BeginMessage( "/Kontrol/patch" )
         << device.id().c_str()
-        << p.id().c_str()
+        << p.id().c_str();
 
         ops << osc::EndMessage
         << osc::EndBundle;
@@ -98,7 +100,7 @@ void OSCBroadcaster::patch(ParameterSource, const Device& device, const Patch& p
 
 
 
-void OSCBroadcaster::page(ParameterSource src, const Device& device, const Patch& patch, cconst Page& p) {
+void OSCBroadcaster::page(ParameterSource src, const Device& device, const Patch& patch, const Page& p) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;
 
@@ -152,7 +154,7 @@ void OSCBroadcaster::param(ParameterSource src, const Device& device, const Patc
     socket_->Send( ops.Data(), ops.Size() );
 }
 
-void OSCBroadcaster::changed(ParameterSource src, const Device& device, const Patch& patch, cconst Parameter& p) {
+void OSCBroadcaster::changed(ParameterSource src, const Device& device, const Patch& patch, const Parameter& p) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;
 

@@ -67,7 +67,12 @@ public:
     
     void stop();
 
-    void createDevice(const std::string& host, unsigned port) const;
+    void createDevice(
+        ParameterSource src, 
+        const EntityId& deviceId, 
+        const std::string& host, 
+        unsigned port
+    ) const;
 
     void createPatch(
         ParameterSource src, 
