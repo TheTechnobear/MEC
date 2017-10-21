@@ -1,5 +1,5 @@
-#include "Device.h"
-#include "Patch.h"
+#include "Rack.h"
+#include "Module.h"
 #include "ParameterModel.h"
 
 
@@ -20,39 +20,39 @@
 namespace Kontrol {
 
 
-inline std::shared_ptr<ParameterModel> Device::model() {
+inline std::shared_ptr<ParameterModel> Rack::model() {
     return ParameterModel::model();
 }
 
-void Device::addPatch(const std::shared_ptr<Patch>& patch) {
-    if (patch != nullptr) {
-        patches_[patch->id()] = patch;
+void Rack::addModule(const std::shared_ptr<Module>& module) {
+    if (module != nullptr) {
+        modules_[module->id()] = module;
     }
 }
 
-std::vector<std::shared_ptr<Patch>>  Device::getPatches() {
-    std::vector<std::shared_ptr<Patch>> ret;
-    for (auto p : patches_) {
+std::vector<std::shared_ptr<Module>>  Rack::getModules() {
+    std::vector<std::shared_ptr<Module>> ret;
+    for (auto p : modules_) {
         if (p.second != nullptr) ret.push_back(p.second);
     }
     return ret;
 }
 
-std::shared_ptr<Patch> Device::getPatch(const EntityId& patchId) {
-    return patches_[patchId];
+std::shared_ptr<Module> Rack::getModule(const EntityId& moduleId) {
+    return modules_[moduleId];
 }
 
-bool Device::loadParameterDefinitions(const EntityId& patchId, const std::string& filename) {
+bool Rack::loadParameterDefinitions(const EntityId& moduleId, const std::string& filename) {
     paramDefinitions_ = std::make_shared<mec::Preferences>(filename);
-    return loadParameterDefinitions(patchId, *paramDefinitions_);
+    return loadParameterDefinitions(moduleId, *paramDefinitions_);
 }
 
 
-bool Device::loadParameterDefinitions(const EntityId& patchId, const mec::Preferences& prefs) {
-    auto patch  = getPatch(patchId);
-    if (patch != nullptr) {
-        if (patch->loadParameterDefinitions(prefs)) {
-            publishMetaData(patch);
+bool Rack::loadParameterDefinitions(const EntityId& moduleId, const mec::Preferences& prefs) {
+    auto module  = getModule(moduleId);
+    if (module != nullptr) {
+        if (module->loadParameterDefinitions(prefs)) {
+            publishMetaData(module);
             return true;
         }
     }
@@ -60,19 +60,19 @@ bool Device::loadParameterDefinitions(const EntityId& patchId, const mec::Prefer
 }
 
 
-bool Device::applyPreset(std::string presetId) {
+bool Rack::applyPreset(std::string presetId) {
     bool ret = false;
-    EntityId patchId; // TODO
-    auto patch = getPatch(patchId);
-    if (patch != nullptr) {
+    EntityId moduleId; // TODO
+    auto module = getModule(moduleId);
+    if (module != nullptr) {
         currentPreset_ = presetId;
         auto presetvalues = presets_[presetId];
         for (auto presetvalue : presetvalues) {
-            auto param = patch->getParam(presetvalue.paramId());
+            auto param = module->getParam(presetvalue.paramId());
             if (param != nullptr) {
                 if (presetvalue.value().type() == ParamValue::T_Float) {
                     if (presetvalue.value() != param->current()) {
-                        model()->changeParam(PS_PRESET, id(), patchId, presetvalue.paramId(), presetvalue.value());
+                        model()->changeParam(PS_PRESET, id(), moduleId, presetvalue.paramId(), presetvalue.value());
                         ret = true;
                     }
                 }
@@ -82,17 +82,17 @@ bool Device::applyPreset(std::string presetId) {
     return ret;
 }
 
-bool Device::changeMidiCC(unsigned midiCC, unsigned midiValue) {
-    EntityId patchId; //TODO
-    auto patch = getPatch(patchId);
-    if (patch != nullptr) {
+bool Rack::changeMidiCC(unsigned midiCC, unsigned midiValue) {
+    EntityId moduleId; //TODO
+    auto module = getModule(moduleId);
+    if (module != nullptr) {
         auto paramId = midi_mapping_[midiCC];
         if (!paramId.empty()) {
-            auto param = patch->getParam(paramId);
+            auto param = module->getParam(paramId);
             if (param != nullptr) {
                 ParamValue pv = param->calcMidi(midiValue);
                 if (pv != param->current()) {
-                    model()->changeParam(PS_MIDI, id(), patchId, paramId, pv);
+                    model()->changeParam(PS_MIDI, id(), moduleId, paramId, pv);
                     return true;
                 }
             }
@@ -103,14 +103,14 @@ bool Device::changeMidiCC(unsigned midiCC, unsigned midiValue) {
 }
 
 
-bool Device::loadPatchSettings(const std::string& filename) {
-    patchSettings_ = std::make_shared<mec::Preferences>(filename);
-    patchSettingsFile_ = filename;
-    return loadPatchSettings(*patchSettings_);
+bool Rack::loadModuleSettings(const std::string& filename) {
+    moduleSettings_ = std::make_shared<mec::Preferences>(filename);
+    moduleSettingsFile_ = filename;
+    return loadModuleSettings(*moduleSettings_);
 }
 
 
-bool Device::loadPatchSettings(const mec::Preferences& prefs) {
+bool Rack::loadModuleSettings(const mec::Preferences& prefs) {
     mec::Preferences presets(prefs.getSubTree("presets"));
     if (presets.valid()) { // just ignore if not present
 
@@ -144,9 +144,9 @@ bool Device::loadPatchSettings(const mec::Preferences& prefs) {
         if (cc.valid()) {
             for (std::string ccstr : cc.getKeys()) {
                 unsigned ccnum = std::stoi(ccstr);
-                EntityId patchId; // TODO
+                EntityId moduleId; // TODO
                 EntityId paramId = cc.getString(ccstr);
-                addMidiCCMapping(ccnum, patchId, paramId);
+                addMidiCCMapping(ccnum, moduleId, paramId);
             }
         }
     }
@@ -154,16 +154,16 @@ bool Device::loadPatchSettings(const mec::Preferences& prefs) {
 }
 
 
-bool Device::savePatchSettings() {
-    // save to original patch settings file
+bool Rack::saveModuleSettings() {
+    // save to original module settings file
     // note: we do not save back to an preferences file, as this would not be complete
-    if (!patchSettingsFile_.empty()) {
-        savePatchSettings(patchSettingsFile_);
+    if (!moduleSettingsFile_.empty()) {
+        saveModuleSettings(moduleSettingsFile_);
     }
     return false;
 }
 
-bool Device::savePatchSettings(const std::string& filename) {
+bool Rack::saveModuleSettings(const std::string& filename) {
     // do in cJSON for now
     std::ofstream outfile(filename);
     cJSON *root = cJSON_CreateObject();
@@ -203,11 +203,11 @@ bool Device::savePatchSettings(const std::string& filename) {
 }
 
 
-bool Device::savePreset(std::string presetId) {
-    EntityId patchId; //TODO
-    auto patch = getPatch(patchId);
-    if (patch != nullptr) {
-        std::vector<std::shared_ptr<Parameter>> params = patch->getParams();
+bool Rack::savePreset(std::string presetId) {
+    EntityId moduleId; //TODO
+    auto module = getModule(moduleId);
+    if (module != nullptr) {
+        std::vector<std::shared_ptr<Parameter>> params = module->getParams();
         currentPreset_ = presetId;
         std::vector<Preset> presets;
         for (auto p : params) {
@@ -218,7 +218,7 @@ bool Device::savePreset(std::string presetId) {
     return true;
 }
 
-std::vector<std::string> Device::getPresetList() {
+std::vector<std::string> Rack::getPresetList() {
     std::vector<std::string> presets;
     for (auto p : presets_) {
         presets.push_back(p.first);
@@ -226,36 +226,36 @@ std::vector<std::string> Device::getPresetList() {
     return presets;
 }
 
-void Device::addMidiCCMapping(unsigned ccnum, const EntityId& patchId, const EntityId& paramId) {
+void Rack::addMidiCCMapping(unsigned ccnum, const EntityId& moduleId, const EntityId& paramId) {
     midi_mapping_[ccnum] = paramId;
 }
 
-void Device::publishMetaData(const std::shared_ptr<Patch>& patch) const {
-    // if (patch != nullptr) {
-    //     std::vector<std::shared_ptr<Parameter>> params = patch->getParams();
-    //     std::vector<std::shared_ptr<Page>> pages = patch->getPages();
+void Rack::publishMetaData(const std::shared_ptr<Module>& module) const {
+    // if (module != nullptr) {
+    //     std::vector<std::shared_ptr<Parameter>> params = module->getParams();
+    //     std::vector<std::shared_ptr<Page>> pages = module->getPages();
     //     for (auto p : params) {
     //         const Parameter& param = *(p.second);
-    //         model()->param(PS_LOCAL, *this, *patch, param);
-    //         model()->changed(PS_LOCAL, *this, *patch, param);
+    //         model()->param(PS_LOCAL, *this, *module, param);
+    //         model()->changed(PS_LOCAL, *this, *module, param);
     //     }
     //     for (auto p : pages) {
     //         if (p != nullptr) {
-    //             model()->page(PS_LOCAL, *this, *patch,  *p);
+    //             model()->page(PS_LOCAL, *this, *module,  *p);
     //         }
     //     }
     // }
 }
 
-void Device::publishMetaData() const {
-    for (auto p : patches_) {
+void Rack::publishMetaData() const {
+    for (auto p : modules_) {
         if (p.second != nullptr) publishMetaData(p.second);
     }
 }
 
 
-void Device::dumpPatchSettings() const {
-    LOG_1("Patch Settings Dump");
+void Rack::dumpModuleSettings() const {
+    LOG_1("Module Settings Dump");
     LOG_1("-------------------");
     LOG_1("Presets");
     for (auto preset : presets_) {

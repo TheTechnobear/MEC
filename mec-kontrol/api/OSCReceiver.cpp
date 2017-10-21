@@ -6,7 +6,7 @@
 #include <memory.h>
 #include <mec_log.h>
 
-#include"Device.h"
+#include"Rack.h"
 
 namespace Kontrol {
 
@@ -42,23 +42,23 @@ public:
             // std::cout << "recieved osc message: " << m.AddressPattern() << std::endl;
             if ( std::strcmp( m.AddressPattern(), "/Kontrol/changed" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                const char* deviceId = (arg++)->AsString();
-                const char* patchId = (arg++)->AsString();
+                const char* rackId = (arg++)->AsString();
+                const char* moduleId = (arg++)->AsString();
                 const char* paramId = (arg++)->AsString();
                 if ( arg != m.ArgumentsEnd() ) {
                     if (arg->IsString()) {
-                        receiver_.changeParam(PS_OSC, deviceId, patchId, paramId, ParamValue(std::string(arg->AsString())));
+                        receiver_.changeParam(PS_OSC, rackId, moduleId, paramId, ParamValue(std::string(arg->AsString())));
 
                     } else if (arg->IsFloat()) {
-                        receiver_.changeParam(PS_OSC, deviceId, patchId, paramId, ParamValue(arg->AsFloat()));
+                        receiver_.changeParam(PS_OSC, rackId, moduleId, paramId, ParamValue(arg->AsFloat()));
                     }
                 }
 
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/param" ) == 0 ) {
                 std::vector<ParamValue> params;
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                const char* deviceId = (arg++)->AsString();
-                const char* patchId = (arg++)->AsString();
+                const char* rackId = (arg++)->AsString();
+                const char* moduleId = (arg++)->AsString();
                 while ( arg != m.ArgumentsEnd() ) {
                     if (arg->IsString()) {
                         params.push_back(ParamValue(std::string(arg->AsString())));
@@ -69,12 +69,12 @@ public:
                     arg++;
                 }
 
-                receiver_.createParam(PS_OSC, deviceId, patchId, params);
+                receiver_.createParam(PS_OSC, rackId, moduleId, params);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/page" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "recieved page p1"<< std::endl;
-                const char* deviceId = (arg++)->AsString();
-                const char* patchId = (arg++)->AsString();
+                const char* rackId = (arg++)->AsString();
+                const char* moduleId = (arg++)->AsString();
                 const char* pageId = (arg++)->AsString();
 
                 const char* displayname = (arg++)->AsString();
@@ -85,24 +85,24 @@ public:
                 }
 
                 // std::cout << "recieved page " << id << std::endl;
-                receiver_.createPage(PS_OSC, deviceId, patchId, pageId, displayname, paramIds);
-            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/patch" ) == 0 ) {
+                receiver_.createPage(PS_OSC, rackId, moduleId, pageId, displayname, paramIds);
+            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/module" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "recieved page p1"<< std::endl;
-                const char* deviceId = (arg++)->AsString();
-                const char* patchId = (arg++)->AsString();
+                const char* rackId = (arg++)->AsString();
+                const char* moduleId = (arg++)->AsString();
 
-                // std::cout << "recieved patch " << patchId << std::endl;
-                receiver_.createPatch(PS_OSC, deviceId, patchId);
-            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/device" ) == 0 ) {
+                // std::cout << "recieved module " << moduleId << std::endl;
+                receiver_.createModule(PS_OSC, rackId, moduleId);
+            } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/rack" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "recieved page p1"<< std::endl;
-                const char* deviceId = (arg++)->AsString();
+                const char* rackId = (arg++)->AsString();
                 const char* host = (arg++)->AsString();
                 unsigned port = (arg++)->AsInt32();
 
-                // std::cout << "recieved patch " << patchId << std::endl;
-                receiver_.createDevice(PS_OSC, deviceId, host, port);
+                // std::cout << "recieved module " << moduleId << std::endl;
+                receiver_.createRack(PS_OSC, rackId, host, port);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/connect" ) == 0 ) {
                 osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
                 osc::int32 port;
@@ -110,7 +110,7 @@ public:
                 char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
                 remoteEndpoint.AddressAsString(buf);
 
-                receiver_.createDevice(PS_OSC, Device::createId(buf,port), buf, port);
+                receiver_.createRack(PS_OSC, Rack::createId(buf,port), buf, port);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/metaData" ) == 0 ) {
                 receiver_.publishMetaData();
             }
@@ -174,49 +174,49 @@ void OSCReceiver::poll() {
     }
 }
 
-void OSCReceiver::createDevice(
+void OSCReceiver::createRack(
     ParameterSource src,
-    const EntityId& deviceId,
+    const EntityId& rackId,
     const std::string& host, 
     unsigned port) const {
-    param_model_->createDevice(src, deviceId, host, port);
+    param_model_->createRack(src, rackId, host, port);
 }
 
-void OSCReceiver::createPatch(
+void OSCReceiver::createModule(
     ParameterSource src,
-    const EntityId& deviceId,
-    const EntityId& patchId
+    const EntityId& rackId,
+    const EntityId& moduleId
 ) const {
-    param_model_->createPatch(src, deviceId, patchId);
+    param_model_->createModule(src, rackId, moduleId);
 }
 
 
 void OSCReceiver::createParam(
     ParameterSource src,
-    const EntityId& deviceId,
-    const EntityId& patchId,
+    const EntityId& rackId,
+    const EntityId& moduleId,
     const std::vector<ParamValue>& args) const {
-    param_model_->createParam(src, deviceId, patchId, args);
+    param_model_->createParam(src, rackId, moduleId, args);
 }
 
 void OSCReceiver::changeParam(
     ParameterSource src,
-    const EntityId& deviceId,
-    const EntityId& patchId,
+    const EntityId& rackId,
+    const EntityId& moduleId,
     const EntityId& paramId,
     ParamValue f) const {
-    param_model_->changeParam(src, deviceId, patchId, paramId, f);
+    param_model_->changeParam(src, rackId, moduleId, paramId, f);
 }
 
 void OSCReceiver::createPage(
     ParameterSource src,
-    const EntityId& deviceId,
-    const EntityId& patchId,
+    const EntityId& rackId,
+    const EntityId& moduleId,
     const EntityId& pageId,
     const std::string& displayName,
     const std::vector<EntityId> paramIds
 ) const {
-    param_model_->createPage(src, deviceId, patchId, pageId, displayName, paramIds);
+    param_model_->createPage(src, rackId, moduleId, pageId, displayName, paramIds);
 }
 
 

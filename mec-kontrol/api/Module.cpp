@@ -1,4 +1,4 @@
-#include "Patch.h"
+#include "Module.h"
 
 #include "ParameterModel.h"
 
@@ -22,7 +22,7 @@ namespace Kontrol {
 
 #if 0
 
-std::string Patch::getParamId(const EntityId& pageId, unsigned paramNum) {
+std::string Module::getParamId(const EntityId& pageId, unsigned paramNum) {
     auto page = pages_[pageId];
     if (page != nullptr && paramNum < page->paramIds().size()) {
         return page->paramIds()[paramNum];
@@ -35,8 +35,8 @@ std::string Patch::getParamId(const EntityId& pageId, unsigned paramNum) {
 
 
 
-// Patch
-std::shared_ptr<Parameter> Patch::createParam(const std::vector<ParamValue>& args) {
+// Module
+std::shared_ptr<Parameter> Module::createParam(const std::vector<ParamValue>& args) {
     auto p = Parameter::create(args);
     if (p->valid()) {
         parameters_[p->id()] = p;
@@ -45,7 +45,7 @@ std::shared_ptr<Parameter> Patch::createParam(const std::vector<ParamValue>& arg
     return nullptr;
 }
 
-bool Patch::changeParam(const EntityId& paramId, const ParamValue& value) {
+bool Module::changeParam(const EntityId& paramId, const ParamValue& value) {
     auto p = parameters_[paramId];
     if (p != nullptr) {
         if (p->change(value)) {
@@ -56,12 +56,12 @@ bool Patch::changeParam(const EntityId& paramId, const ParamValue& value) {
 }
 
 
-std::shared_ptr<Page> Patch::createPage(
+std::shared_ptr<Page> Module::createPage(
     const EntityId& pageId,
     const std::string& displayName,
     const std::vector<EntityId> paramIds
 ) {
-    // std::cout << "Patch::addPage " << id << std::endl;
+    // std::cout << "Module::addPage " << id << std::endl;
     auto p = std::make_shared<Page>(pageId, displayName, paramIds);
     pages_[pageId] = p;
     pageIds_.push_back(pageId);
@@ -69,15 +69,15 @@ std::shared_ptr<Page> Patch::createPage(
 }
 
 // access functions
-std::shared_ptr<Page> Patch::getPage(const EntityId& pageId) {
+std::shared_ptr<Page> Module::getPage(const EntityId& pageId) {
     return pages_[pageId];
 }
 
-std::shared_ptr<Parameter>  Patch::getParam(const EntityId& paramId) {
+std::shared_ptr<Parameter>  Module::getParam(const EntityId& paramId) {
     return parameters_[paramId];
 }
 
-std::vector<std::shared_ptr<Page>> Patch::getPages() {
+std::vector<std::shared_ptr<Page>> Module::getPages() {
     std::vector<std::shared_ptr<Page>> ret;
     for (auto p : pageIds_) {
         auto page = pages_[p];
@@ -86,7 +86,7 @@ std::vector<std::shared_ptr<Page>> Patch::getPages() {
     return ret;
 }
 
-std::vector<std::shared_ptr<Parameter>> Patch::getParams() {
+std::vector<std::shared_ptr<Parameter>> Module::getParams() {
     std::vector<std::shared_ptr<Parameter>> ret;
     for (auto p : parameters_) {
         if (p.second != nullptr) ret.push_back(p.second);
@@ -94,7 +94,7 @@ std::vector<std::shared_ptr<Parameter>> Patch::getParams() {
     return ret;
 }
 
-std::vector<std::shared_ptr<Parameter>> Patch::getParams(const std::shared_ptr<Page>& page) {
+std::vector<std::shared_ptr<Parameter>> Module::getParams(const std::shared_ptr<Page>& page) {
     std::vector<std::shared_ptr<Parameter>> ret;
     if (page != nullptr) {
         for (auto pid : page->paramIds()) {
@@ -107,15 +107,15 @@ std::vector<std::shared_ptr<Parameter>> Patch::getParams(const std::shared_ptr<P
 
 
 
-bool Patch::loadParameterDefinitions(const mec::Preferences& prefs) {
+bool Module::loadParameterDefinitions(const mec::Preferences& prefs) {
     if (!prefs.valid()) return false;
 
-    mec::Preferences patch(prefs.getSubTree("patch"));
-    if (!patch.valid()) return false;
+    mec::Preferences module(prefs.getSubTree("module"));
+    if (!module.valid()) return false;
 
-    if (patch.exists("parameters")) {
+    if (module.exists("parameters")) {
         // load parameters
-        mec::Preferences::Array params(patch.getArray("parameters"));
+        mec::Preferences::Array params(module.getArray("parameters"));
         if (!params.valid()) return false;
         for (int i = 0; i < params.getSize(); i++) {
 
@@ -142,9 +142,9 @@ bool Patch::loadParameterDefinitions(const mec::Preferences& prefs) {
         }
     }
 
-    if (patch.exists("pages")) {
+    if (module.exists("pages")) {
         // load pages
-        mec::Preferences::Array pages(patch.getArray("pages"));
+        mec::Preferences::Array pages(module.getArray("pages"));
 
         if (!pages.valid()) return false;
         for (int i = 0; i < pages.getSize(); i++) {
@@ -168,7 +168,7 @@ bool Patch::loadParameterDefinitions(const mec::Preferences& prefs) {
 }
 
 
-void Patch::dumpParameters() {
+void Module::dumpParameters() {
     const char* IND = "    ";
     // print by page , this will miss anything not on a page, but gives a clear way of setting things
     LOG_1("Parameter Dump");
@@ -201,7 +201,7 @@ void Patch::dumpParameters() {
     }
 }
 
-void Patch::dumpCurrentValues() {
+void Module::dumpCurrentValues() {
     const char* IND = "    ";
     // print by page , this will miss anything not on a page, but gives a clear way of setting things
     LOG_1("Current Values Dump");

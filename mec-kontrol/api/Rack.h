@@ -11,7 +11,7 @@
 
 namespace Kontrol {
 
-class Patch;
+class Module;
 class ParameterModel;
 
 
@@ -25,9 +25,9 @@ private:
     ParamValue value_;
 };
 
-class Device : public Entity {
+class Rack : public Entity {
 public:
-    Device( const std::string& host,
+    Rack( const std::string& host,
             unsigned port,
             const std::string& displayName)
         : Entity(createId(host, port), displayName) {
@@ -38,19 +38,19 @@ public:
         return (host + ":" + std::to_string(port));
     }
 
-    std::vector<std::shared_ptr<Patch>>  getPatches();
-    std::shared_ptr<Patch> getPatch(const EntityId& patchId);
-    void addPatch(const std::shared_ptr<Patch>& patch);
+    std::vector<std::shared_ptr<Module>>  getModules();
+    std::shared_ptr<Module> getModule(const EntityId& moduleId);
+    void addModule(const std::shared_ptr<Module>& module);
 
 
-    bool loadParameterDefinitions(const EntityId& patchId, const std::string& filename);
-    bool loadParameterDefinitions(const EntityId& patchId, const mec::Preferences& prefs);
+    bool loadParameterDefinitions(const EntityId& moduleId, const std::string& filename);
+    bool loadParameterDefinitions(const EntityId& moduleId, const mec::Preferences& prefs);
 
-    bool loadPatchSettings(const std::string& filename);
-    bool loadPatchSettings(const mec::Preferences& prefs);
+    bool loadModuleSettings(const std::string& filename);
+    bool loadModuleSettings(const mec::Preferences& prefs);
 
-    bool savePatchSettings();
-    bool savePatchSettings(const std::string& filename);
+    bool saveModuleSettings();
+    bool saveModuleSettings(const std::string& filename);
 
     bool applyPreset(std::string presetId);
     bool savePreset(std::string presetId);
@@ -59,25 +59,25 @@ public:
     std::vector<std::string> getPresetList();
 
     bool changeMidiCC(unsigned midiCC, unsigned midiValue);
-    void addMidiCCMapping(unsigned ccnum, const EntityId& patchId, const EntityId& paramId);
+    void addMidiCCMapping(unsigned ccnum, const EntityId& moduleId, const EntityId& paramId);
 
     static std::shared_ptr<ParameterModel> model();
 
-    void publishMetaData(const std::shared_ptr<Patch>& patch) const;
+    void publishMetaData(const std::shared_ptr<Module>& module) const;
     void publishMetaData() const;
 
-    void dumpPatchSettings() const;
+    void dumpModuleSettings() const;
 
     std::string host() const { return host_;}
     unsigned port() const { return port_;}
 private:
     std::string host_;
     unsigned port_;
-    std::unordered_map<EntityId, std::shared_ptr<Patch>> patches_;
+    std::unordered_map<EntityId, std::shared_ptr<Module>> modules_;
 
-    std::string patchSettingsFile_;
+    std::string moduleSettingsFile_;
     std::string currentPreset_;
-    std::shared_ptr<mec::Preferences> patchSettings_;
+    std::shared_ptr<mec::Preferences> moduleSettings_;
 
     std::unordered_map<unsigned, std::string> midi_mapping_; // key CC id, value = paramId
     std::unordered_map<std::string, std::vector<Preset>> presets_; // key = presetid

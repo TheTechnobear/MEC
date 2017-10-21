@@ -47,10 +47,6 @@ protected:
     std::string displayName_;
 };
 
-class Patch;
-
-class Device;
-
 class Page : public Entity {
 public:
     Page(

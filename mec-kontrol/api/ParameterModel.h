@@ -5,7 +5,8 @@
 #include <memory>
 
 #include "Entity.h"
-#include "Patch.h"
+#include "Rack.h"
+#include "Module.h"
 #include "Parameter.h"
 
 namespace Kontrol {
@@ -22,11 +23,11 @@ public:
     }
     virtual void stop() { ; }
 
-    virtual void device(ParameterSource, const Device&) = 0;
-    virtual void patch(ParameterSource, const Device&, const Patch&) = 0;
-    virtual void page(ParameterSource src, const Device&, const Patch&, const Page&) = 0 ;
-    virtual void param(ParameterSource src, const Device&, const Patch&, const Parameter&) = 0;
-    virtual void changed(ParameterSource src, const Device&, const Patch&, const Parameter&) = 0;
+    virtual void rack(ParameterSource, const Rack&) = 0;
+    virtual void module(ParameterSource, const Rack&, const Module&) = 0;
+    virtual void page(ParameterSource src, const Rack&, const Module&, const Page&) = 0 ;
+    virtual void param(ParameterSource src, const Rack&, const Module&, const Parameter&) = 0;
+    virtual void changed(ParameterSource src, const Rack&, const Module&, const Parameter&) = 0;
 };
 
 
@@ -46,42 +47,42 @@ public:
 
 
 	// access
-	std::shared_ptr<Device> 		getLocalDevice() const;
-	std::shared_ptr<Device> 		getDevice(const EntityId& deviceId) const;
-	std::shared_ptr<Patch>  		getPatch(const std::shared_ptr<Device>&, const EntityId& patchId) const;
-	std::shared_ptr<Page>     		getPage(const std::shared_ptr<Patch>&, const EntityId& pageId) const;
-	std::shared_ptr<Parameter>  	getParam(const std::shared_ptr<Patch>&, const EntityId& paramId) const;
+	std::shared_ptr<Rack> 		getLocalRack() const;
+	std::shared_ptr<Rack> 		getRack(const EntityId& rackId) const;
+	std::shared_ptr<Module>  		getModule(const std::shared_ptr<Rack>&, const EntityId& moduleId) const;
+	std::shared_ptr<Page>     		getPage(const std::shared_ptr<Module>&, const EntityId& pageId) const;
+	std::shared_ptr<Parameter>  	getParam(const std::shared_ptr<Module>&, const EntityId& paramId) const;
 
-	std::vector<std::shared_ptr<Device>> 	getDevices() const;
-	std::vector<std::shared_ptr<Patch>>  	getPatches(const std::shared_ptr<Device>&) const;
-	std::vector<std::shared_ptr<Page>> 		getPages(const std::shared_ptr<Patch>&) const;
-	std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Patch>&) const;
-	std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Patch>&, const std::shared_ptr<Page>&) const;
+	std::vector<std::shared_ptr<Rack>> 	getRacks() const;
+	std::vector<std::shared_ptr<Module>>  	getModules(const std::shared_ptr<Rack>&) const;
+	std::vector<std::shared_ptr<Page>> 		getPages(const std::shared_ptr<Module>&) const;
+	std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Module>&) const;
+	std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Module>&, const std::shared_ptr<Page>&) const;
 
 
-    void createDevice(
+    void createRack(
         ParameterSource src,
-    	const EntityId& deviceId, 
+    	const EntityId& rackId, 
     	const std::string& host, 
     	unsigned port) ;
 
-    void createPatch(
+    void createModule(
         ParameterSource src, 
-        const EntityId& deviceId,
-        const EntityId& patchId
+        const EntityId& rackId,
+        const EntityId& moduleId
     ) const;
 
     void createParam(
         ParameterSource src, 
-        const EntityId& deviceId,
-        const EntityId& patchId,
+        const EntityId& rackId,
+        const EntityId& moduleId,
         const std::vector<ParamValue>& args
     ) const;
 
     void createPage(
         ParameterSource src,
-        const EntityId& deviceId,
-        const EntityId& patchId,
+        const EntityId& rackId,
+        const EntityId& moduleId,
         const EntityId& pageId,
         const std::string& displayName,
         const std::vector<EntityId> paramIds
@@ -89,22 +90,22 @@ public:
 
     void changeParam(
         ParameterSource src, 
-        const EntityId& deviceId,
-        const EntityId& patchId,
+        const EntityId& rackId,
+        const EntityId& moduleId,
         const EntityId& paramId, 
         ParamValue v) const;
 
 
-    bool loadParameterDefinitions(const EntityId& deviceId, const EntityId& patchId, const std::string& filename);
-    bool loadParameterDefinitions(const EntityId& deviceId, const EntityId& patchId, const mec::Preferences& prefs);
+    bool loadParameterDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename);
+    bool loadParameterDefinitions(const EntityId& rackId, const EntityId& moduleId, const mec::Preferences& prefs);
 
 private:    
-    void publishMetaData(const std::shared_ptr<Device>& device) const;
-    void publishMetaData(const std::shared_ptr<Device>& device, const std::shared_ptr<Patch>& patch);
+    void publishMetaData(const std::shared_ptr<Rack>& rack) const;
+    void publishMetaData(const std::shared_ptr<Rack>& rack, const std::shared_ptr<Module>& module);
 
 	ParameterModel();
-	std::shared_ptr<Device>  localDevice_;
-	std::unordered_map<EntityId, std::shared_ptr<Device>> devices_;
+	std::shared_ptr<Rack>  localRack_;
+	std::unordered_map<EntityId, std::shared_ptr<Rack>> racks_;
 	std::unordered_map<std::string, std::shared_ptr<ParameterCallback> > listeners_; // key = source : host:ip
 };
 

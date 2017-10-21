@@ -27,9 +27,9 @@ enum ParameterSource {
 class ParameterModel;
 
 
-class Patch : public Entity {
+class Module : public Entity {
 public:
-    Patch(const std::string& id, const std::string& displayName)
+    Module(const std::string& id, const std::string& displayName)
         : Entity(id, displayName) {
         ;
     }
@@ -60,7 +60,7 @@ public:
 
     void dumpParameters();
     void dumpCurrentValues();
-    void dumpPatchSettings();
+    void dumpModuleSettings();
 
 
 private:

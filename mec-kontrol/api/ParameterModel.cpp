@@ -1,7 +1,5 @@
 #include "ParameterModel.h"
 
-#include "Device.h"
-
 namespace Kontrol {
 
 
@@ -21,75 +19,75 @@ ParameterModel::ParameterModel() {
 }
 
 void ParameterModel::publishMetaData() const {
-    publishMetaData(localDevice_);
+    publishMetaData(localRack_);
 }
 
-void ParameterModel::publishMetaData(const std::shared_ptr<Device>& device) const {
-    std::vector<std::shared_ptr<Patch>> patches = getPatches(device);
-    for (auto p : patches) {
-        if (p != nullptr) publishMetaData(device);
+void ParameterModel::publishMetaData(const std::shared_ptr<Rack>& rack) const {
+    std::vector<std::shared_ptr<Module>> modules = getModules(rack);
+    for (auto p : modules) {
+        if (p != nullptr) publishMetaData(rack);
     }
 }
 
 
 //access
-std::shared_ptr<Device> ParameterModel::getLocalDevice() const {
-    return localDevice_;
+std::shared_ptr<Rack> ParameterModel::getLocalRack() const {
+    return localRack_;
 }
 
-std::shared_ptr<Device>  ParameterModel::getDevice(const EntityId& deviceId) const {
+std::shared_ptr<Rack>  ParameterModel::getRack(const EntityId& rackId) const {
     try {
-        return devices_.at(deviceId);
+        return racks_.at(rackId);
     } catch (const std::out_of_range&) {
         return nullptr;
     }
 }
 
-std::shared_ptr<Patch> ParameterModel::getPatch(const std::shared_ptr<Device>& device, const EntityId& patchId) const {
-    if (device != nullptr) return device->getPatch(patchId);
+std::shared_ptr<Module> ParameterModel::getModule(const std::shared_ptr<Rack>& rack, const EntityId& moduleId) const {
+    if (rack != nullptr) return rack->getModule(moduleId);
     return nullptr;
 }
 
-std::shared_ptr<Page>  ParameterModel::getPage(const std::shared_ptr<Patch>& patch, const EntityId& pageId) const {
-    if (patch != nullptr) return patch->getPage(pageId);
+std::shared_ptr<Page>  ParameterModel::getPage(const std::shared_ptr<Module>& module, const EntityId& pageId) const {
+    if (module != nullptr) return module->getPage(pageId);
     return nullptr;
 }
 
-std::shared_ptr<Parameter>  ParameterModel::getParam(const std::shared_ptr<Patch>& patch, const EntityId& paramId) const {
-    if (patch != nullptr) return patch->getParam(paramId);
+std::shared_ptr<Parameter>  ParameterModel::getParam(const std::shared_ptr<Module>& module, const EntityId& paramId) const {
+    if (module != nullptr) return module->getParam(paramId);
     return nullptr;
 }
 
 
-std::vector<std::shared_ptr<Device>>    ParameterModel::getDevices() const {
-    std::vector<std::shared_ptr<Device>> ret;
-    for (auto p : devices_) {
+std::vector<std::shared_ptr<Rack>>    ParameterModel::getRacks() const {
+    std::vector<std::shared_ptr<Rack>> ret;
+    for (auto p : racks_) {
         if (p.second != nullptr) ret.push_back(p.second);
     }
     return ret;
 }
 
-std::vector<std::shared_ptr<Patch>>     ParameterModel::getPatches(const std::shared_ptr<Device>& device) const {
-    std::vector<std::shared_ptr<Patch>> ret;
-    if (device != nullptr) ret = device->getPatches();
+std::vector<std::shared_ptr<Module>>     ParameterModel::getModules(const std::shared_ptr<Rack>& rack) const {
+    std::vector<std::shared_ptr<Module>> ret;
+    if (rack != nullptr) ret = rack->getModules();
     return ret;
 }
 
-std::vector<std::shared_ptr<Page>>      ParameterModel::getPages(const std::shared_ptr<Patch>& patch) const {
+std::vector<std::shared_ptr<Page>>      ParameterModel::getPages(const std::shared_ptr<Module>& module) const {
     std::vector<std::shared_ptr<Page>> ret;
-    if (patch != nullptr) ret = patch->getPages();
+    if (module != nullptr) ret = module->getPages();
     return ret;
 }
 
-std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::shared_ptr<Patch>& patch) const {
+std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::shared_ptr<Module>& module) const {
     std::vector<std::shared_ptr<Parameter>> ret;
-    if (patch != nullptr) ret = patch->getParams();
+    if (module != nullptr) ret = module->getParams();
     return ret;
 }
 
-std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::shared_ptr<Patch>& patch, const std::shared_ptr<Page>& page) const {
+std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::shared_ptr<Module>& module, const std::shared_ptr<Page>& page) const {
     std::vector<std::shared_ptr<Parameter>> ret;
-    if (patch != nullptr && page != nullptr) ret = patch->getParams(page);
+    if (module != nullptr && page != nullptr) ret = module->getParams(page);
     return ret;
 }
 
@@ -125,107 +123,107 @@ void ParameterModel::addCallback(const std::string& id, std::shared_ptr<Paramete
 }
 
 
-void ParameterModel::createDevice(
+void ParameterModel::createRack(
     ParameterSource src,
-    const EntityId& deviceId,
+    const EntityId& rackId,
     const std::string& host,
     unsigned port
 ) {
     std::string desc = host;
-    auto device = std::make_shared<Device>(host, port, desc);
-    devices_[device->id()] = device;
+    auto rack = std::make_shared<Rack>(host, port, desc);
+    racks_[rack->id()] = rack;
 
     for ( auto i : listeners_) {
-        (i.second)->device(src, *device);
+        (i.second)->rack(src, *rack);
     }
 }
 
-void ParameterModel::createPatch(
+void ParameterModel::createModule(
     ParameterSource src,
-    const EntityId& deviceId,
-    const EntityId& patchId
+    const EntityId& rackId,
+    const EntityId& moduleId
 ) const {
 
-    auto device = getDevice(deviceId);
+    auto rack = getRack(rackId);
 
-    if (device == nullptr) return;
+    if (rack == nullptr) return;
 
-    auto patch = std::make_shared<Patch>(patchId, patchId);
-    device->addPatch(patch);
+    auto module = std::make_shared<Module>(moduleId, moduleId);
+    rack->addModule(module);
 
     for ( auto i : listeners_) {
-        (i.second)->patch(src, *device, *patch);
+        (i.second)->module(src, *rack, *module);
     }
 }
 
 void ParameterModel::createPage(
     ParameterSource src,
-    const EntityId& deviceId,
-    const EntityId& patchId,
+    const EntityId& rackId,
+    const EntityId& moduleId,
     const EntityId& pageId,
     const std::string& displayName,
     const std::vector<EntityId> paramIds
 ) const {
-    auto device = getDevice(deviceId);
-    auto patch = getPatch(device, patchId);
-    if (patch == nullptr) return;
+    auto rack = getRack(rackId);
+    auto module = getModule(rack, moduleId);
+    if (module == nullptr) return;
 
-    auto page = patch->createPage(pageId, displayName, paramIds);
+    auto page = module->createPage(pageId, displayName, paramIds);
     if (page != nullptr) {
         for ( auto i : listeners_) {
-            (i.second)->page(src, *device, *patch, *page);
+            (i.second)->page(src, *rack, *module, *page);
         }
     }
 }
 
 void ParameterModel::createParam(
     ParameterSource src,
-    const EntityId& deviceId,
-    const EntityId& patchId,
+    const EntityId& rackId,
+    const EntityId& moduleId,
     const std::vector<ParamValue>& args
 ) const {
-    auto device = getDevice(deviceId);
-    auto patch = getPatch(device, patchId);
-    if (patch == nullptr) return;
+    auto rack = getRack(rackId);
+    auto module = getModule(rack, moduleId);
+    if (module == nullptr) return;
 
-    auto param = patch->createParam(args);
+    auto param = module->createParam(args);
     if (param != nullptr) {
         for ( auto i : listeners_) {
-            (i.second)->param(src, *device, *patch, *param);
+            (i.second)->param(src, *rack, *module, *param);
         }
     }
 }
 
 void ParameterModel::changeParam(
     ParameterSource src,
-    const EntityId& deviceId,
-    const EntityId& patchId,
+    const EntityId& rackId,
+    const EntityId& moduleId,
     const EntityId& paramId,
     ParamValue v) const {
-    auto device = getDevice(deviceId);
-    auto patch = getPatch(device, patchId);
-    auto param = getParam(patch, paramId);
+    auto rack = getRack(rackId);
+    auto module = getModule(rack, moduleId);
+    auto param = getParam(module, paramId);
     if (param == nullptr) return;
 
-    if (patch->changeParam(paramId, v)) {
+    if (module->changeParam(paramId, v)) {
         for ( auto i : listeners_) {
-            (i.second)->changed(src, *device, *patch, *param);
+            (i.second)->changed(src, *rack, *module, *param);
         }
     }
 }
 
 
 
-bool ParameterModel::loadParameterDefinitions(const EntityId& deviceId, const EntityId& patchId, const std::string& filename) {
-    auto device = getDevice(deviceId);
-    if (device == nullptr) return false;
-    return device->loadParameterDefinitions(patchId, filename);
+bool ParameterModel::loadParameterDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename) {
+    auto rack = getRack(rackId);
+    if (rack == nullptr) return false;
+    return rack->loadParameterDefinitions(moduleId, filename);
 }
 
-bool ParameterModel::loadParameterDefinitions(const EntityId& deviceId, const EntityId& patchId, const mec::Preferences& prefs) {
-    auto device = getDevice(deviceId);
-    if (device == nullptr) return false;
-    return device->loadParameterDefinitions(patchId, prefs);
+bool ParameterModel::loadParameterDefinitions(const EntityId& rackId, const EntityId& moduleId, const mec::Preferences& prefs) {
+    auto rack = getRack(rackId);
+    if (rack == nullptr) return false;
+    return rack->loadParameterDefinitions(moduleId, prefs);
 }
 
 

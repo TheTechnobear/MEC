@@ -67,30 +67,30 @@ public:
     
     void stop();
 
-    void createDevice(
+    void createRack(
         ParameterSource src, 
-        const EntityId& deviceId, 
+        const EntityId& rackId, 
         const std::string& host, 
         unsigned port
     ) const;
 
-    void createPatch(
+    void createModule(
         ParameterSource src, 
-        const EntityId& deviceId,
-        const EntityId& patchId
+        const EntityId& rackId,
+        const EntityId& moduleId
     ) const;
 
     void createParam(
         ParameterSource src, 
-        const EntityId& deviceId,
-        const EntityId& patchId,
+        const EntityId& rackId,
+        const EntityId& moduleId,
         const std::vector<ParamValue>& args
     ) const;
 
     void createPage(
         ParameterSource src,
-        const EntityId& deviceId,
-        const EntityId& patchId,
+        const EntityId& rackId,
+        const EntityId& moduleId,
         const EntityId& pageId,
         const std::string& displayName,
         const std::vector<EntityId> paramIds
@@ -98,8 +98,8 @@ public:
 
     void changeParam(
         ParameterSource src, 
-        const EntityId& deviceId,
-        const EntityId& patchId,
+        const EntityId& rackId,
+        const EntityId& moduleId,
         const EntityId& paramId, 
         ParamValue v) const;
 

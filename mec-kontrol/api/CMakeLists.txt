@@ -4,8 +4,8 @@ project (mec-kontrol-api)
 
 set(KONTROL_API_SRC 
     Entity.cpp
-    Device.cpp
-    Patch.cpp
+    Rack.cpp
+    Module.cpp
     Parameter.cpp 
     ParamValue.cpp 
     ParameterModel.cpp

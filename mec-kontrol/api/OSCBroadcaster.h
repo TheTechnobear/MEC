@@ -21,11 +21,11 @@ public:
     void requestConnect(unsigned port);
 
     // ParameterCallback
-    virtual void device(ParameterSource, const Device&);
-    virtual void patch(ParameterSource, const Device& device, const Patch&);
-    virtual void page(ParameterSource src, const Device& device, const Patch& patch, const Page& p);
-    virtual void param(ParameterSource src, const Device& device, const Patch& patch, const Parameter&);
-    virtual void changed(ParameterSource src, const Device& device, const Patch& patch, const Parameter& p);
+    virtual void rack(ParameterSource, const Rack&);
+    virtual void module(ParameterSource, const Rack& rack, const Module&);
+    virtual void page(ParameterSource src, const Rack& rack, const Module& module, const Page& p);
+    virtual void param(ParameterSource src, const Rack& rack, const Module& module, const Parameter&);
+    virtual void changed(ParameterSource src, const Rack& rack, const Module& module, const Parameter& p);
 private:
     unsigned int port_;
     std::shared_ptr<UdpTransmitSocket> socket_;
