@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ParameterModel.h"
+#include "KontrolModel.h"
 #include <memory>
 
 #include <ip/UdpSocket.h>
@@ -60,7 +60,7 @@ struct OscMsg {
 
 class OSCReceiver {
 public:
-    OSCReceiver(const std::shared_ptr<ParameterModel>& param);
+    OSCReceiver(const std::shared_ptr<KontrolModel>& param);
     ~OSCReceiver();
     bool listen(unsigned port = 9000);
     void poll();
@@ -108,7 +108,7 @@ public:
     std::shared_ptr<UdpListeningReceiveSocket> socket() { return socket_;}
 private:
 
-    std::shared_ptr<ParameterModel> param_model_;
+    std::shared_ptr<KontrolModel> model_;
     unsigned int port_;
     thread_t receive_thread_;
     std::shared_ptr<UdpListeningReceiveSocket> socket_;

@@ -1,6 +1,5 @@
 #include "Module.h"
 
-#include "ParameterModel.h"
 
 #include <algorithm>
 #include <limits>
@@ -30,10 +29,6 @@ std::string Module::getParamId(const EntityId& pageId, unsigned paramNum) {
     return std::string("");
 }
 #endif
-
-
-
-
 
 // Module
 std::shared_ptr<Parameter> Module::createParam(const std::vector<ParamValue>& args) {
@@ -107,10 +102,7 @@ std::vector<std::shared_ptr<Parameter>> Module::getParams(const std::shared_ptr<
 
 
 
-bool Module::loadParameterDefinitions(const mec::Preferences& prefs) {
-    if (!prefs.valid()) return false;
-
-    mec::Preferences module(prefs.getSubTree("module"));
+bool Module::loadModuleDefinitions(const mec::Preferences& module) {
     if (!module.valid()) return false;
 
     if (module.exists("parameters")) {

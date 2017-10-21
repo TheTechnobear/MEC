@@ -8,7 +8,7 @@ set(KONTROL_API_SRC
     Module.cpp
     Parameter.cpp 
     ParamValue.cpp 
-    ParameterModel.cpp
+    KontrolModel.cpp
     OSCReceiver.cpp 
     OSCBroadcaster.cpp )
 

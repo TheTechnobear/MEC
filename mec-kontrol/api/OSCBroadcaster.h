@@ -1,13 +1,14 @@
 #pragma once
 
-#include "ParameterModel.h"
+#include "KontrolModel.h"
+
 
 #include <memory>
 #include <ip/UdpSocket.h>
 
 namespace Kontrol {
 
-class OSCBroadcaster : public ParameterCallback {
+class OSCBroadcaster : public KontrolCallback {
 public:
     static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
     static const std::string ADDRESS;
@@ -20,7 +21,7 @@ public:
     void requestMetaData();
     void requestConnect(unsigned port);
 
-    // ParameterCallback
+    // KontrolCallback
     virtual void rack(ParameterSource, const Rack&);
     virtual void module(ParameterSource, const Rack& rack, const Module&);
     virtual void page(ParameterSource src, const Rack& rack, const Module& module, const Page& p);

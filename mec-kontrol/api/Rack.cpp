@@ -1,6 +1,6 @@
 #include "Rack.h"
 #include "Module.h"
-#include "ParameterModel.h"
+#include "KontrolModel.h"
 
 
 
@@ -12,6 +12,11 @@
 #include <fstream>
 
 
+// TODO 
+// preset, need to be stored per module
+// midi cc... potentially mapped to muliple modules and multi parameters  e.g. cc73 : (module1 : t_mix, r_mix , module2:o_transpose)
+// both these imply a certain json tree stucture, the current implmentatin below wont work ;) 
+
 // for saving presets only , later moved to Preferences
 #include <cJSON.h>
 #include <mec_log.h>
@@ -20,8 +25,8 @@
 namespace Kontrol {
 
 
-inline std::shared_ptr<ParameterModel> Rack::model() {
-    return ParameterModel::model();
+inline std::shared_ptr<KontrolModel> Rack::model() {
+    return KontrolModel::model();
 }
 
 void Rack::addModule(const std::shared_ptr<Module>& module) {
@@ -42,16 +47,11 @@ std::shared_ptr<Module> Rack::getModule(const EntityId& moduleId) {
     return modules_[moduleId];
 }
 
-bool Rack::loadParameterDefinitions(const EntityId& moduleId, const std::string& filename) {
-    paramDefinitions_ = std::make_shared<mec::Preferences>(filename);
-    return loadParameterDefinitions(moduleId, *paramDefinitions_);
-}
 
-
-bool Rack::loadParameterDefinitions(const EntityId& moduleId, const mec::Preferences& prefs) {
+bool Rack::loadModuleDefinitions(const EntityId& moduleId, const mec::Preferences& prefs) {
     auto module  = getModule(moduleId);
     if (module != nullptr) {
-        if (module->loadParameterDefinitions(prefs)) {
+        if (module->loadModuleDefinitions(prefs)) {
             publishMetaData(module);
             return true;
         }
@@ -62,91 +62,96 @@ bool Rack::loadParameterDefinitions(const EntityId& moduleId, const mec::Prefere
 
 bool Rack::applyPreset(std::string presetId) {
     bool ret = false;
-    EntityId moduleId; // TODO
-    auto module = getModule(moduleId);
-    if (module != nullptr) {
-        currentPreset_ = presetId;
-        auto presetvalues = presets_[presetId];
-        for (auto presetvalue : presetvalues) {
+    currentPreset_ = presetId;
+    auto presetvalues = presets_[presetId];
+    for (auto presetvalue : presetvalues) {
+        auto module = getModule(presetvalue.moduleId());
+        if (module != nullptr) {
             auto param = module->getParam(presetvalue.paramId());
             if (param != nullptr) {
                 if (presetvalue.value().type() == ParamValue::T_Float) {
                     if (presetvalue.value() != param->current()) {
-                        model()->changeParam(PS_PRESET, id(), moduleId, presetvalue.paramId(), presetvalue.value());
+                        model()->changeParam(PS_PRESET, id(), presetvalue.moduleId(), presetvalue.paramId(), presetvalue.value());
                         ret = true;
-                    }
-                }
-            }
-        }
-    }
+                    } //if chg
+                } //iffloat
+            } // ifpara
+        } // ifmod
+    }// presets
     return ret;
 }
 
 bool Rack::changeMidiCC(unsigned midiCC, unsigned midiValue) {
-    EntityId moduleId; //TODO
-    auto module = getModule(moduleId);
+    auto mm = midi_mapping_[midiCC];
+    if (mm == nullptr) return false;
+
+    auto module = getModule(mm->moduleId());
     if (module != nullptr) {
-        auto paramId = midi_mapping_[midiCC];
-        if (!paramId.empty()) {
-            auto param = module->getParam(paramId);
-            if (param != nullptr) {
-                ParamValue pv = param->calcMidi(midiValue);
-                if (pv != param->current()) {
-                    model()->changeParam(PS_MIDI, id(), moduleId, paramId, pv);
-                    return true;
-                }
+        auto param = module->getParam(mm->paramId());
+        if (param != nullptr) {
+            ParamValue pv = param->calcMidi(midiValue);
+            if (pv != param->current()) {
+                model()->changeParam(PS_MIDI, id(), module->id(), param->id(), pv);
+                return true;
             }
         }
     }
-
     return false;
 }
 
 
-bool Rack::loadModuleSettings(const std::string& filename) {
-    moduleSettings_ = std::make_shared<mec::Preferences>(filename);
-    moduleSettingsFile_ = filename;
-    return loadModuleSettings(*moduleSettings_);
+bool Rack::loadRackSettings(const std::string& filename) {
+    rackSettings_ = std::make_shared<mec::Preferences>(filename);
+    rackSettingsFile_ = filename;
+    return loadRackSettings(*rackSettings_);
 }
 
 
-bool Rack::loadModuleSettings(const mec::Preferences& prefs) {
+bool Rack::loadRackSettings(const mec::Preferences& prefs) {
     mec::Preferences presets(prefs.getSubTree("presets"));
     if (presets.valid()) { // just ignore if not present
 
         for (std::string presetId : presets.getKeys()) {
 
-            mec::Preferences params(presets.getSubTree(presetId));
-            std::vector<Preset> preset;
+            mec::Preferences modules(presets.getSubTree(presetId));
+            for (EntityId moduleId : modules.getKeys() ) {
+                mec::Preferences params(presets.getSubTree(moduleId));
 
-            for (EntityId paramID : params.getKeys()) {
-                mec::Preferences::Type t = params.getType(paramID);
-                switch (t) {
-                case mec::Preferences::P_BOOL:   preset.push_back(Preset(paramID, ParamValue(params.getBool(paramID) ? 1.0f : 0.0f ))); break;
-                case mec::Preferences::P_NUMBER: preset.push_back(Preset(paramID, ParamValue((float) params.getDouble(paramID)))); break;
-                case mec::Preferences::P_STRING: preset.push_back(Preset(paramID, ParamValue(params.getString(paramID)))); break;
-                //ignore
-                case mec::Preferences::P_NULL:
-                case mec::Preferences::P_ARRAY:
-                case mec::Preferences::P_OBJECT:
-                default:
-                    break;
-                }
-            } //for param
-            presets_[presetId] = preset;
-        }
+                std::vector<Preset> preset;
+
+                for (EntityId paramId : params.getKeys()) {
+                    mec::Preferences::Type t = params.getType(paramId);
+                    switch (t) {
+                    case mec::Preferences::P_BOOL:   preset.push_back(Preset(moduleId, paramId, ParamValue(params.getBool(paramId) ? 1.0f : 0.0f ))); break;
+                    case mec::Preferences::P_NUMBER: preset.push_back(Preset(moduleId, paramId, ParamValue((float) params.getDouble(paramId)))); break;
+                    case mec::Preferences::P_STRING: preset.push_back(Preset(moduleId, paramId, ParamValue(params.getString(paramId)))); break;
+                    //ignore
+                    case mec::Preferences::P_NULL:
+                    case mec::Preferences::P_ARRAY:
+                    case mec::Preferences::P_OBJECT:
+                    default:
+                        break;
+                    }
+                } //for param
+                presets_[presetId] = preset;
+            } // module
+        } // preset
     }
 
     mec::Preferences midimapping(prefs.getSubTree("midi-mapping"));
     if (midimapping.valid()) { // just ignore if not present
-        mec::Preferences cc(midimapping.getSubTree("cc"));
-        // only currently handling CC midi learn
-        if (cc.valid()) {
-            for (std::string ccstr : cc.getKeys()) {
-                unsigned ccnum = std::stoi(ccstr);
-                EntityId moduleId; // TODO
-                EntityId paramId = cc.getString(ccstr);
-                addMidiCCMapping(ccnum, moduleId, paramId);
+        for (EntityId moduleId : midimapping.getKeys()) {
+            mec::Preferences module(midimapping.getSubTree(moduleId));
+            if (module.valid()) {
+                mec::Preferences cc(module.getSubTree("cc"));
+                // only currently handling CC midi learn
+                if (cc.valid()) {
+                    for (std::string ccstr : cc.getKeys()) {
+                        unsigned ccnum = std::stoi(ccstr);
+                        EntityId paramId = cc.getString(ccstr);
+                        addMidiCCMapping(ccnum, moduleId, paramId);
+                    }
+                }
             }
         }
     }
@@ -154,16 +159,16 @@ bool Rack::loadModuleSettings(const mec::Preferences& prefs) {
 }
 
 
-bool Rack::saveModuleSettings() {
+bool Rack::saveRackSettings() {
     // save to original module settings file
     // note: we do not save back to an preferences file, as this would not be complete
-    if (!moduleSettingsFile_.empty()) {
-        saveModuleSettings(moduleSettingsFile_);
+    if (!rackSettingsFile_.empty()) {
+        saveRackSettings(rackSettingsFile_);
     }
     return false;
 }
 
-bool Rack::saveModuleSettings(const std::string& filename) {
+bool Rack::saveRackSettings(const std::string& filename) {
     // do in cJSON for now
     std::ofstream outfile(filename);
     cJSON *root = cJSON_CreateObject();
@@ -185,13 +190,16 @@ bool Rack::saveModuleSettings(const std::string& filename) {
             }//switch
         }
     }
+
     cJSON *midi = cJSON_CreateObject();
-    cJSON *ccs = cJSON_CreateObject();
     cJSON_AddItemToObject(root, "midi-mapping", midi);
-    cJSON_AddItemToObject(midi, "cc", ccs);
-    for (auto c : midi_mapping_) {
-        std::string ccstr = std::to_string(c.first);
-        cJSON_AddStringToObject(ccs, ccstr.c_str(), c.second.c_str());
+    for (auto mm : midi_mapping_) {
+        cJSON *module = cJSON_CreateObject();
+        cJSON_AddItemToObject(midi, mm.second->moduleId().c_str(), module);
+        cJSON *ccs = cJSON_CreateObject();
+        cJSON_AddItemToObject(module, "cc", ccs);
+        std::string ccstr = std::to_string(mm.first);
+        cJSON_AddStringToObject(ccs, ccstr.c_str(), mm.second->paramId().c_str());
     }
 
     // const char* text = cJSON_PrintUnformatted(root);
@@ -204,16 +212,17 @@ bool Rack::saveModuleSettings(const std::string& filename) {
 
 
 bool Rack::savePreset(std::string presetId) {
-    EntityId moduleId; //TODO
-    auto module = getModule(moduleId);
-    if (module != nullptr) {
-        std::vector<std::shared_ptr<Parameter>> params = module->getParams();
-        currentPreset_ = presetId;
-        std::vector<Preset> presets;
-        for (auto p : params) {
-            presets.push_back(Preset(p->id(), p->current()));
+    for (auto m : modules_) {
+        auto module = m.second;
+        if (module != nullptr) {
+            std::vector<std::shared_ptr<Parameter>> params = module->getParams();
+            currentPreset_ = presetId;
+            std::vector<Preset> presets;
+            for (auto p : params) {
+                presets.push_back(Preset(module->id(), p->id(), p->current()));
+            }
+            presets_[presetId] = presets;
         }
-        presets_[presetId] = presets;
     }
     return true;
 }
@@ -227,7 +236,7 @@ std::vector<std::string> Rack::getPresetList() {
 }
 
 void Rack::addMidiCCMapping(unsigned ccnum, const EntityId& moduleId, const EntityId& paramId) {
-    midi_mapping_[ccnum] = paramId;
+    midi_mapping_[ccnum] = std::make_shared<MidiMapping>(ccnum, moduleId, paramId);
 }
 
 void Rack::publishMetaData(const std::shared_ptr<Module>& module) const {
@@ -254,14 +263,15 @@ void Rack::publishMetaData() const {
 }
 
 
-void Rack::dumpModuleSettings() const {
-    LOG_1("Module Settings Dump");
+void Rack::dumpRackSettings() const {
+    LOG_1("Rack Settings Dump");
     LOG_1("-------------------");
     LOG_1("Presets");
     for (auto preset : presets_) {
         LOG_1(preset.first);
         for (auto presetvalue : preset.second) {
-            std::string d = presetvalue.paramId();
+            std::string d = presetvalue.moduleId();
+            d += " : " + presetvalue.paramId();
             ParamValue pv = presetvalue.value();
             switch (pv.type()) {
             case ParamValue::T_Float :

@@ -123,8 +123,8 @@ private:
     const OSCReceiver& receiver_;
 };
 
-OSCReceiver::OSCReceiver(const std::shared_ptr<ParameterModel>& param)
-    : param_model_(param), port_(0) {
+OSCReceiver::OSCReceiver(const std::shared_ptr<KontrolModel>& param)
+    : model_(param), port_(0) {
     PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), MAX_N_OSC_MSGS, msgData_);
     packetListener_ = std::make_shared<KontrolPacketListener> (&messageQueue_);
     oscListener_ = std::make_shared<KontrolOSCListener> (*this);
@@ -179,7 +179,7 @@ void OSCReceiver::createRack(
     const EntityId& rackId,
     const std::string& host, 
     unsigned port) const {
-    param_model_->createRack(src, rackId, host, port);
+    model_->createRack(src, rackId, host, port);
 }
 
 void OSCReceiver::createModule(
@@ -187,7 +187,7 @@ void OSCReceiver::createModule(
     const EntityId& rackId,
     const EntityId& moduleId
 ) const {
-    param_model_->createModule(src, rackId, moduleId);
+    model_->createModule(src, rackId, moduleId);
 }
 
 
@@ -196,7 +196,7 @@ void OSCReceiver::createParam(
     const EntityId& rackId,
     const EntityId& moduleId,
     const std::vector<ParamValue>& args) const {
-    param_model_->createParam(src, rackId, moduleId, args);
+    model_->createParam(src, rackId, moduleId, args);
 }
 
 void OSCReceiver::changeParam(
@@ -205,7 +205,7 @@ void OSCReceiver::changeParam(
     const EntityId& moduleId,
     const EntityId& paramId,
     ParamValue f) const {
-    param_model_->changeParam(src, rackId, moduleId, paramId, f);
+    model_->changeParam(src, rackId, moduleId, paramId, f);
 }
 
 void OSCReceiver::createPage(
@@ -216,12 +216,12 @@ void OSCReceiver::createPage(
     const std::string& displayName,
     const std::vector<EntityId> paramIds
 ) const {
-    param_model_->createPage(src, rackId, moduleId, pageId, displayName, paramIds);
+    model_->createPage(src, rackId, moduleId, pageId, displayName, paramIds);
 }
 
 
 void OSCReceiver::publishMetaData() const {
-    param_model_->publishMetaData();
+    model_->publishMetaData();
 }
 
 

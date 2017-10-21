@@ -1,28 +1,29 @@
-#include "ParameterModel.h"
+#include "KontrolModel.h"
+#include <mec_prefs.h>
 
 namespace Kontrol {
 
 
-std::shared_ptr<ParameterModel> ParameterModel::model() {
-    static std::shared_ptr<ParameterModel> model_;
+std::shared_ptr<KontrolModel> KontrolModel::model() {
+    static std::shared_ptr<KontrolModel> model_;
     if (!model_) {
-        model_ = std::shared_ptr<ParameterModel>(new ParameterModel());
+        model_ = std::shared_ptr<KontrolModel>(new KontrolModel());
     }
     return model_;
 }
 
-// void ParameterModel::free() {
+// void KontrolModel::free() {
 //     model_.reset();
 // }
 
-ParameterModel::ParameterModel() {
+KontrolModel::KontrolModel() {
 }
 
-void ParameterModel::publishMetaData() const {
+void KontrolModel::publishMetaData() const {
     publishMetaData(localRack_);
 }
 
-void ParameterModel::publishMetaData(const std::shared_ptr<Rack>& rack) const {
+void KontrolModel::publishMetaData(const std::shared_ptr<Rack>& rack) const {
     std::vector<std::shared_ptr<Module>> modules = getModules(rack);
     for (auto p : modules) {
         if (p != nullptr) publishMetaData(rack);
@@ -31,11 +32,11 @@ void ParameterModel::publishMetaData(const std::shared_ptr<Rack>& rack) const {
 
 
 //access
-std::shared_ptr<Rack> ParameterModel::getLocalRack() const {
+std::shared_ptr<Rack> KontrolModel::getLocalRack() const {
     return localRack_;
 }
 
-std::shared_ptr<Rack>  ParameterModel::getRack(const EntityId& rackId) const {
+std::shared_ptr<Rack>  KontrolModel::getRack(const EntityId& rackId) const {
     try {
         return racks_.at(rackId);
     } catch (const std::out_of_range&) {
@@ -43,23 +44,23 @@ std::shared_ptr<Rack>  ParameterModel::getRack(const EntityId& rackId) const {
     }
 }
 
-std::shared_ptr<Module> ParameterModel::getModule(const std::shared_ptr<Rack>& rack, const EntityId& moduleId) const {
+std::shared_ptr<Module> KontrolModel::getModule(const std::shared_ptr<Rack>& rack, const EntityId& moduleId) const {
     if (rack != nullptr) return rack->getModule(moduleId);
     return nullptr;
 }
 
-std::shared_ptr<Page>  ParameterModel::getPage(const std::shared_ptr<Module>& module, const EntityId& pageId) const {
+std::shared_ptr<Page>  KontrolModel::getPage(const std::shared_ptr<Module>& module, const EntityId& pageId) const {
     if (module != nullptr) return module->getPage(pageId);
     return nullptr;
 }
 
-std::shared_ptr<Parameter>  ParameterModel::getParam(const std::shared_ptr<Module>& module, const EntityId& paramId) const {
+std::shared_ptr<Parameter>  KontrolModel::getParam(const std::shared_ptr<Module>& module, const EntityId& paramId) const {
     if (module != nullptr) return module->getParam(paramId);
     return nullptr;
 }
 
 
-std::vector<std::shared_ptr<Rack>>    ParameterModel::getRacks() const {
+std::vector<std::shared_ptr<Rack>>    KontrolModel::getRacks() const {
     std::vector<std::shared_ptr<Rack>> ret;
     for (auto p : racks_) {
         if (p.second != nullptr) ret.push_back(p.second);
@@ -67,25 +68,25 @@ std::vector<std::shared_ptr<Rack>>    ParameterModel::getRacks() const {
     return ret;
 }
 
-std::vector<std::shared_ptr<Module>>     ParameterModel::getModules(const std::shared_ptr<Rack>& rack) const {
+std::vector<std::shared_ptr<Module>>     KontrolModel::getModules(const std::shared_ptr<Rack>& rack) const {
     std::vector<std::shared_ptr<Module>> ret;
     if (rack != nullptr) ret = rack->getModules();
     return ret;
 }
 
-std::vector<std::shared_ptr<Page>>      ParameterModel::getPages(const std::shared_ptr<Module>& module) const {
+std::vector<std::shared_ptr<Page>>      KontrolModel::getPages(const std::shared_ptr<Module>& module) const {
     std::vector<std::shared_ptr<Page>> ret;
     if (module != nullptr) ret = module->getPages();
     return ret;
 }
 
-std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::shared_ptr<Module>& module) const {
+std::vector<std::shared_ptr<Parameter>> KontrolModel::getParams(const std::shared_ptr<Module>& module) const {
     std::vector<std::shared_ptr<Parameter>> ret;
     if (module != nullptr) ret = module->getParams();
     return ret;
 }
 
-std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::shared_ptr<Module>& module, const std::shared_ptr<Page>& page) const {
+std::vector<std::shared_ptr<Parameter>> KontrolModel::getParams(const std::shared_ptr<Module>& module, const std::shared_ptr<Page>& page) const {
     std::vector<std::shared_ptr<Parameter>> ret;
     if (module != nullptr && page != nullptr) ret = module->getParams(page);
     return ret;
@@ -93,14 +94,14 @@ std::vector<std::shared_ptr<Parameter>> ParameterModel::getParams(const std::sha
 
 
 // listener model
-void ParameterModel::clearCallbacks() {
+void KontrolModel::clearCallbacks() {
     for (auto p : listeners_) {
         (p.second)->stop();
     }
 
     listeners_.clear();
 }
-void ParameterModel::removeCallback(const std::string& id) {
+void KontrolModel::removeCallback(const std::string& id) {
     auto p = listeners_.find(id);
     if (p != listeners_.end()) {
         (p->second)->stop();
@@ -108,22 +109,22 @@ void ParameterModel::removeCallback(const std::string& id) {
     }
 }
 
-void ParameterModel::removeCallback(std::shared_ptr<ParameterCallback>) {
-    // for(std::vector<std::shared_ptr<ParameterCallback> >::iterator i(listeners_) : listeners_) {
+void KontrolModel::removeCallback(std::shared_ptr<KontrolCallback>) {
+    // for(std::vector<std::shared_ptr<KontrolCallback> >::iterator i(listeners_) : listeners_) {
     //  if(*i == listener) {
     //      i.remove();
     //      return;
     //  }
     // }
 }
-void ParameterModel::addCallback(const std::string& id, std::shared_ptr<ParameterCallback> listener) {
+void KontrolModel::addCallback(const std::string& id, std::shared_ptr<KontrolCallback> listener) {
     auto p = listeners_[id];
     if (p != nullptr) p->stop();
     listeners_[id] = listener;
 }
 
 
-void ParameterModel::createRack(
+void KontrolModel::createRack(
     ParameterSource src,
     const EntityId& rackId,
     const std::string& host,
@@ -138,7 +139,7 @@ void ParameterModel::createRack(
     }
 }
 
-void ParameterModel::createModule(
+void KontrolModel::createModule(
     ParameterSource src,
     const EntityId& rackId,
     const EntityId& moduleId
@@ -156,7 +157,7 @@ void ParameterModel::createModule(
     }
 }
 
-void ParameterModel::createPage(
+void KontrolModel::createPage(
     ParameterSource src,
     const EntityId& rackId,
     const EntityId& moduleId,
@@ -176,7 +177,7 @@ void ParameterModel::createPage(
     }
 }
 
-void ParameterModel::createParam(
+void KontrolModel::createParam(
     ParameterSource src,
     const EntityId& rackId,
     const EntityId& moduleId,
@@ -194,7 +195,7 @@ void ParameterModel::createParam(
     }
 }
 
-void ParameterModel::changeParam(
+void KontrolModel::changeParam(
     ParameterSource src,
     const EntityId& rackId,
     const EntityId& moduleId,
@@ -212,18 +213,15 @@ void ParameterModel::changeParam(
     }
 }
 
-
-
-bool ParameterModel::loadParameterDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename) {
-    auto rack = getRack(rackId);
-    if (rack == nullptr) return false;
-    return rack->loadParameterDefinitions(moduleId, filename);
+bool KontrolModel::loadModuleDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename) {
+    mec::Preferences prefs(filename);
+    return loadModuleDefinitions(rackId,moduleId, prefs);
 }
 
-bool ParameterModel::loadParameterDefinitions(const EntityId& rackId, const EntityId& moduleId, const mec::Preferences& prefs) {
+bool KontrolModel::loadModuleDefinitions(const EntityId& rackId, const EntityId& moduleId, const mec::Preferences& prefs) {
     auto rack = getRack(rackId);
     if (rack == nullptr) return false;
-    return rack->loadParameterDefinitions(moduleId, prefs);
+    return rack->loadModuleDefinitions(moduleId, prefs);
 }
 
 
