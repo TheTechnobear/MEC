@@ -104,7 +104,7 @@ public:
     void publishParam(ParameterSource src, const Rack&, const Module&, const Parameter&) const;
     void publishChanged(ParameterSource src, const Rack&, const Module&, const Parameter&) const;
 
-
+    bool loadSettings(const EntityId& rackId, const std::string& filename);
     bool loadModuleDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename);
     bool loadModuleDefinitions(const EntityId& rackId, const EntityId& moduleId, const mec::Preferences& prefs);
 

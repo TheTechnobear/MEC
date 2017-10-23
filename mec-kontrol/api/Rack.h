@@ -59,6 +59,8 @@ public:
     void publishCurrentValues() const;
 
     void dumpSettings() const;
+    void dumpParameters();
+    void dumpCurrentValues();
 
     std::string host() const { return host_;}
     unsigned port() const { return port_;}

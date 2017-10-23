@@ -39,7 +39,7 @@ public:
     const EntityId& id() const { return id_;};
 
     virtual const std::string& displayName() const { return displayName_;};
-    virtual bool valid() { return id_.empty();}
+    virtual bool valid() { return !id_.empty();}
 protected:
     Entity() {;}
     virtual ~Entity() {;}

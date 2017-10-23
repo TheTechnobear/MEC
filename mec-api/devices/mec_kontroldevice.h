@@ -4,7 +4,7 @@
 #include "../mec_device.h"
 #include "../mec_msg_queue.h"
 
-#include "ParameterModel.h"
+#include "KontrolModel.h"
 #include "OSCBroadcaster.h"
 #include "OSCReceiver.h"
 
@@ -36,7 +36,7 @@ private:
     unsigned connectPort_;
     unsigned listenPort_;
 
-    std::shared_ptr<Kontrol::ParameterModel> param_model_;
+    std::shared_ptr<Kontrol::KontrolModel> model_;
     std::shared_ptr<Kontrol::OSCReceiver> osc_receiver_;
     std::shared_ptr<Kontrol::OSCBroadcaster> osc_broadcaster_;
 };

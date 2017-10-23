@@ -12,11 +12,6 @@
 #include <fstream>
 
 
-// TODO
-// preset, need to be stored per module
-// midi cc... potentially mapped to muliple modules and multi parameters  e.g. cc73 : (module1 : t_mix, r_mix , module2:o_transpose)
-// both these imply a certain json tree stucture, the current implmentatin below wont work ;)
-
 // for saving presets only , later moved to Preferences
 #include <cJSON.h>
 #include <mec_log.h>
@@ -75,7 +70,7 @@ bool Rack::loadSettings(const mec::Preferences& prefs) {
         if (module != nullptr) {
             mec::Preferences modpref(prefs.getSubTree(module->id()));
             if (modpref.valid()) {
-                ret |= module->loadSettings(prefs);
+                ret |= module->loadSettings(modpref);
                 // publishCurrentValues(module);
             }
         }
@@ -231,11 +226,27 @@ void Rack::publishMetaData() const {
 
 
 void Rack::dumpSettings() const {
-    LOG_1("Rack Settings Dump");
-    LOG_1("-------------------");
+    LOG_1("Rack Settings :" << id());
+    LOG_1("------------------------");
     for(auto m : modules_) {
         if(m.second!=nullptr) m.second->dumpSettings();
     }
 }
+
+void Rack::dumpParameters() {
+    LOG_1("Rack Parameters :" << id() );
+    LOG_1("------------------------");
+    for(auto m : modules_) {
+        if(m.second!=nullptr) m.second->dumpParameters();
+    }
+}
+void Rack::dumpCurrentValues() {
+    LOG_1("Rack Values : " << id());
+    LOG_1("-----------------------");
+    for(auto m : modules_) {
+        if(m.second!=nullptr) m.second->dumpCurrentValues();
+    }
+}
+
 
 } //namespace

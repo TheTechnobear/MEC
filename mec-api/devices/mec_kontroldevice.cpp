@@ -12,7 +12,7 @@ KontrolDevice::KontrolDevice(ICallback& cb) :
     state_(S_UNCONNECTED),
     active_(false), callback_(cb),
     listenPort_(0), connectPort_(0)  {
-    param_model_ = Kontrol::ParameterModel::model();
+    model_ = Kontrol::KontrolModel::model();
 }
 
 KontrolDevice::~KontrolDevice() {
@@ -32,27 +32,27 @@ bool KontrolDevice::init(void* arg) {
     active_ = false;
     state_ = S_UNCONNECTED;
 
-    if (prefs.exists("parameter definitions")) {
-        std::string file = prefs.getString("parameter definitions", "./kontrol-param.json");
-        if (!file.empty()) {
-            param_model_->loadParameterDefinitions(file);
-        }
-        param_model_->dumpParameters();
-    }
+    // if (prefs.exists("parameter definitions")) {
+    //     std::string file = prefs.getString("parameter definitions", "./kontrol-param.json");
+    //     if (!file.empty()) {
+    //         model_->loadModuleDefinitions(file);
+    //     }
+    //     // model_->dumpParameters();
+    // }
 
-    if (prefs.exists("patch settings")) {
-        std::string file = prefs.getString("patch settings", "./kontrol-patch.json");
-        if (!file.empty()) {
-            param_model_->loadPatchSettings(file);
-        }
-        param_model_->dumpPatchSettings();
-    }
+    // if (prefs.exists("patch settings")) {
+    //     std::string file = prefs.getString("patch settings", "./kontrol-patch.json");
+    //     if (!file.empty()) {
+    //         model_->loadSettings(file);
+    //     }
+    //     // model_->dumpPatchSettings();
+    // }
 
     connectPort_ = prefs.getInt("connect port", 9000);
 
     listenPort_ = prefs.getInt("listen port", 9001);
     if (listenPort_ > 0) {
-        auto p = std::make_shared<Kontrol::OSCReceiver>(param_model_);
+        auto p = std::make_shared<Kontrol::OSCReceiver>(model_);
         if (p->listen(listenPort_)) {
             osc_receiver_ = p;
             LOG_0("kontrol device : listening on " << listenPort_);
@@ -62,11 +62,11 @@ bool KontrolDevice::init(void* arg) {
     if (connectPort_ > 0) {
         std::string host = "127.0.0.1";
         std::string id = "mec.osc:" + host + ":" + std::to_string(connectPort_);
-        param_model_->removeCallback(id);
+        model_->removeCallback(id);
         auto p = std::make_shared<Kontrol::OSCBroadcaster>();
         if (p->connect(host, (unsigned) connectPort_)) {
             osc_broadcaster_ = p;
-            param_model_->addCallback(id, osc_broadcaster_);
+            model_->addCallback(id, osc_broadcaster_);
             LOG_0("kontrol device : connected to " << connectPort_);
         }
     }

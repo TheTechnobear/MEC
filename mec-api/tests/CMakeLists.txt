@@ -10,6 +10,3 @@ target_link_libraries (t_voice mec-api )
 
 add_executable(t_surface t_surface.cpp)
 target_link_libraries (t_surface mec-api )
-
-# add_executable(t_kontrol t_kontrol.cpp)
-# target_link_libraries (t_surface mec-api )

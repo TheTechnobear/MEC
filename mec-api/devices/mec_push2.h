@@ -7,7 +7,7 @@
 
 #include "mec_mididevice.h"
 
-#include "ParameterModel.h"
+#include "KontrolModel.h"
 
 #include <RtMidi.h>
 
@@ -49,7 +49,7 @@ private:
     std::shared_ptr<Push2_OLED> oled_;
 
     // kontrol interface
-    std::shared_ptr<Kontrol::ParameterModel>       param_model_;
+    std::shared_ptr<Kontrol::KontrolModel>       model_;
 
 
     float       pitchbendRange_;
@@ -57,7 +57,12 @@ private:
     char msgData_[sizeof(MidiMsg) * MAX_N_MIDI_MSGS];
 
     //navigation
+    unsigned currentModule_ = 0;
     unsigned currentPage_ = 0;
+    std::shared_ptr<Kontrol::Rack> rack_;
+    std::vector<std::shared_ptr<Kontrol::Module>> modules_;
+    std::vector<std::shared_ptr<Kontrol::Page>> pages_;
+    std::vector<std::shared_ptr<Kontrol::Parameter>> params_;
 
     // scales colour
     void updatePadColours();

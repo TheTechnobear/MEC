@@ -105,7 +105,7 @@ std::vector<std::shared_ptr<Parameter>> Module::getParams(const std::shared_ptr<
 bool Module::loadModuleDefinitions(const mec::Preferences& module) {
     if (!module.valid()) return false;
 
-    type_ = module.getString("type");
+    type_ = module.getString("name");
     displayName_ = module.getString("display");
 
     if (module.exists("parameters")) {
@@ -113,7 +113,6 @@ bool Module::loadModuleDefinitions(const mec::Preferences& module) {
         mec::Preferences::Array params(module.getArray("parameters"));
         if (!params.valid()) return false;
         for (int i = 0; i < params.getSize(); i++) {
-
             mec::Preferences::Array pargs(params.getArray(i));
             if (!pargs.valid()) return false;
 
@@ -185,7 +184,9 @@ void Module::dumpSettings() const {
     }
     LOG_1("Midi Mapping");
     for (auto cc : midi_mapping_) {
-        // LOG_1("CC : " <<  cc.first  << " to " << cc.second);
+        for(auto id : cc.second) {
+            LOG_1("CC : " <<  cc.first << " -> " << id);
+        }
     }
 }
 
@@ -193,8 +194,8 @@ void Module::dumpSettings() const {
 void Module::dumpParameters() {
     const char* IND = "    ";
     // print by page , this will miss anything not on a page, but gives a clear way of setting things
-    LOG_1("Parameter Dump");
-    LOG_1("--------------");
+    LOG_1("Parameter Dump : " << displayName_ << " : " << type_);
+    LOG_1("----------------------");
     for (std::string pageId : pageIds_) {
         auto page = pages_[pageId];
         if (page == nullptr) { LOG_1("Page not found: " << pageId); continue;}
@@ -283,15 +284,15 @@ bool Module::loadSettings(const mec::Preferences& prefs) {
 
     mec::Preferences midimapping(prefs.getSubTree("midi-mapping"));
     if (midimapping.valid()) { // just ignore if not present
-        for (EntityId moduleId : midimapping.getKeys()) {
-            mec::Preferences module(midimapping.getSubTree(moduleId));
-            if (module.valid()) {
-                mec::Preferences cc(module.getSubTree("cc"));
-                // only currently handling CC midi learn
-                if (cc.valid()) {
-                    for (std::string ccstr : cc.getKeys()) {
-                        unsigned ccnum = std::stoi(ccstr);
-                        EntityId paramId = cc.getString(ccstr);
+        mec::Preferences cc(midimapping.getSubTree("cc"));
+        // only currently handling CC midi learn
+        if (cc.valid()) {
+            for (std::string ccstr : cc.getKeys()) {
+                unsigned ccnum = std::stoi(ccstr);
+                mec::Preferences::Array array = cc.getArray(ccstr);
+                if (array.valid()) {
+                    for (int i = 0; i < array.getSize(); i++) {
+                        EntityId paramId = array.getString(i);
                         addMidiCCMapping(ccnum, paramId);
                     }
                 }

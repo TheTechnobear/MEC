@@ -76,8 +76,8 @@ public:
     std::string type() const {return type_;};
 
     bool loadModuleDefinitions(const mec::Preferences& prefs);
-    void dumpParameters();
     void dumpSettings() const;
+    void dumpParameters();
     void dumpCurrentValues();
 
 

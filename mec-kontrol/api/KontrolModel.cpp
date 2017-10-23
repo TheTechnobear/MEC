@@ -237,8 +237,6 @@ void KontrolModel::publishChanged(ParameterSource src, const Rack& rack, const M
     }
 }
 
-
-
 bool KontrolModel::loadModuleDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename) {
     mec::Preferences prefs(filename);
     return loadModuleDefinitions(rackId,moduleId, prefs);
@@ -250,6 +248,11 @@ bool KontrolModel::loadModuleDefinitions(const EntityId& rackId, const EntityId&
     return rack->loadModuleDefinitions(moduleId, prefs);
 }
 
+bool KontrolModel::loadSettings(const EntityId& rackId,const std::string& filename) {
+    auto rack = getRack(rackId);
+    if (rack == nullptr) return false;
+    return rack->loadSettings(filename);
+}
 
 
 } //namespace
