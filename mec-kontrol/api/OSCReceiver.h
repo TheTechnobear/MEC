@@ -77,7 +77,9 @@ public:
     void createModule(
         ParameterSource src, 
         const EntityId& rackId,
-        const EntityId& moduleId
+        const EntityId& moduleId,
+        const std::string& displayName,
+        const std::string& type
     ) const;
 
     void createParam(

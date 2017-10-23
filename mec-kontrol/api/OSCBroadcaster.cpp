@@ -81,7 +81,7 @@ void OSCBroadcaster::rack(ParameterSource src, const Rack& p) {
 }
 
 
-void OSCBroadcaster::module(ParameterSource src, const Rack& rack, const Module& p) {
+void OSCBroadcaster::module(ParameterSource src, const Rack& rack, const Module& m) {
     if (!socket_) return;
     if (src != PS_LOCAL) return;
 
@@ -90,7 +90,9 @@ void OSCBroadcaster::module(ParameterSource src, const Rack& rack, const Module&
     ops << osc::BeginBundleImmediate
         << osc::BeginMessage( "/Kontrol/module" )
         << rack.id().c_str()
-        << p.id().c_str();
+        << m.id().c_str()
+        << m.displayName().c_str()
+        << m.type().c_str();
 
         ops << osc::EndMessage
         << osc::EndBundle;

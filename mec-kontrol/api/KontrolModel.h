@@ -69,7 +69,9 @@ public:
     void createModule(
         ParameterSource src,
         const EntityId& rackId,
-        const EntityId& moduleId
+        const EntityId& moduleId,
+        const std::string& displayName,
+        const std::string& type
     ) const;
 
     void createParam(
@@ -94,6 +96,13 @@ public:
         const EntityId& moduleId,
         const EntityId& paramId,
         ParamValue v) const;
+
+
+    void publishRack(ParameterSource, const Rack&) const;
+    void publishModule(ParameterSource, const Rack&, const Module&) const;
+    void publishPage(ParameterSource src, const Rack&, const Module&, const Page&) const;
+    void publishParam(ParameterSource src, const Rack&, const Module&, const Parameter&) const;
+    void publishChanged(ParameterSource src, const Rack&, const Module&, const Parameter&) const;
 
 
     bool loadModuleDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename);

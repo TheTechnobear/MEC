@@ -15,30 +15,6 @@ class Module;
 class KontrolModel;
 
 
-class Preset {
-public:
-    Preset(const EntityId& moduleId, const EntityId& paramId, const ParamValue& v) : 
-        moduleId_(moduleId) , paramId_(paramId), value_(v) {;}
-    const EntityId& moduleId() { return moduleId_;}
-    const EntityId& paramId() { return paramId_;}
-    ParamValue value() { return value_;}
-private:
-    EntityId moduleId_;
-    EntityId paramId_;
-    ParamValue value_;
-};
-
-class MidiMapping {
-public: 
-    MidiMapping(unsigned cc,const EntityId& moduleId, const EntityId& paramId) :   
-        cc_(cc), moduleId_(moduleId) , paramId_(paramId) {;}
-    const EntityId& moduleId() { return moduleId_;}
-    const EntityId& paramId() { return paramId_;}
-private:
-    unsigned  cc_;
-    EntityId moduleId_;
-    EntityId paramId_;
-};
 
 class Rack : public Entity {
 public:
@@ -59,14 +35,14 @@ public:
 
     bool loadModuleDefinitions(const EntityId& moduleId, const mec::Preferences& prefs);
 
-    bool loadRackSettings(const std::string& filename);
-    bool loadRackSettings(const mec::Preferences& prefs);
+    bool loadSettings(const std::string& filename);
+    bool loadSettings(const mec::Preferences& prefs);
 
-    bool saveRackSettings();
-    bool saveRackSettings(const std::string& filename);
+    bool saveSettings();
+    bool saveSettings(const std::string& filename);
 
     bool applyPreset(std::string presetId);
-    bool savePreset(std::string presetId);
+    bool updatePreset(std::string presetId);
 
     std::string currentPreset() { return currentPreset_;}
     std::vector<std::string> getPresetList();
@@ -79,7 +55,10 @@ public:
     void publishMetaData(const std::shared_ptr<Module>& module) const;
     void publishMetaData() const;
 
-    void dumpRackSettings() const;
+    void publishCurrentValues(const std::shared_ptr<Module>& module) const;
+    void publishCurrentValues() const;
+
+    void dumpSettings() const;
 
     std::string host() const { return host_;}
     unsigned port() const { return port_;}
@@ -88,12 +67,9 @@ private:
     unsigned port_;
     std::unordered_map<EntityId, std::shared_ptr<Module>> modules_;
 
-    std::string rackSettingsFile_;
-    std::shared_ptr<mec::Preferences> rackSettings_;
+    std::string settingsFile_;
+    std::shared_ptr<mec::Preferences> settings_;
     std::string currentPreset_;
-
-    std::unordered_map<unsigned, std::shared_ptr<MidiMapping>> midi_mapping_; // key CC id, value = paramId
-    std::unordered_map<std::string, std::vector<Preset>> presets_; // key = presetid
 
     std::shared_ptr<mec::Preferences> moduleDefinitions_;
 

@@ -77,7 +77,7 @@ public:
                 const char* moduleId = (arg++)->AsString();
                 const char* pageId = (arg++)->AsString();
 
-                const char* displayname = (arg++)->AsString();
+                const char* displayName = (arg++)->AsString();
 
                 std::vector<EntityId> paramIds;
                 while ( arg != m.ArgumentsEnd() ) {
@@ -85,15 +85,17 @@ public:
                 }
 
                 // std::cout << "recieved page " << id << std::endl;
-                receiver_.createPage(PS_OSC, rackId, moduleId, pageId, displayname, paramIds);
+                receiver_.createPage(PS_OSC, rackId, moduleId, pageId, displayName, paramIds);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/module" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "recieved page p1"<< std::endl;
                 const char* rackId = (arg++)->AsString();
                 const char* moduleId = (arg++)->AsString();
+                const char* displayName = (arg++)->AsString();
+                const char* type = (arg++)->AsString();
 
                 // std::cout << "recieved module " << moduleId << std::endl;
-                receiver_.createModule(PS_OSC, rackId, moduleId);
+                receiver_.createModule(PS_OSC, rackId, moduleId, displayName, type);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/rack" ) == 0 ) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "recieved page p1"<< std::endl;
@@ -185,9 +187,11 @@ void OSCReceiver::createRack(
 void OSCReceiver::createModule(
     ParameterSource src,
     const EntityId& rackId,
-    const EntityId& moduleId
+    const EntityId& moduleId,
+    const std::string& displayName,
+    const std::string& type
 ) const {
-    model_->createModule(src, rackId, moduleId);
+    model_->createModule(src, rackId, moduleId, displayName, type);
 }
 
 

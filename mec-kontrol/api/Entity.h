@@ -43,6 +43,7 @@ public:
 protected:
     Entity() {;}
     virtual ~Entity() {;}
+
     EntityId id_;
     std::string displayName_;
 };

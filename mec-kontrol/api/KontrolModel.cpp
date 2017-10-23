@@ -134,27 +134,25 @@ void KontrolModel::createRack(
     auto rack = std::make_shared<Rack>(host, port, desc);
     racks_[rack->id()] = rack;
 
-    for ( auto i : listeners_) {
-        (i.second)->rack(src, *rack);
-    }
+    publishRack(src,*rack);
 }
 
 void KontrolModel::createModule(
     ParameterSource src,
     const EntityId& rackId,
-    const EntityId& moduleId
+    const EntityId& moduleId,
+    const std::string& displayName,
+    const std::string& type
 ) const {
 
     auto rack = getRack(rackId);
 
     if (rack == nullptr) return;
 
-    auto module = std::make_shared<Module>(moduleId, moduleId);
+    auto module = std::make_shared<Module>(moduleId, displayName,type);
     rack->addModule(module);
 
-    for ( auto i : listeners_) {
-        (i.second)->module(src, *rack, *module);
-    }
+    publishModule(src, *rack, *module);
 }
 
 void KontrolModel::createPage(
@@ -171,9 +169,7 @@ void KontrolModel::createPage(
 
     auto page = module->createPage(pageId, displayName, paramIds);
     if (page != nullptr) {
-        for ( auto i : listeners_) {
-            (i.second)->page(src, *rack, *module, *page);
-        }
+        publishPage(src,*rack, *module, *page);
     }
 }
 
@@ -189,9 +185,7 @@ void KontrolModel::createParam(
 
     auto param = module->createParam(args);
     if (param != nullptr) {
-        for ( auto i : listeners_) {
-            (i.second)->param(src, *rack, *module, *param);
-        }
+        publishParam(src, *rack, *module, *param);
     }
 }
 
@@ -207,11 +201,43 @@ void KontrolModel::changeParam(
     if (param == nullptr) return;
 
     if (module->changeParam(paramId, v)) {
-        for ( auto i : listeners_) {
-            (i.second)->changed(src, *rack, *module, *param);
-        }
+        publishChanged(src, *rack, *module, *param);
     }
 }
+
+void KontrolModel::publishRack(ParameterSource src, const Rack& rack) const {
+    for ( auto i : listeners_) {
+        (i.second)->rack(src, rack);
+    }
+}
+
+void KontrolModel::publishModule(ParameterSource src , const Rack& rack, const Module& module) const {
+    for ( auto i : listeners_) {
+        (i.second)->module(src, rack, module);
+    }
+}
+
+void KontrolModel::publishPage(ParameterSource src, const Rack& rack, const Module& module, const Page& page) const {
+    for ( auto i : listeners_) {
+        (i.second)->page(src, rack, module, page);
+    }
+
+}
+
+void KontrolModel::publishParam(ParameterSource src, const Rack& rack, const Module& module, const Parameter& param) const {
+    for ( auto i : listeners_) {
+     (i.second)->param(src, rack, module, param);
+    }
+
+}
+
+void KontrolModel::publishChanged(ParameterSource src, const Rack& rack, const Module& module, const Parameter& param) const {
+    for ( auto i : listeners_) {
+        (i.second)->changed(src, rack, module, param);
+    }
+}
+
+
 
 bool KontrolModel::loadModuleDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename) {
     mec::Preferences prefs(filename);
