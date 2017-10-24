@@ -38,12 +38,13 @@ cflags += -I $(kontrol)
 
 kontrol.sources = \
 	$(kontrol)/Entity.cpp \
+	$(kontrol)/Rack.cpp \
+	$(kontrol)/Module.cpp \
+	$(kontrol)/ParamValue.cpp \
 	$(kontrol)/Parameter.cpp \
-	$(kontrol)/Patch.cpp \
-	$(kontrol)/ParameterModel.cpp \
+	$(kontrol)/KontrolModel.cpp \
 	$(kontrol)/OSCReceiver.cpp \
 	$(kontrol)/OSCBroadcaster.cpp 
-
 
 
 define forLinux
@@ -62,20 +63,17 @@ endef
 common.sources = \
 	$(oscpack.sources) \
 	$(portaudio.sources) \
-	$(kontrol.sources) \
-	devices/KontrolDevice.cpp \
-	devices/Organelle.cpp \
+	$(kontrol.sources)
 
 
 # input source file (class name == source file basename)
 
 class.sources = \
-	KontrolHost~.cpp 
-				
+	KontrolModule.cpp \
+			
 
 # all extra files to be included in binary distribution of the library
 datafiles = \
-			KontrolHost~-help.pd \
 			../README.md 
 
 

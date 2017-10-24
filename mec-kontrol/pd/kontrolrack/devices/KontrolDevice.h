@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ParameterModel.h>
+#include <KontrolModel.h>
 #include <Parameter.h>
 
 #include <map>
@@ -9,7 +9,7 @@
 
 class KontrolDevice;
 
-class DeviceMode :  public Kontrol::ParameterCallback {
+class DeviceMode :  public Kontrol::KontrolCallback {
 public:
     virtual ~DeviceMode() {;}
     virtual bool init() = 0;
@@ -24,7 +24,7 @@ protected:
 };
 
 
-class KontrolDevice : public Kontrol::ParameterCallback  {
+class KontrolDevice : public Kontrol::KontrolCallback  {
 public:
     KontrolDevice();
     virtual ~KontrolDevice();
@@ -37,18 +37,20 @@ public:
     virtual void changePot(unsigned pot, float value);
     virtual void changeEncoder(unsigned encoder, float value);
     virtual void encoderButton(unsigned encoder, bool value);
-    //Kontrol::ParameterCallback
-    virtual void addClient(const std::string&, unsigned );
-    virtual void page(Kontrol::ParameterSource , const Kontrol::Page& );
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Parameter&);
-    virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p);
+
+    //Kontrol::KontrolCallback
+    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack&);
+    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&);
+    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&);
+    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
+    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
 
     virtual void midiCC(unsigned num, unsigned value);
 
     void sendPdMessage(const char* obj, float f);
-    std::shared_ptr<Kontrol::ParameterModel> model() { return param_model_;}
+    std::shared_ptr<Kontrol::KontrolModel> model() { return model_;}
 protected:
-    std::shared_ptr<Kontrol::ParameterModel> param_model_;
+    std::shared_ptr<Kontrol::KontrolModel> model_;
     std::map<unsigned, std::shared_ptr<DeviceMode>> modes_;
     unsigned currentMode_;
 };

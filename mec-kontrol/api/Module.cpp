@@ -375,5 +375,16 @@ void Module::addMidiCCMapping(unsigned ccnum, const EntityId & paramId) {
     midi_mapping_[ccnum].push_back(paramId);
 }
 
+void Module::removeMidiCCMapping(unsigned ccnum, const EntityId & paramId) {
+    auto v = midi_mapping_[ccnum];
+    for(auto it = v.begin();it != v.end();it++) {
+        if(*it == paramId) {
+            v.erase(it);
+            midi_mapping_[ccnum] = v;
+            return;
+        }
+    }
+}
+
 
 } //namespace

@@ -25,9 +25,9 @@ public:
 
     virtual void rack(ParameterSource, const Rack&) = 0;
     virtual void module(ParameterSource, const Rack&, const Module&) = 0;
-    virtual void page(ParameterSource src, const Rack&, const Module&, const Page&) = 0 ;
-    virtual void param(ParameterSource src, const Rack&, const Module&, const Parameter&) = 0;
-    virtual void changed(ParameterSource src, const Rack&, const Module&, const Parameter&) = 0;
+    virtual void page(ParameterSource, const Rack&, const Module&, const Page&) = 0 ;
+    virtual void param(ParameterSource, const Rack&, const Module&, const Parameter&) = 0;
+    virtual void changed(ParameterSource, const Rack&, const Module&, const Parameter&) = 0;
 };
 
 
@@ -97,6 +97,8 @@ public:
         const EntityId& paramId,
         ParamValue v) const;
 
+    EntityId localRackId() { if(localRack_) return localRack_->id(); else return "";}
+    std::shared_ptr<Rack> localRack() { return localRack_;}
 
     void publishRack(ParameterSource, const Rack&) const;
     void publishModule(ParameterSource, const Rack&, const Module&) const;

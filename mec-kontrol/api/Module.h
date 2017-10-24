@@ -25,9 +25,6 @@ enum ParameterSource {
 };
 
 
-
-class ParameterModel;
-
 class Preset {
 public:
     Preset(const EntityId& paramId, const ParamValue& v) : 
@@ -91,6 +88,7 @@ public:
     std::vector<EntityId>   getParamsForCC(unsigned cc);
 
     void addMidiCCMapping(unsigned ccnum, const EntityId& paramId);
+    void removeMidiCCMapping(unsigned ccnum, const EntityId& paramId);
 private:
     std::string type_;
     std::vector<std::string> pageIds_; // ordered list of page id, for presentation

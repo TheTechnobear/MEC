@@ -1,9 +1,9 @@
 ###############################
 # kontrol pure data external
-project (KontrolHost)
+project (KontrolRack)
 
 set(KONTROL_HOST_SRC
-    KontrolHost~.cpp
+    KontrolRack~.cpp
     devices/KontrolDevice.cpp
     devices/Organelle.cpp
 )
@@ -15,13 +15,13 @@ include_directories (
     "${PROJECT_SOURCE_DIR}/../../../external/oscpack"
     )
 
-add_library(KontrolHost SHARED ${KONTROL_HOST_SRC})
+add_library(KontrolRack SHARED ${KONTROL_HOST_SRC})
 
-target_link_libraries (KontrolHost mec-kontrol-api oscpack portaudio)
+target_link_libraries (KontrolRack mec-kontrol-api oscpack portaudio)
 
 ### setup for pure data
 
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "KontrolHost~")
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "KontrolRack~")
 
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")

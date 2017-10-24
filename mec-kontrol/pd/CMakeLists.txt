@@ -2,6 +2,6 @@
 # kontrol library
 project (mec-kontrol)
 
-add_subdirectory (kontrol) 
-add_subdirectory (kontrolhost) 
+add_subdirectory (kontrolmodule) 
+add_subdirectory (kontrolrack) 
 

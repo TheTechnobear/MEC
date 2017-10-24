@@ -3,7 +3,7 @@
 #include "../../m_pd.h"
 
 KontrolDevice::KontrolDevice() {
-    param_model_ = Kontrol::ParameterModel::model();
+    model_ = Kontrol::KontrolModel::model();
 }
 
 KontrolDevice::~KontrolDevice() {
@@ -21,7 +21,7 @@ void KontrolDevice::addMode(unsigned mode, std::shared_ptr<DeviceMode> handler) 
 }
 
 bool KontrolDevice::init() {
-    param_model_->addCallback("pd.device", std::shared_ptr<KontrolDevice>(this));
+    model_->addCallback("pd.device", std::shared_ptr<KontrolDevice>(this));
     for (auto m : modes_) {
         if (m.second != nullptr) m.second->init();
     }
@@ -51,31 +51,38 @@ void KontrolDevice::encoderButton(unsigned encoder, bool value) {
 
 }
 
-void KontrolDevice::addClient(const std::string& host, unsigned port) {
+void KontrolDevice::rack(Kontrol::ParameterSource src, const Kontrol::Rack& rack) {
     auto m = modes_[currentMode_];
-    if (m != nullptr) m->addClient(host, port);
+    if (m != nullptr) m->rack(src, rack);
 }
 
-void KontrolDevice::page(Kontrol::ParameterSource src, const Kontrol::Page& p) {
+void KontrolDevice::module(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module) {
     auto m = modes_[currentMode_];
-    if (m != nullptr) m->page(src, p);
+    if (m != nullptr) m->module(src, rack, module);
+}
+
+void KontrolDevice::page(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Page& page) {
+    auto m = modes_[currentMode_];
+    if (m != nullptr) m->page(src, rack, module, page);
+}
+
+void KontrolDevice::param(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+    auto m = modes_[currentMode_];
+    if (m != nullptr) m->param(src, rack, module, param);
 
 }
 
-void KontrolDevice::param(Kontrol::ParameterSource src , const Kontrol::Parameter& p)  {
+void KontrolDevice::changed(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
     auto m = modes_[currentMode_];
-    if (m != nullptr) m->param(src, p);
-
-}
-
-void KontrolDevice::changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p) {
-    auto m = modes_[currentMode_];
-    if (m != nullptr) m->changed(src, p);
+    if (m != nullptr) m->changed(src, rack, module,  param);
 }
 
 
 void KontrolDevice::midiCC(unsigned num, unsigned value) {
-    model()->changeMidiCC(num, value);
+    auto rack = model()->getLocalRack();
+    if(rack!=nullptr) {
+        rack->changeMidiCC(num, value);
+    }
 }
 
 

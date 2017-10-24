@@ -185,6 +185,11 @@ void Rack::addMidiCCMapping(unsigned ccnum, const EntityId & moduleId, const Ent
     if (module != nullptr) module->addMidiCCMapping(ccnum, paramId);
 }
 
+void Rack::removeMidiCCMapping(unsigned ccnum, const EntityId & moduleId, const EntityId & paramId) {
+    auto module = getModule(moduleId);
+    if (module != nullptr) module->removeMidiCCMapping(ccnum, paramId);
+}
+
 void Rack::publishCurrentValues(const std::shared_ptr<Module>& module) const {
     if (module != nullptr) {
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();

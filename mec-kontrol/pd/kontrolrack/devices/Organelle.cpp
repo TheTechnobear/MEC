@@ -37,15 +37,17 @@ public:
   virtual void changePot(unsigned, float ) {;}
   virtual void changeEncoder(unsigned, float ) {;}
   virtual void encoderButton(unsigned, bool ) {;}
-  virtual void addClient(const std::string&, unsigned ) {;}
-  virtual void page(Kontrol::ParameterSource , const Kontrol::Page& )  {;}
-  virtual void param(Kontrol::ParameterSource, const Kontrol::Parameter&) {;}
-  virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p)  {;}
+
+  virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack&) {;}
+  virtual void module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&) {;}
+  virtual void page(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&) {;}
+  virtual void param(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) {;}
+  virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) {;}
 
   void displayPopup(const std::string& text, unsigned time);
 protected:
   Organelle& parent_;
-  std::shared_ptr<Kontrol::ParameterModel> model() { return parent_.model();}
+  std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model();}
   int popupTime_;
 };
 
@@ -62,19 +64,22 @@ struct Pots {
 
 class OParamMode : public OBaseMode {
 public:
-  OParamMode(Organelle& p) : OBaseMode(p), currentPage_(0) {;}
+  OParamMode(Organelle& p) : OBaseMode(p) {;}
   virtual bool init();
   virtual void poll();
   virtual void activate();
   virtual void changePot(unsigned pot, float value);
   virtual void changeEncoder(unsigned encoder, float value);
   virtual void encoderButton(unsigned encoder, bool value);
-  virtual void changed(Kontrol::ParameterSource src, const Kontrol::Parameter& p);
+  virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
 private:
   void display();
-  std::string get_param_id(unsigned paramnum);
+  unsigned currentPageNum_;
   std::shared_ptr<Pots> pots_;
-  unsigned currentPage_;
+  Kontrol::EntityId currentRackId_;
+  Kontrol::EntityId currentModuleId_;
+  Kontrol::EntityId currentPageId_;
+  std::vector<std::shared_ptr<Kontrol::Parameter>> currentParams_;
 };
 
 class OMenuMode : public OBaseMode {
@@ -153,16 +158,16 @@ bool OParamMode::init() {
 }
 
 void OParamMode::display() {
-  auto pageId = model()->getPageId(currentPage_);
-  if (pageId.empty()) return;
   parent_.clearDisplay();
   for (int i = 1; i < 5; i++) {
     // parameters start from 0 on page, but line 1 is oled line
     // note: currently line 0 is unavailable, and 5 used for AUX
-    auto id = model()->getParamId(pageId, i - 1);
-    if (id.empty()) return;
-    auto param = model()->getParam(id);
-    if (param != nullptr) parent_.displayParamLine(i, *param);
+    try {
+      auto param = currentParams_.at(i);
+      if (param != nullptr) parent_.displayParamLine(i, *param);
+    } catch (std::out_of_range) {
+      return ;
+    }
   } // for
 }
 
@@ -183,23 +188,15 @@ void OParamMode::poll() {
   }
 }
 
-std::string OParamMode::get_param_id(unsigned paramnum) {
-  auto pageId = model()->getPageId(currentPage_);
-  if (pageId.empty()) return "";
-  auto page = model()->getPage(pageId);
-  if (page == nullptr) return "";
-  auto id = model()->getParamId(page->id(), paramnum);
-  return id;
-}
 
 
 void OParamMode::changePot(unsigned pot, float value) {
   OBaseMode::changePot(pot, value);
-  auto id = get_param_id(pot);
-  auto param = model()->getParam(id);
-  if (param == nullptr) return;
-  if (!id.empty())  {
+  try {
+    auto param = currentParams_.at(pot);
+    auto paramId = param->id();
     Kontrol::ParamValue calc = param->calcFloat(value / MAX_POT_VALUE);
+
     if (pots_->locked_[pot] != Pots::K_UNLOCKED) {
       //if pot is locked, determined if we can unlock it
       if (calc == param->current()) {
@@ -232,32 +229,38 @@ void OParamMode::changePot(unsigned pot, float value) {
     }
 
     if (pots_->locked_[pot] == Pots::K_UNLOCKED) {
-      model()->changeParam(Kontrol::PS_LOCAL, id, calc);
+      model()->changeParam(Kontrol::PS_LOCAL, currentRackId_, currentModuleId_, paramId, calc);
     }
+  } catch (std::out_of_range) {
+    return ;
   }
+
 }
 
 
 void OParamMode::changeEncoder(unsigned enc, float value) {
   OBaseMode::changeEncoder(enc, value);
-  unsigned pagenum = currentPage_;
+  unsigned pagenum = currentPageNum_;
+  auto module = model()->getModule(model()->getRack(currentRackId_), currentModuleId_);
+  if (module == nullptr) return;
+
+  std::vector<std::shared_ptr<Kontrol::Page>> pages = module->getPages();
   if (value > 0) {
     // clockwise
     pagenum++;
-    pagenum = std::min(pagenum, model()->getPageCount() - 1);
+    pagenum = std::min(pagenum, (unsigned) pages.size() - 1);
   } else {
     // anti clockwise
     if (pagenum > 0) pagenum--;
   }
 
-  if (pagenum != currentPage_) {
-    auto pageId = model()->getPageId(pagenum);
-    if (pageId.empty()) return;
-    auto page = model()->getPage(pageId);
-    if (page == nullptr) return;
+  if (pagenum != currentPageNum_) {
+    auto page = pages.at(pagenum);
+    currentPageId_ = page->id();
+    currentPageNum_ = pagenum;
+    currentParams_ = module->getParams(page);
     displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
 
-    currentPage_ = pagenum;
     for (int i = 0; i < 4; i++) {
       pots_->locked_[i] = Pots::K_LOCKED;
     }
@@ -271,27 +274,26 @@ void OParamMode::encoderButton(unsigned enc, bool value) {
   }
 }
 
-
-void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Parameter& param) {
-  OBaseMode::changed(src, param);
+void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+  OBaseMode::changed(src, rack, module, param);
   if (popupTime_ > 0) return;
 
-  auto pageId = model()->getPageId(currentPage_);
-  if (pageId.empty()) return;
-
+  if (rack.id() != currentRackId_ || module.id() != currentModuleId_) return;
   for (int i = 1; i < 5; i++) {
     // parameters start from 0 on page, but line 1 is oled line
     // note: currently line 0 is unavailable, and 5 used for AUX
-    auto id = model()->getParamId(pageId, i - 1);
-    if (id.empty()) return;
-    if ( id == param.id()) {
-      parent_.displayParamLine(i, param);
-      if (src != Kontrol::PS_LOCAL) {
-        //std::cout << "locking " << param.id() << " src " << src << std::endl;
-        pots_->locked_[i - 1] = Pots::K_LOCKED;
+    try {
+      auto p = currentParams_.at(i);
+      if (p->id() == param.id()) {
+        parent_.displayParamLine(i, param);
+        if (src != Kontrol::PS_LOCAL) {
+          //std::cout << "locking " << param.id() << " src " << src << std::endl;
+          pots_->locked_[i - 1] = Pots::K_LOCKED;
+        }
       }
+    } catch (std::out_of_range) {
       return;
-    } // if id=param id
+    }
   } // for
 }
 
@@ -390,7 +392,7 @@ std::string OMainMenu::getItemText(unsigned idx) {
   switch (idx) {
   case MMI_HOME:   return "Home";
   case MMI_MODULE: return parent_.currentModule();
-  case MMI_PRESET: return model()->currentPreset();
+  case MMI_PRESET: return parent_.currentPreset();
   case MMI_SAVE:   return "Save Settings";
   case MMI_LEARN:  {
     if (parent_.midiLearn()) {
@@ -426,7 +428,10 @@ void OMainMenu::clicked(unsigned idx) {
     break;
   }
   case MMI_SAVE:  {
-    model()->savePatchSettings();
+    auto rack = model()->getRack(parent_.currentRack());
+    if (rack != nullptr) {
+      rack->saveSettings();
+    }
     parent_.changeMode(OM_PARAMETER);
     break;
   }
@@ -444,12 +449,22 @@ enum PresetMenuItms {
 
 
 bool OPresetMenu::init() {
-  presets_ = model()->getPresetList();
+  auto rack = model()->getRack(parent_.currentRack());
+  if (rack != nullptr) {
+    presets_ = rack->getPresetList();
+  } else {
+    presets_.clear();
+  }
   return true;
 }
 
 void OPresetMenu::activate() {
-  presets_ = model()->getPresetList();
+  auto rack = model()->getRack(parent_.currentRack());
+  if (rack != nullptr) {
+    presets_ = rack->getPresetList();
+  } else {
+    presets_.clear();
+  }
   OMenuMode::activate();
 }
 
@@ -473,12 +488,20 @@ std::string OPresetMenu::getItemText(unsigned idx) {
 void OPresetMenu::clicked(unsigned idx) {
   switch (idx) {
   case PMI_SAVE:   {
-    model()->savePreset(model()->currentPreset());
+    auto rack = model()->getRack(parent_.currentRack());
+    if (rack != nullptr) {
+      rack->updatePreset(parent_.currentPreset());
+    }
     parent_.changeMode(OM_MAINMENU);
     break;
   }
   case PMI_NEW:   {
-    model()->savePreset("New " + std::to_string(presets_.size()));
+    auto rack = model()->getRack(parent_.currentRack());
+    if (rack != nullptr) {
+      std::string newPreset = "New " + std::to_string(presets_.size());
+      rack->updatePreset(newPreset);
+      parent_.currentPreset(newPreset);
+    }
     parent_.changeMode(OM_MAINMENU);
     break;
   }
@@ -486,7 +509,12 @@ void OPresetMenu::clicked(unsigned idx) {
     break;
   }
   default: {
-    model()->applyPreset(presets_[idx - PMI_LAST]);
+    auto rack = model()->getRack(parent_.currentRack());
+    if (rack != nullptr) {
+      std::string newPreset = presets_[idx - PMI_LAST];
+      rack->applyPreset(newPreset);
+      parent_.currentPreset(newPreset);
+    }
     break;
   }
   }
@@ -649,11 +677,17 @@ void Organelle::invertLine(unsigned line) {
 
 }
 
-void Organelle::changed(Kontrol::ParameterSource src, const Kontrol::Parameter & p) {
-  if (midiLearnActive_) {
-    lastParamId_ = p.id();
+void Organelle::changed(Kontrol::ParameterSource src,
+                        const Kontrol::Rack& rack,
+                        const Kontrol::Module& module,
+                        const Kontrol::Parameter& param) {
+
+  if (midiLearnActive_
+      && rack.id() == currentRackId_
+      && module.id() == currentModuleId_) {
+    lastParamId_ = param.id();
   }
-  KontrolDevice::changed(src, p);
+  KontrolDevice::changed(src, rack, module, param);
 }
 
 void Organelle::midiLearn(bool b) {
@@ -666,12 +700,16 @@ void Organelle::midiCC(unsigned num, unsigned value) {
   //std::cout << "midiCC " << num << " " << value << std::endl;
   if (midiLearnActive_) {
     if (!lastParamId_.empty()) {
-      if (value > 0) {
-        model()->addMidiCCMapping(num, lastParamId_);
-        lastParamId_ = "";
-      }
-      else {
-        model()->addMidiCCMapping(num, "");
+      auto rack = model()->getRack(currentRackId_);
+      if (rack != nullptr) {
+        if (value > 0) {
+          rack->addMidiCCMapping(num, currentModuleId_, lastParamId_);
+          lastParamId_ = "";
+        }
+        else {
+          rack->removeMidiCCMapping(num, currentModuleId_, lastParamId_);
+          lastParamId_ = "";
+        }
       }
     }
   }

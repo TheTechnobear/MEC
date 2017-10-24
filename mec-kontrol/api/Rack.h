@@ -49,6 +49,7 @@ public:
 
     bool changeMidiCC(unsigned midiCC, unsigned midiValue);
     void addMidiCCMapping(unsigned ccnum, const EntityId& moduleId, const EntityId& paramId);
+    void removeMidiCCMapping(unsigned ccnum, const EntityId& moduleId, const EntityId& paramId);
 
     static std::shared_ptr<KontrolModel> model();
 
