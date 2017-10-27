@@ -64,7 +64,7 @@ struct Pots {
 
 class OParamMode : public OBaseMode {
 public:
-  OParamMode(Organelle& p) : OBaseMode(p) {;}
+  OParamMode(Organelle& p) : OBaseMode(p), currentPageNum_(0) {;}
   virtual bool init();
   virtual void poll();
   virtual void activate();
@@ -73,13 +73,12 @@ public:
   virtual void encoderButton(unsigned encoder, bool value);
   virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
 private:
+  void setPage(unsigned pagenum,bool UI);
   void display();
   unsigned currentPageNum_;
   std::shared_ptr<Pots> pots_;
-  Kontrol::EntityId currentRackId_;
-  Kontrol::EntityId currentModuleId_;
-  Kontrol::EntityId currentPageId_;
   std::vector<std::shared_ptr<Kontrol::Parameter>> currentParams_;
+  std::vector<std::shared_ptr<Kontrol::Page>> pages_;
 };
 
 class OMenuMode : public OBaseMode {
@@ -146,10 +145,12 @@ void OBaseMode::poll() {
   popupTime_--;
 }
 
-
-
 bool OParamMode::init() {
   OBaseMode::init();
+  auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
+  if(module) pages_ = module->getPages();
+  setPage(currentPageNum_, false);
+
   pots_ = std::make_shared<Pots>();
   for (int i = 0; i < 4; i++) {
     pots_->locked_[i] = Pots::K_UNLOCKED;
@@ -187,8 +188,6 @@ void OParamMode::poll() {
     popupTime_ = -1;
   }
 }
-
-
 
 void OParamMode::changePot(unsigned pot, float value) {
   OBaseMode::changePot(pot, value);
@@ -229,7 +228,7 @@ void OParamMode::changePot(unsigned pot, float value) {
     }
 
     if (pots_->locked_[pot] == Pots::K_UNLOCKED) {
-      model()->changeParam(Kontrol::PS_LOCAL, currentRackId_, currentModuleId_, paramId, calc);
+      model()->changeParam(Kontrol::PS_LOCAL, parent_.currentRack(), parent_.currentModule(), paramId, calc);
     }
   } catch (std::out_of_range) {
     return ;
@@ -237,33 +236,35 @@ void OParamMode::changePot(unsigned pot, float value) {
 
 }
 
+void OParamMode::setPage(unsigned pagenum, bool UI) {
+  auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
+  if (module == nullptr) return;
+
+  auto page = pages_.at(pagenum);
+  currentPageNum_ = pagenum;
+  currentParams_ = module->getParams(page);
+  if(UI) displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
+
+  for (int i = 0; i < 4; i++) {
+    pots_->locked_[i] = Pots::K_LOCKED;
+  }
+}
 
 void OParamMode::changeEncoder(unsigned enc, float value) {
   OBaseMode::changeEncoder(enc, value);
   unsigned pagenum = currentPageNum_;
-  auto module = model()->getModule(model()->getRack(currentRackId_), currentModuleId_);
-  if (module == nullptr) return;
 
-  std::vector<std::shared_ptr<Kontrol::Page>> pages = module->getPages();
   if (value > 0) {
     // clockwise
     pagenum++;
-    pagenum = std::min(pagenum, (unsigned) pages.size() - 1);
+    pagenum = std::min(pagenum, (unsigned) pages_.size() - 1);
   } else {
     // anti clockwise
     if (pagenum > 0) pagenum--;
   }
 
   if (pagenum != currentPageNum_) {
-    auto page = pages.at(pagenum);
-    currentPageId_ = page->id();
-    currentPageNum_ = pagenum;
-    currentParams_ = module->getParams(page);
-    displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
-
-    for (int i = 0; i < 4; i++) {
-      pots_->locked_[i] = Pots::K_LOCKED;
-    }
+    setPage(pagenum,true);
   }
 }
 
@@ -278,7 +279,7 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack& rack
   OBaseMode::changed(src, rack, module, param);
   if (popupTime_ > 0) return;
 
-  if (rack.id() != currentRackId_ || module.id() != currentModuleId_) return;
+  if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
   for (int i = 1; i < 5; i++) {
     // parameters start from 0 on page, but line 1 is oled line
     // note: currently line 0 is unavailable, and 5 used for AUX

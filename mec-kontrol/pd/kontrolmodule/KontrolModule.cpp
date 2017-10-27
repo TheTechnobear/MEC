@@ -14,25 +14,27 @@ typedef struct _KontrolModule {
 //define pure data methods
 extern "C"  {
   void    KontrolModule_free(t_KontrolModule*);
-  void*   KontrolModule_new(t_symbol* name);
+  void*   KontrolModule_new(t_symbol* name,t_symbol* type);
   void    KontrolModule_setup(void);
 }
 // puredata methods implementation - start
 
-void KontrolModule_free(t_KontrolModule* x)
-{
+void KontrolModule_free(t_KontrolModule* x) {
 }
 
-void *KontrolModule_new(t_symbol* name)
-{
+void *KontrolModule_new(t_symbol* name, t_symbol* type) {
   t_KontrolModule *x = (t_KontrolModule *) pd_new(KontrolModule_class);
-  if (name && name->s_name) {
+  if (name && name->s_name && type && type ->s_name) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack) {
       auto rackId = rack->id();
       Kontrol::EntityId moduleId = name->s_name;
+      std::string moduleType = type->s_name;
+      if (rack->getModule(moduleId) == nullptr) {
+        Kontrol::KontrolModel::model()->createModule(Kontrol::PS_LOCAL, rackId, moduleId, moduleType, moduleType);
+      }
 
-      Kontrol::KontrolModel::model()->loadModuleDefinitions(rackId, moduleId, moduleId + "-module.json");
+      Kontrol::KontrolModel::model()->loadModuleDefinitions(rackId, moduleId, moduleType + "-module.json");
       rack->loadSettings(rackId + "-rack.json");
       rack->applyPreset("default");
       rack->dumpSettings();
@@ -52,7 +54,7 @@ void KontrolModule_setup(void) {
                                   (t_method) KontrolModule_free,
                                   sizeof(t_KontrolModule),
                                   CLASS_DEFAULT,
-                                  A_SYMBOL, A_NULL);
+                                  A_SYMBOL, A_SYMBOL, A_NULL);
 }
 
 // puredata methods implementation - end

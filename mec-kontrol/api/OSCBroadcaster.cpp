@@ -94,7 +94,7 @@ void OSCBroadcaster::module(ParameterSource src, const Rack& rack, const Module&
         << m.displayName().c_str()
         << m.type().c_str();
 
-        ops << osc::EndMessage
+    ops << osc::EndMessage
         << osc::EndBundle;
 
     socket_->Send( ops.Data(), ops.Size() );

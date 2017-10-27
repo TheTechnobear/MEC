@@ -15,18 +15,15 @@ represents the device interface, of which there is always one
 
 static t_class *KontrolRack_tilde_class;
 
-
 class SendBroadcaster : public  Kontrol::KontrolCallback {
 public:
-    //Kontrol::KontrolCallback
-    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack&) {;}
-    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&) {;}
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&) {;}
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) {;}
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
+  //Kontrol::KontrolCallback
+  virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack&) {;}
+  virtual void module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&) {;}
+  virtual void page(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&) {;}
+  virtual void param(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) {;}
+  virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
 };
-
-
 
 class ClientHandler : public Kontrol::KontrolCallback {
 public:
@@ -42,12 +39,33 @@ private:
 };
 
 
+
+class DeviceHandler : public Kontrol::KontrolCallback {
+public:
+  DeviceHandler(t_KontrolRack* x) : x_(x) {;}
+  //Kontrol::KontrolCallback
+  virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack&) {;}
+  virtual void module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&) {;}
+  // virtual void module(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module) {;}
+    // if(src==Kontrol::PS_LOCAL) {
+    //     // if(x_->device_ && ! ( x_->device_->currentModule().empty()) ) {
+    //       // post(rack.id().c_str());
+    //       // x_->device_->currentRack(rack.id());
+    //       // x_->device_->currentModule(module.id());
+    //     // }
+    // }
+  // }
+
+  virtual void page(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&) {;}
+  virtual void param(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) {;}
+  virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) {;}
+private:
+  t_KontrolRack *x_;
+};
+
 // number of dsp renders before poll osc
 static const int OSC_POLL_FREQUENCY  = 50;
 static const int DEVICE_POLL_FREQUENCY = 50;
-
-
-
 
 // puredata methods implementation - start
 
@@ -99,7 +117,7 @@ void KontrolRack_tilde_free(t_KontrolRack* x)
   // Kontrol::ParameterModel::free();
 }
 
-void *KontrolRack_tilde_new(t_floatarg osc_in)
+void *KontrolRack_tilde_new(t_floatarg port)
 {
   t_KontrolRack *x = (t_KontrolRack *) pd_new(KontrolRack_tilde_class);
 
@@ -109,13 +127,18 @@ void *KontrolRack_tilde_new(t_floatarg osc_in)
   x->pollCount_ = 0;
   x->model_ = Kontrol::KontrolModel::model();
 
+  x->model_->createLocalRack(port);
+
   x->device_ = std::make_shared<Organelle>();
   x->device_->init();
 
+  x->device_->currentRack(x->model_->localRackId());
+
   x->model_->addCallback("pd.send", std::make_shared<SendBroadcaster>());
   x->model_->addCallback("pd.client", std::make_shared<ClientHandler>(x));
+  x->model_->addCallback("pd.device", std::make_shared<DeviceHandler>(x));
 
-  KontrolRack_tilde_listen(x, osc_in); // if zero will ignore
+  KontrolRack_tilde_listen(x, port); // if zero will ignore
   return (void *)x;
 }
 
@@ -157,7 +180,6 @@ void KontrolRack_tilde_setup(void) {
   class_addmethod(KontrolRack_tilde_class,
                   (t_method) KontrolRack_tilde_encbut, gensym("encbut"),
                   A_DEFFLOAT, A_NULL);
-
 
   class_addmethod(KontrolRack_tilde_class,
                   (t_method) KontrolRack_tilde_midiCC, gensym("midiCC"),
@@ -216,8 +238,6 @@ void    KontrolRack_tilde_encbut(t_KontrolRack* x, t_floatarg f) {
   if (x->device_) x->device_->encoderButton(0, f);
 }
 
-
-
 void    KontrolRack_tilde_knob1Raw(t_KontrolRack* x, t_floatarg f) {
   if (x->device_) x->device_->changePot(0, f);
 }
@@ -234,16 +254,14 @@ void    KontrolRack_tilde_knob4Raw(t_KontrolRack* x, t_floatarg f) {
   if (x->device_) x->device_->changePot(3, f);
 }
 
-
 void    KontrolRack_tilde_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value) {
   if (x->device_) x->device_->midiCC((unsigned) cc, (unsigned) value);
 }
 
-
-void SendBroadcaster::changed(Kontrol::ParameterSource src, 
-  const Kontrol::Rack& rack, 
-  const Kontrol::Module& module, 
-  const Kontrol::Parameter& param) {
+void SendBroadcaster::changed(Kontrol::ParameterSource src,
+                              const Kontrol::Rack& rack,
+                              const Kontrol::Module& module,
+                              const Kontrol::Parameter& param) {
 
   t_pd* sendobj = get_object(param.id().c_str());
   if (!sendobj) { post("send to %s failed", param.id().c_str()); return; }
@@ -263,7 +281,6 @@ void SendBroadcaster::changed(Kontrol::ParameterSource src,
   pd_forwardmess(sendobj, 1, &a);
 }
 
-
 void ClientHandler::rack(Kontrol::ParameterSource, const Kontrol::Rack& rack) {
   std::string id = "pd.osc:" + rack.host() + ":" + std::to_string(rack.port());
   Kontrol::KontrolModel::model()->removeCallback(id);
@@ -276,7 +293,4 @@ void ClientHandler::rack(Kontrol::ParameterSource, const Kontrol::Rack& rack) {
   }
 }
 
-
-
 // puredata methods implementation - end
-

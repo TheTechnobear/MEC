@@ -45,7 +45,6 @@ public:
     void removeCallback(std::shared_ptr<KontrolCallback>);
     void addCallback(const std::string& id, std::shared_ptr<KontrolCallback> listener);
 
-
     // access
     std::shared_ptr<Rack>          getLocalRack() const;
     std::shared_ptr<Rack>          getRack(const EntityId& rackId) const;
@@ -59,14 +58,13 @@ public:
     std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Module>&) const;
     std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Module>&, const std::shared_ptr<Page>&) const;
 
-
-    void createRack(
+    std::shared_ptr<Rack> createRack(
         ParameterSource src,
         const EntityId& rackId,
         const std::string& host,
         unsigned port) ;
 
-    void createModule(
+    std::shared_ptr<Module> createModule(
         ParameterSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
@@ -74,14 +72,14 @@ public:
         const std::string& type
     ) const;
 
-    void createParam(
+    std::shared_ptr<Parameter> createParam(
         ParameterSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
         const std::vector<ParamValue>& args
     ) const;
 
-    void createPage(
+    std::shared_ptr<Page> createPage(
         ParameterSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
@@ -90,13 +88,14 @@ public:
         const std::vector<EntityId> paramIds
     ) const;
 
-    void changeParam(
+    std::shared_ptr<Parameter> changeParam(
         ParameterSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
         const EntityId& paramId,
         ParamValue v) const;
 
+    std::shared_ptr<Rack> createLocalRack(unsigned port);
     EntityId localRackId() { if(localRack_) return localRack_->id(); else return "";}
     std::shared_ptr<Rack> localRack() { return localRack_;}
 

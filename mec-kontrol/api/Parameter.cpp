@@ -133,6 +133,21 @@ bool  Parameter::change(const ParamValue& c) {
     return false;
 }
 
+void Parameter::dump() const {
+    std::string d = id() + " : ";
+    ParamValue cv = current();
+    switch (cv.type()) {
+    case ParamValue::T_Float :
+        d += "  " + std::to_string(cv.floatValue()) + " [F],";
+        break;
+    case ParamValue::T_String :
+    default:
+        d += cv.stringValue() + " [S],";
+        break;
+    }
+    LOG_1(d);
+}
+
 // Parameter_Float : [parameter] min max default
 Parameter_Float::Parameter_Float(ParameterType type) :  Parameter(type) {
     ;

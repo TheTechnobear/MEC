@@ -80,7 +80,7 @@ void KontrolDevice::changed(Kontrol::ParameterSource src, const Kontrol::Rack& r
 
 void KontrolDevice::midiCC(unsigned num, unsigned value) {
     auto rack = model()->getLocalRack();
-    if(rack!=nullptr) {
+    if (rack != nullptr) {
         rack->changeMidiCC(num, value);
     }
 }

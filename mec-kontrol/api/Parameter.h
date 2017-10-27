@@ -42,7 +42,7 @@ public:
 
     virtual bool valid() { return Entity::valid() && type_ != PT_Invalid;}
 
-    void dump();
+    void dump() const;
 
 protected:
     virtual void init(const std::vector<ParamValue>& args, unsigned& pos);

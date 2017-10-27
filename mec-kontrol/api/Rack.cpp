@@ -233,23 +233,23 @@ void Rack::publishMetaData() const {
 void Rack::dumpSettings() const {
     LOG_1("Rack Settings :" << id());
     LOG_1("------------------------");
-    for(auto m : modules_) {
-        if(m.second!=nullptr) m.second->dumpSettings();
+    for (auto m : modules_) {
+        if (m.second != nullptr) m.second->dumpSettings();
     }
 }
 
 void Rack::dumpParameters() {
     LOG_1("Rack Parameters :" << id() );
     LOG_1("------------------------");
-    for(auto m : modules_) {
-        if(m.second!=nullptr) m.second->dumpParameters();
+    for (auto m : modules_) {
+        if (m.second != nullptr) m.second->dumpParameters();
     }
 }
 void Rack::dumpCurrentValues() {
     LOG_1("Rack Values : " << id());
     LOG_1("-----------------------");
-    for(auto m : modules_) {
-        if(m.second!=nullptr) m.second->dumpCurrentValues();
+    for (auto m : modules_) {
+        if (m.second != nullptr) m.second->dumpCurrentValues();
     }
 }
 

@@ -112,7 +112,7 @@ public:
                 char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
                 remoteEndpoint.AddressAsString(buf);
 
-                receiver_.createRack(PS_OSC, Rack::createId(buf,port), buf, port);
+                receiver_.createRack(PS_OSC, Rack::createId(buf, port), buf, port);
             } else if ( std::strcmp( m.AddressPattern(), "/Kontrol/metaData" ) == 0 ) {
                 receiver_.publishMetaData();
             }
@@ -179,7 +179,7 @@ void OSCReceiver::poll() {
 void OSCReceiver::createRack(
     ParameterSource src,
     const EntityId& rackId,
-    const std::string& host, 
+    const std::string& host,
     unsigned port) const {
     model_->createRack(src, rackId, host, port);
 }
