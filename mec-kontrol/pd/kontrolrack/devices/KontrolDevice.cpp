@@ -21,7 +21,8 @@ void KontrolDevice::addMode(unsigned mode, std::shared_ptr<DeviceMode> handler) 
 }
 
 bool KontrolDevice::init() {
-    model_->addCallback("pd.device", std::shared_ptr<KontrolDevice>(this));
+    //FIXME: cannot create shared_ptr like this
+    model_->addCallback("pd.kdevice", std::shared_ptr<KontrolDevice>(this));
     for (auto m : modes_) {
         if (m.second != nullptr) m.second->init();
     }

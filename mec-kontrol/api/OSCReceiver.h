@@ -64,18 +64,18 @@ public:
     ~OSCReceiver();
     bool listen(unsigned port = 9000);
     void poll();
-    
+
     void stop();
 
     void createRack(
-        ParameterSource src, 
-        const EntityId& rackId, 
-        const std::string& host, 
+        ParameterSource src,
+        const EntityId& rackId,
+        const std::string& host,
         unsigned port
     ) const;
 
     void createModule(
-        ParameterSource src, 
+        ParameterSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
         const std::string& displayName,
@@ -83,7 +83,7 @@ public:
     ) const;
 
     void createParam(
-        ParameterSource src, 
+        ParameterSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
         const std::vector<ParamValue>& args
@@ -99,10 +99,10 @@ public:
     ) const;
 
     void changeParam(
-        ParameterSource src, 
+        ParameterSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
-        const EntityId& paramId, 
+        const EntityId& paramId,
         ParamValue v) const;
 
     void publishMetaData() const;

@@ -43,7 +43,7 @@ public:
     void clearCallbacks();
     void removeCallback(const std::string& id);
     void removeCallback(std::shared_ptr<KontrolCallback>);
-    void addCallback(const std::string& id, std::shared_ptr<KontrolCallback> listener);
+    void addCallback(const std::string& id, const std::shared_ptr<KontrolCallback>& listener);
 
     // access
     std::shared_ptr<Rack>          getLocalRack() const;

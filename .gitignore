@@ -6,6 +6,7 @@ profile
 build
 
 **/*.sublime-workspace
+cmake-build*/
 
 #Xcode
 xcuserdata

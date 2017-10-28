@@ -10,7 +10,7 @@ set(KONTROL_API_SRC
     ParamValue.cpp 
     KontrolModel.cpp
     OSCReceiver.cpp 
-    OSCBroadcaster.cpp )
+    OSCBroadcaster.cpp)
 
 include_directories (
     "${PROJECT_SOURCE_DIR}/../../mec-utils"

@@ -45,16 +45,15 @@ public:
   DeviceHandler(t_KontrolRack* x) : x_(x) {;}
   //Kontrol::KontrolCallback
   virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack&) {;}
-  virtual void module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&) {;}
-  // virtual void module(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module) {;}
-    // if(src==Kontrol::PS_LOCAL) {
-    //     // if(x_->device_ && ! ( x_->device_->currentModule().empty()) ) {
-    //       // post(rack.id().c_str());
-    //       // x_->device_->currentRack(rack.id());
-    //       // x_->device_->currentModule(module.id());
-    //     // }
-    // }
-  // }
+  virtual void module(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module) {
+     if(src==Kontrol::PS_LOCAL) {
+          if(x_->device_ && ! ( x_->device_->currentModule().empty()) ) {
+//            post(rack.id().c_str());
+            x_->device_->currentRack(rack.id());
+            x_->device_->currentModule(module.id());
+          }
+     }
+   }
 
   virtual void page(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&) {;}
   virtual void param(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) {;}
@@ -136,7 +135,7 @@ void *KontrolRack_tilde_new(t_floatarg port)
 
   x->model_->addCallback("pd.send", std::make_shared<SendBroadcaster>());
   x->model_->addCallback("pd.client", std::make_shared<ClientHandler>(x));
-  x->model_->addCallback("pd.device", std::make_shared<DeviceHandler>(x));
+  x->model_->addCallback("pd.dev", x->device_);
 
   KontrolRack_tilde_listen(x, port); // if zero will ignore
   return (void *)x;

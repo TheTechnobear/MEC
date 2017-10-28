@@ -122,7 +122,7 @@ void KontrolModel::removeCallback(std::shared_ptr<KontrolCallback>) {
     //  }
     // }
 }
-void KontrolModel::addCallback(const std::string& id, std::shared_ptr<KontrolCallback> listener) {
+void KontrolModel::addCallback(const std::string& id, const std::shared_ptr<KontrolCallback>& listener) {
     auto p = listeners_[id];
     if (p != nullptr) p->stop();
     listeners_[id] = listener;
