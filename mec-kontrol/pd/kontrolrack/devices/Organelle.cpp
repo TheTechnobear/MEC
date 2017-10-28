@@ -182,12 +182,10 @@ bool OParamMode::init() {
 
 void OParamMode::display() {
     parent_.clearDisplay();
-    for (unsigned int i = 1; i < 5; i++) {
-        // parameters start from 0 on page, but line 1 is oled line
-        // note: currently line 0 is unavailable, and 5 used for AUX
+    for (unsigned int i = 0; i < 4; i++) {
         try {
             auto &param = currentParams_.at(i);
-            if (param != nullptr) parent_.displayParamLine(i, *param);
+            if (param != nullptr) parent_.displayParamLine(i+1, *param);
         } catch (std::out_of_range) {
             return;
         }
@@ -315,13 +313,11 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack
     if (popupTime_ > 0) return;
 
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
-    for (unsigned int i = 1; i < 5; i++) {
-        // parameters start from 0 on page, but line 1 is oled line
-        // note: currently line 0 is unavailable, and 5 used for AUX
+    for (unsigned int i = 0; i < 4; i++) {
         try {
             auto &p = currentParams_.at(i);
             if (p->id() == param.id()) {
-                parent_.displayParamLine(i, param);
+                parent_.displayParamLine(i+1, param);
                 if (src != Kontrol::PS_LOCAL) {
                     //std::cout << "locking " << param.id() << " src " << src << std::endl;
                     pots_->locked_[i - 1] = Pots::K_LOCKED;
