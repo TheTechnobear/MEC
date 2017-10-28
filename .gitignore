@@ -8,6 +8,9 @@ build
 **/*.sublime-workspace
 cmake-build*/
 
+.idea/workspace.xml
+.idea/tasks.xml
+
 #Xcode
 xcuserdata
 #contents.xcworkspacedata
