@@ -170,7 +170,7 @@ void Parameter_Float::createArgs(std::vector<ParamValue>& args) const {
 
 std::string Parameter_Float::displayValue() const {
     char numbuf[11];
-    sprintf(numbuf, "%.2f", current_.floatValue());
+    sprintf(numbuf, "%.1f", current_.floatValue());
     return std::string(numbuf);
 }
 

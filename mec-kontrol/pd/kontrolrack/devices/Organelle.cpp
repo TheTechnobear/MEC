@@ -2,6 +2,7 @@
 
 #include <osc/OscOutboundPacketStream.h>
 #include <iostream>
+#include <cmath>
 
 #include "../../m_pd.h"
 
@@ -19,7 +20,7 @@ const int8_t PATCH_SCREEN = 3;
 static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
 static char screenosc[OUTPUT_BUFFER_SIZE];
 
-static const unsigned MAX_POT_VALUE = 1023;
+static const float MAX_POT_VALUE = 1023.0F;
 
 enum OrganelleModes {
     OM_PARAMETER,
@@ -69,7 +70,7 @@ struct Pots {
         K_LOCKED
     } locked_[4];
 
-    unsigned sum_[4];
+    unsigned values_[4][3];
 };
 
 
@@ -219,10 +220,13 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
         auto &param = currentParams_.at(pot);
         auto paramId = param->id();
 
-        unsigned& v = pots_->sum_[pot];
-        v -= v/AVG_FAC;
-        v += rawvalue;
-        float value = float(v / AVG_FAC ) / MAX_POT_VALUE;
+        unsigned& v1 = pots_->values_[pot][0];
+        unsigned& v2 = pots_->values_[pot][1];
+        unsigned& v3 = pots_->values_[pot][2];
+        float value = std::round(double(v1 + v2 + v3 + rawvalue ) / (4.0 * 4.0) ) / 256.0f;
+        v3 = v2;
+        v2 = v1;
+        v1 = (unsigned) rawvalue;
 
         Kontrol::ParamValue calc = param->calcFloat(value);
 
