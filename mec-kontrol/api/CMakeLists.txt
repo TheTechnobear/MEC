@@ -2,7 +2,7 @@
 # MEC library
 project (mec-kontrol-api)
 
-set(KONTROL_API_SRC 
+set(KONTROL_API_SRC
     Entity.cpp
     Rack.cpp
     Module.cpp

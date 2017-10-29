@@ -1,40 +1,39 @@
 ###############################
 # kontrol pure data external
-project (KontrolModule)
-
+project(KontrolModule)
 
 
 set(KONTROLMODULE_SRC
-    KontrolModule.cpp
+        KontrolModule.cpp
+        )
+
+
+include_directories(
+        "${PROJECT_SOURCE_DIR}/.."
+        "${PROJECT_SOURCE_DIR}/../../api"
+        "${PROJECT_SOURCE_DIR}/../../../external/oscpack"
 )
-
-
-include_directories (
-    "${PROJECT_SOURCE_DIR}/.."
-    "${PROJECT_SOURCE_DIR}/../../api"
-    "${PROJECT_SOURCE_DIR}/../../../external/oscpack"
-    )
 
 add_library(KontrolModule SHARED ${KONTROLMODULE_SRC})
 
-target_link_libraries (KontrolModule mec-kontrol-api oscpack portaudio)
+target_link_libraries(KontrolModule mec-kontrol-api oscpack portaudio)
 
 
 ### setup for pure data
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
-if(${APPLE})
+if (${APPLE})
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".pd_darwin")
-elseif(${UNIX})
+elseif (${UNIX})
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".pd_linux")
-elseif(${WIN32})
+elseif (${WIN32})
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".dll")
     find_library(PD_LIBRARY NAMES pd HINTS ${PD_CMAKE_PATH})
     target_link_libraries(${PROJECT_NAME} ${PD_LIBRARY})
-endif()
+endif ()
 
 # Removes some warning for Microsoft Visual C.
-if(${MSVC})
+if (${MSVC})
     target_compile_definitions(${PROJECT_NAME} PRIVATE PD_INTERNAL)
     set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS /wd4091 /wd4996")
-endif()
+endif ()

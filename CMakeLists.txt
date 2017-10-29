@@ -9,21 +9,31 @@ set(MEC_VERSION_UPDATE 0)
 set(MEC_VERSION "${MEC_VERSION_MAJOR}.${MEC_VERSION_MINOR}.${MEC_VERSION_UPDATE}")
 set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
 
+
 if(APPLE)
     set(EXECUTABLE_NAME MicroExpression)
 elseif(UNIX)
     set(EXECUTABLE_NAME microexpression)
 endif(APPLE)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -funroll-loops -fomit-frame-pointer")
+
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(UNIX) 
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+elseif(UNIX)
     if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11  -mfloat-abi=hard -mfpu=neon -O3 ")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=armv7-a -mfpu=vfpv3 -mfloat-abi=hard -O3")
     else()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
     endif ()
-endif(APPLE) 
+endif(APPLE)
+
+
 
 set(CMAKE_MACOSX_RPATH 1)
 

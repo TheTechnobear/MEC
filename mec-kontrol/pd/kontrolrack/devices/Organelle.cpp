@@ -68,7 +68,10 @@ struct Pots {
         K_LT,
         K_LOCKED
     } locked_[4];
+
+    unsigned sum_[4];
 };
+
 
 
 class OParamMode : public OBaseMode {
@@ -209,12 +212,19 @@ void OParamMode::poll() {
     }
 }
 
-void OParamMode::changePot(unsigned pot, float value) {
-    OBaseMode::changePot(pot, value);
+void OParamMode::changePot(unsigned pot, float rawvalue) {
+    OBaseMode::changePot(pot, rawvalue);
     try {
+        static const unsigned AVG_FAC = 2;
         auto &param = currentParams_.at(pot);
         auto paramId = param->id();
-        Kontrol::ParamValue calc = param->calcFloat(value / MAX_POT_VALUE);
+
+        unsigned& v = pots_->sum_[pot];
+        v -= v/AVG_FAC;
+        v += rawvalue;
+        float value = float(v / AVG_FAC ) / MAX_POT_VALUE;
+
+        Kontrol::ParamValue calc = param->calcFloat(value);
 
         if (pots_->locked_[pot] != Pots::K_UNLOCKED) {
             //if pot is locked, determined if we can unlock it
