@@ -69,8 +69,6 @@ struct Pots {
         K_LT,
         K_LOCKED
     } locked_[4];
-
-    unsigned values_[4][3];
 };
 
 
@@ -216,17 +214,10 @@ void OParamMode::poll() {
 void OParamMode::changePot(unsigned pot, float rawvalue) {
     OBaseMode::changePot(pot, rawvalue);
     try {
-        static const unsigned AVG_FAC = 2;
         auto &param = currentParams_.at(pot);
         auto paramId = param->id();
 
-        unsigned& v1 = pots_->values_[pot][0];
-        unsigned& v2 = pots_->values_[pot][1];
-        unsigned& v3 = pots_->values_[pot][2];
-        float value = std::round(double(v1 + v2 + v3 + rawvalue ) / (4.0 * 4.0) ) / 256.0f;
-        v3 = v2;
-        v2 = v1;
-        v1 = (unsigned) rawvalue;
+        float value = rawvalue / MAX_POT_VALUE;
 
         Kontrol::ParamValue calc = param->calcFloat(value);
 
