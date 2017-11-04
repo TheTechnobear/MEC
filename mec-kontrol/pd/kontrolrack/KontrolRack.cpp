@@ -292,6 +292,8 @@ void SendBroadcaster::changed(Kontrol::ParameterSource src,
 }
 
 void ClientHandler::rack(Kontrol::ParameterSource, const Kontrol::Rack &rack) {
+    if(Kontrol::KontrolModel::model()->localRackId() == rack.id()) return;
+
     std::string id = "pd.osc:" + rack.host() + ":" + std::to_string(rack.port());
     Kontrol::KontrolModel::model()->removeCallback(id);
     if (rack.port()) {

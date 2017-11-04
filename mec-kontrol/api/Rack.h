@@ -21,7 +21,7 @@ public:
     Rack( const std::string& host,
           unsigned port,
           const std::string& displayName)
-        : Entity(createId(host, port), displayName) {
+        : Entity(createId(host, port), displayName), host_(host), port_(port) {
         ;
     }
 

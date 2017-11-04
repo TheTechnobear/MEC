@@ -32,7 +32,7 @@ static uint16_t VID = 0x2982, PID = 0x1967;
 
 #define HDR_PKT_SZ 0x10
 static uint8_t headerPkt[HDR_PKT_SZ] =
-{ 0xef, 0xcd, 0xab, 0x89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};// rev engineered
+    {0xef, 0xcd, 0xab, 0x89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};// rev engineered
 // { 0xFF, 0xCC, 0xAA, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00 }; //ableton
 
 
@@ -41,9 +41,7 @@ static uint8_t headerPkt[HDR_PKT_SZ] =
 #define usb_interface interface
 
 
-
-static int perr(char const *format, ...)
-{
+static int perr(char const *format, ...) {
     va_list args;
     int r;
 
@@ -73,28 +71,26 @@ void Push2::clearDisplay() {
 void Push2::clearRow(unsigned row, unsigned vscale) {
     for (int line = 0; line < F_HEIGHT; line++) {
         for (int vs = 0; vs < vscale; vs++) {
-            int bl = (((((row * F_HEIGHT) + line )) * vscale) + vs ) * (LINE / 2);
-            memset(& (dataPkt_[bl]), 0, LINE);
+            int bl = (((((row * F_HEIGHT) + line)) * vscale) + vs) * (LINE / 2);
+            memset(&(dataPkt_[bl]), 0, LINE);
         }
     }
 }
 
-void Push2::drawCell8(unsigned row, unsigned cell, const char* str, unsigned vscale, unsigned hscale, int16_t clr)
-{
+void Push2::drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, int16_t clr) {
     unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
     // static const unsigned CELL_OFFSET_8[8] = { 0, 24, 48, 72, 96, 120, 144, 168 };
     if (cell < 8) {
-        drawText(row, (CH_COLS / 8) * cell , str, vscale, hscale, clr);
+        drawText(row, (CH_COLS / 8) * cell, str, vscale, hscale, clr);
     }
 }
-void Push2::drawText(unsigned row, unsigned col, const char* str, unsigned vscale, unsigned hscale, int16_t clr)
-{
+
+void Push2::drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, int16_t clr) {
     drawText(row, col, str, strlen(str), vscale, hscale, clr);
 }
 
 
-void Push2::drawText(unsigned row, unsigned col, const char* str, int ln, unsigned vscale, unsigned hscale, int16_t colour)
-{
+void Push2::drawText(unsigned row, unsigned col, const char *str, int ln, unsigned vscale, unsigned hscale, int16_t colour) {
     unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
     unsigned CH_ROWS = ((HEIGHT / F_HEIGHT) / vscale);
     if (row > CH_ROWS) return;
@@ -104,13 +100,13 @@ void Push2::drawText(unsigned row, unsigned col, const char* str, int ln, unsign
         int c = col + i;
         int ch = str[i];
         for (int line = 0; line < F_HEIGHT; line++) {
-            int prow  = ch / (GIMP_IMAGE_WIDTH / F_WIDTH) ;
-            int pchar = ch %  (GIMP_IMAGE_WIDTH / F_WIDTH);
+            int prow = ch / (GIMP_IMAGE_WIDTH / F_WIDTH);
+            int pchar = ch % (GIMP_IMAGE_WIDTH / F_WIDTH);
             int pline = ((prow * F_HEIGHT) + line) * (GIMP_IMAGE_WIDTH * GIMP_IMAGE_BYTES_PER_PIXEL);
 
             for (int vs = 0; vs < vscale; vs++) {
-                int bl = (((((row * F_HEIGHT) + line )) * vscale) + vs ) * (LINE / 2);
-                for (int pix = 0; pix < F_WIDTH ; pix++) {
+                int bl = (((((row * F_HEIGHT) + line)) * vscale) + vs) * (LINE / 2);
+                for (int pix = 0; pix < F_WIDTH; pix++) {
                     int poffset = (pline) + (((pchar * F_WIDTH) + pix) * GIMP_IMAGE_BYTES_PER_PIXEL);
 
                     uint16_t clr = 0;
@@ -130,7 +126,7 @@ void Push2::drawText(unsigned row, unsigned col, const char* str, int ln, unsign
                     for (int hs = 0; hs < hscale; hs++) {
                         int bpos = bl + ((((c * F_WIDTH) + pix) * hscale) + hs);
                         // dataPkt_[bpos] = ( (clr & 0x00FF) << 8 ) | ( (clr & 0xFF00) >> 8);
-                        if (bpos < (DATA_PKT_SZ / 2) ) {
+                        if (bpos < (DATA_PKT_SZ / 2)) {
                             dataPkt_[bpos] = clr;
                         }
                     }
@@ -140,18 +136,16 @@ void Push2::drawText(unsigned row, unsigned col, const char* str, int ln, unsign
     }
 }
 
-void Push2::p1_drawCell8(unsigned row, unsigned cell, const char* str)
-{
-    static const unsigned P1_CELL_OFFSET_8[8] = { 0, 12, 24, 36, 48, 60, 72, 84 };
+void Push2::p1_drawCell8(unsigned row, unsigned cell, const char *str) {
+    static const unsigned P1_CELL_OFFSET_8[8] = {0, 12, 24, 36, 48, 60, 72, 84};
     if (cell < 8) {
         drawText(row, P1_CELL_OFFSET_8[cell], str, P1_VSCALE, P1_HSCALE, MONO_CLR);
     }
 }
 
 
-void Push2::p1_drawCell4(unsigned row, unsigned cell, const char* str)
-{
-    static const unsigned P1_CELL_OFFSET_4[4] = { 3, 27, 51, 75 };
+void Push2::p1_drawCell4(unsigned row, unsigned cell, const char *str) {
+    static const unsigned P1_CELL_OFFSET_4[4] = {3, 27, 51, 75};
     if (cell < 4) {
         drawText(row, P1_CELL_OFFSET_4[cell], str, strlen(str), P1_VSCALE, P1_HSCALE, MONO_CLR);
     }
@@ -171,18 +165,18 @@ int Push2::render() {
     int tfrsize = 0;
     int r = 0;
     CALL_CHECK(libusb_bulk_transfer(handle_, endpointOut_, headerPkt_, HDR_PKT_SZ, &tfrsize, 1000));
-    if (tfrsize != HDR_PKT_SZ) { printf( "header packet short %d", tfrsize); }
-    CALL_CHECK(libusb_bulk_transfer(handle_, endpointOut_, (unsigned char*) dataPkt_, DATA_PKT_SZ, &tfrsize, 1000));
-    if (tfrsize != DATA_PKT_SZ) { printf( "data packet short %d", tfrsize); }
+    if (tfrsize != HDR_PKT_SZ) { printf("header packet short %d", tfrsize); }
+    CALL_CHECK(libusb_bulk_transfer(handle_, endpointOut_, (unsigned char *) dataPkt_, DATA_PKT_SZ, &tfrsize, 1000));
+    if (tfrsize != DATA_PKT_SZ) { printf("data packet short %d", tfrsize); }
 
     return 0;
 }
 
 
 int Push2::init() {
-    const struct libusb_version* version;
+    const struct libusb_version *version;
     version = libusb_get_version();
-    std::cout <<  "Using libusb " <<  version->major << "." << version->minor << "." <<  version->micro << "." <<  version->nano << std::endl;
+    std::cout << "Using libusb " << version->major << "." << version->minor << "." << version->micro << "." << version->nano << std::endl;
     int r = libusb_init(NULL);
     libusb_set_debug(NULL, LIBUSB_LOG_LEVEL_INFO);
     static uint16_t vid = VID, pid = PID;

@@ -15,9 +15,9 @@ namespace mec {
 
 class KontrolDevice : public Device {
 public:
-    KontrolDevice(ICallback&);
+    KontrolDevice(ICallback &);
     virtual ~KontrolDevice();
-    virtual bool init(void*);
+    virtual bool init(void *);
     virtual bool process();
     virtual void deinit();
     virtual bool isActive();
@@ -30,7 +30,7 @@ private:
         S_CONNECTED
     } state_;
 
-    ICallback& callback_;
+    ICallback &callback_;
     bool active_;
     MsgQueue queue_;
     unsigned connectPort_;

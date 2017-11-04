@@ -25,10 +25,22 @@ void KontrolModel::publishMetaData() const {
 
 void KontrolModel::publishMetaData(const std::shared_ptr<Rack>& rack) const {
     std::vector<std::shared_ptr<Module>> modules = getModules(rack);
-    for (auto p : modules) {
-        if (p != nullptr) publishMetaData(rack);
+    publishRack(PS_LOCAL, *rack);
+    for (const auto &p : modules) {
+        if (p != nullptr) publishMetaData(rack,p);
     }
 }
+
+void KontrolModel::publishMetaData(const std::shared_ptr<Rack>& rack, const std::shared_ptr<Module>& module) const {
+    publishModule(PS_LOCAL, *rack,*module);
+    for(const auto param: module->getParams()) {
+        publishParam(PS_LOCAL,*rack,*module, *param);
+    }
+    for(const auto page: module->getPages()) {
+        publishPage(PS_LOCAL,*rack,*module, *page);
+    }
+}
+
 
 std::shared_ptr<Rack> KontrolModel::createLocalRack(unsigned port) {
     std::string host = "localhost";

@@ -8,10 +8,10 @@
 namespace mec {
 
 ////////////////////////////////////////////////
-KontrolDevice::KontrolDevice(ICallback& cb) :
+KontrolDevice::KontrolDevice(ICallback &cb) :
     state_(S_UNCONNECTED),
     active_(false), callback_(cb),
-    listenPort_(0), connectPort_(0)  {
+    listenPort_(0), connectPort_(0) {
     model_ = Kontrol::KontrolModel::model();
 }
 
@@ -20,8 +20,7 @@ KontrolDevice::~KontrolDevice() {
 }
 
 
-
-bool KontrolDevice::init(void* arg) {
+bool KontrolDevice::init(void *arg) {
     Preferences prefs(arg);
 
     LOG_0("KontrolDevice::init");
@@ -86,19 +85,19 @@ bool KontrolDevice::process() {
     // wait till after initialisatioin of all devices before requesting meta data
     if (osc_broadcaster_) {
         switch (state_) {
-        case S_UNCONNECTED :
-        case S_CONNECTED:
-            break;
-        case S_CONNECT_REQUEST :
-            LOG_0("KontrolDevice::process request callback");
-            osc_broadcaster_->requestConnect(listenPort_);
-            state_ = S_METADATA_REQUEST;
-            break;
-        case S_METADATA_REQUEST :
-            LOG_0("KontrolDevice::process request meta data");
-            osc_broadcaster_->requestMetaData();
-            state_ = S_CONNECTED;
-            break;
+            case S_UNCONNECTED :
+            case S_CONNECTED:
+                break;
+            case S_CONNECT_REQUEST :
+                LOG_0("KontrolDevice::process request callback");
+                osc_broadcaster_->requestConnect(listenPort_);
+                state_ = S_METADATA_REQUEST;
+                break;
+            case S_METADATA_REQUEST :
+                LOG_0("KontrolDevice::process request meta data");
+                osc_broadcaster_->requestMetaData();
+                state_ = S_CONNECTED;
+                break;
         }
     }
     // return queue_.process(callback_);

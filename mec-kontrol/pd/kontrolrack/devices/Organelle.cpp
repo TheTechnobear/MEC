@@ -325,7 +325,7 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack
                 parent_.displayParamLine(i+1, param);
                 if (src != Kontrol::PS_LOCAL) {
                     //std::cout << "locking " << param.id() << " src " << src << std::endl;
-                    pots_->locked_[i - 1] = Pots::K_LOCKED;
+                    pots_->locked_[i] = Pots::K_LOCKED;
                 }
             }
         } catch (std::out_of_range) {

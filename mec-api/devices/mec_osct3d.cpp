@@ -17,15 +17,13 @@
 
 namespace mec {
 
-class OscT3DHandler: public  osc::OscPacketListener
-{
+class OscT3DHandler : public osc::OscPacketListener {
 public:
-    OscT3DHandler(Preferences& p, MsgQueue& q)
-        :   prefs_(p),
-            queue_(q),
-            valid_(true),
-            socket_(nullptr)
-    {
+    OscT3DHandler(Preferences &p, MsgQueue &q)
+        : prefs_(p),
+          queue_(q),
+          valid_(true),
+          socket_(nullptr) {
         if (valid_) {
             LOG_0("OscT3DHandler enabling for mecapi");
         }
@@ -35,15 +33,14 @@ public:
         stealVoices_ = false;
     }
 
-    bool isValid() { return valid_;}
+    bool isValid() { return valid_; }
 
-    void setSocket(UdpListeningReceiveSocket* pS) {
+    void setSocket(UdpListeningReceiveSocket *pS) {
         socket_ = pS;
     }
 
-    virtual void ProcessMessage( const osc::ReceivedMessage& m,
-                                 const IpEndpointName& remoteEndpoint )
-    {
+    virtual void ProcessMessage(const osc::ReceivedMessage &m,
+                                const IpEndpointName &remoteEndpoint) {
         (void) remoteEndpoint; // suppress unused parameter warning
 
         try {
@@ -56,49 +53,45 @@ public:
 
             osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
             std::string addr = m.AddressPattern();
-            if ( addr.length() > 8 && addr.find(A_TOUCH) == 0) {
+            if (addr.length() > 8 && addr.find(A_TOUCH) == 0) {
                 std::string touch = addr.substr(8);
                 int tId = std::stoi(touch);
                 float x = 0.0f, y = 0.0f, z = 0.0f, note = 0.0f;
-                args >> x >> y >> z >> note >>  osc::EndMessage;
+                args >> x >> y >> z >> note >> osc::EndMessage;
                 queue_touch(tId, note, x, (y * 2.0f) - 1.0f, z);
-            }
-            else if ( addr == A_FRM) {
+            } else if (addr == A_FRM) {
                 osc::int32 d1, d2;
                 args >> d1 >> d2 >> osc::EndMessage;
-            }
-            else if ( addr ==  A_COMMAND) {
-                const char* cmd;
+            } else if (addr == A_COMMAND) {
+                const char *cmd;
                 args >> cmd >> osc::EndMessage;
 
-                LOG_1("received /t3d/command message with argument: " << cmd );
+                LOG_1("received /t3d/command message with argument: " << cmd);
                 if (strcmp(cmd, "shutdown") == 0) {
-                    LOG_1( "T3D shutdown request" );
+                    LOG_1("T3D shutdown request");
                     MecMsg msg;
                     msg.type_ = MecMsg::MEC_CONTROL;
                     msg.data_.mec_control_.cmd_ = MecMsg::SHUTDOWN;
                     queue_.addToQueue(msg);
                 }
             }
-        } catch ( osc::Exception& e ) {
+        } catch (osc::Exception &e) {
             // any parsing errors such as unexpected argument types, or
             // missing arguments get thrown as exceptions.
-            LOG_0("error while parsing message: " << m.AddressPattern() << ": " << e.what() );
+            LOG_0("error while parsing message: " << m.AddressPattern() << ": " << e.what());
         }
     }
 
-    virtual void queue_touch(int tId, float mn, float mx, float my, float mz)
-    {
-        Voices::Voice* voice = voices_.voiceId(tId);
-        if (mz > 0.0)
-        {
+    virtual void queue_touch(int tId, float mn, float mx, float my, float mz) {
+        Voices::Voice *voice = voices_.voiceId(tId);
+        if (mz > 0.0) {
             if (!voice) {
                 voice = voices_.startVoice(tId);
                 // LOG_1("start voice for " << tId << " ch " << voice->i_);
 
                 if (!voice && stealVoices_) {
                     // no available voices, steal?
-                    Voices::Voice* stolen = voices_.oldestActiveVoice();
+                    Voices::Voice *stolen = voices_.oldestActiveVoice();
                     MecMsg msg;
                     msg.data_.touch_.touchId_ = stolen->i_;
                     msg.data_.touch_.note_ = stolen->note_;
@@ -127,8 +120,7 @@ public:
                         queue_.addToQueue(msg);
                     }
                     // dont send to callbacks until we have the minimum pressures for velocity
-                }
-                else {
+                } else {
                     MecMsg msg;
                     msg.data_.touch_.touchId_ = voice->i_;
                     msg.data_.touch_.note_ = mn;
@@ -162,15 +154,17 @@ public:
             }
         }
     }
+
 private:
-    inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
-    float   note(float n) { return n; }
+    inline float clamp(float v, float mn, float mx) { return (std::max(std::min(v, mx), mn)); }
+
+    float note(float n) { return n; }
 
     Preferences prefs_;
-    MsgQueue& queue_;
+    MsgQueue &queue_;
     bool valid_;
     bool activeTouches_[16];
-    UdpListeningReceiveSocket* socket_;
+    UdpListeningReceiveSocket *socket_;
     bool stealVoices_;
     Voices voices_;
 
@@ -178,7 +172,7 @@ private:
 
 
 ////////////////////////////////////////////////
-OscT3D::OscT3D(ICallback& cb) :
+OscT3D::OscT3D(ICallback &cb) :
     active_(false), callback_(cb) {
 }
 
@@ -187,16 +181,16 @@ OscT3D::~OscT3D() {
 }
 
 
-void OscT3DListen(OscT3D* self) {
+void OscT3DListen(OscT3D *self) {
     self->listenProc();
 }
 
 void OscT3D::listenProc() {
-    LOG_1( "T3D socket listening on : " << port_);
+    LOG_1("T3D socket listening on : " << port_);
     socket_->Run();
 }
 
-bool OscT3D::init(void* arg) {
+bool OscT3D::init(void *arg) {
     Preferences prefs(arg);
 
     if (active_) {
@@ -213,12 +207,12 @@ bool OscT3D::init(void* arg) {
         delete pCb;
     }
 
-    LOG_1( "T3D socket on port : " << port_);
+    LOG_1("T3D socket on port : " << port_);
 
     socket_.reset(
         new UdpListeningReceiveSocket(
-            IpEndpointName( IpEndpointName::ANY_ADDRESS, port_ ),
-            pCb )
+            IpEndpointName(IpEndpointName::ANY_ADDRESS, port_),
+            pCb)
     );
 
     pCb->setSocket(socket_.get());

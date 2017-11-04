@@ -11,38 +11,42 @@
 namespace mec {
 
 ////////////////////////////////////////////////
-class EigenharpHandler: public  EigenApi::Callback
-{
+class EigenharpHandler : public EigenApi::Callback {
 public:
-    EigenharpHandler(Preferences& p, ICallback& cb)
-        :   prefs_(p),
-            callback_(cb),
-            valid_(true),
-            voices_(p.getInt("voices", 15), p.getInt("velocity count", 5)),
-            pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
-            stealVoices_(p.getBool("steal voices", true)),
-            throttle_(p.getInt("throttle", 0) == 0 ? 0 : 1000000 / p.getInt("throttle", 0) )
-    {
+    EigenharpHandler(Preferences &p, ICallback &cb)
+        : prefs_(p),
+          callback_(cb),
+          valid_(true),
+          voices_(p.getInt("voices", 15), p.getInt("velocity count", 5)),
+          pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
+          stealVoices_(p.getBool("steal voices", true)),
+          throttle_(p.getInt("throttle", 0) == 0 ? 0 : 1000000 / p.getInt("throttle", 0)) {
         if (valid_) {
             LOG_0("EigenharpHandler enabling for mecapi");
         }
     }
 
-    bool isValid() { return valid_;}
+    bool isValid() { return valid_; }
 
-    virtual void device(const char* dev, DeviceType dt, int rows, int cols, int ribbons, int pedals)
-    {
-        const char* dk = "defaut";
+    virtual void device(const char *dev, DeviceType dt, int rows, int cols, int ribbons, int pedals) {
+        const char *dk = "defaut";
         switch (dt) {
-        case EigenApi::Callback::PICO:  dk = "pico";    break;
-        case EigenApi::Callback::TAU:   dk = "tau";     break;
-        case EigenApi::Callback::ALPHA: dk = "alpha";   break;
-        default: dk = "default";
+            case EigenApi::Callback::PICO:
+                dk = "pico";
+                break;
+            case EigenApi::Callback::TAU:
+                dk = "tau";
+                break;
+            case EigenApi::Callback::ALPHA:
+                dk = "alpha";
+                break;
+            default:
+                dk = "default";
         }
 
-        LOG_1("EigenharpHandler device d: "  << dev << " dt: " <<  (int) dt) << " dk: " << dk;
-        LOG_1(" r: " << rows     << " c: " << cols);
-        LOG_1(" s: " << ribbons  << " p: " << pedals);
+        LOG_1("EigenharpHandler device d: " << dev << " dt: " << (int) dt) << " dk: " << dk;
+        LOG_1(" r: " << rows << " c: " << cols);
+        LOG_1(" s: " << ribbons << " p: " << pedals);
 
         if (prefs_.exists("mapping")) {
             Preferences map(prefs_.getSubTree("mapping"));
@@ -54,20 +58,18 @@ public:
     }
 
 
-    virtual void key(const char* dev, unsigned long long t, unsigned course, unsigned key, bool a, unsigned p, int r, int y)
-    {
-        Voices::Voice* voice = voices_.voiceId(key);
-        float   mx = bipolar(r);
-        float   my = bipolar(y);
-        float   mz = unipolar(p);
-        float   mn = note(key, mx);
-        if (a)
-        {
+    virtual void key(const char *dev, unsigned long long t, unsigned course, unsigned key, bool a, unsigned p, int r, int y) {
+        Voices::Voice *voice = voices_.voiceId(key);
+        float mx = bipolar(r);
+        float my = bipolar(y);
+        float mz = unipolar(p);
+        float mn = note(key, mx);
+        if (a) {
 
-            LOG_3("EigenharpHandler key device d: "  << dev  << " a: "  << a);
-            LOG_3(" c: "   << course   << " k: "   << key);
-            LOG_3(" r: "   << r        << " y: "   << y    << " p: "  << p);
-            LOG_3(" mn: " << mn << " mx: "  << mx       << " my: "  << my   << " mz: " << mz);
+            LOG_3("EigenharpHandler key device d: " << dev << " a: " << a);
+            LOG_3(" c: " << course << " k: " << key);
+            LOG_3(" r: " << r << " y: " << y << " p: " << p);
+            LOG_3(" mn: " << mn << " mx: " << mx << " my: " << my << " mz: " << mz);
 
             if (!voice) {
                 if (stolenKeys_.find(key) != stolenKeys_.end()) {
@@ -80,7 +82,7 @@ public:
                 if (!voice && stealVoices_) {
                     LOG_2("voice steal required for " << key);
                     // no available voices, steal?
-                    Voices::Voice* stolen = voices_.oldestActiveVoice();
+                    Voices::Voice *stolen = voices_.oldestActiveVoice();
                     callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
                     stolenKeys_.insert(stolen->id_);
                     voices_.stopVoice(stolen);
@@ -98,8 +100,7 @@ public:
                         voice->t_ = t;
                     }
                     // dont send to callbacks until we have the minimum pressures for velocity
-                }
-                else {
+                } else {
                     if (throttle_ == 0 || (t - voice->t_) >= throttle_) {
                         LOG_2("continue voice for " << key << " ch " << voice->i_);
                         callback_.touchContinue(voice->i_, mn, mx, my, mz);
@@ -125,30 +126,30 @@ public:
         }
     }
 
-    virtual void breath(const char* dev, unsigned long long t, unsigned val)
-    {
+    virtual void breath(const char *dev, unsigned long long t, unsigned val) {
         callback_.control(0, unipolar(val));
     }
 
-    virtual void strip(const char* dev, unsigned long long t, unsigned strip, unsigned val)
-    {
+    virtual void strip(const char *dev, unsigned long long t, unsigned strip, unsigned val) {
         callback_.control(0x10 + strip, unipolar(val));
     }
 
-    virtual void pedal(const char* dev, unsigned long long t, unsigned pedal, unsigned val)
-    {
+    virtual void pedal(const char *dev, unsigned long long t, unsigned pedal, unsigned val) {
         callback_.control(0x20 + pedal, unipolar(val));
     }
 
 private:
-    inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
-    float   unipolar(int val) { return std::min( float(val) / 4096.0f, 1.0f); }
-    float   bipolar(int val) { return clamp(float(val) / 4096.0f, -1.0f, 1.0f);}
+    inline float clamp(float v, float mn, float mx) { return (std::max(std::min(v, mx), mn)); }
+
+    float unipolar(int val) { return std::min(float(val) / 4096.0f, 1.0f); }
+
+    float bipolar(int val) { return clamp(float(val) / 4096.0f, -1.0f, 1.0f); }
+
     //float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + (mx  * pitchbendRange_) ; }
-    float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + ((mx > 0.0 ? mx*mx : -mx * mx)  * pitchbendRange_) ; }
+    float note(unsigned key, float mx) { return mapper_.noteFromKey(key) + ((mx > 0.0 ? mx * mx : -mx * mx) * pitchbendRange_); }
 
     Preferences prefs_;
-    ICallback& callback_;
+    ICallback &callback_;
     SurfaceMapper mapper_;
     Voices voices_;
     bool valid_;
@@ -160,15 +161,15 @@ private:
 
 
 ////////////////////////////////////////////////
-Eigenharp::Eigenharp(ICallback& cb) :
-    active_(false), callback_(cb), minPollTime_(100)  {
+Eigenharp::Eigenharp(ICallback &cb) :
+    active_(false), callback_(cb), minPollTime_(100) {
 }
 
 Eigenharp::~Eigenharp() {
     deinit();
 }
 
-bool Eigenharp::init(void* arg) {
+bool Eigenharp::init(void *arg) {
     Preferences prefs(arg);
 
     if (active_) {

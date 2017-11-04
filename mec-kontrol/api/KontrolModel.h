@@ -111,7 +111,7 @@ public:
 
 private:
     void publishMetaData(const std::shared_ptr<Rack>& rack) const;
-    void publishMetaData(const std::shared_ptr<Rack>& rack, const std::shared_ptr<Module>& module);
+    void publishMetaData(const std::shared_ptr<Rack>& rack, const std::shared_ptr<Module>& module) const;
 
     KontrolModel();
     std::shared_ptr<Rack>  localRack_;

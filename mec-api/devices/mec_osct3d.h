@@ -16,9 +16,9 @@ namespace mec {
 class OscT3D : public Device {
 
 public:
-    OscT3D(ICallback&);
+    OscT3D(ICallback &);
     virtual ~OscT3D();
-    virtual bool init(void*);
+    virtual bool init(void *);
     virtual bool process();
     virtual void deinit();
     virtual bool isActive();
@@ -26,7 +26,7 @@ public:
     void listenProc();
 
 private:
-    ICallback& callback_;
+    ICallback &callback_;
     bool active_;
     MsgQueue queue_;
     std::unique_ptr<UdpListeningReceiveSocket> socket_;

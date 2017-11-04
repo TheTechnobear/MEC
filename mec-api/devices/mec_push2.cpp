@@ -30,21 +30,21 @@ const unsigned P2_ENCODER_CC_END = P2_ENCODER_CC_START + 7;
 const unsigned P2_ENCODER_CC_VOLUME = 79;
 
 const unsigned P2_DEV_SELECT_CC_START = 102;
-const unsigned P2_DEV_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7 ;
+const unsigned P2_DEV_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7;
 
 const unsigned P2_TRACK_SELECT_CC_START = 20;
-const unsigned P2_TRACK_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7 ;
+const unsigned P2_TRACK_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7;
 
 static const struct Scales {
     char name[20];
     int16_t value;
-} scales [] = {
-    {"Chromatic",        0b111111111111 },
-    {"Major",            0b101011010101 },
-    {"Harmonic Minor",   0b101101011001 },
-    {"Melodic Minor",    0b101101010101 },
-    {"Whole",            0b101010101010 },
-    {"Octatonic",        0b101101101101 }
+} scales[] = {
+    {"Chromatic",      0b111111111111},
+    {"Major",          0b101011010101},
+    {"Harmonic Minor", 0b101101011001},
+    {"Melodic Minor",  0b101101010101},
+    {"Whole",          0b101010101010},
+    {"Octatonic",      0b101101101101}
 };
 
 const int scales_len = sizeof(scales) / sizeof(scales[0]);
@@ -63,33 +63,30 @@ static const char tonics[12][3] = {
     "A#",
     "B"
 };
-static const char scaleModes [2][15] = {
+static const char scaleModes[2][15] = {
     "Chromatic",
     "In Key"
 };
 
 
-
-
-
 class Push2_OLED : public Kontrol::KontrolCallback {
 public:
-    Push2_OLED(Push2& parent, const std::shared_ptr<Push2API::Push2>& api) :
+    Push2_OLED(Push2 &parent, const std::shared_ptr<Push2API::Push2> &api) :
         parent_(parent), push2Api_(api), currentPage_(0) {
-        model_ = Kontrol::KontrolModel::model();
-        ;
+        model_ = Kontrol::KontrolModel::model();;
     }
+
     void setCurrentPage(unsigned page);
-    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack&);
-    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&);
-    virtual void page(Kontrol::ParameterSource src, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&);
-    virtual void param(Kontrol::ParameterSource src, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
-    virtual void changed(Kontrol::ParameterSource src, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
+    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack &);
+    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &);
+    virtual void page(Kontrol::ParameterSource src, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &);
+    virtual void param(Kontrol::ParameterSource src, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &);
+    virtual void changed(Kontrol::ParameterSource src, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &);
 
 private:
     void displayPage();
-    void drawParam(unsigned pos, const Kontrol::Parameter& param);
-    Push2& parent_;
+    void drawParam(unsigned pos, const Kontrol::Parameter &param);
+    Push2 &parent_;
     std::shared_ptr<Push2API::Push2> push2Api_;
     std::shared_ptr<Kontrol::KontrolModel> model_;
     unsigned currentPage_;
@@ -99,7 +96,7 @@ int NumNotesInScale(int16_t scale) {
     int s = scale;
     int n = 0;
     for (int i = 0; i < 12; i++) {
-        if ( s & 0x01) {
+        if (s & 0x01) {
             n++;
         }
         s = s >> 1;
@@ -107,7 +104,7 @@ int NumNotesInScale(int16_t scale) {
     return n;
 }
 
-Push2::Push2(ICallback& cb) :
+Push2::Push2(ICallback &cb) :
     MidiDevice(cb),
     scaleIdx_(1),
     octave_(2),
@@ -117,16 +114,15 @@ Push2::Push2(ICallback& cb) :
     tonic_(0),
     rowOffset_(5) {
     numNotesInScale_ = NumNotesInScale(scale_);
-    PaUtil_InitializeRingBuffer(& midiQueue_, sizeof(MidiMsg), MAX_N_MIDI_MSGS, msgData_);
+    PaUtil_InitializeRingBuffer(&midiQueue_, sizeof(MidiMsg), MAX_N_MIDI_MSGS, msgData_);
 }
 
 Push2::~Push2() {
     deinit();
 }
 
-void Push2InCallback( double deltatime, std::vector< unsigned char > *message, void *userData )
-{
-    Push2* self = static_cast<Push2*>(userData);
+void Push2InCallback(double deltatime, std::vector<unsigned char> *message, void *userData) {
+    Push2 *self = static_cast<Push2 *>(userData);
     self->midiCallback(deltatime, message);
 }
 
@@ -136,7 +132,7 @@ RtMidiIn::RtMidiCallback Push2::getMidiCallback() {
 }
 
 
-bool Push2::init(void* arg) {
+bool Push2::init(void *arg) {
     if (MidiDevice::init(arg)) {
 
         Preferences prefs(arg);
@@ -174,10 +170,9 @@ bool Push2::init(void* arg) {
 bool Push2::process() {
     push2Api_->render(); // TODO maybe this should be moved off to separate slow thread
 
-    while (PaUtil_GetRingBufferReadAvailable(& midiQueue_))
-    {
+    while (PaUtil_GetRingBufferReadAvailable(&midiQueue_)) {
         MidiMsg msg;
-        PaUtil_ReadRingBuffer(& midiQueue_, &msg, 1);
+        PaUtil_ReadRingBuffer(&midiQueue_, &msg, 1);
         processMidi(msg);
     }
 
@@ -192,22 +187,22 @@ void Push2::deinit() {
     MidiDevice::deinit();
 }
 
-bool Push2::midiCallback(double deltatime, std::vector< unsigned char > *message)  {
+bool Push2::midiCallback(double deltatime, std::vector<unsigned char> *message) {
     unsigned int n = message->size();
-    if (n > 3)  LOG_0("midiCallback unexpect midi size" << n);
+    if (n > 3) LOG_0("midiCallback unexpect midi size" << n);
 
     MidiMsg m;
 
-    m.data[0] = (int)message->at(0);
-    if (n > 1) m.data[1] = (int)message->at(1);
-    if (n > 2) m.data[2] = (int)message->at(2);
+    m.data[0] = (int) message->at(0);
+    if (n > 1) m.data[1] = (int) message->at(1);
+    if (n > 2) m.data[2] = (int) message->at(2);
 
     // LOG_0("midi: s " << std::hex << m.status_ << " "<< m.data[1] << " " << m.data[2]);
-    PaUtil_WriteRingBuffer(&midiQueue_, (void*) &m, 1);
+    PaUtil_WriteRingBuffer(&midiQueue_, (void *) &m, 1);
     return true;
 }
 
-bool Push2::processMidi(const MidiMsg& midimsg)  {
+bool Push2::processMidi(const MidiMsg &midimsg) {
     //TODO... this can be rationalise with mec_mididevice.cpp
     //be careful : push2 we want to process midi message in main thread
     //since we are going to be handling some of the messages for OLED etc
@@ -215,82 +210,82 @@ bool Push2::processMidi(const MidiMsg& midimsg)  {
     int type = midimsg.data[0] & 0xF0;
     MecMsg msg;
     switch (type) {
-    case 0x90: { // note on
-        if (midimsg.data[1] >= P2_NOTE_PAD_START && midimsg.data[1] <= P2_NOTE_PAD_END) {
-            // TODO: use voice, or make single ch midi
-            if (midimsg.data[2] > 0)
-                msg.type_ = MecMsg::TOUCH_ON;
-            else
-                msg.type_ = MecMsg::TOUCH_OFF;
+        case 0x90: { // note on
+            if (midimsg.data[1] >= P2_NOTE_PAD_START && midimsg.data[1] <= P2_NOTE_PAD_END) {
+                // TODO: use voice, or make single ch midi
+                if (midimsg.data[2] > 0)
+                    msg.type_ = MecMsg::TOUCH_ON;
+                else
+                    msg.type_ = MecMsg::TOUCH_OFF;
 
-            msg.data_.touch_.touchId_ = ch;
-            msg.data_.touch_.note_ = (float) midimsg.data[1];
-            msg.data_.touch_.x_ = 0;
-            msg.data_.touch_.y_ = 0;
-            msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0;
-            queue_.addToQueue(msg);
-        } else {
-            if (midimsg.data[2] > 0) {
-                processPushNoteOn(midimsg.data[1], midimsg.data[2]);
+                msg.data_.touch_.touchId_ = ch;
+                msg.data_.touch_.note_ = (float) midimsg.data[1];
+                msg.data_.touch_.x_ = 0;
+                msg.data_.touch_.y_ = 0;
+                msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0;
+                queue_.addToQueue(msg);
             } else {
-                processPushNoteOff(midimsg.data[1], 100);
+                if (midimsg.data[2] > 0) {
+                    processPushNoteOn(midimsg.data[1], midimsg.data[2]);
+                } else {
+                    processPushNoteOff(midimsg.data[1], 100);
+                }
             }
+            break;
         }
-        break;
-    }
 
-    case 0x80: { // note off
-        if (midimsg.data[1] >= P2_NOTE_PAD_START && midimsg.data[1] <= P2_NOTE_PAD_END) {
+        case 0x80: { // note off
+            if (midimsg.data[1] >= P2_NOTE_PAD_START && midimsg.data[1] <= P2_NOTE_PAD_END) {
+                // TODO: use voice, or make single ch midi
+                msg.type_ = MecMsg::TOUCH_OFF;
+                msg.data_.touch_.touchId_ = ch;
+                msg.data_.touch_.note_ = (float) midimsg.data[1];
+                msg.data_.touch_.x_ = 0;
+                msg.data_.touch_.y_ = 0;
+                msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0;
+                queue_.addToQueue(msg);
+            } else {
+                processPushNoteOff(midimsg.data[1], midimsg.data[2]);
+            }
+            break;
+        }
+        case 0xA0: { // poly pressure
             // TODO: use voice, or make single ch midi
-            msg.type_ = MecMsg::TOUCH_OFF;
+            msg.type_ = MecMsg::TOUCH_CONTINUE;
             msg.data_.touch_.touchId_ = ch;
             msg.data_.touch_.note_ = (float) midimsg.data[1];
             msg.data_.touch_.x_ = 0;
             msg.data_.touch_.y_ = 0;
             msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0;
             queue_.addToQueue(msg);
-        } else {
-            processPushNoteOff(midimsg.data[1], midimsg.data[2]);
         }
-        break;
-    }
-    case 0xA0: { // poly pressure
-        // TODO: use voice, or make single ch midi
-        msg.type_ = MecMsg::TOUCH_CONTINUE;
-        msg.data_.touch_.touchId_ = ch;
-        msg.data_.touch_.note_ = (float) midimsg.data[1];
-        msg.data_.touch_.x_ = 0;
-        msg.data_.touch_.y_ = 0;
-        msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0;
-        queue_.addToQueue(msg);
-    }
-    case 0xB0: { // CC
-        processPushCC(midimsg.data[1], midimsg.data[2]);
-        break;
-    }
-    case 0xD0: { // channel pressure
-        // float v = float(midimsg.data[1]) / 127.0f;
-        // msg.type_ = MecMsg::CONTROL;
-        // msg.data_.control_.controlId_ = type;
-        // msg.data_.control_.value_ = v;
-        // queue_.addToQueue(msg);
-        break;
-    }
-    case 0xE0: { // pitchbend
-        // float pb = (float) ((midimsg.data[2] << 7) + midimsg.data[1]);
-        // float v = (pb / 8192.0f) - 1.0f;  // -1.0 to 1.0
-        // msg.type_ = MecMsg::CONTROL;
-        // msg.data_.control_.controlId_ = type;
-        // msg.data_.control_.value_ = v;
-        // queue_.addToQueue(msg);
-        break;
-    }
-    default: {
-        // TODO
-        // everything else;
-        // need to consider sysex replies?
-        break;
-    }
+        case 0xB0: { // CC
+            processPushCC(midimsg.data[1], midimsg.data[2]);
+            break;
+        }
+        case 0xD0: { // channel pressure
+            // float v = float(midimsg.data[1]) / 127.0f;
+            // msg.type_ = MecMsg::CONTROL;
+            // msg.data_.control_.controlId_ = type;
+            // msg.data_.control_.value_ = v;
+            // queue_.addToQueue(msg);
+            break;
+        }
+        case 0xE0: { // pitchbend
+            // float pb = (float) ((midimsg.data[2] << 7) + midimsg.data[1]);
+            // float v = (pb / 8192.0f) - 1.0f;  // -1.0 to 1.0
+            // msg.type_ = MecMsg::CONTROL;
+            // msg.data_.control_.controlId_ = type;
+            // msg.data_.control_.value_ = v;
+            // queue_.addToQueue(msg);
+            break;
+        }
+        default: {
+            // TODO
+            // everything else;
+            // need to consider sysex replies?
+            break;
+        }
     } //switch
 
     return true;
@@ -313,15 +308,16 @@ void Push2::processPushCC(unsigned cc, unsigned v) {
         unsigned idx = cc - P2_ENCODER_CC_START;
         //TODO
         try {
+            if (idx >= params_.size()) return;
             auto param = params_[idx];
             // auto page = pages_[currentPage_]
             if (param != nullptr) {
                 const int steps = 1;
                 // LOG_0("v = " << v);
-                float  vel = 0.0;
+                float vel = 0.0;
                 if (v & 0x40) {
                     // -ve
-                    vel =  (128.0 - (float) v) / (128.0 * steps)  * -1.0;
+                    vel = (128.0 - (float) v) / (128.0 * steps) * -1.0;
                     // LOG_0("vel - = " << vel);
                 } else {
                     vel = float(v) / (128.0 * steps);
@@ -332,7 +328,7 @@ void Push2::processPushCC(unsigned cc, unsigned v) {
                 auto module = modules_[currentModule_];
                 model_->changeParam(Kontrol::PS_LOCAL, rack_->id(), module->id(), param->id(), calc);
             }
-        } catch(std::out_of_range) {
+        } catch (std::out_of_range) {
 
         }
 
@@ -367,9 +363,9 @@ int8_t Push2::determinePadScaleColour(int8_t r, int8_t c) {
     int8_t note_s = (r * rowOffset_) + c;
     if (chromatic_) {
         int i = note_s % 12;
-        int v = scale_  & ( 1 << (11 - i) );
+        int v = scale_ & (1 << (11 - i));
 
-        return i == 0 ? PAD_NOTE_ROOT_CLR :  (v > 0  ? PAD_NOTE_IN_KEY_CLR : PAD_NOTE_OFF_CLR);
+        return i == 0 ? PAD_NOTE_ROOT_CLR : (v > 0 ? PAD_NOTE_IN_KEY_CLR : PAD_NOTE_OFF_CLR);
     } else {
         return (note_s % numNotesInScale_) == 0 ? PAD_NOTE_ROOT_CLR : PAD_NOTE_IN_KEY_CLR;
     }
@@ -401,7 +397,7 @@ int16_t page_clrs[8] = {
     RGB565(0xFF, 0x7F, 0xFF)
 };
 
-void Push2_OLED::drawParam(unsigned pos, const Kontrol::Parameter& param) {
+void Push2_OLED::drawParam(unsigned pos, const Kontrol::Parameter &param) {
     // #define MONO_CLR RGB565(255,60,0)
     int16_t clr = page_clrs[currentPage_];
 
@@ -413,27 +409,27 @@ void Push2_OLED::drawParam(unsigned pos, const Kontrol::Parameter& param) {
 void Push2_OLED::displayPage() {
     int16_t clr = page_clrs[currentPage_];
     push2Api_->clearDisplay();
-    for (int i = P2_TRACK_SELECT_CC_START; i < P2_TRACK_SELECT_CC_END; i++) { parent_.sendCC(0, i, 0);}
+    for (int i = P2_TRACK_SELECT_CC_START; i < P2_TRACK_SELECT_CC_END; i++) { parent_.sendCC(0, i, 0); }
 
     push2Api_->drawCell8(0, 0, "Kontrol", VSCALE, HSCALE, RGB565(0x7F, 0x7F, 0x7F));
-    
-    int i=0;
+
+    int i = 0;
     for (auto page : parent_.pages_) {
         push2Api_->drawCell8(5, i, centreText(page->displayName()).c_str(), VSCALE, HSCALE, page_clrs[i]);
         parent_.sendCC(0, P2_TRACK_SELECT_CC_START + i, i == currentPage_ ? 122 : 124);
 
         if (i == currentPage_) {
-            int j=0;
-            for(auto param : parent_.params_) {
+            int j = 0;
+            for (auto param : parent_.params_) {
                 if (param != nullptr) {
                     drawParam(j, *param);
                 }
                 j++;
-                if(j==8) break;
+                if (j == 8) break;
             }
         }
         i++;
-        if(i==8) break;
+        if (i == 8) break;
     }
 }
 
@@ -441,34 +437,60 @@ void Push2_OLED::setCurrentPage(unsigned page) {
     if (page != currentPage_) {
         currentPage_ = page;
         try {
-            auto module =parent_.modules_[parent_.currentModule_]; 
-            auto page = parent_.pages_[parent_.currentPage_];
-            parent_.params_=module->getParams(page);
+            auto pmodule = parent_.modules_[parent_.currentModule_];
+            auto ppage = parent_.pages_[parent_.currentPage_];
+            parent_.params_ = pmodule->getParams(ppage);
             displayPage();
-        } catch (std::out_of_range) {
-            ;
+        } catch (std::out_of_range) { ;
         }
     }
 }
 
 
-void Push2_OLED::rack(Kontrol::ParameterSource, const Kontrol::Rack&) {
+void Push2_OLED::rack(Kontrol::ParameterSource, const Kontrol::Rack &rack) {
     ;
 }
 
-void Push2_OLED::module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&) {
+void Push2_OLED::module(Kontrol::ParameterSource, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     ;
 }
 
-void Push2_OLED::page(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Page& page) {
+
+void Push2_OLED::page(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module, const Kontrol::Page &page) {
+    auto model = Kontrol::KontrolModel::model();
+    if (!parent_.rack_) {
+        parent_.rack_ = model->getRack(rack.id());
+    }
+
+    if (parent_.currentModule_ < 0) {
+        auto pr = model->getRack(rack.id());
+        auto pm = model->getModule(pr, module.id());
+        parent_.currentModule_ = 0;
+        parent_.modules_ = model->getModules(pr);
+        if (pm) {
+            parent_.pages_ = model->getPages(pm);
+            if (parent_.pages_.size() > 0) {
+                setCurrentPage(0);
+            } else {
+                parent_.currentPage_ = -1;
+            }
+        }
+    } else {
+        // really we need to track current module here
+        auto pm = model->getModule(
+            model->getRack(rack.id()),
+            module.id());
+        parent_.pages_ = model->getPages(pm);
+    }
+
     // LOG_0("Push2_OLED::page " << page.id());
     displayPage();
 }
 
-void Push2_OLED::param(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+void Push2_OLED::param(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module, const Kontrol::Parameter &param) {
     int i = 0;
-    for(auto p: parent_.params_) {
-        if(p->id()==param.id()) {
+    for (auto p: parent_.params_) {
+        if (p->id() == param.id()) {
             drawParam(i, param);
             return;
         }
@@ -476,10 +498,10 @@ void Push2_OLED::param(Kontrol::ParameterSource src, const Kontrol::Rack& rack, 
     }
 }
 
-void Push2_OLED::changed(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+void Push2_OLED::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module, const Kontrol::Parameter &param) {
     int i = 0;
-    for(auto p: parent_.params_) {
-        if(p->id()==param.id()) {
+    for (auto p: parent_.params_) {
+        if (p->id() == param.id()) {
             drawParam(i, param);
             return;
         }

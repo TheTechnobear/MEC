@@ -17,38 +17,34 @@ namespace mec {
 // TODO
 // 1. voices not needed? as soundplane already does touch alloction, just need to detemine on and off
 ////////////////////////////////////////////////
-class SoundplaneHandler: public  SoundplaneMECCallback
-{
+class SoundplaneHandler : public SoundplaneMECCallback {
 public:
-    SoundplaneHandler(Preferences& p, MsgQueue& q)
-        :   prefs_(p),
-            queue_(q),
-            valid_(true),
-            voices_(p.getInt("voices", 15)),
-            stealVoices_(p.getBool("steal voices", true))
-    {
+    SoundplaneHandler(Preferences &p, MsgQueue &q)
+        : prefs_(p),
+          queue_(q),
+          valid_(true),
+          voices_(p.getInt("voices", 15)),
+          stealVoices_(p.getBool("steal voices", true)) {
         if (valid_) {
             LOG_0("SoundplaneHandler enabling for mecapi");
         }
     }
 
-    bool isValid() { return valid_;}
+    bool isValid() { return valid_; }
 
-    virtual void device(const char* dev, int rows, int cols)
-    {
+    virtual void device(const char *dev, int rows, int cols) {
         LOG_1("SoundplaneHandler  device d: " << dev);
         LOG_1(" r: " << rows << " c: " << cols);
     }
 
-    virtual void touch(const char* dev, unsigned long long t, bool a, int touch, float n, float x, float y, float z)
-    {
+    virtual void touch(const char *dev, unsigned long long t, bool a, int touch, float n, float x, float y, float z) {
         static const unsigned int NOTE_CH_OFFSET = 1;
 
-        Voices::Voice* voice = voices_.voiceId(touch);
+        Voices::Voice *voice = voices_.voiceId(touch);
         float fn = n;
         float mn = note(fn);
         float mx = clamp(x, -1.0f, 1.0f);
-        float my = clamp((y - 0.5 ) * 2.0 , -1.0f, 1.0f);
+        float my = clamp((y - 0.5) * 2.0, -1.0f, 1.0f);
         float mz = clamp(z, 0.0f, 1.0f);
 
         MecMsg msg;
@@ -58,26 +54,25 @@ public:
         msg.data_.touch_.x_ = mx;
         msg.data_.touch_.y_ = my;
         msg.data_.touch_.z_ = mz;
-        if (a)
-        {
+        if (a) {
             // LOG_1("SoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
             // LOG_1(" touch: " <<  touch);
             // LOG_1(" note: " <<  n  << " mn: "   << mn << " fn: " << fn);
             // LOG_1(" x: " << x      << " y: "   << y    << " z: "   << z);
             // LOG_1(" mx: " << mx    << " my: "  << my   << " mz: "  << mz);
             if (!voice) {
-                if(stolenTouches_.find(touch) != stolenTouches_.end()) {
+                if (stolenTouches_.find(touch) != stolenTouches_.end()) {
                     // this key has been stolen, must be released to reactivate it
                     return;
-                } 
+                }
 
                 voice = voices_.startVoice(touch);
                 // LOG_2(std::cout << "start voice for " << key << " ch " << voice->i_ << std::endl;)
 
                 if (!voice && stealVoices_) {
                     // no available voices, steal?
-                    Voices::Voice* stolen = voices_.oldestActiveVoice();
-                    
+                    Voices::Voice *stolen = voices_.oldestActiveVoice();
+
                     MecMsg stolenMsg;
                     stolenMsg.type_ = MecMsg::TOUCH_OFF;
                     stolenMsg.data_.touch_.touchId_ = stolen->i_;
@@ -92,7 +87,7 @@ public:
                     voice = voices_.startVoice(touch);
                 }
 
-                if (voice)  {
+                if (voice) {
                     msg.type_ = MecMsg::TOUCH_ON;
                     msg.data_.touch_.touchId_ = voice->i_;
                     queue_.addToQueue(msg);
@@ -102,8 +97,7 @@ public:
                     voice->z_ = mz;
                     voice->t_ = t;
                 }
-            }
-            else {
+            } else {
                 msg.type_ = MecMsg::TOUCH_CONTINUE;
                 msg.data_.touch_.touchId_ = voice->i_;
                 queue_.addToQueue(msg);
@@ -113,10 +107,8 @@ public:
                 voice->z_ = mz;
                 voice->t_ = t;
             }
-            
-        }
-        else
-        {
+
+        } else {
             if (voice) {
                 // LOG_2("stop voice for " << touch << " ch " << voice->i_ );
                 msg.type_ = MecMsg::TOUCH_OFF;
@@ -129,8 +121,7 @@ public:
         }
     }
 
-    virtual void control(const char* dev, unsigned long long t, int id, float val)
-    {
+    virtual void control(const char *dev, unsigned long long t, int id, float val) {
         MecMsg msg;
         msg.type_ = MecMsg::CONTROL;
         msg.data_.control_.controlId_ = id;
@@ -139,11 +130,12 @@ public:
     }
 
 private:
-    inline  float clamp(float v, float mn, float mx) {return (std::max(std::min(v, mx), mn));}
-    float   note(float n) { return n; }
+    inline float clamp(float v, float mn, float mx) { return (std::max(std::min(v, mx), mn)); }
+
+    float note(float n) { return n; }
 
     Preferences prefs_;
-    MsgQueue& queue_;
+    MsgQueue &queue_;
     Voices voices_;
     bool valid_;
     bool stealVoices_;
@@ -152,7 +144,7 @@ private:
 
 
 ////////////////////////////////////////////////
-Soundplane::Soundplane(ICallback& cb) :
+Soundplane::Soundplane(ICallback &cb) :
     active_(false), callback_(cb) {
 }
 
@@ -160,7 +152,7 @@ Soundplane::~Soundplane() {
     deinit();
 }
 
-bool Soundplane::init(void* arg) {
+bool Soundplane::init(void *arg) {
     Preferences prefs(arg);
 
     if (active_) {
@@ -175,8 +167,8 @@ bool Soundplane::init(void* arg) {
     pModelState->loadStateFromAppStateFile();
     model_->updateAllProperties();  //??
     model_->setPropertyImmediate("midi_active", 0.0f);
-    model_->setPropertyImmediate("osc_active",  0.0f);
-    model_->setPropertyImmediate("mec_active",  1.0f);
+    model_->setPropertyImmediate("osc_active", 0.0f);
+    model_->setPropertyImmediate("mec_active", 1.0f);
     model_->setPropertyImmediate("data_freq_mec", 500.0f);
 
     SoundplaneHandler *pCb = new SoundplaneHandler(prefs, queue_);
