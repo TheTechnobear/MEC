@@ -6,8 +6,12 @@ it is **not** definitive, things are still in a state of flux.
 pre-alpha, development, code that is untested, and is likely not working - no **not** use.
 
 # TO DO
-- new data model, device->patch->page/parameters
-- update osc comms model
+- Push 2, update to new mode model, and allow selection of rack/module, also > 8 params etc
+- resolve Rack entity id ... what to use? description? 
+- invert connection model , i.e. racks connect to 'parent'
+- meta data, we should only push to requesting client
+- ping keep-alive
+- version osc mesages 
 
 # design
 overall design is to allow for a peer to peer parameter system, essentially Kontrol is responsible for 'syncronising' parameters across a transport.
@@ -62,32 +66,28 @@ however... what we need to do, is to have parameter ids unique for a particular 
 
 
 ## osc messaging format
+(done, except need to rationalise rack, versioning) 
+
 move to a message heirarcy 
 version osc messages (or clients?)
 
-/host/patch/parameterid
-/host/patch/page
-
 example:
-/kontrol/param/**organelle/wrpsbrds/o_transpose** "pitch" -24 24 0 
-/kontrol/page/**organelle/wrpsbrds/osc** "oscillator" o_transpose 
-/kontrol/changed/**organelle/wrpsbrds/o_transpose** 12
+````
+/kontrol/rack organelle
+/kontrol/module organelle wrpsbrds
+/kontrol/param organelle wrpsbrds o_transpose "pitch" -24 24 0
+/kontrol/param organelle wrpsbrds o_transpose "pitch" -24 24 0
+/kontrol/page organelle wrpsbrds o_transpose "oscillator" o_transpose 
+/kontrol/changed organelle wrpsbrds o_transpose  12
+````
 
-note: the highlighted part is unique
 
-shorter names?
-/ok/pm/organelle/wrpsbrds/o_transpose pitch  -24 24 0 
-/ok/pg/organelle/wrpsbrds/osc "oscillator" o_transpose 
-/ok/ch/organelle/wrpsbrds/o_transpose 12
-
-in a modular system, then modules could take the place of patch, or suffixed.
-e.g. 
-/ok/pm/organelle/modpatch_slot1/o_pitch frequency "base pitch" 0 48000 440 
 
 
 ## json parameter file 
 (pseudo only ;) )
-[code]
+
+````
 patch : {
     name : wrpsbrds,
     parameters : {
@@ -109,13 +109,14 @@ patch : {
         }
     }
 }
-[/code]
+````
 
 
 
 ## json patch file (?)
 lets start with (e.g.) 10 presets, which can be saved/recalled
 store presets as param name , value
+````
 preset {
     0 : {
         o_transpose : 12,
@@ -127,8 +128,7 @@ midi_mapping : {
         63 : o_transpose
     }
 }
-
-
+````
 
 # pure data messages:
 
@@ -170,26 +170,74 @@ need to right justify text, variable space in middle.
 page name in bottom right?
 Aux function test? (all pages, or per page?)
 e.g
-```
+````
 I ======    O ==========
 |mix                45%|
 |active              on|
 |time         1500 mSec|
 |feedback           45%|
 Aux = blah      [Reverb]
-```
+````
 
 twist encoder, display next/prev page as overlay, only display params on encoder up
-```
+````
 I ======    O ==========
 |mix                45%|
 |ac------------------on|
 |ti|<  Oscs        >|ec|
 |fe------------------5%|
 Aux = blah      [Reverb]
-```
+````
 
 
 
+## TO DO more details/thoughts
+
+### Push 2, update to new mode model, and allow selection of rack/module, also > 8 params etc
+similar model to organelle, each mode has a handler... to resolve all inputs.
+
+### Resolve Rack entity id ... what to use? description? 
+original plan was host:port , but how do we get the hostname (possible) and is it really useful, whne you have multiple racks
+e.g. having organelle:9000 organelle 9001, what about descriptive name?
+
+
+ 
+### invert connection model , i.e. racks connect to 'parent'
+currently, PD is listening, and MEC connects and requests meta data
+new idea is:
+MEC is running and listening
+PD connects to MEC, and listens, and when it connects sends meta data
+
+
+
+### meta data, we should only push to requesting client
+perhaps with inverted model, easier... we just push when we connect.
+
+### ping keep-alive
+mec needs to know if client disappears... we can have graceful (disconnect) and also 'no response', 
+either will cause entire rack to be removed... note how this means we need to join rack to host/port
+
+PD, does it need to know about MEC?
+yes... when MEC starts up, it does not know about PD... 
+so if PD detects MEC does not exist (lack of response), then when it does appear it needs to send connection request and also meta data.
+
+(this perhaps mean the connection request is part of the ping protocol, i.e. all it is doing is tracking response)
+
+client1 ->ping -> mec 
+mec-> pong ->client
+
+client pings mec regularly, and records last pong response time... if over N secs its assumed dead
+(this includes startup , where last pong = -1) 
+
+whist disconnected client continues to ping, and when a pong comes back, it sends meta data
+
+mec... tracks last ping request per client, after N seconds if not received, it drops client rack
+
+
+### version osc mesages 
+put in main messages topic, so we dont have issues?
+Im not likely to support multiple versions in short term
+so
+```` /kontrol/v1/param ````
 
 
