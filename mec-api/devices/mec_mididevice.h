@@ -39,22 +39,22 @@ protected:
             size = 0;
         }
 
-        MidiMsg(char status) {
+        MidiMsg(unsigned char status) {
             data[0] = status;
             size = 1;
         }
 
-        MidiMsg(char status, char d1) : MidiMsg(status) {
+        MidiMsg(unsigned char status, unsigned char d1) : MidiMsg(status) {
             data[1] = d1;
             size = 2;
         }
 
-        MidiMsg(char status, char d1, char d2) : MidiMsg(status, d1) {
+        MidiMsg(unsigned char status, unsigned char d1, unsigned char d2) : MidiMsg(status, d1) {
             data[2] = d2;
             size = 3;
         }
 
-        char data[3];
+        unsigned char data[3];
         unsigned size;
     };
 

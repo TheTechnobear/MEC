@@ -16,6 +16,7 @@ static uint16_t VID = 0x2982, PID = 0x1967;
 
 
 // see : https://github.com/Ableton/push-interface/blob/master/doc/AbletonPush2MIDIDisplayInterface.asc#usb-display-interface-access
+
 // //bbbbbggggggrrrrr
 // #define RGB565(r,g,b)   ((((((int16_t) b & 0x0078)>> 3)   << 5) | (((int16_t) g & 0x00FC) >> 2 ) << 6 ) | (((int16_t) r & 0x00f8) >> 3))   //use top bits of colour input
 

@@ -27,6 +27,8 @@ set(MECAPI_SRC
     devices/mec_osct3d.h
     devices/mec_push2.cpp
     devices/mec_push2.h
+    devices/mec_push2_param.cpp
+    devices/mec_push2_param.h
     devices/mec_soundplane.cpp
     devices/mec_soundplane.h
     devices/mec_kontroldevice.cpp
