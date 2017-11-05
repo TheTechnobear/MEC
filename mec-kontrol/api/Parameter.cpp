@@ -52,28 +52,30 @@ std::shared_ptr<Parameter> createParameter(const std::string &t) {
 void Parameter::createArgs(std::vector<ParamValue> &args) const {
     switch (type_) {
         case PT_Float:
-            args.push_back(PTS_Float);
+            args.push_back(ParamValue(PTS_Float));
             break;
         case PT_Boolean:
-            args.push_back(PTS_Boolean);
+            args.push_back(ParamValue(PTS_Boolean));
             break;
         case PT_Int:
-            args.push_back(PTS_Int);
+            args.push_back(ParamValue(PTS_Int));
             break;
         case PT_Percent:
-            args.push_back(PTS_Percent);
+            args.push_back(ParamValue(PTS_Percent));
             break;
         case PT_Frequency:
-            args.push_back(PTS_Frequency);
+            args.push_back(ParamValue(PTS_Frequency));
             break;
         case PT_Time:
-            args.push_back(PTS_Time);
+            args.push_back(ParamValue(PTS_Time));
             break;
         case PT_Pitch:
-            args.push_back(PTS_Pitch);
+            args.push_back(ParamValue(PTS_Pitch));
             break;
         default:
-            args.push_back("invalid");
+            args.push_back(ParamValue("invalid"));
+        case PT_Invalid:
+            break;
     }
     args.push_back(ParamValue(id_));
     args.push_back(ParamValue(displayName_));
@@ -133,7 +135,7 @@ ParamValue Parameter::calcFloat(float f) {
 }
 
 ParamValue Parameter::calcMidi(int midi) {
-    float f = (float) midi / 127.0;
+    float f = (float) midi / 127.0f;
     return calcFloat(f);
 }
 
@@ -203,7 +205,7 @@ ParamValue Parameter_Float::calcRelative(float f) {
 }
 
 ParamValue Parameter_Float::calcMidi(int midi) {
-    float f = (float) midi / 127.0;
+    float f = (float) midi / 127.0f;
     return calcFloat(f);
 }
 
@@ -259,7 +261,7 @@ void Parameter_Boolean::createArgs(std::vector<ParamValue> &args) const {
 bool Parameter_Boolean::change(const ParamValue &c) {
     switch (current_.type()) {
         case ParamValue::T_Float  : {
-            float v = c.floatValue() > 0.5 ? 1.0 : 0.0;
+            float v = c.floatValue() > 0.5f ? 1.0f : 0.0f;
             return Parameter::change(ParamValue(v));
         }
         case ParamValue::T_String:
@@ -279,11 +281,11 @@ ParamValue Parameter_Boolean::calcRelative(float f) {
 }
 
 ParamValue Parameter_Boolean::calcFloat(float f) {
-    return ParamValue(f > 0.5 ? 1.0 : 0.0);
+    return ParamValue(f > 0.5f ? 1.0f : 0.0f);
 }
 
 ParamValue Parameter_Boolean::calcMidi(int midi) {
-    return ParamValue(midi > 63 ? 1.0 : 0.0);;
+    return ParamValue(midi > 63 ? 1.0f : 0.0f);
 }
 
 
@@ -303,17 +305,15 @@ const std::string &Parameter_Time::displayUnit() const {
     return sUnit;
 }
 
-
-//TODO : add a new T_Int type, wil be useful for ordinals too
 void Parameter_Int::init(const std::vector<ParamValue> &args, unsigned &pos) {
     Parameter::init(args, pos);
-    if (args.size() > pos && args[pos].type() == ParamValue::T_Float) min_ = args[pos++].floatValue();
+    if (args.size() > pos && args[pos].type() == ParamValue::T_Float) min_ = static_cast<int>(args[pos++].floatValue());
     else
         throwError(id(), "missing min");
-    if (args.size() > pos && args[pos].type() == ParamValue::T_Float) max_ = args[pos++].floatValue();
+    if (args.size() > pos && args[pos].type() == ParamValue::T_Float) max_ = static_cast<int>(args[pos++].floatValue());
     else
         throwError(id(), "missing max");
-    if (args.size() > pos && args[pos].type() == ParamValue::T_Float) def_ = args[pos++].floatValue();
+    if (args.size() > pos && args[pos].type() == ParamValue::T_Float) def_ = static_cast<int>(args[pos++].floatValue());
     else
         throwError(id(), "missing def");
     change(def_);
@@ -336,7 +336,7 @@ std::string Parameter_Int::displayValue() const {
 bool Parameter_Int::change(const ParamValue &c) {
     switch (current_.type()) {
         case ParamValue::T_Float  : {
-            int v = c.floatValue();
+            int v = static_cast<int>(c.floatValue());
             v = std::max(v, min());
             v = std::min(v, max());
             return Parameter::change(ParamValue((float) v));
@@ -348,22 +348,22 @@ bool Parameter_Int::change(const ParamValue &c) {
 }
 
 ParamValue Parameter_Int::calcRelative(float f) {
-    int v = current().floatValue() + (f * (max() - min()));
+    int v = static_cast<int>(current().floatValue() + (f * (max() - min())));
     v = std::max(v, min());
     v = std::min(v, max());
     return ParamValue((float) v);
 }
 
 ParamValue Parameter_Int::calcMidi(int midi) {
-    float f = (float) midi / 127.0;
-    int v = (f * (max() - min())) + min();
+    float f = (float) midi / 127.0f;
+    int v = static_cast<int>((f * (max() - min())) + min());
     v = std::max(v, min());
     v = std::min(v, max());
     return ParamValue((float) v);
 }
 
 ParamValue Parameter_Int::calcFloat(float f) {
-    int v = (f * (max() - min())) + min();
+    int v = static_cast<int>((f * (max() - min())) + min());
     v = std::max(v, min());
     v = std::min(v, max());
     return ParamValue((float) v);

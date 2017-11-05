@@ -1,9 +1,6 @@
 #include "mec_kontroldevice.h"
 
 #include "mec_log.h"
-#include "mec_prefs.h"
-
-#include "Parameter.h"
 
 namespace mec {
 
@@ -47,9 +44,9 @@ bool KontrolDevice::init(void *arg) {
     //     // model_->dumpPatchSettings();
     // }
 
-    connectPort_ = prefs.getInt("connect port", 9000);
+    listenPort_ = static_cast<unsigned>(prefs.getInt("listen port", 4000));
+    connectPort_ = static_cast<unsigned>(prefs.getInt("connect port", 9000));
 
-    listenPort_ = prefs.getInt("listen port", 9001);
     if (listenPort_ > 0) {
         auto p = std::make_shared<Kontrol::OSCReceiver>(model_);
         if (p->listen(listenPort_)) {
@@ -63,7 +60,7 @@ bool KontrolDevice::init(void *arg) {
         std::string id = "mec.osc:" + host + ":" + std::to_string(connectPort_);
         model_->removeCallback(id);
         auto p = std::make_shared<Kontrol::OSCBroadcaster>();
-        if (p->connect(host, (unsigned) connectPort_)) {
+        if (p->connect(host, connectPort_)) {
             osc_broadcaster_ = p;
             model_->addCallback(id, osc_broadcaster_);
             LOG_0("kontrol device : connected to " << connectPort_);

@@ -288,7 +288,7 @@ void MecApi_Impl::initDevices() {
 
     if (prefs_->exists("soundplane")) {
         LOG_1("soundplane initialise");
-        std::shared_ptr<Device> device =std::make_shared<Soundplane>(*this);
+        std::shared_ptr<Device> device = std::make_shared<Soundplane>(*this);
         if (device->init(prefs_->getSubTree("soundplane"))) {
             if (device->isActive()) {
                 devices_.push_back(device);

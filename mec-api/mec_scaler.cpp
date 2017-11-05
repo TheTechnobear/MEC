@@ -23,7 +23,7 @@ bool Scales::load(const Preferences &prefs) {
     for (std::string k : keys) {
         ScaleArray scale;
         Preferences::Array array(prefs.getArray(k));
-        for (int i = 0; i < array.getSize(); i++) {
+        for (unsigned i = 0; i < array.getSize(); i++) {
             float n = (float) array.getDouble(i);
             scale.push_back(n);
         }
@@ -68,8 +68,8 @@ bool Scaler::load(const Preferences &prefs) {
 MusicalTouch Scaler::map(const Touch &t) const {
     // see notes above, important 12 note scale has 13 entries!
     // think , row = string , column = fret
-    int ix = t.c_;
-    int sz = scale_.size() - 1;
+    int ix = (int) t.c_;
+    int sz = (int) scale_.size() - 1;
     int n = ix % sz;
 
     float fx = t.c_ - ix;

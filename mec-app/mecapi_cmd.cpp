@@ -1,5 +1,4 @@
 #include <unistd.h>
-#include <signal.h>
 #include <string.h>
 
 #include <pthread.h>
@@ -17,9 +16,9 @@
 #define OUTPUT_BUFFER_SIZE 1024
 
 //hacks for now
-#define VELOCITY 1.0f
-#define PB_RANGE 2.0f
-#define MPE_PB_RANGE 48.0f
+//#define VELOCITY 1.0f
+//#define PB_RANGE 2.0f
+//#define MPE_PB_RANGE 48.0f
 
 class MecCmdCallback : public mec::ICallback {
 public:
@@ -42,7 +41,7 @@ class MecConsoleCallback : public MecCmdCallback {
 public:
     MecConsoleCallback(mec::Preferences &p)
             : prefs_(p),
-              throttle_(p.getInt("throttle", 0)),
+              throttle_(static_cast<unsigned>(p.getInt("throttle", 0))),
               valid_(true) {
         if (valid_) {
             LOG_0("mecapi_proc enabling for console output, throttle :  " << throttle_);
@@ -158,7 +157,7 @@ class MecMpeProcessor : public mec::MPE_Processor {
 public:
     MecMpeProcessor(mec::Preferences &p) : prefs_(p) {
         // p.getInt("voices", 15);
-        setPitchbendRange(p.getDouble("pitchbend range", 48.0));
+        setPitchbendRange(static_cast<float>(p.getDouble("pitchbend range", 48.0f)));
         std::string device = prefs_.getString("device");
         int virt = prefs_.getInt("virtual", 0);
         if (output_.create(device, virt > 0)) {
@@ -178,7 +177,7 @@ public:
             std::vector<unsigned char> msg;
 
             for (int i = 0; i < m.size; i++) {
-                msg.push_back(m.data[i]);
+                msg.push_back((unsigned char) m.data[i]);
             }
             output_.sendMsg(msg);
         }

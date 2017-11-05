@@ -8,7 +8,6 @@
 
 
 #include "mec_log.h"
-#include "mec_prefs.h"
 #include "../mec_voice.h"
 
 ////////////////////////////////////////////////
@@ -55,7 +54,7 @@ public:
             std::string addr = m.AddressPattern();
             if (addr.length() > 8 && addr.find(A_TOUCH) == 0) {
                 std::string touch = addr.substr(8);
-                int tId = std::stoi(touch);
+                unsigned tId = static_cast<unsigned>(std::stoi(touch));
                 float x = 0.0f, y = 0.0f, z = 0.0f, note = 0.0f;
                 args >> x >> y >> z >> note >> osc::EndMessage;
                 queue_touch(tId, note, x, (y * 2.0f) - 1.0f, z);
@@ -82,7 +81,7 @@ public:
         }
     }
 
-    virtual void queue_touch(int tId, float mn, float mx, float my, float mz) {
+    virtual void queue_touch(unsigned tId, float mn, float mx, float my, float mz) {
         Voices::Voice *voice = voices_.voiceId(tId);
         if (mz > 0.0) {
             if (!voice) {
@@ -199,7 +198,7 @@ bool OscT3D::init(void *arg) {
     active_ = false;
     OscT3DHandler *pCb = new OscT3DHandler(prefs, queue_);
 
-    port_ = prefs.getInt("port", 9000);
+    port_ = (unsigned) prefs.getInt("port", 9000);
 
     if (pCb->isValid()) {
         active_ = true;

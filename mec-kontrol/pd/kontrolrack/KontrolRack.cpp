@@ -134,7 +134,7 @@ void KontrolRack_free(t_KontrolRack *x) {
     // Kontrol::ParameterModel::free();
 }
 
-void *KontrolRack_new(t_floatarg port) {
+void *KontrolRack_new(t_floatarg serverport t_floatarg clientport) {
     t_KontrolRack *x = (t_KontrolRack *) pd_new(KontrolRack_class);
 
 
@@ -154,7 +154,8 @@ void *KontrolRack_new(t_floatarg port) {
     x->model_->addCallback("pd.client", std::make_shared<ClientHandler>(x));
     x->model_->addCallback("pd.dev", x->device_);
 
-    KontrolRack_listen(x, port); // if zero will ignore
+    KontrolRack_listen(x, clientport);
+    KontrolRack_connect(x,serverport);
 
     x->x_clock = clock_new(x, (t_method) KontrolRack_tick);
     clock_setunit(x->x_clock, TICK_MS, 0);
@@ -169,7 +170,9 @@ void KontrolRack_setup(void) {
                                   (t_method) KontrolRack_free,
                                   sizeof(t_KontrolRack),
                                   CLASS_DEFAULT,
-                                  A_DEFFLOAT, A_NULL);
+                                  A_DEFFLOAT,
+                                  A_DEFFLOAT,
+                                  A_NULL);
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_listen, gensym("listen"),
@@ -222,11 +225,11 @@ void KontrolRack_setup(void) {
 
 
 void KontrolRack_connect(t_KontrolRack *x, t_floatarg f) {
-    std::string host = "127.0.0.1";
-    unsigned port = (unsigned) f;
-    std::string id = "pd.osc:" + host + ":" + std::to_string(port);
-    x->model_->removeCallback(id);
-    if (port) {
+    if(f>0) {
+        std::string host = "127.0.0.1";
+        unsigned port = (unsigned) f;
+        std::string id = "pd.osc:" + host + ":" + std::to_string(port);
+        x->model_->removeCallback(id);
         auto p = std::make_shared<Kontrol::OSCBroadcaster>();
         if (p->connect(host, port)) {
             post("client connected %s", id.c_str());

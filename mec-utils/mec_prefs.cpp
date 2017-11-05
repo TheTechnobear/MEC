@@ -33,7 +33,7 @@ bool Preferences::loadPreferences(const std::string &file) {
     if (t.good()) {
         std::string jsonStr;
         t.seekg(0, std::ios::end);
-        jsonStr.reserve(t.tellg());
+        jsonStr.reserve((unsigned) t.tellg());
         t.seekg(0, std::ios::beg);
 
         jsonStr.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
@@ -86,7 +86,7 @@ static Preferences::Type convertJsonType(int t) {
         default:
             return Preferences::P_NULL;
     }
-    return Preferences::P_NULL;
+//    return Preferences::P_NULL;
 }
 
 Preferences::Type Preferences::getType(const std::string &v) const {
@@ -204,10 +204,7 @@ bool Preferences::Array::valid() const {
 bool Preferences::Array::getBool(unsigned i) const {
     cJSON *array = (cJSON *) jsonData_;
     cJSON *node = cJSON_GetArrayItem(array, i);
-    if (node != nullptr && node->type == cJSON_True) {
-        return true;
-    }
-    return false;
+    return node != nullptr && node->type == cJSON_True;
 }
 
 int Preferences::Array::getInt(unsigned i) const {
@@ -216,7 +213,7 @@ int Preferences::Array::getInt(unsigned i) const {
     if (node != nullptr && node->type == cJSON_Number) {
         return node->valueint;
     }
-    return 0.0;
+    return 0;
 }
 
 double Preferences::Array::getDouble(unsigned i) const {

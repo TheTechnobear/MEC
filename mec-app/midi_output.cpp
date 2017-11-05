@@ -35,7 +35,7 @@ bool MidiOutput::create(const std::string &portname, bool virt) {
         return true;
     }
 
-    for (int i = 0; i < output_->getPortCount(); i++) {
+    for (unsigned i = 0; i < output_->getPortCount(); i++) {
         if (portname.compare(output_->getPortName(i)) == 0) {
             try {
                 output_->openPort(i);
@@ -49,7 +49,7 @@ bool MidiOutput::create(const std::string &portname, bool virt) {
     }
     LOG_0("Port not found : [" << portname << "]");
     LOG_0("available ports : ");
-    for (int i = 0; i < output_->getPortCount(); i++) {
+    for (unsigned i = 0; i < output_->getPortCount(); i++) {
         LOG_0("[" << output_->getPortName(i) << "]");
     }
 

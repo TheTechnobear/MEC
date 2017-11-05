@@ -87,7 +87,7 @@ public:
     }
 
     virtual void deviceStateChanged(SoundplaneDriver& driver, MLSoundplaneState s) override {
-        LOG_0( "Device state changed: " << s )
+        LOG_0( "Device state changed: " << s );
     }
 
     //start: SoundplaneModel

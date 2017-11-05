@@ -8,7 +8,6 @@
 
 #include "mec_log.h"
 
-#include <algorithm>
 
 namespace mec {
 
@@ -72,8 +71,7 @@ Surface::~Surface() {
 }
 
 bool Surface::load(const Preferences &prefs) {
-    if (!prefs.valid()) return false;
-    return true;
+    return prefs.valid();
 }
 
 Touch Surface::map(const Touch &t) const {
@@ -85,9 +83,9 @@ SurfaceID Surface::getId() {
 }
 
 
-const float UNDEFINED_SPLIT = -1.0f;
-const float MIN_SPLIT = 0.0f;
-const float MAX_SPLIT = 16384.0f;
+//const float UNDEFINED_SPLIT = -1.0f;
+//const float MIN_SPLIT = 0.0f;
+//const float MAX_SPLIT = 16384.0f;
 
 ////////////////////////////// SplitSurface ////////////////////////////////////////
 
@@ -108,7 +106,7 @@ bool SplitSurface::load(const Preferences &prefs) {
     splitPoint_ = (float) prefs.getDouble("split point", 0.5);
 
     Preferences::Array array(prefs.getArray("surfaces"));
-    for (int i = 0; i < array.getSize(); i++) {
+    for (unsigned i = 0; i < array.getSize(); i++) {
         SurfaceID n = array.getString(i);
         if (n.size() > 0) {
             surfaces_.push_back(n);
@@ -136,36 +134,36 @@ Touch SplitSurface::map(const Touch &t) const {
     // relationship between X-C , Y - R
     // touch id, needs to be voiced on surface
     Touch out = t;
-    int n = 0;
+    unsigned n = 0;
 
     switch (axis_) {
         case C_X: {
-            n = (t.x_ / splitPoint_);
-            n = std::min<int>(n, surfaces_.size() - 1);
+            n = static_cast<unsigned>(t.x_ / splitPoint_);
+            n = std::min<unsigned>(n, surfaces_.size() - 1);
             out.x_ = t.x_ - (splitPoint_ * n);
             break;
         }
         case C_Y: {
-            n = (t.y_ / splitPoint_);
-            n = std::min<int>(n, surfaces_.size() - 1);
+            n = static_cast<unsigned>(static_cast<int>(t.y_ / splitPoint_));
+            n = std::min<unsigned>(n, surfaces_.size() - 1);
             out.y_ = t.y_ - (splitPoint_ * n);
             break;
         }
         case C_Z: {
-            n = (t.z_ / splitPoint_);
-            n = std::min<int>(n, surfaces_.size() - 1);
+            n = static_cast<unsigned>(t.z_ / splitPoint_);
+            n = std::min<unsigned>(n, surfaces_.size() - 1);
             out.z_ = t.z_ - (splitPoint_ * n);
             break;
         }
         case C_R: {
-            n = (t.r_ / splitPoint_);
-            n = std::min<int>(n, surfaces_.size() - 1);
+            n = static_cast<unsigned>(t.r_ / splitPoint_);
+            n = std::min<unsigned>(n, surfaces_.size() - 1);
             out.r_ = t.r_ - (splitPoint_ * n);
             break;
         }
         case C_C: {
-            n = (t.c_ / splitPoint_);
-            n = std::min<int>(n, surfaces_.size() - 1);
+            n = static_cast<unsigned>(t.c_ / splitPoint_);
+            n = std::min<unsigned>(n, surfaces_.size() - 1);
             out.c_ = t.c_ - (splitPoint_ * n);
             break;
         }
@@ -197,7 +195,7 @@ bool JoinedSurface::load(const Preferences &prefs) {
     surfaceSize_ = (float) prefs.getDouble("surface size", 1.0);
 
     Preferences::Array array(prefs.getArray("surfaces"));
-    for (int i = 0; i < array.getSize(); i++) {
+    for (unsigned i = 0; i < array.getSize(); i++) {
         SurfaceID n = array.getString(i);
         if (n.size() > 0) {
             surfaces_.push_back(n);

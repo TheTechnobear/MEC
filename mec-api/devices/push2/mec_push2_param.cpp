@@ -16,7 +16,7 @@ std::string centreText(const std::string t) {
 static const unsigned VSCALE = 3;
 static const unsigned HSCALE = 1;
 
-int16_t page_clrs[8] = {
+uint16_t page_clrs[8] = {
         RGB565(0xFF, 0xFF, 0xFF),
         RGB565(0xFF, 0, 0xFF),
         RGB565(0xFF, 0, 0),
@@ -75,7 +75,7 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
 
 void P2_ParamMode::drawParam(unsigned pos, const Kontrol::Parameter &param) {
     // #define MONO_CLR RGB565(255,60,0)
-    int16_t clr = page_clrs[currentPage_];
+    uint16_t clr = page_clrs[currentPage_];
 
     push2Api_->drawCell8(1, pos, centreText(param.displayName()).c_str(), VSCALE, HSCALE, clr);
     push2Api_->drawCell8(2, pos, centreText(param.displayValue()).c_str(), VSCALE, HSCALE, clr);

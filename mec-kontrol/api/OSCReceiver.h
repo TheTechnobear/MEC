@@ -53,7 +53,7 @@ static const int MAX_N_OSC_MSGS = 64;
 static const int MAX_OSC_MESSAGE_SIZE = 512;
 struct OscMsg {
     IpEndpointName origin_;
-    int  size_;
+    int size_;
     char buffer_[MAX_OSC_MESSAGE_SIZE];
 };
 

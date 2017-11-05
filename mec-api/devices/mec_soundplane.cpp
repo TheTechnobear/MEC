@@ -3,10 +3,8 @@
 #include <SoundplaneModel.h>
 #include <MLAppState.h>
 
-#include <SoundplaneMECOutput.h>
 
 #include "mec_log.h"
-#include "mec_prefs.h"
 #include "../mec_voice.h"
 
 
@@ -23,7 +21,7 @@ public:
             : prefs_(p),
               queue_(q),
               valid_(true),
-              voices_(p.getInt("voices", 15)),
+              voices_(static_cast<unsigned>(p.getInt("voices", 15))),
               stealVoices_(p.getBool("steal voices", true)) {
         if (valid_) {
             LOG_0("SoundplaneHandler enabling for mecapi");
@@ -37,14 +35,15 @@ public:
         LOG_1(" r: " << rows << " c: " << cols);
     }
 
-    virtual void touch(const char *dev, unsigned long long t, bool a, int touch, float n, float x, float y, float z) {
+    virtual void touch(const char *dev, unsigned long long t, bool a, int itouch, float n, float x, float y, float z) {
         static const unsigned int NOTE_CH_OFFSET = 1;
 
+        unsigned touch = (unsigned) itouch;
         Voices::Voice *voice = voices_.voiceId(touch);
         float fn = n;
         float mn = note(fn);
         float mx = clamp(x, -1.0f, 1.0f);
-        float my = clamp((y - 0.5) * 2.0, -1.0f, 1.0f);
+        float my = clamp((y - 0.5f) * 2.0f, -1.0f, 1.0f);
         float mz = clamp(z, 0.0f, 1.0f);
 
         MecMsg msg;
@@ -80,7 +79,7 @@ public:
                     stolenMsg.data_.touch_.x_ = stolen->x_;
                     stolenMsg.data_.touch_.y_ = stolen->y_;
                     stolenMsg.data_.touch_.z_ = 0.0f;
-                    stolenTouches_.insert(stolen->id_);
+                    stolenTouches_.insert((unsigned) stolen->id_);
                     queue_.addToQueue(stolenMsg);
                     voices_.stopVoice(stolen);
 

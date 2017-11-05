@@ -1,7 +1,6 @@
 #include "mec_eigenharp.h"
 
 #include "mec_log.h"
-#include "mec_prefs.h"
 #include "../mec_surfacemapper.h"
 #include "../mec_voice.h"
 
@@ -17,10 +16,14 @@ public:
             : prefs_(p),
               callback_(cb),
               valid_(true),
-              voices_(p.getInt("voices", 15), p.getInt("velocity count", 5)),
+              voices_(static_cast<unsigned>(p.getInt("voices", 15)),
+                      static_cast<unsigned>(p.getInt("velocity count", 5))),
               pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
               stealVoices_(p.getBool("steal voices", true)),
-              throttle_(p.getInt("throttle", 0) == 0 ? 0 : 1000000 / p.getInt("throttle", 0)) {
+              throttle_(p.getInt("throttle", 0) == 0
+                        ? 0 : 1000000ULL /
+                              p.getInt("throttle",
+                                       0)) {
         if (valid_) {
             LOG_0("EigenharpHandler enabling for mecapi");
         }
@@ -29,7 +32,7 @@ public:
     bool isValid() { return valid_; }
 
     virtual void device(const char *dev, DeviceType dt, int rows, int cols, int ribbons, int pedals) {
-        const char *dk = "defaut";
+        const char *dk;
         switch (dt) {
             case EigenApi::Callback::PICO:
                 dk = "pico";
@@ -85,7 +88,7 @@ public:
                     // no available voices, steal?
                     Voices::Voice *stolen = voices_.oldestActiveVoice();
                     callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
-                    stolenKeys_.insert(stolen->id_);
+                    stolenKeys_.insert((unsigned) stolen->id_);
                     voices_.stopVoice(stolen);
                     voice = voices_.startVoice(key);
                     // if(voice) { LOG_1("voice steal found for " << key  "stolen from " << stolen->id_)); }

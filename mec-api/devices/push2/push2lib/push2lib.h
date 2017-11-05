@@ -13,7 +13,7 @@ namespace Push2API {
 
 #define MONO_CLR RGB565(255,60,0)
 
-#define RGB565(r, g, b)   ((((((int16_t) b & 0x0078)>> 3)   << 5) | (((int16_t) g & 0x00FC) >> 2 ) << 6 ) | (((int16_t) r & 0x00f8) >> 3))   //use top bits of colour input
+#define RGB565(r, g, b)   (uint16_t) ((((((uint16_t) b & 0x0078)>> 3)   << 5) | (((uint16_t) g & 0x00FC) >> 2 ) << 6 ) | (((uint16_t) r & 0x00f8) >> 3))   //use top bits of colour input
 
 class Push2 {
 public:
@@ -29,9 +29,10 @@ public:
 
     static const unsigned P1_VSCALE = 5;
     static const unsigned P1_HSCALE = 2;
-    void drawText(unsigned row, unsigned col, const char *str, int ln, unsigned vscale, unsigned hscale, int16_t clr);
-    void drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, int16_t clr);
-    void drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, int16_t clr);
+    void drawText(unsigned row, unsigned col, const char *str, unsigned ln, unsigned vscale, unsigned hscale,
+                  uint16_t clr);
+    void drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, uint16_t clr);
+    void drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr);
 
     void p1_drawCell8(unsigned row, unsigned cell, const char *str);
     void p1_drawCell4(unsigned row, unsigned cell, const char *str);

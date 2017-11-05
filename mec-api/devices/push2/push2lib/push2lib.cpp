@@ -1,11 +1,4 @@
 #include <iostream>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-
-
 #include "push2lib.h"
 #include "push1font.h"
 
@@ -78,7 +71,7 @@ void Push2::clearRow(unsigned row, unsigned vscale) {
     }
 }
 
-void Push2::drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, int16_t clr) {
+void Push2::drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr) {
     unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
     // static const unsigned CELL_OFFSET_8[8] = { 0, 24, 48, 72, 96, 120, 144, 168 };
     if (cell < 8) {
@@ -86,12 +79,13 @@ void Push2::drawCell8(unsigned row, unsigned cell, const char *str, unsigned vsc
     }
 }
 
-void Push2::drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, int16_t clr) {
-    drawText(row, col, str, strlen(str), vscale, hscale, clr);
+void Push2::drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, uint16_t clr) {
+    drawText(row, col, str, (int) strlen(str), vscale, hscale, clr);
 }
 
 
-void Push2::drawText(unsigned row, unsigned col, const char *str, int ln, unsigned vscale, unsigned hscale, int16_t colour) {
+void Push2::drawText(unsigned row, unsigned col, const char *str, unsigned ln, unsigned vscale, unsigned hscale,
+                     uint16_t colour) {
     unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
     unsigned CH_ROWS = ((HEIGHT / F_HEIGHT) / vscale);
     if (row > CH_ROWS) return;

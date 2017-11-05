@@ -1,7 +1,6 @@
 #include "mec_mididevice.h"
 
 #include "mec_log.h"
-#include "mec_prefs.h"
 #include "../mec_voice.h"
 
 namespace mec {
@@ -51,7 +50,7 @@ bool MidiDevice::init(void *arg) {
         mpeMode_ = prefs.getBool("mpe", true);
         pitchbendRange_ = (float) prefs.getDouble("pitchbend range", 48.0);
 
-        for (int i = 0; i < midiInDevice_->getPortCount() && !found; i++) {
+        for (unsigned i = 0; i < midiInDevice_->getPortCount() && !found; i++) {
             if (input_device.compare(midiInDevice_->getPortName(i)) == 0) {
                 try {
                     midiInDevice_->openPort(i);
@@ -67,7 +66,7 @@ bool MidiDevice::init(void *arg) {
         if (!found) {
             LOG_0("Input device not found : [" << input_device << "]");
             LOG_0("available devices:");
-            for (int i = 0; i < midiInDevice_->getPortCount(); i++) {
+            for (unsigned i = 0; i < midiInDevice_->getPortCount(); i++) {
                 LOG_0("[" << midiInDevice_->getPortName(i) << "]");
             }
             midiInDevice_.reset();
@@ -89,13 +88,11 @@ bool MidiDevice::init(void *arg) {
             LOG_0("MidiDevice RtMidiOut ctor error:" << error.what());
             return false;
         }
-        found = false;
         if (virt) {
             try {
                 midiOutDevice_->openVirtualPort(output_device);
                 LOG_0("Midi virtual output created :" << output_device);
                 virtualOpen_ = true;
-                found = true;
             } catch (RtMidiError &error) {
                 LOG_0("Midi virtual output create error:" << error.what());
                 virtualOpen_ = false;
@@ -103,7 +100,8 @@ bool MidiDevice::init(void *arg) {
                 return false;
             }
         } else {
-            for (int i = 0; i < midiOutDevice_->getPortCount() && !found; i++) {
+            found = false;
+            for (unsigned i = 0; i < midiOutDevice_->getPortCount() && !found; i++) {
                 if (output_device.compare(midiOutDevice_->getPortName(i)) == 0) {
                     try {
                         midiOutDevice_->openPort(i);
@@ -120,7 +118,7 @@ bool MidiDevice::init(void *arg) {
             if (!found) {
                 LOG_0("Output device not found : [" << output_device << "]");
                 LOG_0("available devices : ");
-                for (int i = 0; i < midiOutDevice_->getPortCount(); i++) {
+                for (unsigned i = 0; i < midiOutDevice_->getPortCount(); i++) {
                     LOG_0("[" << midiOutDevice_->getPortName(i) << "]");
                 }
                 midiOutDevice_.reset();
@@ -149,15 +147,15 @@ bool MidiDevice::isActive() {
     return active_;
 }
 
-bool MidiDevice::midiCallback(double deltatime, std::vector<unsigned char> *message) {
-    int status = 0, data1 = 0, data2 = 0, data3 = 0;
+bool MidiDevice::midiCallback(double, std::vector<unsigned char> *message) {
+    int status = 0, data1 = 0, data2 = 0; //data3 = 0;
     unsigned int n = message->size();
     if (n > 3) LOG_0("midiCallback unexpect midi size" << n);
 
     status = (int) message->at(0);
     if (n > 1) data1 = (int) message->at(1);
     if (n > 2) data2 = (int) message->at(2);
-    if (n > 3) data3 = (int) message->at(3);
+//    if (n > 3) data3 = (int) message->at(3);
 
 
     int ch = status & 0x0F;

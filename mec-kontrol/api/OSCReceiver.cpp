@@ -3,10 +3,8 @@
 #include <osc/OscReceivedElements.h>
 #include <osc/OscPacketListener.h>
 
-#include <memory.h>
-#include <mec_log.h>
+//#include <mec_log.h>
 
-#include"Rack.h"
 
 namespace Kontrol {
 
@@ -19,9 +17,8 @@ public:
                                const IpEndpointName &remoteEndpoint) {
         OscMsg msg;
         msg.origin_ = remoteEndpoint;
-        msg.size_ = size > MAX_OSC_MESSAGE_SIZE ? MAX_OSC_MESSAGE_SIZE : size;
-        memcpy(msg.buffer_, data, msg.size_);
-        // this does a memcpy so safe!
+        msg.size_ = (size > MAX_OSC_MESSAGE_SIZE ? MAX_OSC_MESSAGE_SIZE : size);
+        memcpy(msg.buffer_, data, (size_t) msg.size_);
         PaUtil_WriteRingBuffer(queue_, (void *) &msg, 1);
     }
 
@@ -40,7 +37,7 @@ public:
         (void) remoteEndpoint; // suppress unused parameter warning
 
         try {
-            // std::cout << "recieved osc message: " << m.AddressPattern() << std::endl;
+            // std::cout << "received osc message: " << m.AddressPattern() << std::endl;
             if (std::strcmp(m.AddressPattern(), "/Kontrol/changed") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
@@ -74,7 +71,7 @@ public:
                 receiver_.createParam(PS_OSC, rackId, moduleId, params);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/page") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                // std::cout << "recieved page p1"<< std::endl;
+                // std::cout << "received page p1"<< std::endl;
                 const char *rackId = (arg++)->AsString();
                 const char *moduleId = (arg++)->AsString();
                 const char *pageId = (arg++)->AsString();
@@ -86,26 +83,26 @@ public:
                     paramIds.push_back((arg++)->AsString());
                 }
 
-                // std::cout << "recieved page " << id << std::endl;
+                // std::cout << "received page " << id << std::endl;
                 receiver_.createPage(PS_OSC, rackId, moduleId, pageId, displayName, paramIds);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/module") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                // std::cout << "recieved page p1"<< std::endl;
+                // std::cout << "received page p1"<< std::endl;
                 const char *rackId = (arg++)->AsString();
                 const char *moduleId = (arg++)->AsString();
                 const char *displayName = (arg++)->AsString();
                 const char *type = (arg++)->AsString();
 
-                // std::cout << "recieved module " << moduleId << std::endl;
+                // std::cout << "received module " << moduleId << std::endl;
                 receiver_.createModule(PS_OSC, rackId, moduleId, displayName, type);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/rack") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                // std::cout << "recieved page p1"<< std::endl;
+                // std::cout << "received page p1"<< std::endl;
                 const char *rackId = (arg++)->AsString();
                 const char *host = (arg++)->AsString();
-                unsigned port = (arg++)->AsInt32();
+                unsigned port = (unsigned) (arg++)->AsInt32();
 
-                // std::cout << "recieved module " << moduleId << std::endl;
+                // std::cout << "received module " << moduleId << std::endl;
                 receiver_.createRack(PS_OSC, rackId, host, port);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/connect") == 0) {
                 osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
@@ -114,7 +111,7 @@ public:
                 char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
                 remoteEndpoint.AddressAsString(buf);
 
-                receiver_.createRack(PS_OSC, Rack::createId(buf, port), buf, port);
+                receiver_.createRack(PS_OSC, Rack::createId(buf, (unsigned) port), buf, (unsigned) port);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/metaData") == 0) {
                 receiver_.publishMetaData();
             }
