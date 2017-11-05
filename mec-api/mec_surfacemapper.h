@@ -24,11 +24,11 @@ namespace mec {
 class SurfaceMapper {
 public:
     SurfaceMapper();
-    int  noteFromKey(int key);
-    void load(Preferences& prefs);
+    int noteFromKey(int key);
+    void load(Preferences &prefs);
 private:
-    void loadNoteArray(Preferences& prefs);
-    void loadCalcDefinition(Preferences& prefs);
+    void loadNoteArray(Preferences &prefs);
+    void loadCalcDefinition(Preferences &prefs);
 
     enum mode {
         SM_NoMapping,

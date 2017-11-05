@@ -24,7 +24,7 @@ SurfaceManager::~SurfaceManager() {
 
 }
 
-bool SurfaceManager::init(const Preferences& prefs) {
+bool SurfaceManager::init(const Preferences &prefs) {
     if (!prefs.valid()) return false;
 
     std::vector<std::string> keys = prefs.getKeys();
@@ -55,7 +55,7 @@ bool SurfaceManager::init(const Preferences& prefs) {
     return true;
 }
 
-std::shared_ptr<Surface>  SurfaceManager::getSurface(SurfaceID id) {
+std::shared_ptr<Surface> SurfaceManager::getSurface(SurfaceID id) {
     return surfaces_[id];
 }
 
@@ -63,7 +63,7 @@ std::shared_ptr<Surface>  SurfaceManager::getSurface(SurfaceID id) {
 
 
 Surface::Surface(SurfaceID surfaceId) :
-    surfaceId_(surfaceId) {
+        surfaceId_(surfaceId) {
     ;
 }
 
@@ -71,12 +71,12 @@ Surface::~Surface() {
     ;
 }
 
-bool   Surface::load(const Preferences& prefs) {
+bool Surface::load(const Preferences &prefs) {
     if (!prefs.valid()) return false;
     return true;
 }
 
-Touch Surface::map(const Touch& t) const {
+Touch Surface::map(const Touch &t) const {
     return t;
 }
 
@@ -93,7 +93,7 @@ const float MAX_SPLIT = 16384.0f;
 
 
 SplitSurface::SplitSurface(SurfaceID surfaceId) :
-    Surface(surfaceId) {
+        Surface(surfaceId) {
     ;
 }
 
@@ -101,7 +101,7 @@ SplitSurface::~SplitSurface() {
     ;
 }
 
-bool    SplitSurface::load(const Preferences& prefs) {
+bool SplitSurface::load(const Preferences &prefs) {
 
     if (!prefs.valid()) return false;
 
@@ -123,8 +123,7 @@ bool    SplitSurface::load(const Preferences& prefs) {
         else if (axis == "r") axis_ = C_R;
         else if (axis == "c") axis_ = C_C;
         else axis_ = C_X;
-    }
-    else {
+    } else {
         axis_ = C_X;
     }
 
@@ -132,7 +131,7 @@ bool    SplitSurface::load(const Preferences& prefs) {
     return surfaces_.size() > 0;
 }
 
-Touch SplitSurface::map(const Touch& t) const {
+Touch SplitSurface::map(const Touch &t) const {
     // TODO
     // relationship between X-C , Y - R
     // touch id, needs to be voiced on surface
@@ -140,39 +139,39 @@ Touch SplitSurface::map(const Touch& t) const {
     int n = 0;
 
     switch (axis_) {
-    case C_X: {
-        n = (t.x_ / splitPoint_ );
-        n = std::min<int> (n, surfaces_.size() - 1);
-        out.x_ = t.x_ - ( splitPoint_ * n );
-        break;
-    }
-    case C_Y: {
-        n = (t.y_ / splitPoint_ );
-        n = std::min<int> (n, surfaces_.size() - 1);
-        out.y_ = t.y_ - ( splitPoint_ * n );
-        break;
-    }
-    case C_Z: {
-        n = (t.z_ / splitPoint_ );
-        n = std::min<int> (n, surfaces_.size() - 1);
-        out.z_ = t.z_ - ( splitPoint_ * n );
-        break;
-    }
-    case C_R: {
-        n = (t.r_ / splitPoint_ );
-        n = std::min<int> (n, surfaces_.size() - 1);
-        out.r_ = t.r_ - ( splitPoint_ * n );
-        break;
-    }
-    case C_C: {
-        n = (t.c_ / splitPoint_ );
-        n = std::min<int> (n, surfaces_.size() - 1);
-        out.c_ = t.c_ - ( splitPoint_ * n );
-        break;
-    }
-    default:
-        LOG_0("SplitSurface : invalid axis");
-        break;
+        case C_X: {
+            n = (t.x_ / splitPoint_);
+            n = std::min<int>(n, surfaces_.size() - 1);
+            out.x_ = t.x_ - (splitPoint_ * n);
+            break;
+        }
+        case C_Y: {
+            n = (t.y_ / splitPoint_);
+            n = std::min<int>(n, surfaces_.size() - 1);
+            out.y_ = t.y_ - (splitPoint_ * n);
+            break;
+        }
+        case C_Z: {
+            n = (t.z_ / splitPoint_);
+            n = std::min<int>(n, surfaces_.size() - 1);
+            out.z_ = t.z_ - (splitPoint_ * n);
+            break;
+        }
+        case C_R: {
+            n = (t.r_ / splitPoint_);
+            n = std::min<int>(n, surfaces_.size() - 1);
+            out.r_ = t.r_ - (splitPoint_ * n);
+            break;
+        }
+        case C_C: {
+            n = (t.c_ / splitPoint_);
+            n = std::min<int>(n, surfaces_.size() - 1);
+            out.c_ = t.c_ - (splitPoint_ * n);
+            break;
+        }
+        default:
+            LOG_0("SplitSurface : invalid axis");
+            break;
     }
     out.surface_ = surfaces_[n];
     return out;
@@ -183,7 +182,7 @@ Touch SplitSurface::map(const Touch& t) const {
 
 
 JoinedSurface::JoinedSurface(SurfaceID surfaceId) :
-    Surface(surfaceId) {
+        Surface(surfaceId) {
     ;
 }
 
@@ -191,7 +190,7 @@ JoinedSurface::~JoinedSurface() {
     ;
 }
 
-bool    JoinedSurface::load(const Preferences& prefs) {
+bool JoinedSurface::load(const Preferences &prefs) {
     if (!prefs.valid()) return false;
 
     // temp, this will come from the source surface
@@ -213,8 +212,7 @@ bool    JoinedSurface::load(const Preferences& prefs) {
         else if (axis == "r") axis_ = C_R;
         else if (axis == "c") axis_ = C_C;
         else axis_ = C_X;
-    }
-    else {
+    } else {
         axis_ = C_X;
     }
 
@@ -222,7 +220,7 @@ bool    JoinedSurface::load(const Preferences& prefs) {
     return surfaces_.size() > 0;
 }
 
-Touch JoinedSurface::map(const Touch& t) const {
+Touch JoinedSurface::map(const Touch &t) const {
     // TODO
     // use source surface for dimension,
     // relationship between X-C , Y - R
@@ -232,29 +230,29 @@ Touch JoinedSurface::map(const Touch& t) const {
     for (SurfaceID n : surfaces_) {
         if (t.surface_ == n) {
             switch (axis_) {
-            case C_X: {
-                out.x_ = t.x_ + ( surfaceSize_ * idx );
-                break;
-            }
-            case C_Y: {
-                out.y_ = t.y_ + ( surfaceSize_ * idx );
-                break;
-            }
-            case C_Z: {
-                out.z_ = t.z_ + ( surfaceSize_ * idx );
-                break;
-            }
-            case C_R: {
-                out.r_ = t.r_ + ( surfaceSize_ * idx );
-                break;
-            }
-            case C_C: {
-                out.c_ = t.c_ + ( surfaceSize_ * idx );
-                break;
-            }
-            default:
-                LOG_0("JoinedSurface : invalid axis");
-                break;
+                case C_X: {
+                    out.x_ = t.x_ + (surfaceSize_ * idx);
+                    break;
+                }
+                case C_Y: {
+                    out.y_ = t.y_ + (surfaceSize_ * idx);
+                    break;
+                }
+                case C_Z: {
+                    out.z_ = t.z_ + (surfaceSize_ * idx);
+                    break;
+                }
+                case C_R: {
+                    out.r_ = t.r_ + (surfaceSize_ * idx);
+                    break;
+                }
+                case C_C: {
+                    out.c_ = t.c_ + (surfaceSize_ * idx);
+                    break;
+                }
+                default:
+                    LOG_0("JoinedSurface : invalid axis");
+                    break;
             }
 
             out.surface_ = surfaceId_;

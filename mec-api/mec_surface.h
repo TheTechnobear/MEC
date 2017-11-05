@@ -17,14 +17,13 @@
 namespace mec {
 
 
-
 class Surface;
 
 class SurfaceManager {
 public:
     SurfaceManager();
     virtual ~SurfaceManager();
-    bool init(const Preferences& prefs);
+    bool init(const Preferences &prefs);
 
     std::shared_ptr<Surface> getSurface(SurfaceID id);
 private:
@@ -37,9 +36,9 @@ public:
     Surface(SurfaceID surfaceId);
     virtual ~Surface();
 
-    SurfaceID       getId();
-    virtual bool    load(const Preferences& prefs);
-    virtual Touch   map(const Touch&) const;
+    SurfaceID getId();
+    virtual bool load(const Preferences &prefs);
+    virtual Touch map(const Touch &) const;
 
 protected:
     SurfaceID surfaceId_;
@@ -51,8 +50,8 @@ public:
     SplitSurface(SurfaceID surfaceId);
     virtual ~SplitSurface();
 
-    virtual bool    load(const Preferences& prefs) override;
-    virtual Touch   map(const Touch&) const override;
+    virtual bool load(const Preferences &prefs) override;
+    virtual Touch map(const Touch &) const override;
 
 private:
     enum {
@@ -74,8 +73,8 @@ public:
     JoinedSurface(SurfaceID surfaceId);
     virtual ~JoinedSurface();
 
-    virtual bool  load(const Preferences& prefs) override;
-    virtual Touch map(const Touch&) const override;
+    virtual bool load(const Preferences &prefs) override;
+    virtual Touch map(const Touch &) const override;
 
 private:
     enum {

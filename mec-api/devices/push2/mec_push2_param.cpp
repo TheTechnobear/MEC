@@ -1,5 +1,7 @@
 #include "mec_push2_param.h"
 
+//#include <mec_log.h>
+
 namespace mec {
 std::string centreText(const std::string t) {
     unsigned len = t.length();
@@ -27,7 +29,8 @@ int16_t page_clrs[8] = {
 P2_ParamMode::P2_ParamMode(mec::Push2 &parent, const std::__1::shared_ptr<Push2API::Push2> &api)
         : parent_(parent),
           push2Api_(api),
-          currentPage_(0) {
+          currentModule_(-1),
+          currentPage_(-1) {
     model_ = Kontrol::KontrolModel::model();;
 }
 
@@ -66,10 +69,7 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
 
     } else if (cc >= P2_TRACK_SELECT_CC_START && cc <= P2_TRACK_SELECT_CC_END) {
         unsigned idx = cc - P2_TRACK_SELECT_CC_START;
-        if (currentPage_ != idx && idx < pages_.size()) {
-            currentPage_ = idx;
-            setCurrentPage(currentPage_);
-        }
+        setCurrentPage(idx);
     }
 }
 
@@ -110,7 +110,7 @@ void P2_ParamMode::displayPage() {
 }
 
 void P2_ParamMode::setCurrentPage(int page) {
-    if (page != currentPage_) {
+    if (page != currentPage_ && page< pages_.size()) {
         currentPage_ = page;
         try {
             auto pmodule = modules_[currentModule_];
@@ -123,15 +123,15 @@ void P2_ParamMode::setCurrentPage(int page) {
 }
 
 void P2_ParamMode::rack(Kontrol::ParameterSource src, const Kontrol::Rack &rack) {
-    P2_Mode::rack(src,rack);
+    P2_DisplayMode::rack(src,rack);
 }
 
 void P2_ParamMode::module(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
-    P2_Mode::module(src,rack,module);
+    P2_DisplayMode::module(src,rack,module);
 }
 
 void P2_ParamMode::page(Kontrol::ParameterSource src,const Kontrol::Rack &rack, const Kontrol::Module &module, const Kontrol::Page &page) {
-    P2_Mode::page(src, rack,module, page);
+    P2_DisplayMode::page(src, rack,module, page);
     auto model = Kontrol::KontrolModel::model();
     if (!rack_) {
         rack_ = model->getRack(rack.id());
@@ -164,7 +164,7 @@ void P2_ParamMode::page(Kontrol::ParameterSource src,const Kontrol::Rack &rack, 
 
 void P2_ParamMode::param(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                          const Kontrol::Parameter &param) {
-    P2_Mode::param(src,rack,module,param);
+    P2_DisplayMode::param(src,rack,module,param);
     unsigned i = 0;
     for (auto p: params_) {
         if (p->id() == param.id()) {
@@ -177,7 +177,7 @@ void P2_ParamMode::param(Kontrol::ParameterSource src, const Kontrol::Rack &rack
 
 void P2_ParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                            const Kontrol::Parameter &param) {
-    P2_Mode::changed(src,rack,module,param);
+    P2_DisplayMode::changed(src,rack,module,param);
     unsigned i = 0;
     for (auto p: params_) {
         if (p->id() == param.id()) {

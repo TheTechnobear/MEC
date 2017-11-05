@@ -20,11 +20,11 @@ namespace mec {
 class SoundplaneHandler : public SoundplaneMECCallback {
 public:
     SoundplaneHandler(Preferences &p, MsgQueue &q)
-        : prefs_(p),
-          queue_(q),
-          valid_(true),
-          voices_(p.getInt("voices", 15)),
-          stealVoices_(p.getBool("steal voices", true)) {
+            : prefs_(p),
+              queue_(q),
+              valid_(true),
+              voices_(p.getInt("voices", 15)),
+              stealVoices_(p.getBool("steal voices", true)) {
         if (valid_) {
             LOG_0("SoundplaneHandler enabling for mecapi");
         }
@@ -145,7 +145,7 @@ private:
 
 ////////////////////////////////////////////////
 Soundplane::Soundplane(ICallback &cb) :
-    active_(false), callback_(cb) {
+        active_(false), callback_(cb) {
 }
 
 Soundplane::~Soundplane() {
@@ -163,7 +163,8 @@ bool Soundplane::init(void *arg) {
     std::string appDir = prefs.getString("app state dir", ".");
 
     // generate a persistent state for the Model
-    std::unique_ptr<MLAppState> pModelState = std::unique_ptr<MLAppState>(new MLAppState(model_.get(), "", "MadronaLabs", "Soundplane", 1, appDir));
+    std::unique_ptr<MLAppState> pModelState = std::unique_ptr<MLAppState>(
+            new MLAppState(model_.get(), "", "MadronaLabs", "Soundplane", 1, appDir));
     pModelState->loadStateFromAppStateFile();
     model_->updateAllProperties();  //??
     model_->setPropertyImmediate("midi_active", 0.0f);

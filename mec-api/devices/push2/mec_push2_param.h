@@ -1,11 +1,10 @@
 #pragma once
 
-#include "mec_push2.h"
-#include "mec_push2_param.h"
+#include "../mec_push2.h"
 
 namespace mec {
 
-class P2_ParamMode : public P2_Mode {
+class P2_ParamMode : public P2_DisplayMode {
 public:
     P2_ParamMode(mec::Push2 &parent, const std::__1::shared_ptr<Push2API::Push2> &api);
 

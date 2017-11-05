@@ -22,11 +22,14 @@ public:
 
     virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
 
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &) { ; }
+    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                      const Kontrol::Page &) { ; }
 
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) { ; }
+    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                       const Kontrol::Parameter &) { ; }
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &);
+    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                         const Kontrol::Parameter &);
 };
 
 class ClientHandler : public Kontrol::KontrolCallback {
@@ -38,11 +41,14 @@ public:
 
     virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
 
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &) { ; }
+    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                      const Kontrol::Page &) { ; }
 
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) { ; }
+    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                       const Kontrol::Parameter &) { ; }
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) { ; }
+    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                         const Kontrol::Parameter &) { ; }
 
 private:
     t_KontrolRack *x_;
@@ -66,11 +72,14 @@ public:
         }
     }
 
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &) { ; }
+    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                      const Kontrol::Page &) { ; }
 
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) { ; }
+    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                       const Kontrol::Parameter &) { ; }
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) { ; }
+    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                         const Kontrol::Parameter &) { ; }
 
 private:
     t_KontrolRack *x_;
@@ -100,7 +109,7 @@ static void sendPdMessage(const char *obj, float f) {
 
 static const int OSC_POLL_FREQUENCY = 1;
 static const int DEVICE_POLL_FREQUENCY = 1;
-static const unsigned TICK_MS = 1000/ 25;
+static const unsigned TICK_MS = 1000 / 25;
 
 /// main PD methods
 void KontrolRack_tick(t_KontrolRack *x) {
@@ -147,8 +156,8 @@ void *KontrolRack_new(t_floatarg port) {
 
     KontrolRack_listen(x, port); // if zero will ignore
 
-    x->x_clock = clock_new(x, (t_method)KontrolRack_tick);
-    clock_setunit(x->x_clock,TICK_MS , 0);
+    x->x_clock = clock_new(x, (t_method) KontrolRack_tick);
+    clock_setunit(x->x_clock, TICK_MS, 0);
     clock_delay(x->x_clock, 1);
 
     return (void *) x;
@@ -156,11 +165,11 @@ void *KontrolRack_new(t_floatarg port) {
 
 void KontrolRack_setup(void) {
     KontrolRack_class = class_new(gensym("KontrolRack"),
-                                        (t_newmethod) KontrolRack_new,
-                                        (t_method) KontrolRack_free,
-                                        sizeof(t_KontrolRack),
-                                        CLASS_DEFAULT,
-                                        A_DEFFLOAT, A_NULL);
+                                  (t_newmethod) KontrolRack_new,
+                                  (t_method) KontrolRack_free,
+                                  sizeof(t_KontrolRack),
+                                  CLASS_DEFAULT,
+                                  A_DEFFLOAT, A_NULL);
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_listen, gensym("listen"),
@@ -292,7 +301,7 @@ void SendBroadcaster::changed(Kontrol::ParameterSource src,
 }
 
 void ClientHandler::rack(Kontrol::ParameterSource, const Kontrol::Rack &rack) {
-    if(Kontrol::KontrolModel::model()->localRackId() == rack.id()) return;
+    if (Kontrol::KontrolModel::model()->localRackId() == rack.id()) return;
 
     std::string id = "pd.osc:" + rack.host() + ":" + std::to_string(rack.port());
     Kontrol::KontrolModel::model()->removeCallback(id);

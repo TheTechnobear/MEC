@@ -1,56 +1,56 @@
 ###############################
 # MEC library
-project (mec-api)
+project(mec-api)
 
-add_subdirectory (devices/eigenharp) 
-add_subdirectory (devices/soundplanelite) 
-add_subdirectory (devices/push2) 
+add_subdirectory(devices/eigenharp)
+add_subdirectory(devices/soundplanelite)
+add_subdirectory(devices/push2)
 
-set(MECAPI_SRC 
-    mec_api.cpp
-    mec_api.h
-    mec_device.h
-    mec_msg_queue.cpp
-    mec_msg_queue.h
-    mec_scaler.cpp
-    mec_scaler.h
-    mec_surface.cpp
-    mec_surface.h
-    mec_surfacemapper.cpp
-    mec_surfacemapper.h
-    mec_voice.h
-    devices/mec_eigenharp.cpp
-    devices/mec_eigenharp.h
-    devices/mec_mididevice.cpp
-    devices/mec_mididevice.h
-    devices/mec_osct3d.cpp
-    devices/mec_osct3d.h
-    devices/mec_push2.cpp
-    devices/mec_push2.h
-    devices/mec_push2_param.cpp
-    devices/mec_push2_param.h
-    devices/mec_soundplane.cpp
-    devices/mec_soundplane.h
-    devices/mec_kontroldevice.cpp
-    devices/mec_kontroldevice.h
-    processors/mec_mpe_processor.cpp
-    processors/mec_mpe_processor.h
+set(MECAPI_SRC
+        mec_api.cpp
+        mec_api.h
+        mec_device.h
+        mec_msg_queue.cpp
+        mec_msg_queue.h
+        mec_scaler.cpp
+        mec_scaler.h
+        mec_surface.cpp
+        mec_surface.h
+        mec_surfacemapper.cpp
+        mec_surfacemapper.h
+        mec_voice.h
+        devices/mec_eigenharp.cpp
+        devices/mec_eigenharp.h
+        devices/mec_mididevice.cpp
+        devices/mec_mididevice.h
+        devices/mec_osct3d.cpp
+        devices/mec_osct3d.h
+        devices/mec_push2.cpp
+        devices/mec_push2.h
+        devices/push2/mec_push2_param.cpp
+        devices/push2/mec_push2_param.h
+        devices/mec_soundplane.cpp
+        devices/mec_soundplane.h
+        devices/mec_kontroldevice.cpp
+        devices/mec_kontroldevice.h
+        processors/mec_mpe_processor.cpp
+        processors/mec_mpe_processor.h
+        devices/push2/mec_push2_play.h devices/push2/mec_push2_play.cpp)
+
+include_directories(
+        "devices/push2"
+        "devices/eigenharp"
+        "devices/soundplanelite"
+        "${PROJECT_SOURCE_DIR}/../mec-utils"
+        "${PROJECT_SOURCE_DIR}/../mec-kontrol/api"
+        "${PROJECT_SOURCE_DIR}/../external/cJSON"
+        "${PROJECT_SOURCE_DIR}/../external/oscpack"
+        "${PROJECT_SOURCE_DIR}/../external/rtmidi"
 )
-
-include_directories (
-    "devices/push2" 
-    "devices/eigenharp" 
-    "devices/soundplanelite"
-    "${PROJECT_SOURCE_DIR}/../mec-utils"
-    "${PROJECT_SOURCE_DIR}/../mec-kontrol/api"
-    "${PROJECT_SOURCE_DIR}/../external/cJSON"
-    "${PROJECT_SOURCE_DIR}/../external/oscpack"
-    "${PROJECT_SOURCE_DIR}/../external/rtmidi"
-    )
 
 add_library(mec-api SHARED ${MECAPI_SRC})
 
-target_link_libraries (mec-api mec-utils mec-eigenharp mec-soundplane mec-push2 mec-kontrol-api cjson oscpack rtmidi)
+target_link_libraries(mec-api mec-utils mec-eigenharp mec-soundplane mec-push2 mec-kontrol-api cjson oscpack rtmidi)
 
 add_subdirectory(tests)
 

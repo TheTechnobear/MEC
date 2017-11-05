@@ -15,7 +15,7 @@ public:
     const float V_CURVE_AMT = 1.0f;
 
     Voices(unsigned voiceCount = 15, unsigned velocityCount = 5)
-        : maxVoices_(voiceCount), velocityCount_(velocityCount) {
+            : maxVoices_(voiceCount), velocityCount_(velocityCount) {
         voices_.resize(maxVoices_);
         for (int i = 0; i < maxVoices_; i++) {
             voices_[i].i_ = i;
@@ -25,6 +25,7 @@ public:
         }
 
     };
+
     virtual ~Voices() {};
 
 
@@ -52,7 +53,7 @@ public:
         } vel_;
     };
 
-    Voice*     voiceId(unsigned id) {
+    Voice *voiceId(unsigned id) {
         for (int i = 0; i < maxVoices_; i++) {
             if (voices_[i].id_ == id)
                 return &voices_[i];
@@ -60,8 +61,8 @@ public:
         return NULL;
     }
 
-    Voice*    startVoice(unsigned id) {
-        Voice* voice;
+    Voice *startVoice(unsigned id) {
+        Voice *voice;
         if (freeVoices_.size() > 0) {
             voice = freeVoices_.front();
             freeVoices_.pop_front();
@@ -93,20 +94,19 @@ public:
         return voice;
     }
 
-    void   addPressure(Voice* voice, float p) {
+    void addPressure(Voice *voice, float p) {
         if (voice->state_ == Voice::PENDING) {
 
 
-            if (voice->vel_.vcount_ < velocityCount_ )
-            {
-                voice->vel_.sumx_   += voice->vel_.x_;
-                voice->vel_.sumy_   += p;
-                voice->vel_.sumxy_  += (voice->vel_.x_ * p) ;
+            if (voice->vel_.vcount_ < velocityCount_) {
+                voice->vel_.sumx_ += voice->vel_.x_;
+                voice->vel_.sumy_ += p;
+                voice->vel_.sumxy_ += (voice->vel_.x_ * p);
                 voice->vel_.sumxsq_ += (voice->vel_.x_ * voice->vel_.x_);
-                voice->vel_.vcount_ ++;
-                voice->vel_.x_ ++;
+                voice->vel_.vcount_++;
+                voice->vel_.x_++;
 
-                if (p <= 1.0 ) {
+                if (p <= 1.0) {
                     return;
                 }
                 // else max pressure, so consider 'complete'
@@ -116,7 +116,7 @@ public:
             voice->vel_.raw_ = voice->vel_.scale_ *
                                (voice->vel_.x_ * voice->vel_.sumxy_ - (voice->vel_.sumx_ * voice->vel_.sumy_))
                                / (voice->vel_.x_ * voice->vel_.sumxsq_ - (voice->vel_.sumx_ * voice->vel_.sumx_));
-            voice->v_  = 1.0f - pow ( (double) (1.0f - voice->vel_.raw_), (double)(voice->vel_.curve_));
+            voice->v_ = 1.0f - pow((double) (1.0f - voice->vel_.raw_), (double) (voice->vel_.curve_));
 
             // LOG_1("vel detector : " << voice->id_);
             // LOG_1("raw : " << voice->vel_.raw_ << " v " << voice->v_);
@@ -129,7 +129,7 @@ public:
         }
     }
 
-    void   stopVoice(Voice* voice) {
+    void stopVoice(Voice *voice) {
         if (!voice) return;
         usedVoices_.remove(voice);
         voice->id_ = -1;
@@ -142,15 +142,15 @@ public:
         freeVoices_.push_back(voice);
     }
 
-    Voice* oldestActiveVoice() {
+    Voice *oldestActiveVoice() {
         return usedVoices_.front();
     }
 
 
 private:
     std::vector<Voice> voices_;
-    std::list<Voice*> freeVoices_;
-    std::list<Voice*> usedVoices_;
+    std::list<Voice *> freeVoices_;
+    std::list<Voice *> usedVoices_;
     unsigned maxVoices_;
     unsigned velocityCount_;
 };

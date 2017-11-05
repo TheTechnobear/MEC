@@ -14,13 +14,13 @@ namespace mec {
 class EigenharpHandler : public EigenApi::Callback {
 public:
     EigenharpHandler(Preferences &p, ICallback &cb)
-        : prefs_(p),
-          callback_(cb),
-          valid_(true),
-          voices_(p.getInt("voices", 15), p.getInt("velocity count", 5)),
-          pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
-          stealVoices_(p.getBool("steal voices", true)),
-          throttle_(p.getInt("throttle", 0) == 0 ? 0 : 1000000 / p.getInt("throttle", 0)) {
+            : prefs_(p),
+              callback_(cb),
+              valid_(true),
+              voices_(p.getInt("voices", 15), p.getInt("velocity count", 5)),
+              pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
+              stealVoices_(p.getBool("steal voices", true)),
+              throttle_(p.getInt("throttle", 0) == 0 ? 0 : 1000000 / p.getInt("throttle", 0)) {
         if (valid_) {
             LOG_0("EigenharpHandler enabling for mecapi");
         }
@@ -58,7 +58,8 @@ public:
     }
 
 
-    virtual void key(const char *dev, unsigned long long t, unsigned course, unsigned key, bool a, unsigned p, int r, int y) {
+    virtual void key(const char *dev, unsigned long long t, unsigned course, unsigned key, bool a, unsigned p, int r,
+                     int y) {
         Voices::Voice *voice = voices_.voiceId(key);
         float mx = bipolar(r);
         float my = bipolar(y);
@@ -146,7 +147,9 @@ private:
     float bipolar(int val) { return clamp(float(val) / 4096.0f, -1.0f, 1.0f); }
 
     //float   note(unsigned key, float mx) { return mapper_.noteFromKey(key) + (mx  * pitchbendRange_) ; }
-    float note(unsigned key, float mx) { return mapper_.noteFromKey(key) + ((mx > 0.0 ? mx * mx : -mx * mx) * pitchbendRange_); }
+    float note(unsigned key, float mx) {
+        return mapper_.noteFromKey(key) + ((mx > 0.0 ? mx * mx : -mx * mx) * pitchbendRange_);
+    }
 
     Preferences prefs_;
     ICallback &callback_;
@@ -162,7 +165,7 @@ private:
 
 ////////////////////////////////////////////////
 Eigenharp::Eigenharp(ICallback &cb) :
-    active_(false), callback_(cb), minPollTime_(100) {
+        active_(false), callback_(cb), minPollTime_(100) {
 }
 
 Eigenharp::~Eigenharp() {

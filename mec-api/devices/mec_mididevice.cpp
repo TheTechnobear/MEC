@@ -8,7 +8,7 @@ namespace mec {
 
 ////////////////////////////////////////////////
 MidiDevice::MidiDevice(ICallback &cb) :
-    active_(false), callback_(cb) {
+        active_(false), callback_(cb) {
 }
 
 MidiDevice::~MidiDevice() {

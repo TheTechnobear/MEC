@@ -1,7 +1,7 @@
 ###############################
 # kontrol library
-project (mec-kontrol)
+project(mec-kontrol)
 
-add_subdirectory (kontrolmodule) 
-add_subdirectory (kontrolrack) 
+add_subdirectory(kontrolmodule)
+add_subdirectory(kontrolrack)
 

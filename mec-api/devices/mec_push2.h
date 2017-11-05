@@ -28,7 +28,7 @@ static const unsigned P2_DEV_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7;
 static const unsigned P2_TRACK_SELECT_CC_START = 20;
 static const unsigned P2_TRACK_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7;
 
-class P2_Mode : Kontrol::KontrolCallback {
+class P2_DisplayMode : Kontrol::KontrolCallback {
 public:
     virtual void activate() { ; }
 
@@ -52,39 +52,83 @@ public:
                          const Kontrol::Parameter &) override { ; }
 };
 
-class Push2 : public MidiDevice {
+class P2_PadMode : Kontrol::KontrolCallback {
+public:
+    virtual void activate() { ; }
+
+    virtual void processNoteOn(unsigned n, unsigned v) { ; }
+
+    virtual void processNoteOff(unsigned n, unsigned v) { ; }
+
+    virtual void processCC(unsigned cc, unsigned v) { ; }
+
+    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack &) override { ; }
+
+    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
+
+    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                      const Kontrol::Page &) override { ; }
+
+    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                       const Kontrol::Parameter &) override { ; };
+
+    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                         const Kontrol::Parameter &) override { ; }
+};
+
+enum PushDisplayModes {
+    P2D_Param
+};
+
+enum PushPadModes {
+    P2P_Play
+};
+
+
+class Push2 : public MidiDevice, public Kontrol::KontrolCallback {
 
 public:
     Push2(ICallback &);
 
     virtual ~Push2();
 
-    //mididevice : device
-    virtual bool init(void *);
+    //MidiDevice
+    bool init(void *) override;
+    bool process() override;
+    void deinit() override;
+    RtMidiIn::RtMidiCallback getMidiCallback() override; //override
 
-    virtual bool process();
+    bool midiCallback(double deltatime, std::vector<unsigned char> *message) override;
 
-    virtual void deinit();
+    // Kontrol::KontrolCallback
+    void rack(Kontrol::ParameterSource source, const Kontrol::Rack &rack) override;
+    void module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
+    void page(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+              const Kontrol::Page &page) override;
+    void param(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+               const Kontrol::Parameter &parameter) override;
+    void changed(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+                 const Kontrol::Parameter &parameter) override;
 
-    virtual RtMidiIn::RtMidiCallback getMidiCallback(); //override
 
-    virtual bool midiCallback(double deltatime, std::vector<unsigned char> *message);
-
-    void changeMode(unsigned);
-
-    void addMode(unsigned mode, std::shared_ptr<P2_Mode>);
-
+    void addDisplayMode(PushDisplayModes mode, std::shared_ptr<P2_DisplayMode>);
+    void changeDisplayMode(PushDisplayModes);
+    void addPadMode(PushPadModes mode, std::shared_ptr<P2_PadMode>);
+    void changePadMode(PushPadModes);
 private:
-
-    static const unsigned int MAX_N_MIDI_MSGS = 16;
+    inline std::shared_ptr<P2_PadMode> currentPadMode() { return padModes_[currentPadMode_]; }
+    inline std::shared_ptr<P2_DisplayMode> currentDisplayMode() { return displayModes_[currentDisplayMode_]; }
 
     bool processMidi(const MidiMsg &);
-
     void processNoteOn(unsigned n, unsigned v);
-
     void processNoteOff(unsigned n, unsigned v);
-
     void processCC(unsigned cc, unsigned v);
+
+    PushPadModes currentPadMode_;
+    std::map<unsigned, std::shared_ptr<P2_PadMode>> padModes_;
+    PushDisplayModes currentDisplayMode_;
+    std::map<unsigned, std::shared_ptr<P2_DisplayMode>> displayModes_;
+
 
     // push display
     std::shared_ptr<Push2API::Push2> push2Api_;
@@ -92,29 +136,9 @@ private:
     // kontrol interface
     std::shared_ptr<Kontrol::KontrolModel> model_;
 
-
-//        float pitchbendRange_;
+    static const unsigned int MAX_N_MIDI_MSGS = 16;
     PaUtilRingBuffer midiQueue_; // draw midi from P2
     char msgData_[sizeof(MidiMsg) * MAX_N_MIDI_MSGS];
-
-
-    // scales colour
-    void updatePadColours();
-
-    unsigned determinePadScaleColour(int8_t r, int8_t c);
-
-    uint8_t octave_;    // current octave
-    uint8_t scaleIdx_;
-    uint16_t scale_;     // current scale
-    uint8_t numNotesInScale_;   // number of notes in current scale
-    uint8_t tonic_;     // current tonic
-    uint8_t rowOffset_; // current tonic
-    bool chromatic_; // are we in chromatic mode or not
-
-    std::map<unsigned, std::shared_ptr<P2_Mode>> modes_;
-    unsigned currentMode_;
-
-    inline std::shared_ptr<P2_Mode> currentMode() { return modes_[currentMode_]; }
 };
 
 }

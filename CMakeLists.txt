@@ -10,11 +10,11 @@ set(MEC_VERSION "${MEC_VERSION_MAJOR}.${MEC_VERSION_MINOR}.${MEC_VERSION_UPDATE}
 set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
 
 
-if(APPLE)
+if (APPLE)
     set(EXECUTABLE_NAME MicroExpression)
-elseif(UNIX)
+elseif (UNIX)
     set(EXECUTABLE_NAME microexpression)
-endif(APPLE)
+endif (APPLE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -23,21 +23,20 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -funroll
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-if(APPLE)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(UNIX)
+if (APPLE)
+    #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+elseif (UNIX)
     if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
-        if(BELA) 
+        if (BELA)
             message(STATUS "BELA optimized")
             set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon -ftree-vectorize --fast-math")
-        else()
+        else ()
             set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=armv7-a -mfpu=neon -mfloat-abi=hard -O3")
-        endif(BELA)
-    else()
-#        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
+        endif (BELA)
+    else ()
+        #        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
     endif ()
-endif(APPLE)
-
+endif (APPLE)
 
 
 set(CMAKE_MACOSX_RPATH 1)
@@ -53,7 +52,7 @@ add_subdirectory(external/portaudio portaudio)
 add_subdirectory(external/cJSON cjson)
 add_subdirectory(external/rtmidi rtmidi)
 
-add_subdirectory(mec-api) 
+add_subdirectory(mec-api)
 add_subdirectory(mec-app)
 add_subdirectory(mec-kontrol)
 add_subdirectory(mec-utils) 

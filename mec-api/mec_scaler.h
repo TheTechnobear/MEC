@@ -16,7 +16,7 @@
 // consider ROW as a guitar string (so string N is offset N* rowOffset)
 // consider columns as a positon (like a fret) on that string. (its fretless, i.e. fractional position)
 // note: presently linear interp between scale positions
- 
+
 // scale can be chromatic or not, intervales are determined in float
 // e.g.
 // major : 0.0, 2.0, 4.0, 5.0, 7.0, 9.0, 11.0, 12.0
@@ -28,52 +28,52 @@
 // we use linear interp beween notes in scale
 
 
-  
+
 namespace mec {
 
 typedef std::vector<float> ScaleArray;
 
 class Scales {
 public:
-            Scales();
+    Scales();
     virtual ~Scales();
-    bool    load(const Preferences& prefs);
+    bool load(const Preferences &prefs);
 
     // static/singleton interface
-    static const ScaleArray& getScale(const std::string& name);
-    static bool init(const Preferences&);
+    static const ScaleArray &getScale(const std::string &name);
+    static bool init(const Preferences &);
 
 private:
-    std::map<std::string,ScaleArray> scales_;
+    std::map<std::string, ScaleArray> scales_;
 };
 
 
 class Scaler {
 public:
-            Scaler();
+    Scaler();
     virtual ~Scaler();
-    bool    load(const Preferences& prefs);
+    bool load(const Preferences &prefs);
 
-    virtual MusicalTouch map(const Touch& t) const;
+    virtual MusicalTouch map(const Touch &t) const;
 
     float getTonic() const;
     float getRowOffset() const;
     float getColumnOffset() const;
-    const ScaleArray& getScale() const;
- 
-    void  setTonic(float);
-    void  setRowOffset(float);
-    void  setColumnOffset(float);
+    const ScaleArray &getScale() const;
 
-    void  setScale(const ScaleArray& scale) ;
-    void  setScale(const std::string& name);
+    void setTonic(float);
+    void setRowOffset(float);
+    void setColumnOffset(float);
+
+    void setScale(const ScaleArray &scale);
+    void setScale(const std::string &name);
 
 private:
-    float       tonic_;
-    float       rowOffset_;
-    float       columnOffset_;
+    float tonic_;
+    float rowOffset_;
+    float columnOffset_;
 
-    ScaleArray  scale_;
+    ScaleArray scale_;
 };
 
 }

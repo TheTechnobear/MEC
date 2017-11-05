@@ -5,8 +5,8 @@
 
 MidiOutput::MidiOutput() {
     try {
-        output_.reset(new RtMidiOut( RtMidi::Api::UNSPECIFIED, "MEC MIDI"));
-    } catch (RtMidiError  &error) {
+        output_.reset(new RtMidiOut(RtMidi::Api::UNSPECIFIED, "MEC MIDI"));
+    } catch (RtMidiError &error) {
         LOG_0("Midi output ctor error:" << error.what());
     }
 }
@@ -16,7 +16,7 @@ MidiOutput::~MidiOutput() {
 }
 
 
-bool MidiOutput::create(const std::string& portname, bool virt) {
+bool MidiOutput::create(const std::string &portname, bool virt) {
 
     if (!output_) return false;
 
@@ -26,9 +26,9 @@ bool MidiOutput::create(const std::string& portname, bool virt) {
     if (virt) {
         try {
             output_->openVirtualPort(portname);
-            LOG_0( "Midi virtual output created :" << portname );
+            LOG_0("Midi virtual output created :" << portname);
             virtualOpen_ = true; // port is open because it belongs to client
-        } catch (RtMidiError  &error) {
+        } catch (RtMidiError &error) {
             LOG_0("Midi virtual output create error:" << error.what());
             return false;
         }
@@ -39,8 +39,8 @@ bool MidiOutput::create(const std::string& portname, bool virt) {
         if (portname.compare(output_->getPortName(i)) == 0) {
             try {
                 output_->openPort(i);
-                LOG_0( "Midi output opened :" << portname );
-            } catch (RtMidiError  &error) {
+                LOG_0("Midi output opened :" << portname);
+            } catch (RtMidiError &error) {
                 LOG_0("Midi output create error:" << error.what());
                 return false;
             }
@@ -56,12 +56,12 @@ bool MidiOutput::create(const std::string& portname, bool virt) {
     return false;
 }
 
-bool MidiOutput::sendMsg(std::vector<unsigned char>& msg) {
+bool MidiOutput::sendMsg(std::vector<unsigned char> &msg) {
     if (!isOpen()) return false;
 
     try {
-        output_->sendMessage( &msg );
-    } catch (RtMidiError  &error) {
+        output_->sendMessage(&msg);
+    } catch (RtMidiError &error) {
         LOG_0("Midi output write error:" << error.what());
         return false;
     }

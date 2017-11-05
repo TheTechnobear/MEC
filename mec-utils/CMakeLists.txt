@@ -1,19 +1,19 @@
 ###############################
 # MEC library
-project (mec-utils)
+project(mec-utils)
 
-set(MECUTILS_SRC 
-    mec_log.h
-    mec_prefs.cpp
-    mec_prefs.h
-)
+set(MECUTILS_SRC
+        mec_log.h
+        mec_prefs.cpp
+        mec_prefs.h
+        )
 
-include_directories (
-    "${PROJECT_SOURCE_DIR}/../external/cJSON"
+include_directories(
+        "${PROJECT_SOURCE_DIR}/../external/cJSON"
 )
 
 add_library(mec-utils SHARED ${MECUTILS_SRC})
 
-target_link_libraries (mec-utils cjson)
+target_link_libraries(mec-utils cjson)
 
 

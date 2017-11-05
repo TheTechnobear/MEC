@@ -1,8 +1,8 @@
 ###############################
 # kontrol library
-project (mec-kontrol)
+project(mec-kontrol)
 
-add_subdirectory (api) 
-add_subdirectory (tests) 
-add_subdirectory (pd) 
+add_subdirectory(api)
+add_subdirectory(tests)
+add_subdirectory(pd)
 

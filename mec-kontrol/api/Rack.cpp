@@ -3,7 +3,6 @@
 #include "KontrolModel.h"
 
 
-
 #include <algorithm>
 #include <limits>
 #include <string.h>
@@ -24,13 +23,13 @@ inline std::shared_ptr<KontrolModel> Rack::model() {
     return KontrolModel::model();
 }
 
-void Rack::addModule(const std::shared_ptr<Module>& module) {
+void Rack::addModule(const std::shared_ptr<Module> &module) {
     if (module != nullptr) {
         modules_[module->id()] = module;
     }
 }
 
-std::vector<std::shared_ptr<Module>>  Rack::getModules() {
+std::vector<std::shared_ptr<Module>> Rack::getModules() {
     std::vector<std::shared_ptr<Module>> ret;
     for (auto p : modules_) {
         if (p.second != nullptr) ret.push_back(p.second);
@@ -38,13 +37,13 @@ std::vector<std::shared_ptr<Module>>  Rack::getModules() {
     return ret;
 }
 
-std::shared_ptr<Module> Rack::getModule(const EntityId& moduleId) {
+std::shared_ptr<Module> Rack::getModule(const EntityId &moduleId) {
     return modules_[moduleId];
 }
 
 
-bool Rack::loadModuleDefinitions(const EntityId& moduleId, const mec::Preferences& prefs) {
-    auto module  = getModule(moduleId);
+bool Rack::loadModuleDefinitions(const EntityId &moduleId, const mec::Preferences &prefs) {
+    auto module = getModule(moduleId);
     if (module != nullptr) {
         if (module->loadModuleDefinitions(prefs)) {
             publishMetaData(module);
@@ -55,15 +54,14 @@ bool Rack::loadModuleDefinitions(const EntityId& moduleId, const mec::Preference
 }
 
 
-
-bool Rack::loadSettings(const std::string& filename) {
+bool Rack::loadSettings(const std::string &filename) {
     settings_ = std::make_shared<mec::Preferences>(filename);
     settingsFile_ = filename;
     return loadSettings(*settings_);
 }
 
 
-bool Rack::loadSettings(const mec::Preferences& prefs) {
+bool Rack::loadSettings(const mec::Preferences &prefs) {
     bool ret = false;
     for (auto m : modules_) {
         auto module = m.second;
@@ -88,7 +86,7 @@ bool Rack::saveSettings() {
     return false;
 }
 
-bool Rack::saveSettings(const std::string & filename) {
+bool Rack::saveSettings(const std::string &filename) {
     // do in cJSON for now
     std::ofstream outfile(filename);
     cJSON *root = cJSON_CreateObject();
@@ -100,7 +98,7 @@ bool Rack::saveSettings(const std::string & filename) {
     }
 
     // const char* text = cJSON_PrintUnformatted(root);
-    const char* text = cJSON_Print(root);
+    const char *text = cJSON_Print(root);
     outfile << text << std::endl;
     outfile.close();
     cJSON_Delete(root);
@@ -162,7 +160,7 @@ bool Rack::changeMidiCC(unsigned midiCC, unsigned midiValue) {
     for (auto m : modules_) {
         auto module = m.second;
         if (module != nullptr) {
-            std::vector<EntityId>  mmvec = module->getParamsForCC(midiCC);
+            std::vector<EntityId> mmvec = module->getParamsForCC(midiCC);
             for (auto paramId : mmvec) {
                 auto param = module->getParam(paramId);
                 if (param != nullptr) {
@@ -179,18 +177,17 @@ bool Rack::changeMidiCC(unsigned midiCC, unsigned midiValue) {
 }
 
 
-
-void Rack::addMidiCCMapping(unsigned ccnum, const EntityId & moduleId, const EntityId & paramId) {
+void Rack::addMidiCCMapping(unsigned ccnum, const EntityId &moduleId, const EntityId &paramId) {
     auto module = getModule(moduleId);
     if (module != nullptr) module->addMidiCCMapping(ccnum, paramId);
 }
 
-void Rack::removeMidiCCMapping(unsigned ccnum, const EntityId & moduleId, const EntityId & paramId) {
+void Rack::removeMidiCCMapping(unsigned ccnum, const EntityId &moduleId, const EntityId &paramId) {
     auto module = getModule(moduleId);
     if (module != nullptr) module->removeMidiCCMapping(ccnum, paramId);
 }
 
-void Rack::publishCurrentValues(const std::shared_ptr<Module>& module) const {
+void Rack::publishCurrentValues(const std::shared_ptr<Module> &module) const {
     if (module != nullptr) {
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();
         std::vector<std::shared_ptr<Page>> pages = module->getPages();
@@ -208,7 +205,7 @@ void Rack::publishCurrentValues() const {
 }
 
 
-void Rack::publishMetaData(const std::shared_ptr<Module>& module) const {
+void Rack::publishMetaData(const std::shared_ptr<Module> &module) const {
     if (module != nullptr) {
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();
         std::vector<std::shared_ptr<Page>> pages = module->getPages();
@@ -217,7 +214,7 @@ void Rack::publishMetaData(const std::shared_ptr<Module>& module) const {
         }
         for (auto p : pages) {
             if (p != nullptr) {
-                model()->publishPage(PS_LOCAL, *this, *module,  *p);
+                model()->publishPage(PS_LOCAL, *this, *module, *p);
             }
         }
     }
@@ -239,12 +236,13 @@ void Rack::dumpSettings() const {
 }
 
 void Rack::dumpParameters() {
-    LOG_1("Rack Parameters :" << id() );
+    LOG_1("Rack Parameters :" << id());
     LOG_1("------------------------");
     for (auto m : modules_) {
         if (m.second != nullptr) m.second->dumpParameters();
     }
 }
+
 void Rack::dumpCurrentValues() {
     LOG_1("Rack Values : " << id());
     LOG_1("-----------------------");

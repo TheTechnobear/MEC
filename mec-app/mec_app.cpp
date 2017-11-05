@@ -12,14 +12,16 @@
 #include "mec_app.h"
 #include <mec_prefs.h>
 
-pthread_cond_t  waitCond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t waitCond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t waitMtx = PTHREAD_MUTEX_INITIALIZER;
 
 
 #ifdef __MACH__
+
 #include <mach/clock.h>
 #include <mach/mach.h>
-void getWaitTime(struct timespec& ts, int t) {
+
+void getWaitTime(struct timespec &ts, int t) {
     clock_serv_t cclock;
     mach_timespec_t mts;
     host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
@@ -32,6 +34,7 @@ void getWaitTime(struct timespec& ts, int t) {
     ts.tv_sec += t / 1000000;
     ts.tv_nsec += 1000 * (t % 1000000);
 }
+
 #else
 void getWaitTime(struct timespec& ts, int t) {
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -47,20 +50,20 @@ void getWaitTime(struct timespec& ts, int t) {
 volatile bool keepRunning = true;
 
 void exitHandler() {
-    LOG_0("mec_app exit handler called" );
+    LOG_0("mec_app exit handler called");
 }
 
 void intHandler(int sig) {
     // only called in main thread
     if (sig == SIGINT) {
-        LOG_0("mec_app int handler called" );
+        LOG_0("mec_app int handler called");
         keepRunning = 0;
         pthread_cond_broadcast(&waitCond);
     }
 }
 
 #include <mec_msg_queue.h>
-#include <mec_log.h>
+//#include <mec_log.h>
 
 
 int main(int ac, char **av) {
@@ -77,7 +80,7 @@ int main(int ac, char **av) {
     LOG_0("mec_app initialise ");
 
     const char *pref_file = "./mec.json";
-    if ( ac > 1 ) pref_file = av[1];
+    if (ac > 1) pref_file = av[1];
     mec::Preferences prefs(pref_file);
     if (!prefs.valid()) return -1;
 
@@ -90,7 +93,7 @@ int main(int ac, char **av) {
         pthread_t mec_thread;
         rc = pthread_create(&mec_thread, NULL, mecapi_proc, prefs.getTree());
         if (rc) {
-            LOG_0("unabled to create mecapi thread" << rc );
+            LOG_0("unabled to create mecapi thread" << rc);
             exit(-1);
         }
         usleep(1000);

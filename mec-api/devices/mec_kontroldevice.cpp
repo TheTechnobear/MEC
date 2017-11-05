@@ -9,9 +9,9 @@ namespace mec {
 
 ////////////////////////////////////////////////
 KontrolDevice::KontrolDevice(ICallback &cb) :
-    state_(S_UNCONNECTED),
-    active_(false), callback_(cb),
-    listenPort_(0), connectPort_(0) {
+        state_(S_UNCONNECTED),
+        active_(false), callback_(cb),
+        listenPort_(0), connectPort_(0) {
     model_ = Kontrol::KontrolModel::model();
 }
 
