@@ -2,6 +2,8 @@
 #include "push2lib.h"
 #include "push1font.h"
 
+#include <stdarg.h> 
+#include <memory.h>
 
 namespace Push2API {
 
