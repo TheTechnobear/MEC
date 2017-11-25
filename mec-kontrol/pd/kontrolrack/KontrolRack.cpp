@@ -134,7 +134,7 @@ void KontrolRack_free(t_KontrolRack *x) {
     // Kontrol::ParameterModel::free();
 }
 
-void *KontrolRack_new(t_floatarg serverport t_floatarg clientport) {
+void *KontrolRack_new(t_floatarg serverport, t_floatarg clientport) {
     t_KontrolRack *x = (t_KontrolRack *) pd_new(KontrolRack_class);
 
 
@@ -143,7 +143,7 @@ void *KontrolRack_new(t_floatarg serverport t_floatarg clientport) {
     x->pollCount_ = 0;
     x->model_ = Kontrol::KontrolModel::model();
 
-    x->model_->createLocalRack(port);
+    x->model_->createLocalRack((unsigned int) clientport);
 
     x->device_ = std::make_shared<Organelle>();
     x->device_->init();
