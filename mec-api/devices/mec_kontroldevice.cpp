@@ -6,15 +6,33 @@ namespace mec {
 
 ////////////////////////////////////////////////
 KontrolDevice::KontrolDevice(ICallback &cb) :
-        state_(S_UNCONNECTED),
         active_(false), callback_(cb),
-        listenPort_(0), connectPort_(0) {
+        listenPort_(0){
     model_ = Kontrol::KontrolModel::model();
 }
 
 KontrolDevice::~KontrolDevice() {
     deinit();
 }
+
+
+class KontrolDeviceClientHandler : public Kontrol::KontrolCallback {
+public:
+    KontrolDeviceClientHandler(KontrolDevice &kd) : this_(kd) {;}
+    //Kontrol::KontrolCallback
+    virtual void ping(const std::string &host, unsigned port) { this_.newClient(host,port);}
+
+    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack &) { ; }
+    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
+    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                      const Kontrol::Page &) { ; }
+    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                       const Kontrol::Parameter &) { ; }
+    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                         const Kontrol::Parameter &) { ; }
+
+    KontrolDevice& this_;
+};
 
 
 bool KontrolDevice::init(void *arg) {
@@ -26,7 +44,6 @@ bool KontrolDevice::init(void *arg) {
         deinit();
     }
     active_ = false;
-    state_ = S_UNCONNECTED;
 
     // if (prefs.exists("parameter definitions")) {
     //     std::string file = prefs.getString("parameter definitions", "./kontrol-param.json");
@@ -44,8 +61,9 @@ bool KontrolDevice::init(void *arg) {
     //     // model_->dumpPatchSettings();
     // }
 
+    model_->addCallback("clienthandler", std::make_shared<KontrolDeviceClientHandler>(*this));
+
     listenPort_ = static_cast<unsigned>(prefs.getInt("listen port", 4000));
-    connectPort_ = static_cast<unsigned>(prefs.getInt("connect port", 9000));
 
     if (listenPort_ > 0) {
         auto p = std::make_shared<Kontrol::OSCReceiver>(model_);
@@ -55,50 +73,36 @@ bool KontrolDevice::init(void *arg) {
         }
     }
 
-    if (connectPort_ > 0) {
-        std::string host = "127.0.0.1";
-        std::string id = "mec.osc:" + host + ":" + std::to_string(connectPort_);
-        model_->removeCallback(id);
-        auto p = std::make_shared<Kontrol::OSCBroadcaster>();
-        if (p->connect(host, connectPort_)) {
-            osc_broadcaster_ = p;
-            model_->addCallback(id, osc_broadcaster_);
-            LOG_0("kontrol device : connected to " << connectPort_);
-        }
-    }
-
-    if (osc_broadcaster_ && osc_receiver_) {
-        state_ = S_CONNECT_REQUEST;
-    }
-
     active_ = true;
 
     LOG_0("KontrolDevice::init - complete");
     return active_;
 }
 
+void KontrolDevice::newClient(const std::string &host, unsigned port) {
+    osc_broadcaster_ = std::make_shared<Kontrol::OSCBroadcaster>(true);
+    if(osc_broadcaster_->connect(host,port)) {
+        osc_broadcaster_->sendPing(listenPort_);
+    }
+}
+
+
 bool KontrolDevice::process() {
 
-    // wait till after initialisatioin of all devices before requesting meta data
-    if (osc_broadcaster_) {
-        switch (state_) {
-            case S_UNCONNECTED :
-            case S_CONNECTED:
-                break;
-            case S_CONNECT_REQUEST :
-                LOG_0("KontrolDevice::process request callback");
-                osc_broadcaster_->requestConnect(listenPort_);
-                state_ = S_METADATA_REQUEST;
-                break;
-            case S_METADATA_REQUEST :
-                LOG_0("KontrolDevice::process request meta data");
-                osc_broadcaster_->requestMetaData();
-                state_ = S_CONNECTED;
-                break;
+    if (osc_receiver_)  osc_receiver_->poll();
+
+    if (osc_broadcaster_ && osc_receiver_) {
+        static const std::chrono::seconds pingFrequency(5);
+        auto now = std::chrono::steady_clock::now();
+        auto dur = now- lastPing_;
+
+        if(dur < pingFrequency) {
+            lastPing_ = now;
+            osc_broadcaster_->sendPing(listenPort_);
         }
     }
+
     // return queue_.process(callback_);
-    if (osc_receiver_) osc_receiver_->poll();
     return true;
 }
 

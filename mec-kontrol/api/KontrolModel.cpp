@@ -230,6 +230,13 @@ std::shared_ptr<Parameter> KontrolModel::changeParam(
     return param;
 }
 
+
+void KontrolModel::ping(const std::string& host, unsigned port) const {
+    for (auto i : listeners_) {
+        (i.second)->ping(host,port);
+    }
+}
+
 void KontrolModel::publishRack(ParameterSource src, const Rack &rack) const {
     for (auto i : listeners_) {
         (i.second)->rack(src, rack);

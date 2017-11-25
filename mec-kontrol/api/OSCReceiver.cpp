@@ -29,7 +29,7 @@ private:
 
 class KontrolOSCListener : public osc::OscPacketListener {
 public:
-    KontrolOSCListener(const OSCReceiver &recv) : receiver_(recv) { ; }
+    KontrolOSCListener(OSCReceiver &recv) : receiver_(recv) { ; }
 
 
     virtual void ProcessMessage(const osc::ReceivedMessage &m,
@@ -104,16 +104,14 @@ public:
 
                 // std::cout << "received module " << moduleId << std::endl;
                 receiver_.createRack(PS_OSC, rackId, host, port);
-            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/connect") == 0) {
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/ping") == 0) {
                 osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
                 osc::int32 port;
                 args >> port >> osc::EndMessage;
                 char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
                 remoteEndpoint.AddressAsString(buf);
 
-                receiver_.createRack(PS_OSC, Rack::createId(buf, (unsigned) port), buf, (unsigned) port);
-            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/metaData") == 0) {
-                receiver_.publishMetaData();
+                receiver_.ping(std::string(buf), (unsigned) port);
             }
         } catch (osc::Exception &e) {
             // std::err << "error while parsing message: "
@@ -122,7 +120,7 @@ public:
     }
 
 private:
-    const OSCReceiver &receiver_;
+    OSCReceiver &receiver_;
 };
 
 OSCReceiver::OSCReceiver(const std::shared_ptr<KontrolModel> &param)
@@ -222,10 +220,8 @@ void OSCReceiver::createPage(
     model_->createPage(src, rackId, moduleId, pageId, displayName, paramIds);
 }
 
-
-void OSCReceiver::publishMetaData() const {
-    model_->publishMetaData();
+void OSCReceiver::ping(const std::string &host, unsigned port) {
+    model_->ping(host, port);
 }
-
 
 } // namespace

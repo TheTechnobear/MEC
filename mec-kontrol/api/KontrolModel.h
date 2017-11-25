@@ -23,6 +23,8 @@ public:
     }
     virtual void stop() { ; }
 
+    virtual void ping(const std::string& host, unsigned port) {;}
+
     virtual void rack(ParameterSource, const Rack&) = 0;
     virtual void module(ParameterSource, const Rack&, const Module&) = 0;
     virtual void page(ParameterSource, const Rack&, const Module&, const Page&) = 0 ;
@@ -94,6 +96,8 @@ public:
         const EntityId& moduleId,
         const EntityId& paramId,
         ParamValue v) const;
+
+    void ping(const std::string& host, unsigned port) const;
 
     std::shared_ptr<Rack> createLocalRack(unsigned port);
     EntityId localRackId() { if(localRack_) return localRack_->id(); else return "";}
