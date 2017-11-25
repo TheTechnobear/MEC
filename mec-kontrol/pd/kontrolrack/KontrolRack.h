@@ -30,7 +30,7 @@ typedef struct _KontrolRack {
 extern "C" {
 void KontrolRack_tick(t_KontrolRack *x);
 void KontrolRack_free(t_KontrolRack *);
-void *KontrolRack_new(t_floatarg osc_out, t_floatarg osc_in);
+void *KontrolRack_new(t_floatarg,t_floatarg);
 void KontrolRack_setup(void);
 
 void KontrolRack_listen(t_KontrolRack *x, t_floatarg f);
