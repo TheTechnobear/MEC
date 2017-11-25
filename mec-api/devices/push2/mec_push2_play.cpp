@@ -57,7 +57,7 @@ uint8_t NumNotesInScale(int16_t scale) {
     return n;
 }
 
-P2_PlayMode::P2_PlayMode(mec::Push2 &parent, const std::__1::shared_ptr<Push2API::Push2> &api)
+P2_PlayMode::P2_PlayMode(mec::Push2 &parent, const std::shared_ptr<Push2API::Push2> &api)
         : parent_(parent),
           push2Api_(api),
           scaleIdx_(1),

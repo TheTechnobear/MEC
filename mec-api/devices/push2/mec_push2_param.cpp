@@ -26,7 +26,7 @@ uint16_t page_clrs[8] = {
         RGB565(0xFF, 0x7F, 0xFF)
 };
 
-P2_ParamMode::P2_ParamMode(mec::Push2 &parent, const std::__1::shared_ptr<Push2API::Push2> &api)
+P2_ParamMode::P2_ParamMode(mec::Push2 &parent, const std::shared_ptr<Push2API::Push2> &api)
         : parent_(parent),
           push2Api_(api),
           currentModule_(-1),

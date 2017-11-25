@@ -6,7 +6,7 @@ namespace mec {
 
 class P2_PlayMode : public P2_PadMode {
 public:
-    P2_PlayMode(mec::Push2 &parent, const std::__1::shared_ptr<Push2API::Push2> &api);
+    P2_PlayMode(mec::Push2 &parent, const std::shared_ptr<Push2API::Push2> &api);
 
     void processNoteOn(unsigned n, unsigned v) override;
 
