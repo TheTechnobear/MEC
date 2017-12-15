@@ -63,8 +63,9 @@ public:
     void dumpParameters();
     void dumpCurrentValues();
 
-    std::string host() const { return host_;}
+    const std::string& host() const { return host_;}
     unsigned port() const { return port_;}
+
 private:
     std::string host_;
     unsigned port_;

@@ -2,6 +2,7 @@
 
 #include <osc/OscOutboundPacketStream.h>
 
+#include <mec_log.h>
 
 namespace Kontrol {
 
@@ -19,6 +20,7 @@ OSCBroadcaster::~OSCBroadcaster() {
 bool OSCBroadcaster::connect(const std::string &host, unsigned port) {
     stop();
     try {
+        host_ = host;
         port_ = port;
         socket_ = std::shared_ptr<UdpTransmitSocket>(new UdpTransmitSocket(IpEndpointName(host.c_str(), port_)));
     } catch (const std::runtime_error &e) {
@@ -36,24 +38,12 @@ void OSCBroadcaster::stop() {
 
 
 bool OSCBroadcaster::isActive() {
-    std::chrono::seconds timeOut(10); // twice normal ping time
     if (!socket_) return false;
+    static std::chrono::seconds timeOut(10); // twice normal ping time
 
-    auto dur = std::chrono::steady_clock::now() - lastPing_;
+    auto now = std::chrono::steady_clock::now();
+    auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
     return dur < timeOut;
-}
-
-void OSCBroadcaster::sendMetaData() {
-    if (!socket_) return;
-
-    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
-
-    ops << osc::BeginBundleImmediate
-        << osc::BeginMessage("/Kontrol/metaData");
-
-    ops << osc::EndMessage
-        << osc::EndBundle;
-    socket_->Send(ops.Data(), ops.Size());
 }
 
 void OSCBroadcaster::sendPing(unsigned port) {
@@ -72,21 +62,22 @@ void OSCBroadcaster::sendPing(unsigned port) {
 
 void OSCBroadcaster::ping(const std::string &host, unsigned port) {
     if (port == port_) {
-        bool wasActive = isActive();
-        lastPing_ = std::chrono::steady_clock::now();
-
         if (!master_) {
-            sendPing(port);
+            bool wasActive = isActive();
+            lastPing_ = std::chrono::steady_clock::now();
+            //TODO: not sure I want reference to KontrolModel here!
             if (!wasActive) {
-                sendMetaData();
+                KontrolModel::model()->publishMetaData();
             }
+        } else {
+            lastPing_ = std::chrono::steady_clock::now();
         }
     }
 }
 
 void OSCBroadcaster::rack(ParameterSource src, const Rack &p) {
     if (src != PS_LOCAL) return;
-    if (isActive()) return;
+    if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
@@ -105,7 +96,7 @@ void OSCBroadcaster::rack(ParameterSource src, const Rack &p) {
 
 void OSCBroadcaster::module(ParameterSource src, const Rack &rack, const Module &m) {
     if (src != PS_LOCAL) return;
-    if (isActive()) return;
+    if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
@@ -125,7 +116,7 @@ void OSCBroadcaster::module(ParameterSource src, const Rack &rack, const Module 
 
 void OSCBroadcaster::page(ParameterSource src, const Rack &rack, const Module &module, const Page &p) {
     if (src != PS_LOCAL) return;
-    if (isActive()) return;
+    if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
@@ -148,7 +139,7 @@ void OSCBroadcaster::page(ParameterSource src, const Rack &rack, const Module &m
 
 void OSCBroadcaster::param(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p) {
     if (src != PS_LOCAL) return;
-    if (isActive()) return;
+    if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
@@ -179,7 +170,7 @@ void OSCBroadcaster::param(ParameterSource src, const Rack &rack, const Module &
 
 void OSCBroadcaster::changed(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p) {
     if (src != PS_LOCAL) return;
-    if (isActive()) return;
+    if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 

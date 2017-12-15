@@ -10,7 +10,7 @@
         },
 
         "osct3d"  :  {
-            "port" :  9000
+            "port" :  7000
         },
 
 
@@ -70,8 +70,7 @@
         "_kontrol"  :  {
             "_parameter definitions" : "./kontrol-param.json",
             "_patch settings" : "./kontrol-patch.json",
-            "connect port" : 9000,
-            "listen port" : 9001
+            "listen port" : 8000
         }
     },
 
@@ -79,7 +78,7 @@
         "outputs" : {
             "_osc" : {
                 "host" : "127.0.0.1",
-                "port" : 9001
+                "port" :9000
             },
 
             "_midi" : {

@@ -106,6 +106,7 @@ public:
             ParamValue v) const;
 
     void ping(const std::string &host, unsigned port);
+    unsigned int port() { return port_;}
 
     std::shared_ptr<UdpListeningReceiveSocket> socket() { return socket_; }
 

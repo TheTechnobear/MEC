@@ -23,6 +23,7 @@ typedef struct _KontrolRack {
 
     long pollCount_;
     std::shared_ptr<Kontrol::OSCReceiver> osc_receiver_;
+    std::shared_ptr<Kontrol::OSCBroadcaster> osc_broadcaster_;
 } t_KontrolRack;
 
 

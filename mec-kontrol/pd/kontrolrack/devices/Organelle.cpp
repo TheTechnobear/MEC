@@ -192,6 +192,7 @@ void OParamMode::display() {
             return;
         }
     } // for
+    parent_.flipDisplay();
 }
 
 
@@ -274,7 +275,10 @@ void OParamMode::setPage(unsigned pagenum, bool UI) {
         auto &page = pages_.at(pagenum);
         currentPageNum_ = pagenum;
         currentParams_ = module->getParams(page);
-        if (UI) displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
+        if (UI) {
+            displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
+            parent_.flipDisplay();
+        }
 
         for (int i = 0; i < 4; i++) {
             pots_->locked_[i] = Pots::K_LOCKED;
@@ -322,6 +326,7 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack
         try {
             auto &p = currentParams_.at(i);
             if (p->id() == param.id()) {
+                p->change(param.current());
                 parent_.displayParamLine(i+1, param);
                 if (src != Kontrol::PS_LOCAL) {
                     //std::cout << "locking " << param.id() << " src " << src << std::endl;
@@ -332,6 +337,7 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack
             return;
         }
     } // for
+    parent_.flipDisplay();
 }
 
 void OParamMode::module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
@@ -373,6 +379,7 @@ void OMenuMode::displayItem(unsigned i) {
             parent_.invertLine(line);
         }
     }
+    parent_.flipDisplay();
 }
 
 
@@ -475,6 +482,7 @@ void OMainMenu::clicked(unsigned idx) {
         case MMI_LEARN: {
             parent_.midiLearn(!parent_.midiLearn());
             displayItem(MMI_LEARN);
+            parent_.flipDisplay();
             // parent_.changeMode(OM_PARAMETER);
             break;
         }
@@ -776,6 +784,14 @@ void Organelle::midiCC(unsigned num, unsigned value) {
     }
     // update param model
     KontrolDevice::midiCC(num, value);
+}
+
+void Organelle::flipDisplay() {
+    osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+    ops << osc::BeginMessage("/oled/gFlip")
+        << PATCH_SCREEN
+        << osc::EndMessage;
+    socket_->Send(ops.Data(), ops.Size());
 }
 
 

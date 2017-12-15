@@ -19,6 +19,7 @@ public:
     void displayLine(unsigned line, const char *);
     void invertLine(unsigned line);
     void clearDisplay();
+    void flipDisplay();
 
     void midiCC(unsigned num, unsigned value) override;
     void midiLearn(bool b);

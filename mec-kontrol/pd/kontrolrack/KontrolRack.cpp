@@ -28,9 +28,13 @@ public:
 
 // puredata methods implementation - start
 
-static const int OSC_POLL_FREQUENCY = 1;
-static const int DEVICE_POLL_FREQUENCY = 1;
-static const unsigned TICK_MS = 1000 / 25;
+static const unsigned OSC_POLL_FREQUENCY = 50; // 500ms
+static const unsigned DEVICE_POLL_FREQUENCY = 1; // 10ms
+static const unsigned OSC_PING_FREQUENCY = (5 * 100); // 5 seconds
+
+
+// see https://github.com/pure-data/pure-data/blob/master/src/x_time.c
+static const float TICK_MS = 1.0f * 10.0f; // 10.ms
 
 /// main PD methods
 void KontrolRack_tick(t_KontrolRack *x) {
@@ -42,6 +46,12 @@ void KontrolRack_tick(t_KontrolRack *x) {
     if (x->device_ && x->pollCount_ % DEVICE_POLL_FREQUENCY == 0) {
         x->device_->poll();
     }
+
+    if (x->osc_broadcaster_ && x->osc_receiver_
+        && x->pollCount_ % OSC_PING_FREQUENCY == 0) {
+        x->osc_broadcaster_->sendPing(x->osc_receiver_->port());
+    }
+
     clock_delay(x->x_clock, 1);
 }
 
@@ -154,6 +164,10 @@ void KontrolRack_connect(t_KontrolRack *x, t_floatarg f) {
         if (p->connect(host, port)) {
             post("client connected %s", id.c_str());
             x->model_->addCallback(id, p);
+            x->osc_broadcaster_ = p;
+            if(x->osc_receiver_) {
+                x->osc_broadcaster_->sendPing(x->osc_receiver_->port());
+            }
         }
     }
 }

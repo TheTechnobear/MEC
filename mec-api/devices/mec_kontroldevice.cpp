@@ -45,22 +45,6 @@ bool KontrolDevice::init(void *arg) {
     }
     active_ = false;
 
-    // if (prefs.exists("parameter definitions")) {
-    //     std::string file = prefs.getString("parameter definitions", "./kontrol-param.json");
-    //     if (!file.empty()) {
-    //         model_->loadModuleDefinitions(file);
-    //     }
-    //     // model_->dumpParameters();
-    // }
-
-    // if (prefs.exists("patch settings")) {
-    //     std::string file = prefs.getString("patch settings", "./kontrol-patch.json");
-    //     if (!file.empty()) {
-    //         model_->loadSettings(file);
-    //     }
-    //     // model_->dumpPatchSettings();
-    // }
-
     model_->addCallback("clienthandler", std::make_shared<KontrolDeviceClientHandler>(*this));
 
     listenPort_ = static_cast<unsigned>(prefs.getInt("listen port", 4000));
@@ -80,26 +64,39 @@ bool KontrolDevice::init(void *arg) {
 }
 
 void KontrolDevice::newClient(const std::string &host, unsigned port) {
-    osc_broadcaster_ = std::make_shared<Kontrol::OSCBroadcaster>(true);
-    if(osc_broadcaster_->connect(host,port)) {
-        osc_broadcaster_->sendPing(listenPort_);
+    for(auto client : clients_) {
+        if (client->isThisHost(host, port)) {
+            return;
+        }
+    }
+
+    std::string id = "client.osc:" + host + ":" + std::to_string(port);
+    auto client = std::make_shared<Kontrol::OSCBroadcaster>(true);
+    if(client->connect(host,port)) {
+        clients_.push_back((client));
+        model_->addCallback(id,client);
     }
 }
 
-
 bool KontrolDevice::process() {
 
-    if (osc_receiver_)  osc_receiver_->poll();
+    if (osc_receiver_) {
+        osc_receiver_->poll();
 
-    if (osc_broadcaster_ && osc_receiver_) {
         static const std::chrono::seconds pingFrequency(5);
-        auto now = std::chrono::steady_clock::now();
-        auto dur = now- lastPing_;
-
-        if(dur < pingFrequency) {
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
+        if(dur > pingFrequency) {
             lastPing_ = now;
-            osc_broadcaster_->sendPing(listenPort_);
+            for(auto client : clients_) {
+                if(!client->isActive()) {
+                    // not received a ping from this client
+                    LOG_0("KontrolDevice::Process... inactive client");
+                }
+                client->sendPing(osc_receiver_->port());
+            }
         }
+
     }
 
     // return queue_.process(callback_);
@@ -108,7 +105,10 @@ bool KontrolDevice::process() {
 
 void KontrolDevice::deinit() {
     LOG_0("KontrolDevice::deinit");
-    if (osc_broadcaster_) osc_broadcaster_->stop();
+    for(auto client : clients_) {
+        client->stop();
+    }
+    clients_.clear();
     if (osc_receiver_) osc_receiver_->stop();
 
     active_ = false;

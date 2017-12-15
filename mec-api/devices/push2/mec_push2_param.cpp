@@ -49,7 +49,7 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
         //TODO
         try {
             if (idx >= params_.size()) return;
-            auto param = params_[idx];
+            auto &param = params_[idx];
             // auto page = pages_[currentPage_]
             if (param != nullptr) {
                 const int steps = 1;
@@ -181,6 +181,7 @@ void P2_ParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &ra
     unsigned i = 0;
     for (auto p: params_) {
         if (p->id() == param.id()) {
+            p->change(param.current());
             drawParam(i, param);
             return;
         }

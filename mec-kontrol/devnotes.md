@@ -211,27 +211,9 @@ PD connects to MEC, and listens, and when it connects sends meta data
 
 
 ### meta data, we should only push to requesting client
-perhaps with inverted model, easier... we just push when we connect.
-
-### ping keep-alive
-mec needs to know if client disappears... we can have graceful (disconnect) and also 'no response', 
-either will cause entire rack to be removed... note how this means we need to join rack to host/port
-
-PD, does it need to know about MEC?
-yes... when MEC starts up, it does not know about PD... 
-so if PD detects MEC does not exist (lack of response), then when it does appear it needs to send connection request and also meta data.
-
-(this perhaps mean the connection request is part of the ping protocol, i.e. all it is doing is tracking response)
-
-client1 ->ping -> mec 
-mec-> pong ->client
-
-client pings mec regularly, and records last pong response time... if over N secs its assumed dead
-(this includes startup , where last pong = -1) 
-
-whist disconnected client continues to ping, and when a pong comes back, it sends meta data
-
-mec... tracks last ping request per client, after N seconds if not received, it drops client rack
+pushing to other clients...
+which clients?  
+eg. does a PD client really want to know about other clients?
 
 
 ### version osc mesages 
@@ -241,3 +223,34 @@ so
 ```` /kontrol/v1/param ````
 
 
+### keep-alive connection model
+
+ping messages contains host/port, port is the port the client is listening on.
+
+client connects, and starts sending pings to server... so server knows it exists.
+(perhaps back off if doesnt reply?)
+server maintains a client list, 
+a new client is added (with an OSCBroadcaster) when a ping arrives from somewhere it doesn't know
+
+server polls client list, at the ping frequency ( 5 seconds)
+server pings to active clients
+
+OSCBroadcaster is registered to model, to recieve pings... it then:
+ - records the last ping time, 
+ - if a slave, if was previous not connected, sends meta data
+
+additionally, OSCBroadcast will not transmit any OSC messages, to a client if the ping tiemout has been exceeded (10 seconds) 
+
+
+important concepts are:
+- client is sending pings out frequently, master responds to this ping. (RTT/latency could be tracked here)
+- lack of receiving pings = not active
+- OSC broadcasters are connected via KontrolModel callback, to get the ping receipt
+- when client sends inital ping,  server can add it to list of clients
+- both side assume disconnect if not active (server could removed from client list too)
+
+Meta Data... we need to either
+- clear meta data if client goes inactive... 
+- clear meta data due to 'meta data clear message'
+- 'overrwrite data' if we get meta data messages.. 
+( I think currently I overwrite but we need to check)

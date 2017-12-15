@@ -20,7 +20,6 @@ public:
     void stop();
 
     void sendPing(unsigned port);
-    void sendMetaData();
 
     // KontrolCallback
     virtual void ping(const std::string &host, unsigned port);
@@ -29,9 +28,12 @@ public:
     virtual void page(ParameterSource src, const Rack &rack, const Module &module, const Page &p);
     virtual void param(ParameterSource src, const Rack &rack, const Module &module, const Parameter &);
     virtual void changed(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p);
-private:
-    bool isActive();
 
+    virtual bool isThisHost(const std::string &host, unsigned port) { return host==host_ && port==port_;}
+    bool isActive();
+private:
+
+    std::string host_;
     unsigned int port_;
     std::shared_ptr<UdpTransmitSocket> socket_;
     char buffer_[OUTPUT_BUFFER_SIZE];

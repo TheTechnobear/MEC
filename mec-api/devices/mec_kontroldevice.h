@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <vector>
+#include <chrono>
 
 namespace mec {
 
@@ -32,8 +33,9 @@ private:
 
     std::shared_ptr<Kontrol::KontrolModel> model_;
     std::shared_ptr<Kontrol::OSCReceiver> osc_receiver_;
-    std::shared_ptr<Kontrol::OSCBroadcaster> osc_broadcaster_;
     std::chrono::steady_clock::time_point lastPing_;
+    std::vector<std::shared_ptr<Kontrol::OSCBroadcaster> > clients_;
 };
 
-}
+} //namespace
+
