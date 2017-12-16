@@ -372,6 +372,12 @@ std::vector<EntityId>   Module::getParamsForCC(unsigned cc) {
 }
 
 void Module::addMidiCCMapping(unsigned ccnum, const EntityId & paramId) {
+    auto v = midi_mapping_[ccnum];
+    for(auto it = v.begin();it != v.end();it++) {
+        if(*it == paramId) {
+            return; // already preset
+        }
+    }
     midi_mapping_[ccnum].push_back(paramId);
 }
 

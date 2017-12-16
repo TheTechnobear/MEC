@@ -788,7 +788,7 @@ void Organelle::midiLearn(bool b) {
 
 
 void Organelle::midiCC(unsigned num, unsigned value) {
-    //std::cout << "midiCC " << num << " " << value << std::endl;
+    //std::cerr << "midiCC " << num << " " << value << std::endl;
     if (midiLearnActive_) {
         if (!lastParamId_.empty()) {
             auto rack = model()->getRack(currentRackId_);
@@ -797,6 +797,7 @@ void Organelle::midiCC(unsigned num, unsigned value) {
                     rack->addMidiCCMapping(num, currentModuleId_, lastParamId_);
                     lastParamId_ = "";
                 } else {
+                    //std::cerr << "midiCC unlearn" << num << " " << lastParamId_ << std::endl;
                     rack->removeMidiCCMapping(num, currentModuleId_, lastParamId_);
                     lastParamId_ = "";
                 }
