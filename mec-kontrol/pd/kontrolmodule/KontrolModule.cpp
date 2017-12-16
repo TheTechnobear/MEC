@@ -37,7 +37,7 @@ void *KontrolModule_new(t_symbol *name, t_symbol *type) {
 
             Kontrol::KontrolModel::model()->loadModuleDefinitions(rackId, moduleId, moduleType + "-module.json");
             rack->loadSettings(rackId + "-rack.json");
-            rack->applyPreset("default");
+            rack->applyPreset("Default");
             rack->dumpSettings();
             rack->dumpParameters();
             rack->dumpCurrentValues();

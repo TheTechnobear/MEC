@@ -17,10 +17,10 @@
             }
         },
 
-        "__here are the active devices, i.e the above is just whats availabel, here are the ones in use, and you may have muliple of a type"
-        "__somehow you will need to identify a device when there are multiple instances, some devices may not allow multiple"
-        "__settings in these section override those in device type__, i.e device type can act as default"
-        "__surface is important, it has to be unique!"
+        "__here are the active devices, i.e the above is just whats availabel, here are the ones in use, and you may have muliple of a type",
+        "__somehow you will need to identify a device when there are multiple instances, some devices may not allow multiple",
+        "__settings in these section override those in device type__, i.e device type can act as default",
+        "__surface is important, it has to be unique!",
         "active devices" : {
             "pico_1" : {
                 "type" : "eigenharp",

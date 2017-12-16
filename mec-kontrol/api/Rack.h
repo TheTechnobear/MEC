@@ -44,7 +44,7 @@ public:
     bool applyPreset(std::string presetId);
     bool updatePreset(std::string presetId);
 
-    std::string currentPreset() { return currentPreset_;}
+    const std::string& currentPreset() const { return currentPreset_;}
     std::vector<std::string> getPresetList();
 
     bool changeMidiCC(unsigned midiCC, unsigned midiValue);

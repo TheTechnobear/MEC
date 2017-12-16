@@ -9,9 +9,9 @@
 
 const unsigned int SCREEN_WIDTH = 21;
 
-static const int PAGE_SWITCH_TIMEOUT = 5;
+static const int PAGE_SWITCH_TIMEOUT = 50;
 //static const int PAGE_EXIT_TIMEOUT = 5;
-static const auto MENU_TIMEOUT = 35;
+static const auto MENU_TIMEOUT = 350;
 
 
 const int8_t PATCH_SCREEN = 3;
@@ -750,6 +750,7 @@ void Organelle::changed(Kontrol::ParameterSource src,
 
 void Organelle::rack(Kontrol::ParameterSource source, const Kontrol::Rack &rack) {
     KontrolDevice::rack(source, rack);
+    currentPreset_= rack.currentPreset();
 }
 
 void Organelle::module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
@@ -793,7 +794,4 @@ void Organelle::flipDisplay() {
         << osc::EndMessage;
     socket_->Send(ops.Data(), ops.Size());
 }
-
-
-
 
