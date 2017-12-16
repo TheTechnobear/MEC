@@ -69,6 +69,7 @@ struct Pots {
         K_LT,
         K_LOCKED
     } locked_[4];
+    float rawValue[4];
 };
 
 
@@ -219,6 +220,7 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
         auto paramId = param->id();
 
         float value = rawvalue / MAX_POT_VALUE;
+        pots_->rawValue[pot]=rawvalue;
 
         Kontrol::ParamValue calc = param->calcFloat(value);
 
@@ -226,6 +228,7 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
             //if pot is locked, determined if we can unlock it
             if (calc == param->current()) {
                 pots_->locked_[pot] = Pots::K_UNLOCKED;
+                //std::cout << "unlock condition met == " << pot << std::endl;
             } else if (pots_->locked_[pot] == Pots::K_GT) {
                 if (calc > param->current()) {
                     pots_->locked_[pot] = Pots::K_UNLOCKED;
@@ -237,15 +240,20 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
                     //std::cout << "unlock condition met lt " << pot << std::endl;
                 }
             } else if (pots_->locked_[pot] == Pots::K_LOCKED) {
+                //std::cerr << "pot locked " << pot << " pv " << param->current().floatValue() << " cv " << calc.floatValue() << std::endl;
                 // initial locked, determine unlock condition
-                if (calc > param->current()) {
+                if (calc == param->current()) {
+                    // pot value at current value, unlock it
+                    pots_->locked_[pot] = Pots::K_UNLOCKED;
+                    //std::cerr << "set unlock condition == " << pot << std::endl;
+                } else if (calc > param->current()) {
                     // pot starts greater than param, so wait for it to go less than
                     pots_->locked_[pot] = Pots::K_LT;
-                    //std::cout << "set unlock condition lt " << pot << std::endl;
+                    //std::cerr << "set unlock condition lt " << pot << std::endl;
                 } else {
                     // pot starts less than param, so wait for it to go greater than
                     pots_->locked_[pot] = Pots::K_GT;
-                    //std::cout << "set unlock condition gt " << pot << std::endl;
+                    //std::cerr << "set unlock condition gt " << pot << std::endl;
                 }
             }
         }
@@ -265,11 +273,18 @@ void OParamMode::setPage(unsigned pagenum, bool UI) {
 
     try {
         if (currentPageNum_ < 0) {
+            // initialisation
             pages_ = module->getPages();
             if (pages_.size() == 0) {
                 return;
             }
+            auto &page = pages_.at(0);
+            currentParams_ = module->getParams(page);
+            if(currentParams_.size()==0) {
+                return;
+            }
             currentPageNum_ = 0;
+            display();
         }
 
         auto &page = pages_.at(pagenum);
@@ -282,6 +297,7 @@ void OParamMode::setPage(unsigned pagenum, bool UI) {
 
         for (int i = 0; i < 4; i++) {
             pots_->locked_[i] = Pots::K_LOCKED;
+            changePot(i,pots_->rawValue[i]);
         }
     } catch (std::out_of_range) { ;
     }
@@ -329,8 +345,9 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack
                 p->change(param.current());
                 parent_.displayParamLine(i+1, param);
                 if (src != Kontrol::PS_LOCAL) {
-                    //std::cout << "locking " << param.id() << " src " << src << std::endl;
+                    //std::cerr << "locking " << param.id() << " src " << src << std::endl;
                     pots_->locked_[i] = Pots::K_LOCKED;
+                    changePot(i,pots_->rawValue[i]);
                 }
             }
         } catch (std::out_of_range) {
@@ -447,8 +464,13 @@ std::string OMainMenu::getItemText(unsigned idx) {
             return "Home";
         case MMI_MODULE:
             return parent_.currentModule();
-        case MMI_PRESET:
-            return parent_.currentPreset();
+        case MMI_PRESET: {
+            auto rack = model()->getRack(parent_.currentRack());
+            if (rack != nullptr) {
+                return rack->currentPreset();
+            }
+            return "No Preset";
+        }
         case MMI_SAVE:
             return "Save Settings";
         case MMI_LEARN: {
@@ -552,9 +574,9 @@ void OPresetMenu::clicked(unsigned idx) {
         case PMI_SAVE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
-                rack->updatePreset(parent_.currentPreset());
+                rack->updatePreset(rack->currentPreset());
             }
-            parent_.changeMode(OM_MAINMENU);
+            parent_.changeMode(OM_PARAMETER);
             break;
         }
         case PMI_NEW: {
@@ -562,7 +584,6 @@ void OPresetMenu::clicked(unsigned idx) {
             if (rack != nullptr) {
                 std::string newPreset = "New " + std::to_string(presets_.size());
                 rack->updatePreset(newPreset);
-                parent_.currentPreset(newPreset);
             }
             parent_.changeMode(OM_MAINMENU);
             break;
@@ -574,8 +595,8 @@ void OPresetMenu::clicked(unsigned idx) {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 std::string newPreset = presets_[idx - PMI_LAST];
+                parent_.changeMode(OM_PARAMETER);
                 rack->applyPreset(newPreset);
-                parent_.currentPreset(newPreset);
             }
             break;
         }
@@ -750,7 +771,6 @@ void Organelle::changed(Kontrol::ParameterSource src,
 
 void Organelle::rack(Kontrol::ParameterSource source, const Kontrol::Rack &rack) {
     KontrolDevice::rack(source, rack);
-    currentPreset_= rack.currentPreset();
 }
 
 void Organelle::module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {

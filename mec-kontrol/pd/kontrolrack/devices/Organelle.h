@@ -36,10 +36,6 @@ public:
 
     void currentModule(const Kontrol::EntityId &p) { currentModuleId_ = p; }
 
-    std::string currentPreset() { return currentPreset_; }
-
-    void currentPreset(const std::string &p) { currentPreset_ = p; }
-
     void rack(Kontrol::ParameterSource source, const Kontrol::Rack &rack) override;
     void module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
 
@@ -49,7 +45,6 @@ private:
     Kontrol::EntityId currentRackId_;
     Kontrol::EntityId currentModuleId_;
     Kontrol::EntityId lastParamId_; // for midi learn
-    std::string currentPreset_;
     bool midiLearnActive_;
 
     std::string asDisplayString(const Kontrol::Parameter &p, unsigned width) const;

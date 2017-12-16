@@ -115,6 +115,7 @@ bool Rack::updatePreset(std::string presetId) {
             ret |= module->updatePreset(presetId);
         }
     }
+    currentPreset_=presetId;
     return ret;
 }
 
@@ -152,6 +153,7 @@ bool Rack::applyPreset(std::string presetId) {
             }
         }
     }
+    currentPreset_=presetId;
     return ret;
 }
 
