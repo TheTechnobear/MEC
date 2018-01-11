@@ -2,7 +2,8 @@
 
 #include <osc/OscOutboundPacketStream.h>
 #include <iostream>
-#include <cmath>
+//#include <cmath>
+#include <limits>
 
 #include "../../m_pd.h"
 
@@ -178,6 +179,7 @@ bool OParamMode::init() {
 
     pots_ = std::make_shared<Pots>();
     for (int i = 0; i < 4; i++) {
+        pots_->rawValue[i] = std::numeric_limits<float>::max();
         pots_->locked_[i] = Pots::K_UNLOCKED;
     }
     return true;
@@ -228,16 +230,16 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
             //if pot is locked, determined if we can unlock it
             if (calc == param->current()) {
                 pots_->locked_[pot] = Pots::K_UNLOCKED;
-                //std::cout << "unlock condition met == " << pot << std::endl;
+                //std::cerr << "unlock condition met == " << pot << std::endl;
             } else if (pots_->locked_[pot] == Pots::K_GT) {
                 if (calc > param->current()) {
                     pots_->locked_[pot] = Pots::K_UNLOCKED;
-                    //std::cout << "unlock condition met gt " << pot << std::endl;
+                    //std::cerr << "unlock condition met gt " << pot << std::endl;
                 }
             } else if (pots_->locked_[pot] == Pots::K_LT) {
                 if (calc < param->current()) {
                     pots_->locked_[pot] = Pots::K_UNLOCKED;
-                    //std::cout << "unlock condition met lt " << pot << std::endl;
+                    //std::cerr << "unlock condition met lt " << pot << std::endl;
                 }
             } else if (pots_->locked_[pot] == Pots::K_LOCKED) {
                 //std::cerr << "pot locked " << pot << " pv " << param->current().floatValue() << " cv " << calc.floatValue() << std::endl;
@@ -246,6 +248,9 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
                     // pot value at current value, unlock it
                     pots_->locked_[pot] = Pots::K_UNLOCKED;
                     //std::cerr << "set unlock condition == " << pot << std::endl;
+                } else if (rawvalue == std::numeric_limits<float>::max()) {
+                    // stay locked , we need a real value ;) 
+                    // init state
                 } else if (calc > param->current()) {
                     // pot starts greater than param, so wait for it to go less than
                     pots_->locked_[pot] = Pots::K_LT;

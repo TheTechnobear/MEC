@@ -20,7 +20,6 @@ public:
     virtual void encoderButton(unsigned encoder, bool value) = 0;
 
 protected:
-    std::shared_ptr<KontrolDevice> parent_;
 };
 
 
