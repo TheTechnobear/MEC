@@ -14,7 +14,7 @@ static void throwError(const std::string id, const char *what) {
 
 
 // Parameter : type id displayname
-Parameter::Parameter(ParameterType type) : Entity("", ""), type_(type), current_(0.0f) {
+Parameter::Parameter(ParameterType type) : Entity("", ""), type_(type), current_(PV_INITVALUE) {
     ;
 }
 

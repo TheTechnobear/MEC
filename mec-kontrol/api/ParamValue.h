@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <limits>
+
+static const float PV_INITVALUE=std::numeric_limits<float>::max();
 
 namespace Kontrol {
 
@@ -19,9 +22,9 @@ public:
         return *this;
     }
 
-    ParamValue() { type_ = T_Float; floatValue_ = 0.0f; strValue_ = "";}
-    ParamValue(const char* value) { type_ = T_String; strValue_ = value; floatValue_ = 0.0;}
-    ParamValue(const std::string& value) { type_ = T_String; strValue_ = value; floatValue_ = 0.0; }
+    ParamValue() { type_ = T_Float; floatValue_ = PV_INITVALUE; strValue_ = "";}
+    ParamValue(const char* value) { type_ = T_String; strValue_ = value; floatValue_ = PV_INITVALUE;}
+    ParamValue(const std::string& value) { type_ = T_String; strValue_ = value; floatValue_ = PV_INITVALUE; }
     ParamValue(float value) { type_ = T_Float; floatValue_ = value; strValue_ = "";}
     Type type() const { return type_;}
     const std::string& stringValue() const {return strValue_;}
