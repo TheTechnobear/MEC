@@ -1,7 +1,7 @@
 #include "Parameter.h"
 
 #include <iostream>
-
+#include <cmath>
 #include <mec_log.h>
 
 namespace Kontrol {
@@ -348,7 +348,13 @@ bool Parameter_Int::change(const ParamValue &c) {
 }
 
 ParamValue Parameter_Int::calcRelative(float f) {
-    int v = static_cast<int>(current().floatValue() + (f * (max() - min())));
+    float chg = f;
+    float rng = (max() - min());
+    float step = 1.0 / rng;
+    if(chg > 0.001 && chg < step) chg = step;
+    else if(chg < 0.001 && chg > -step  ) chg = -step;
+    int ichg = std::round(chg * rng);
+    int v = static_cast<int>(current().floatValue()) + ichg;
     v = std::max(v, min());
     v = std::min(v, max());
     return ParamValue((float) v);

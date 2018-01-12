@@ -34,6 +34,7 @@ private:
     // scales colour
     void updatePadColours();
     unsigned determinePadScaleColour(int8_t r, int8_t c);
+    unsigned determinePadNote(int8_t r, int8_t c);
 
     uint8_t octave_;    // current octave
     uint8_t scaleIdx_;

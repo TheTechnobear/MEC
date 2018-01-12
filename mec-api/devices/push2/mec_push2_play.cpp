@@ -1,6 +1,6 @@
 #include "mec_push2_play.h"
 
-//#include <mec_log.h>
+#include <mec_log.h>
 
 #define PAD_NOTE_ON_CLR (int8_t) 127
 #define PAD_NOTE_OFF_CLR (int8_t) 0
@@ -61,7 +61,7 @@ P2_PlayMode::P2_PlayMode(mec::Push2 &parent, const std::shared_ptr<Push2API::Pus
         : parent_(parent),
           push2Api_(api),
           scaleIdx_(1),
-          octave_(2),
+          octave_(5),
           chromatic_(true),
           scale_(scales[scaleIdx_].value),
           numNotesInScale_(0),
@@ -82,6 +82,28 @@ void P2_PlayMode::updatePadColours() {
         }
     }
 }
+unsigned P2_PlayMode::determinePadNote(int8_t r, int8_t c) {
+    //TODO : extend to using scales, and octaves
+
+    // octave midi starts at -2, so 5 = C3
+    unsigned note;
+    if(chromatic_) {
+        note = (octave_ * 12)  + (r * rowOffset_) + c + tonic_;
+    } else {
+        // needs testing
+        note = (octave_ * 12)  + (r * rowOffset_) + ((c / numNotesInScale_) * 12 ) + tonic_;
+        int nc = c;
+        int mask = 0b100000000000;
+        while(nc>0) {
+            if(scale_& mask) {
+                nc--;
+            }
+            note++;
+        }
+
+    }
+    return note;
+}
 
 unsigned P2_PlayMode::determinePadScaleColour(int8_t r, int8_t c) {
     auto note_s = (r * rowOffset_) + c;
@@ -99,28 +121,43 @@ unsigned P2_PlayMode::determinePadScaleColour(int8_t r, int8_t c) {
 void P2_PlayMode::processNoteOn(unsigned n, unsigned v) {
     if (n >= P2_NOTE_PAD_START && n <= P2_NOTE_PAD_END) {
         // TODO: use voice, or make single ch midi
+        int padn = n - P2_NOTE_PAD_START;
+        int r = padn / 8;
+        int c = padn % 8;
+
         MecMsg msg;
         msg.type_ = MecMsg::TOUCH_ON;
         msg.data_.touch_.touchId_ = 1;
-        msg.data_.touch_.note_ = (float) n;
+        msg.data_.touch_.note_ = determinePadNote(r,c);
         msg.data_.touch_.x_ = 0;
         msg.data_.touch_.y_ = 0;
         msg.data_.touch_.z_ = float(v) / 127.0f;
         parent_.addTouchMsg(msg);
+
+        parent_.sendNoteOn(0, n, PAD_NOTE_ON_CLR);
     }
 }
 
 void P2_PlayMode::processNoteOff(unsigned n, unsigned v) {
     if (n >= P2_NOTE_PAD_START && n <= P2_NOTE_PAD_END) {
         // TODO: use voice, or make single ch midi
+        int padn = n - P2_NOTE_PAD_START;
+        int r = padn / 8;
+        int c = padn % 8;
+
         MecMsg msg;
         msg.type_ = MecMsg::TOUCH_OFF;
         msg.data_.touch_.touchId_ = 1;
-        msg.data_.touch_.note_ = (float) n;
+        msg.data_.touch_.note_ = determinePadNote(r,c);
         msg.data_.touch_.x_ = 0;
         msg.data_.touch_.y_ = 0;
         msg.data_.touch_.z_ = float(v) / 127.0f;
         parent_.addTouchMsg(msg);
+
+
+        unsigned clr = determinePadScaleColour(r, c);
+        parent_.sendNoteOn(0, n, clr);
+
     }
 }
 
