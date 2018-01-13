@@ -33,6 +33,8 @@ set(MECAPI_SRC
         devices/mec_soundplane.h
         devices/mec_kontroldevice.cpp
         devices/mec_kontroldevice.h
+        processors/mec_midi_processor.cpp
+        processors/mec_midi_processor.h
         processors/mec_mpe_processor.cpp
         processors/mec_mpe_processor.h
         devices/push2/mec_push2_play.h devices/push2/mec_push2_play.cpp)

@@ -1,22 +1,18 @@
 
 #include "mec_mpe_processor.h"
 
-#include "mec_log.h"
+//#include "mec_log.h"
 
 namespace mec {
 
 #define TIMBRE_CC 74
 
-MPE_Processor::MPE_Processor(float pbr) : pitchbendRange_ (pbr) {
+MPE_Processor::MPE_Processor(float pbr) : Midi_Processor(pbr) {
     ;
 }
 
 MPE_Processor::~MPE_Processor() {
     ;
-}
-
-void MPE_Processor::setPitchbendRange(float v) {
-    pitchbendRange_ = v;
 }
 
 /////////////////////////
@@ -116,43 +112,6 @@ void MPE_Processor::control(int attr, float v) {
 void MPE_Processor::mec_control(int cmd, void* other) {
     // ignored
     ;
-}
-
-
-bool MPE_Processor::noteOn(unsigned ch, unsigned note, unsigned vel) {
-    // LOG_1( "midi note on ch " << ch << " note " << note  << " vel " << vel );
-    MidiMsg msg(int(0x90 + ch), note, vel);
-    process(msg);
-    return true;
-}
-
-
-bool MPE_Processor::noteOff(unsigned ch, unsigned note, unsigned vel) {
-    // LOG_1( "midi  note off ch " << ch << " note " << note  << " vel " << vel )
-    MidiMsg msg(int(0x80 + ch), note, vel);
-    process(msg);
-    return true;
-}
-
-bool MPE_Processor::cc(unsigned ch, unsigned cc, unsigned v) {
-    // LOG_1( "midi note off ch " << ch << " note " << note  << " vel " << vel )
-    MidiMsg msg(0xB0 + ch, cc, v);
-    process(msg);
-    return true;
-}
-
-bool MPE_Processor::pressure(unsigned ch, unsigned v) {
-    // LOG_1( "midi pressure ch " << ch << " v  " << v)
-    MidiMsg msg(0xD0 + ch, v);
-    process(msg);
-    return true;
-}
-
-bool MPE_Processor::pitchbend(unsigned ch, unsigned v) {
-    // LOG_1( "midi pitchbend ch " << ch << " v  " << v)
-    MidiMsg msg(0xE0 + ch, v & 0x7f, (v & 0x3F80) >> 7);
-    process(msg);
-    return true;
 }
 
 

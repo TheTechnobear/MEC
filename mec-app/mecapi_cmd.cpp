@@ -152,6 +152,39 @@ private:
     bool valid_;
 };
 
+class MecMidiProcessor : public mec::Midi_Processor {
+public:
+    MecMidiProcessor(mec::Preferences &p) : prefs_(p) {
+        setPitchbendRange(static_cast<float>(p.getDouble("pitchbend range", 48.0f)));
+        std::string device = prefs_.getString("device");
+        int virt = prefs_.getInt("virtual", 0);
+        if (output_.create(device, virt > 0)) {
+            LOG_1("MecMidiProcessor enabling for midi to " << device);
+        }
+        if (!output_.isOpen()) {
+            LOG_0("MecMidiProcessor not open, so invalid for" << device);
+        }
+    }
+
+    bool isValid() { return output_.isOpen(); }
+
+    void process(mec::Midi_Processor::MidiMsg &m) {
+        if (output_.isOpen()) {
+            std::vector<unsigned char> msg;
+
+            for (int i = 0; i < m.size; i++) {
+                msg.push_back((unsigned char) m.data[i]);
+            }
+            output_.sendMsg(msg);
+        }
+    }
+
+private:
+    mec::Preferences prefs_;
+    MidiOutput output_;
+};
+
+
 
 class MecMpeProcessor : public mec::MPE_Processor {
 public:
@@ -210,11 +243,20 @@ void *mecapi_proc(void *arg) {
 
     if (outprefs.exists("midi")) {
         mec::Preferences cbprefs(outprefs.getSubTree("midi"));
-        MecMpeProcessor *pCb = new MecMpeProcessor(cbprefs);
-        if (pCb->isValid()) {
-            mecApi->subscribe(pCb);
+        if(cbprefs.getBool("mpe",true)) {
+            MecMpeProcessor *pCb = new MecMpeProcessor(cbprefs);
+            if (pCb->isValid()) {
+                mecApi->subscribe(pCb);
+            } else {
+                delete pCb;
+            }
         } else {
-            delete pCb;
+            MecMidiProcessor *pCb = new MecMidiProcessor(cbprefs);
+            if (pCb->isValid()) {
+                mecApi->subscribe(pCb);
+            } else {
+                delete pCb;
+            }
         }
     }
     if (outprefs.exists("osc")) {
