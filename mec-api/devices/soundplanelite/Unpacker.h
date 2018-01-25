@@ -6,6 +6,7 @@
 #define __UNPACKER__
 
 #include <array>
+#include <functional>
 
 #include "SoundplaneModelA.h"
 
