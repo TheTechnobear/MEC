@@ -5,9 +5,9 @@ include_directories (
 
 add_executable(t_kontrol t_kontrol.cpp)
 
+target_link_libraries (t_kontrol  mec-kontrol-api mec-utils oscpack portaudio)
 if(UNIX)
-            target_link_libraries(t_kontrol "pthread")
+    target_link_libraries(t_kontrol "pthread")
 endif(UNIX)
 
-target_link_libraries (t_kontrol  mec-kontrol-api mec-utils oscpack portaudio)
 
