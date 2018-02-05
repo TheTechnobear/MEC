@@ -109,6 +109,7 @@ bool Push2::process() {
 
 void Push2::deinit() {
     LOG_0("Push2::deinit");
+    active_=false;
 
     if(processor_.joinable()) {
         processor_.join();
