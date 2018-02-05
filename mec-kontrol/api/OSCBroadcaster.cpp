@@ -94,6 +94,12 @@ void OSCBroadcaster::sendPing(unsigned port) {
     send(ops.Data(), ops.Size());
 }
 
+bool OSCBroadcaster::broadcastChange(ParameterSource src) {
+    //FIXME: PS_OSC is too general
+    //we need to be broadcasting all changes, except back to orgin
+    return src != PS_OSC;
+}
+
 
 void OSCBroadcaster::ping(const std::string &host, unsigned port) {
     if (port == port_) {
@@ -111,7 +117,7 @@ void OSCBroadcaster::ping(const std::string &host, unsigned port) {
 }
 
 void OSCBroadcaster::rack(ParameterSource src, const Rack &p) {
-    if (src != PS_LOCAL) return;
+    if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -130,7 +136,7 @@ void OSCBroadcaster::rack(ParameterSource src, const Rack &p) {
 
 
 void OSCBroadcaster::module(ParameterSource src, const Rack &rack, const Module &m) {
-    if (src != PS_LOCAL) return;
+    if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -150,7 +156,7 @@ void OSCBroadcaster::module(ParameterSource src, const Rack &rack, const Module 
 
 
 void OSCBroadcaster::page(ParameterSource src, const Rack &rack, const Module &module, const Page &p) {
-    if (src != PS_LOCAL) return;
+    if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -173,7 +179,7 @@ void OSCBroadcaster::page(ParameterSource src, const Rack &rack, const Module &m
 }
 
 void OSCBroadcaster::param(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p) {
-    if (src != PS_LOCAL) return;
+    if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -204,7 +210,7 @@ void OSCBroadcaster::param(ParameterSource src, const Rack &rack, const Module &
 }
 
 void OSCBroadcaster::changed(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p) {
-    if (src != PS_LOCAL) return;
+    if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);

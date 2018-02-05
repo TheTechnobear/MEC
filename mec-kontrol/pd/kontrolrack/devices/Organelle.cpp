@@ -713,7 +713,7 @@ void Organelle::displayPopup(const std::string &text) {
             << 100 << 34
             << 1
             << osc::EndMessage;
-        socket_->Send(ops.Data(), ops.Size());
+        send(ops.Data(), ops.Size());
     }
 
     {
@@ -724,7 +724,7 @@ void Organelle::displayPopup(const std::string &text) {
             << 16 << 1
             << text.c_str()
             << osc::EndMessage;
-        socket_->Send(ops.Data(), ops.Size());
+        send(ops.Data(), ops.Size());
     }
 }
 
@@ -753,7 +753,7 @@ void Organelle::clearDisplay() {
         << 128 << 45
         << 0
         << osc::EndMessage;
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 }
 
 void Organelle::displayParamLine(unsigned line, const Kontrol::Parameter &param) {
@@ -773,7 +773,7 @@ void Organelle::displayLine(unsigned line, const char *disp) {
             << 128 << 10
             << 0
             << osc::EndMessage;
-        socket_->Send(ops.Data(), ops.Size());
+        send(ops.Data(), ops.Size());
     }
     {
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
@@ -783,7 +783,7 @@ void Organelle::displayLine(unsigned line, const char *disp) {
             << 8 << 1
             << disp
             << osc::EndMessage;
-        socket_->Send(ops.Data(), ops.Size());
+        send(ops.Data(), ops.Size());
     }
 
 
@@ -799,7 +799,7 @@ void Organelle::invertLine(unsigned line) {
         << 128 << 10
         << osc::EndMessage;
 
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 
 }
 
@@ -860,6 +860,6 @@ void Organelle::flipDisplay() {
     ops << osc::BeginMessage("/oled/gFlip")
         << PATCH_SCREEN
         << osc::EndMessage;
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 }
 

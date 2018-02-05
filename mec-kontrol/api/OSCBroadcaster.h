@@ -40,6 +40,7 @@ public:
 
 protected:
     void send(const char* data, unsigned size);
+    bool broadcastChange(ParameterSource src);
 
 private:
     struct OscMsg {
