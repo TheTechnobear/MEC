@@ -28,7 +28,7 @@ public:
 
 // puredata methods implementation - start
 
-static const unsigned OSC_POLL_FREQUENCY = 50; // 500ms
+static const unsigned OSC_POLL_FREQUENCY = 1; // 10ms
 static const unsigned DEVICE_POLL_FREQUENCY = 1; // 10ms
 static const unsigned OSC_PING_FREQUENCY = (5 * 100); // 5 seconds
 

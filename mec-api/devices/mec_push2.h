@@ -11,6 +11,7 @@
 #include <map>
 #include <push2lib/push2lib.h>
 #include <pa_ringbuffer.h>
+#include <thread>
 
 namespace mec {
 static const unsigned P2_NOTE_PAD_START = 36;
@@ -115,6 +116,8 @@ public:
     void changeDisplayMode(PushDisplayModes);
     void addPadMode(PushPadModes mode, std::shared_ptr<P2_PadMode>);
     void changePadMode(PushPadModes);
+    void processorRun();
+
 private:
     inline std::shared_ptr<P2_PadMode> currentPadMode() { return padModes_[currentPadMode_]; }
     inline std::shared_ptr<P2_DisplayMode> currentDisplayMode() { return displayModes_[currentDisplayMode_]; }
@@ -139,6 +142,7 @@ private:
     static const unsigned int MAX_N_MIDI_MSGS = 16;
     PaUtilRingBuffer midiQueue_; // draw midi from P2
     char msgData_[sizeof(MidiMsg) * MAX_N_MIDI_MSGS];
+    std::thread processor_;
 };
 
 }

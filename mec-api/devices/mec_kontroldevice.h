@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <thread>
 
 namespace mec {
 
@@ -24,6 +25,7 @@ public:
     virtual bool isActive();
 
     void newClient(const std::string &host, unsigned port);
+    void processorRun();
 private:
 
     ICallback &callback_;
@@ -35,6 +37,7 @@ private:
     std::shared_ptr<Kontrol::OSCReceiver> osc_receiver_;
     std::chrono::steady_clock::time_point lastPing_;
     std::vector<std::shared_ptr<Kontrol::OSCBroadcaster> > clients_;
+    std::thread processor_;
 };
 
 } //namespace

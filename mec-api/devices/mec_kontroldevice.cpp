@@ -4,6 +4,10 @@
 
 namespace mec {
 
+
+
+static const unsigned OSC_POLL_MS = 50;
+
 ////////////////////////////////////////////////
 KontrolDevice::KontrolDevice(ICallback &cb) :
         active_(false), callback_(cb),
@@ -34,6 +38,12 @@ public:
     KontrolDevice& this_;
 };
 
+void *kontroldevice_processor_func(void *pKontrolDevice) {
+    KontrolDevice *pThis = static_cast<KontrolDevice *>(pKontrolDevice);
+    pThis->processorRun();
+    return nullptr;
+}
+
 
 bool KontrolDevice::init(void *arg) {
     Preferences prefs(arg);
@@ -58,6 +68,7 @@ bool KontrolDevice::init(void *arg) {
     }
 
     active_ = true;
+    processor_ = std::thread(kontroldevice_processor_func, this);
 
     LOG_0("KontrolDevice::init - complete");
     return active_;
@@ -78,27 +89,32 @@ void KontrolDevice::newClient(const std::string &host, unsigned port) {
     }
 }
 
-bool KontrolDevice::process() {
 
-    if (osc_receiver_) {
-        osc_receiver_->poll();
+void KontrolDevice::processorRun() {
+    while(active_) {
+        if (osc_receiver_) {
+            osc_receiver_->poll();
 
-        static const std::chrono::seconds pingFrequency(5);
-        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-        auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
-        if(dur > pingFrequency) {
-            lastPing_ = now;
-            for(auto client : clients_) {
-                if(!client->isActive()) {
-                    // not received a ping from this client
-                    LOG_0("KontrolDevice::Process... inactive client");
+            static const std::chrono::seconds pingFrequency(5);
+            std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+            auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
+            if (dur > pingFrequency) {
+                lastPing_ = now;
+                for (auto client : clients_) {
+                    if (!client->isActive()) {
+                        // not received a ping from this client
+                        LOG_0("KontrolDevice::Process... inactive client");
+                    }
+                    client->sendPing(osc_receiver_->port());
                 }
-                client->sendPing(osc_receiver_->port());
             }
         }
-
+        std::this_thread::sleep_for(std::chrono::milliseconds(OSC_POLL_MS));
     }
+}
 
+
+bool KontrolDevice::process() {
     // return queue_.process(callback_);
     return true;
 }
@@ -112,6 +128,9 @@ void KontrolDevice::deinit() {
     if (osc_receiver_) osc_receiver_->stop();
 
     active_ = false;
+    if(processor_.joinable()) {
+        processor_.join();
+    }
 }
 
 bool KontrolDevice::isActive() {

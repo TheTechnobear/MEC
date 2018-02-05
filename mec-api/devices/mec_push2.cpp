@@ -11,6 +11,8 @@
 
 namespace mec {
 
+static const unsigned OSC_POLL_MS = 50;
+
 
 Push2::Push2(ICallback &cb) :
         MidiDevice(cb) {
@@ -51,6 +53,12 @@ RtMidiIn::RtMidiCallback Push2::getMidiCallback() {
     return Push2InCallback;
 }
 
+void *push2_processor_func(void *pDevice) {
+    Push2 *pThis = static_cast<Push2 *>(pDevice);
+    pThis->processorRun();
+    return nullptr;
+}
+
 
 bool Push2::init(void *arg) {
     if (MidiDevice::init(arg)) {
@@ -73,6 +81,7 @@ bool Push2::init(void *arg) {
         changePadMode(P2P_Play);
 
         active_ = true;
+        processor_ = std::thread(push2_processor_func, this);
         LOG_0("Push2::init - complete");
 
         return active_;
@@ -80,20 +89,30 @@ bool Push2::init(void *arg) {
     return false;
 }
 
-bool Push2::process() {
-    push2Api_->render(); // TODO maybe this should be moved off to separate slow thread
+void Push2::processorRun() {
+    while(active_) {
+        push2Api_->render();
 
-    while (PaUtil_GetRingBufferReadAvailable(&midiQueue_)) {
-        MidiMsg msg;
-        PaUtil_ReadRingBuffer(&midiQueue_, &msg, 1);
-        processMidi(msg);
+        while (PaUtil_GetRingBufferReadAvailable(&midiQueue_)) {
+            MidiMsg msg;
+            PaUtil_ReadRingBuffer(&midiQueue_, &msg, 1);
+            processMidi(msg);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(OSC_POLL_MS));
     }
+}
 
+bool Push2::process() {
+    //FIXME: consider what thread this needs to be on!
     return MidiDevice::process();
 }
 
 void Push2::deinit() {
     LOG_0("Push2::deinit");
+
+    if(processor_.joinable()) {
+        processor_.join();
+    }
 
     if (push2Api_)push2Api_->deinit();
     push2Api_.reset();
