@@ -1,9 +1,7 @@
 #include "Organelle.h"
 
 #include <osc/OscOutboundPacketStream.h>
-#include <iostream>
 //#include <cmath>
-#include <limits>
 
 #include "../../m_pd.h"
 
@@ -614,7 +612,20 @@ void OPresetMenu::clicked(unsigned idx) {
 // Organelle implmentation
 
 Organelle::Organelle() {
-    ;
+    PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), OscMsg::MAX_N_OSC_MSGS, msgData_);
+}
+
+Organelle::~Organelle() {
+    stop();
+}
+
+void Organelle::stop() {
+    running_ = false;
+    if (socket_) {
+        writer_thread_.join();
+        PaUtil_FlushRingBuffer(&messageQueue_);
+    }
+    socket_.reset();
 }
 
 
@@ -639,6 +650,11 @@ bool Organelle::init() {
     return false;
 }
 
+void *organelle_write_thread_func(void *aObj) {
+    Organelle *pThis = static_cast<Organelle *>(aObj);
+    pThis->writePoll();
+    return nullptr;
+}
 
 bool Organelle::connect() {
     try {
@@ -648,8 +664,34 @@ bool Organelle::connect() {
         socket_.reset();
         return false;
     }
+    running_ = true;
+    writer_thread_ = std::thread(organelle_write_thread_func, this);
     return true;
 }
+
+
+void Organelle::writePoll() {
+    std::unique_lock<std::mutex> lock(write_lock_);
+    while (running_) {
+        while (PaUtil_GetRingBufferReadAvailable(&messageQueue_)) {
+            OscMsg msg;
+            PaUtil_ReadRingBuffer(&messageQueue_, &msg, 1);
+            socket_->Send(msg.buffer_, msg.size_);
+        }
+        write_cond_.wait_for(lock, std::chrono::milliseconds(1000));
+    }
+}
+
+
+void Organelle::send(const char *data, unsigned size) {
+    OscMsg msg;
+    msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
+    memcpy(msg.buffer_, data, (size_t) msg.size_);
+    PaUtil_WriteRingBuffer(&messageQueue_, (void *) &msg, 1);
+    write_cond_.notify_one();
+}
+
+
 
 void Organelle::displayPopup(const std::string &text) {
     {

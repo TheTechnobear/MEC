@@ -2,8 +2,6 @@
 
 #include <osc/OscOutboundPacketStream.h>
 
-#include <mec_log.h>
-
 namespace Kontrol {
 
 
@@ -11,10 +9,18 @@ const std::string OSCBroadcaster::ADDRESS = "127.0.0.1";
 
 
 OSCBroadcaster::OSCBroadcaster(bool master) : master_(master), port_(0) {
+    PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), OscMsg::MAX_N_OSC_MSGS, msgData_);
 }
 
 OSCBroadcaster::~OSCBroadcaster() {
     stop();
+}
+
+
+void *osc_broadcaster_write_thread_func(void *pBroadcaster) {
+    OSCBroadcaster *pThis = static_cast<OSCBroadcaster *>(pBroadcaster);
+    pThis->writePoll();
+    return nullptr;
 }
 
 bool OSCBroadcaster::connect(const std::string &host, unsigned port) {
@@ -28,14 +34,33 @@ bool OSCBroadcaster::connect(const std::string &host, unsigned port) {
         socket_.reset();
         return false;
     }
+    running_ = true;
+    writer_thread_ = std::thread(osc_broadcaster_write_thread_func, this);
     return true;
 }
 
 void OSCBroadcaster::stop() {
+    running_ = false;
+    if (socket_) {
+        writer_thread_.join();
+        PaUtil_FlushRingBuffer(&messageQueue_);
+    }
     port_ = 0;
     socket_.reset();
 }
 
+
+void OSCBroadcaster::writePoll() {
+    std::unique_lock<std::mutex> lock(write_lock_);
+    while (running_) {
+        while (PaUtil_GetRingBufferReadAvailable(&messageQueue_)) {
+            OscMsg msg;
+            PaUtil_ReadRingBuffer(&messageQueue_, &msg, 1);
+            socket_->Send(msg.buffer_, msg.size_);
+        }
+        write_cond_.wait_for(lock, std::chrono::milliseconds(1000));
+    }
+}
 
 bool OSCBroadcaster::isActive() {
     if (!socket_) return false;
@@ -44,6 +69,15 @@ bool OSCBroadcaster::isActive() {
     auto now = std::chrono::steady_clock::now();
     auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
     return dur < timeOut;
+}
+
+
+void OSCBroadcaster::send(const char *data, unsigned size) {
+    OscMsg msg;
+    msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
+    memcpy(msg.buffer_, data, (size_t) msg.size_);
+    PaUtil_WriteRingBuffer(&messageQueue_, (void *) &msg, 1);
+    write_cond_.notify_one();
 }
 
 void OSCBroadcaster::sendPing(unsigned port) {
@@ -57,8 +91,9 @@ void OSCBroadcaster::sendPing(unsigned port) {
         << osc::EndMessage
         << osc::EndBundle;
 
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 }
+
 
 void OSCBroadcaster::ping(const std::string &host, unsigned port) {
     if (port == port_) {
@@ -90,7 +125,7 @@ void OSCBroadcaster::rack(ParameterSource src, const Rack &p) {
     ops << osc::EndMessage
         << osc::EndBundle;
 
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 }
 
 
@@ -110,7 +145,7 @@ void OSCBroadcaster::module(ParameterSource src, const Rack &rack, const Module 
     ops << osc::EndMessage
         << osc::EndBundle;
 
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 }
 
 
@@ -134,7 +169,7 @@ void OSCBroadcaster::page(ParameterSource src, const Rack &rack, const Module &m
     ops << osc::EndMessage
         << osc::EndBundle;
 
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 }
 
 void OSCBroadcaster::param(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p) {
@@ -165,7 +200,7 @@ void OSCBroadcaster::param(ParameterSource src, const Rack &rack, const Module &
     ops << osc::EndMessage
         << osc::EndBundle;
 
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 }
 
 void OSCBroadcaster::changed(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p) {
@@ -193,7 +228,7 @@ void OSCBroadcaster::changed(ParameterSource src, const Rack &rack, const Module
     ops << osc::EndMessage
         << osc::EndBundle;
 
-    socket_->Send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
 }
 
 } // namespace

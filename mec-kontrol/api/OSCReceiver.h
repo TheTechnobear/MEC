@@ -1,61 +1,17 @@
 #pragma once
 
 #include "KontrolModel.h"
+#include <thread>
 #include <memory>
 
 #include <ip/UdpSocket.h>
 #include <pa_ringbuffer.h>
 
-
-#ifndef __WINDOWS__
-// pthread
-#include <pthread.h>
-
-#define thread_t pthread_t
-#define thread_create(thp, func, argp) { \
-    bool t_error = false; \
-    if (pthread_create(thp, NULL, func, (void *) argp) != 0) { \
-        t_error = true; \
-    } \
-}
-#define thread_wait(th) { \
-    bool t_error = true; \
-    if (pthread_join(th, NULL) != 0) { \
-        t_error = true; \
-    } \
-}
-#else
-// Windows
-#include <windows.h>
-#define thread_t HANDLE
-#define thread_create(thp,func,argp) { \
-    bool t_error = false; \
-    bool thread_; \
-    DWORD thid; \
-    *(thp) = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, (LPVOID) argp, 0, &thid); \
-    if (*(thp) == 0) { \
-        t_error = true; \
-    } \
-}
-#define thread_wait(th) { \
-    bool t_error = false; \
-    WaitForSingleObject(th, INFINITE); \
-    CloseHandle(th); \
-}
-#endif
-
 namespace Kontrol {
 
 
 class KontrolOSCListener;
-
-static const int MAX_N_OSC_MSGS = 64;
-static const int MAX_OSC_MESSAGE_SIZE = 512;
-struct OscMsg {
-    IpEndpointName origin_;
-    int size_;
-    char buffer_[MAX_OSC_MESSAGE_SIZE];
-};
+class KontrolPacketListener;
 
 
 class OSCReceiver {
@@ -111,15 +67,24 @@ public:
     std::shared_ptr<UdpListeningReceiveSocket> socket() { return socket_; }
 
 private:
+    friend class KontrolPacketListener;
+
+    struct OscMsg {
+        static const int MAX_N_OSC_MSGS = 64;
+        static const int MAX_OSC_MESSAGE_SIZE = 512;
+        IpEndpointName origin_;
+        int size_;
+        char buffer_[MAX_OSC_MESSAGE_SIZE];
+    };
 
     std::shared_ptr<KontrolModel> model_;
     unsigned int port_;
-    thread_t receive_thread_;
+    std::thread receive_thread_;
     std::shared_ptr<UdpListeningReceiveSocket> socket_;
     std::shared_ptr<PacketListener> packetListener_;
     std::shared_ptr<KontrolOSCListener> oscListener_;
     PaUtilRingBuffer messageQueue_;
-    char msgData_[sizeof(OscMsg) * MAX_N_OSC_MSGS];
+    char msgData_[sizeof(OscMsg) * OscMsg::MAX_N_OSC_MSGS];
     bool ping_;
 };
 

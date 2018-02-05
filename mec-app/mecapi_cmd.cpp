@@ -27,7 +27,7 @@ public:
             case mec::ICallback::SHUTDOWN: {
                 LOG_0("mec requesting shutdown");
                 keepRunning = 0;
-                pthread_cond_broadcast(&waitCond);
+                waitCond.notify_all();
                 break;
             }
             default: {
@@ -280,14 +280,13 @@ void *mecapi_proc(void *arg) {
 
     mecApi->init();
 
-    pthread_mutex_lock(&waitMtx);
-    while (keepRunning) {
-        mecApi->process();
-        struct timespec ts;
-        getWaitTime(ts, 1000);
-        pthread_cond_timedwait(&waitCond, &waitMtx, &ts);
+    {
+        std::unique_lock<std::mutex> lock(waitMtx);
+        while (keepRunning) {
+            mecApi->process();
+            waitCond.wait_for(lock, std::chrono::milliseconds(1000));
+        }
     }
-    pthread_mutex_unlock(&waitMtx);
 
     // delete the api, so that it can clean up
     LOG_0("mecapi_proc stopping");
@@ -296,7 +295,6 @@ void *mecapi_proc(void *arg) {
     LOG_0("mecapi_proc stopped");
 
     exitCode = 0; // success
-    pthread_exit(nullptr);
 }
 
 

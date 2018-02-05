@@ -3,13 +3,18 @@
 #include "KontrolDevice.h"
 
 #include <KontrolModel.h>
-#include <ip/UdpSocket.h>
-#include <string>
 
+#include <ip/UdpSocket.h>
+
+#include <string>
+#include <pa_ringbuffer.h>
+#include <thread>
+#include <mutex>
 
 class Organelle : public KontrolDevice {
 public:
     Organelle();
+    virtual ~Organelle();
 
     //KontrolDevice
     virtual bool init() override;
@@ -39,8 +44,20 @@ public:
     void rack(Kontrol::ParameterSource source, const Kontrol::Rack &rack) override;
     void module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
 
+    void writePoll();
 
 private:
+    void send(const char *data, unsigned size);
+    void stop();
+
+    struct OscMsg {
+        static const int MAX_N_OSC_MSGS = 64;
+        static const int MAX_OSC_MESSAGE_SIZE = 128;
+        int size_;
+        char buffer_[MAX_OSC_MESSAGE_SIZE];
+    };
+
+
     bool connect();
     Kontrol::EntityId currentRackId_;
     Kontrol::EntityId currentModuleId_;
@@ -49,4 +66,11 @@ private:
 
     std::string asDisplayString(const Kontrol::Parameter &p, unsigned width) const;
     std::shared_ptr<UdpTransmitSocket> socket_;
+
+    PaUtilRingBuffer messageQueue_;
+    char msgData_[sizeof(OscMsg) * OscMsg::MAX_N_OSC_MSGS];
+    bool running_;
+    std::mutex write_lock_;
+    std::condition_variable write_cond_;
+    std::thread writer_thread_;
 };

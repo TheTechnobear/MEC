@@ -15,9 +15,9 @@ public:
 
     virtual void ProcessPacket(const char *data, int size,
                                const IpEndpointName &remoteEndpoint) {
-        OscMsg msg;
+        OSCReceiver::OscMsg msg;
         msg.origin_ = remoteEndpoint;
-        msg.size_ = (size > MAX_OSC_MESSAGE_SIZE ? MAX_OSC_MESSAGE_SIZE : size);
+        msg.size_ = (size > OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE ? OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE : size);
         memcpy(msg.buffer_, data, (size_t) msg.size_);
         PaUtil_WriteRingBuffer(queue_, (void *) &msg, 1);
     }
@@ -125,7 +125,7 @@ private:
 
 OSCReceiver::OSCReceiver(const std::shared_ptr<KontrolModel> &param)
         : model_(param), port_(0) {
-    PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), MAX_N_OSC_MSGS, msgData_);
+    PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), OscMsg::MAX_N_OSC_MSGS, msgData_);
     packetListener_ = std::make_shared<KontrolPacketListener>(&messageQueue_);
     oscListener_ = std::make_shared<KontrolOSCListener>(*this);
 }
@@ -134,7 +134,7 @@ OSCReceiver::~OSCReceiver() {
     stop();
 }
 
-void *thread_func(void *pReceiver) {
+void *osc_receiver_read_thread_func(void *pReceiver) {
     OSCReceiver *pThis = static_cast<OSCReceiver *>(pReceiver);
     pThis->socket()->Run();
     return nullptr;
@@ -148,7 +148,7 @@ bool OSCReceiver::listen(unsigned port) {
                 IpEndpointName(IpEndpointName::ANY_ADDRESS, port_),
                 packetListener_.get());
 
-        thread_create(&receive_thread_, thread_func, this);
+        receive_thread_ = std::thread(osc_receiver_read_thread_func, this);
     } catch (const std::runtime_error &e) {
         return false;
     }
@@ -158,7 +158,7 @@ bool OSCReceiver::listen(unsigned port) {
 void OSCReceiver::stop() {
     if (socket_) {
         socket_->AsynchronousBreak();
-        thread_wait(receive_thread_);
+        receive_thread_.join();
         PaUtil_FlushRingBuffer(&messageQueue_);
     }
     port_ = 0;
