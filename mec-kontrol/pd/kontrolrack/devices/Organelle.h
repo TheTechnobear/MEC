@@ -10,6 +10,7 @@
 #include <pa_ringbuffer.h>
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 
 class Organelle : public KontrolDevice {
 public:
