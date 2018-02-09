@@ -11,16 +11,14 @@ The core of the project is the mec-api this provides the main functionality whic
 Building on this core a number of integation 'applications' are provided.
 
 - mec-app,  a standalone console application. (main priority)
-- mec-max,  an 'external' for MAX/Msp 
-- mec-bela, a project for the Bela platform (see http://bela.io)  
 - mec-vst,  a VST/AU which sends 'touches' from mec to VST/AU it hosts.
-
+- mec-bela, a project for the Bela platform (see http://bela.io)  
+- mec-max,  an 'external' for MAX/Msp  (requires Cycling74 Max/MSP)
 
 ## Current Platforms
 
-- Mac OSX 10.11
-- macOS Sierra
-- Linux x86
+- macOS High Sierra (10.13)
+- Linux x86 (64 bit)
 - Linux Arm  - rPI, BBB, BBB+Bela, Organelle.
 
 (Windows is also planned, but lower priority)
@@ -40,23 +38,30 @@ Quite a few more advanced features are still under active development.
 Collaboration is welcome (via pull requests), however please bare in mind, as this is under development, alot of things are still in a fluid state, meaning changes could break proposals - even the direction is not full stable. 
 Bug fixing is very useful, but please contact me before making changes api/architectural changes, as undocumented plans exist.
 
-Testing/Usage , under development so you are welcome to use, and if you find issues to report them, please make bugs reports as specific as possible, any general reports I'll just assume will be fixed during my own development testing.
+Testing/Usage , as its under development  you are welcome to use, and if you find issues to report them, please make bugs reports as specific as possible. any general reports I'll just assume will be fixed during my own development testing.
 please also check todo, for known issues, and to see if a 'feature' is considered to be complete and a priority.
 Im not taking feature requests at the moment (see todo/goals)
 
 
 ## Credits
 Id like to thank the following open source projects for helping make this possible:
-- oscpack
-- rtmidi
-- Juce
-- cJson
-- portAudio 
-- libusb
+- Eigenlabs (https://github.com/Eigenlabs/EigenD)
+- Madrona Labs (https://github.com/madronalabs/soundplane, https://github.com/madronalabs/madronalib)
+- oscpack (http://www.rossbencina.com/code/oscpack)
+- rtmidi (https://github.com/thestk/rtmidi)
+- Juce (https://juce.com) (vst only currently)
+- cJson (https://github.com/DaveGamble/cJSON)
+- portAudio (http://www.portaudio.com)
+- libusb (http://libusb.info)
+- bela (http://bela.io)
 
 Id like to extend a special heartfelt thank you to **John Lambert/EigenLabs** and **Randy Jones/Madrona Labs**. 
 They both made creative/fantastic instruments that I love to play... but also but also had the foresight to open source  their software (used to control them) - thus allowing projects such as these.  It would have been easier for them to guard their 'intellectual property', and I'm very gratefully to them they did not choose this route. 
 
 **Thank You**
+
+## License 
+Ive release this code under GPLv3 , so you are free to build, use, change and distribute as per the license. 
+Note: there may be licensing requirements given by dependent software (as listed in credits), please check these if you plan to distribute binary images.
 
 
