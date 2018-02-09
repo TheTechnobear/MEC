@@ -185,7 +185,9 @@ bool OParamMode::init() {
 
 void OParamMode::display() {
     parent_.clearDisplay();
-    for (unsigned int i = 0; i < 4; i++) {
+    unsigned sz = currentParams_.size(); 
+    sz = sz < 4 ? sz : 4;
+    for (unsigned int i = 0; i < sz; i++) {
         try {
             auto &param = currentParams_.at(i);
             if (param != nullptr) parent_.displayParamLine(i+1, *param);
@@ -341,7 +343,9 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack
     if (popupTime_ > 0) return;
 
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
-    for (unsigned int i = 0; i < 4; i++) {
+    unsigned sz = currentParams_.size(); 
+    sz = sz < 4 ? sz : 4;
+    for (unsigned int i = 0; i < sz; i++) {
         try {
             auto &p = currentParams_.at(i);
             if (p->id() == param.id()) {
@@ -352,12 +356,13 @@ void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack
                     pots_->locked_[i] = Pots::K_LOCKED;
                     changePot(i,pots_->rawValue[i]);
                 }
+                parent_.flipDisplay();
+                return;
             }
         } catch (std::out_of_range) {
             return;
         }
     } // for
-    parent_.flipDisplay();
 }
 
 void OParamMode::module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
