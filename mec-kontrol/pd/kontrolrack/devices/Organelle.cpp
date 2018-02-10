@@ -182,7 +182,7 @@ bool OParamMode::init() {
     pots_ = std::make_shared<Pots>();
     for (int i = 0; i < 4; i++) {
         pots_->rawValue[i] = std::numeric_limits<float>::max();
-        pots_->locked_[i] = Pots::K_UNLOCKED;
+        pots_->locked_[i] = Pots::K_LOCKED;
     }
     return true;
 }
@@ -225,10 +225,17 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
         auto &param = currentParams_.at(pot);
         auto paramId = param->id();
 
-        float value = rawvalue / MAX_POT_VALUE;
-        pots_->rawValue[pot] = rawvalue;
+        Kontrol::ParamValue calc;
 
-        Kontrol::ParamValue calc = param->calcFloat(value);
+        if (rawvalue!= std::numeric_limits<float>::max()) {
+            float value = rawvalue / MAX_POT_VALUE;
+            calc = param->calcFloat(value);
+            //std::cerr << "changePot " << pot << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
+        }
+
+        pots_->rawValue[pot] = rawvalue;
+        
+
 
         if (pots_->locked_[pot] != Pots::K_UNLOCKED) {
             //if pot is locked, determined if we can unlock it
@@ -255,6 +262,7 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
                 } else if (rawvalue == std::numeric_limits<float>::max()) {
                     // stay locked , we need a real value ;) 
                     // init state
+                    //std::cerr << "cannot set unlock condition " << pot << std::endl;
                 } else if (calc > param->current()) {
                     // pot starts greater than param, so wait for it to go less than
                     pots_->locked_[pot] = Pots::K_LT;

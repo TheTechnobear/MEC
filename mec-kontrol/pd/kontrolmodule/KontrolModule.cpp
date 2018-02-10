@@ -1,6 +1,7 @@
 #include "../m_pd.h"
 
 #include <KontrolModel.h>
+#include <string.h>
 #include <string>
 #include <vector>
 
@@ -67,7 +68,7 @@ void KontrolModule_loadsettings(t_KontrolModule *x, t_symbol *settings) {
         auto rack = Kontrol::KontrolModel::model()->getLocalRack();
         if (rack) {
             std::string settingsId = settings->s_name;
-            post("loading settings : %s", settings);
+            post("loading settings : %s", settings->s_name);
             rack->loadSettings(settingsId + "-rack.json");
             rack->dumpSettings();
         } else {
@@ -81,7 +82,7 @@ void KontrolModule_loadpreset(t_KontrolModule *x, t_symbol *preset) {
         auto rack = Kontrol::KontrolModel::model()->getLocalRack();
         if (rack) {
             std::string presetId = preset->s_name;
-            post("loading settings : %s", preset);
+            post("loading preset : %s", preset->s_name);
             rack->applyPreset(presetId);
             rack->dumpCurrentValues();
         }
