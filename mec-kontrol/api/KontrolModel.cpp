@@ -224,16 +224,16 @@ std::shared_ptr<Parameter> KontrolModel::changeParam(
     auto param = getParam(module, paramId);
     if (param == nullptr) return nullptr;
 
-    if (module->changeParam(paramId, v)) {
+    if (module->changeParam(paramId, v, src == PS_PRESET)) {
         publishChanged(src, *rack, *module, *param);
     }
     return param;
 }
 
 
-void KontrolModel::ping(const std::string& host, unsigned port) const {
+void KontrolModel::ping(const std::string &host, unsigned port) const {
     for (auto i : listeners_) {
-        (i.second)->ping(host,port);
+        (i.second)->ping(host, port);
     }
 }
 

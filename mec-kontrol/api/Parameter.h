@@ -23,50 +23,54 @@ enum ParameterType {
 
 class Parameter : public Entity {
 public:
-    static std::shared_ptr<Parameter> create(const std::vector<ParamValue>& args);
+    static std::shared_ptr<Parameter> create(const std::vector<ParamValue> &args);
 
     Parameter(ParameterType type);
-    virtual void createArgs(std::vector<ParamValue>& args) const;
+    virtual void createArgs(std::vector<ParamValue> &args) const;
 
-    ParameterType type() const { return type_;};
+    ParameterType type() const { return type_; };
 
     virtual std::string displayValue() const;
-    virtual const std::string& displayUnit() const;
+    virtual const std::string &displayUnit() const;
 
-    ParamValue current() const { return current_;}
+    ParamValue current() const { return current_; }
 
-    virtual bool change(const ParamValue& c);
+    virtual bool change(const ParamValue &c, bool force);
     virtual ParamValue calcRelative(float f);
     virtual ParamValue calcFloat(float f);
     virtual ParamValue calcMidi(int midi);
 
-    virtual bool valid() { return Entity::valid() && type_ != PT_Invalid;}
+    virtual bool valid() { return Entity::valid() && type_ != PT_Invalid; }
 
     void dump() const;
 
 protected:
-    virtual void init(const std::vector<ParamValue>& args, unsigned& pos);
+    virtual void init(const std::vector<ParamValue> &args, unsigned &pos);
 
     ParameterType type_;
     ParamValue current_;
 };
 
 
-class Parameter_Int : public Parameter  {
+class Parameter_Int : public Parameter {
 public:
     Parameter_Int(ParameterType type) : Parameter(type) { ; }
-    virtual void createArgs(std::vector<ParamValue>& args) const;
-    virtual std::string displayValue() const;
 
-    virtual bool change(const ParamValue& c);
-    virtual ParamValue calcRelative(float f);
-    virtual ParamValue calcMidi(int midi);
-    virtual ParamValue calcFloat(float f);
+    void createArgs(std::vector<ParamValue> &args) const override;
+    std::string displayValue() const override;
+
+    bool change(const ParamValue &c, bool force) override;
+    ParamValue calcRelative(float f) override;
+    ParamValue calcMidi(int midi) override;
+    ParamValue calcFloat(float f) override;
 protected:
-    virtual void init(const std::vector<ParamValue>& args, unsigned& pos);
-    int def() const { return def_;}
-    int min() const { return min_;}
-    int max() const { return max_;}
+    void init(const std::vector<ParamValue> &args, unsigned &pos) override;
+
+    int def() const { return def_; }
+
+    int min() const { return min_; }
+
+    int max() const { return max_; }
 
     int min_;
     int max_;
@@ -77,19 +81,21 @@ protected:
 class Parameter_Float : public Parameter {
 public:
     Parameter_Float(ParameterType type);
-    virtual void createArgs(std::vector<ParamValue>& args) const;
-    virtual std::string displayValue() const;
+    void createArgs(std::vector<ParamValue> &args) const override;
+    std::string displayValue() const override;
 
-    virtual bool change(const ParamValue& c);
-    virtual ParamValue calcRelative(float f);
-    virtual ParamValue calcMidi(int midi);
-    virtual ParamValue calcFloat(float f);
+    bool change(const ParamValue &c, bool force) override;
+    ParamValue calcRelative(float f) override;
+    ParamValue calcMidi(int midi) override;
+    ParamValue calcFloat(float f) override;
 protected:
-    virtual void init(const std::vector<ParamValue>& args, unsigned& pos);
+    void init(const std::vector<ParamValue> &args, unsigned &pos) override;
 
-    float def() const { return def_;}
-    float min() const { return min_;}
-    float max() const { return max_;}
+    float def() const { return def_; }
+
+    float min() const { return min_; }
+
+    float max() const { return max_; }
 
     float min_;
     float max_;
@@ -99,43 +105,48 @@ protected:
 class Parameter_Boolean : public Parameter {
 public:
     Parameter_Boolean(ParameterType type);
-    virtual void createArgs(std::vector<ParamValue>& args) const;
-    virtual std::string displayValue() const;
+    void createArgs(std::vector<ParamValue> &args) const override;
+    std::string displayValue() const override;
 
-    virtual bool change(const ParamValue& c);
-    virtual ParamValue calcRelative(float f);
-    virtual ParamValue calcMidi(int midi);
-    virtual ParamValue calcFloat(float f);
+    bool change(const ParamValue &c, bool force) override;
+    ParamValue calcRelative(float f) override;
+    ParamValue calcMidi(int midi) override;
+    ParamValue calcFloat(float f) override;
 protected:
-    virtual void init(const std::vector<ParamValue>& args, unsigned& pos);
+    void init(const std::vector<ParamValue> &args, unsigned &pos) override;
 
-    bool def() const { return def_;}
+    bool def() const { return def_; }
+
     bool def_;
 };
 
 class Parameter_Percent : public Parameter_Float {
 public:
     Parameter_Percent(ParameterType type) : Parameter_Float(type) { ; }
-    virtual const std::string& displayUnit() const;
+
+    const std::string &displayUnit() const override;
 };
 
-class Parameter_Frequency : public Parameter_Float  {
+class Parameter_Frequency : public Parameter_Float {
 public:
     Parameter_Frequency(ParameterType type) : Parameter_Float(type) { ; }
-    virtual const std::string& displayUnit() const;
+
+    const std::string &displayUnit() const override;
 };
 
-class Parameter_Time : public Parameter_Float  {
+class Parameter_Time : public Parameter_Float {
 public:
     Parameter_Time(ParameterType type) : Parameter_Float(type) { ; }
-    virtual const std::string& displayUnit() const;
+
+    const std::string &displayUnit() const override;
 };
 
 
-class Parameter_Pitch : public Parameter_Int  {
+class Parameter_Pitch : public Parameter_Int {
 public:
     Parameter_Pitch(ParameterType type) : Parameter_Int(type) { ; }
-    virtual const std::string& displayUnit() const;
+
+    const std::string &displayUnit() const override;
 };
 
 

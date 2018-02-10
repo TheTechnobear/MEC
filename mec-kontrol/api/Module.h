@@ -49,7 +49,7 @@ public:
     }
 
     std::shared_ptr<Parameter>  createParam(const std::vector<ParamValue>& args);
-    bool changeParam(const EntityId& paramId, const ParamValue& value);
+    bool changeParam(const EntityId& paramId, const ParamValue& value, bool force);
 
     std::shared_ptr<Page>  createPage(
         const EntityId& pageId,

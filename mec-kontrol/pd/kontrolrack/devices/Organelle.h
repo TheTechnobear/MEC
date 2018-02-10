@@ -49,7 +49,7 @@ public:
 
 private:
     void send(const char *data, unsigned size);
-    void stop();
+    void stop() override ;
 
     struct OscMsg {
         static const int MAX_N_OSC_MSGS = 64;

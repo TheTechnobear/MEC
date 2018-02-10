@@ -140,8 +140,8 @@ ParamValue Parameter::calcMidi(int midi) {
 }
 
 
-bool Parameter::change(const ParamValue &c) {
-    if (current_ != c) {
+bool Parameter::change(const ParamValue &c, bool force) {
+    if (force || current_ != c) {
         current_ = c;
         return true;
     }
@@ -179,7 +179,7 @@ void Parameter_Float::init(const std::vector<ParamValue> &args, unsigned &pos) {
     if (args.size() > pos && args[pos].type() == ParamValue::T_Float) def_ = args[pos++].floatValue();
     else
         throwError(id(), "missing def");
-    change(def_);
+    change(def_, true);
 }
 
 void Parameter_Float::createArgs(std::vector<ParamValue> &args) const {
@@ -216,13 +216,13 @@ ParamValue Parameter_Float::calcFloat(float f) {
     return ParamValue(v);
 }
 
-bool Parameter_Float::change(const ParamValue &c) {
+bool Parameter_Float::change(const ParamValue &c, bool force) {
     switch (current_.type()) {
         case ParamValue::T_Float  : {
             float v = c.floatValue();
             v = std::max(v, min());
             v = std::min(v, max());
-            return Parameter::change(ParamValue(v));
+            return Parameter::change(ParamValue(v), force);
         }
         case ParamValue::T_String:
         default:;
@@ -248,7 +248,7 @@ void Parameter_Boolean::init(const std::vector<ParamValue> &args, unsigned &pos)
     Parameter::init(args, pos);
     if (args.size() > pos && args[pos].type() == ParamValue::T_Float) {
         def_ = args[pos++].floatValue() > 0.5;
-        change(def_);
+        change(def_, true);
     } else
         throwError(id(), "missing def");
 }
@@ -258,11 +258,11 @@ void Parameter_Boolean::createArgs(std::vector<ParamValue> &args) const {
     args.push_back((float) def_);
 }
 
-bool Parameter_Boolean::change(const ParamValue &c) {
+bool Parameter_Boolean::change(const ParamValue &c, bool force) {
     switch (current_.type()) {
         case ParamValue::T_Float  : {
             float v = c.floatValue() > 0.5f ? 1.0f : 0.0f;
-            return Parameter::change(ParamValue(v));
+            return Parameter::change(ParamValue(v), force);
         }
         case ParamValue::T_String:
         default:;
@@ -316,7 +316,7 @@ void Parameter_Int::init(const std::vector<ParamValue> &args, unsigned &pos) {
     if (args.size() > pos && args[pos].type() == ParamValue::T_Float) def_ = static_cast<int>(args[pos++].floatValue());
     else
         throwError(id(), "missing def");
-    change(def_);
+    change(def_, true);
 }
 
 void Parameter_Int::createArgs(std::vector<ParamValue> &args) const {
@@ -333,13 +333,13 @@ std::string Parameter_Int::displayValue() const {
 }
 
 
-bool Parameter_Int::change(const ParamValue &c) {
+bool Parameter_Int::change(const ParamValue &c, bool force) {
     switch (current_.type()) {
         case ParamValue::T_Float  : {
             int v = static_cast<int>(c.floatValue());
             v = std::max(v, min());
             v = std::min(v, max());
-            return Parameter::change(ParamValue((float) v));
+            return Parameter::change(ParamValue((float) v), force);
         }
         case ParamValue::T_String:
         default:;
@@ -351,8 +351,8 @@ ParamValue Parameter_Int::calcRelative(float f) {
     float chg = f;
     float rng = (max() - min());
     float step = 1.0 / rng;
-    if(chg > 0.001 && chg < step) chg = step;
-    else if(chg < 0.001 && chg > -step  ) chg = -step;
+    if (chg > 0.001 && chg < step) chg = step;
+    else if (chg < 0.001 && chg > -step) chg = -step;
     int ichg = std::round(chg * rng);
     int v = static_cast<int>(current().floatValue()) + ichg;
     v = std::max(v, min());

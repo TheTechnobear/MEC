@@ -18,7 +18,6 @@
 namespace Kontrol {
 
 
-
 #if 0
 
 std::string Module::getParamId(const EntityId& pageId, unsigned paramNum) {
@@ -31,7 +30,7 @@ std::string Module::getParamId(const EntityId& pageId, unsigned paramNum) {
 #endif
 
 // Module
-std::shared_ptr<Parameter> Module::createParam(const std::vector<ParamValue>& args) {
+std::shared_ptr<Parameter> Module::createParam(const std::vector<ParamValue> &args) {
     auto p = Parameter::create(args);
     if (p->valid()) {
         parameters_[p->id()] = p;
@@ -40,10 +39,10 @@ std::shared_ptr<Parameter> Module::createParam(const std::vector<ParamValue>& ar
     return nullptr;
 }
 
-bool Module::changeParam(const EntityId& paramId, const ParamValue& value) {
+bool Module::changeParam(const EntityId &paramId, const ParamValue &value, bool force) {
     auto p = parameters_[paramId];
     if (p != nullptr) {
-        if (p->change(value)) {
+        if (p->change(value, force)) {
             return true;
         }
     }
@@ -52,9 +51,9 @@ bool Module::changeParam(const EntityId& paramId, const ParamValue& value) {
 
 
 std::shared_ptr<Page> Module::createPage(
-    const EntityId& pageId,
-    const std::string& displayName,
-    const std::vector<EntityId> paramIds
+        const EntityId &pageId,
+        const std::string &displayName,
+        const std::vector<EntityId> paramIds
 ) {
     // std::cout << "Module::addPage " << id << std::endl;
     auto p = std::make_shared<Page>(pageId, displayName, paramIds);
@@ -64,11 +63,11 @@ std::shared_ptr<Page> Module::createPage(
 }
 
 // access functions
-std::shared_ptr<Page> Module::getPage(const EntityId& pageId) {
+std::shared_ptr<Page> Module::getPage(const EntityId &pageId) {
     return pages_[pageId];
 }
 
-std::shared_ptr<Parameter>  Module::getParam(const EntityId& paramId) {
+std::shared_ptr<Parameter> Module::getParam(const EntityId &paramId) {
     return parameters_[paramId];
 }
 
@@ -89,7 +88,7 @@ std::vector<std::shared_ptr<Parameter>> Module::getParams() {
     return ret;
 }
 
-std::vector<std::shared_ptr<Parameter>> Module::getParams(const std::shared_ptr<Page>& page) {
+std::vector<std::shared_ptr<Parameter>> Module::getParams(const std::shared_ptr<Page> &page) {
     std::vector<std::shared_ptr<Parameter>> ret;
     if (page != nullptr) {
         for (auto pid : page->paramIds()) {
@@ -101,8 +100,7 @@ std::vector<std::shared_ptr<Parameter>> Module::getParams(const std::shared_ptr<
 }
 
 
-
-bool Module::loadModuleDefinitions(const mec::Preferences& module) {
+bool Module::loadModuleDefinitions(const mec::Preferences &module) {
     if (!module.valid()) return false;
 
     type_ = module.getString("name");
@@ -120,16 +118,22 @@ bool Module::loadModuleDefinitions(const mec::Preferences& module) {
 
             for (int j = 0; j < pargs.getSize(); j++) {
                 mec::Preferences::Type t = pargs.getType(j);
-                switch (t ) {
-                case mec::Preferences::P_BOOL:      args.push_back(ParamValue(pargs.getBool(j) ? 1.0f : 0.0f )); break;
-                case mec::Preferences::P_NUMBER:    args.push_back(ParamValue((float) pargs.getDouble(j))); break;
-                case mec::Preferences::P_STRING:    args.push_back(ParamValue(pargs.getString(j))); break;
-                //ignore
-                case mec::Preferences::P_NULL:
-                case mec::Preferences::P_ARRAY:
-                case mec::Preferences::P_OBJECT:
-                default:
-                    break;
+                switch (t) {
+                    case mec::Preferences::P_BOOL:
+                        args.push_back(ParamValue(pargs.getBool(j) ? 1.0f : 0.0f));
+                        break;
+                    case mec::Preferences::P_NUMBER:
+                        args.push_back(ParamValue((float) pargs.getDouble(j)));
+                        break;
+                    case mec::Preferences::P_STRING:
+                        args.push_back(ParamValue(pargs.getString(j)));
+                        break;
+                        //ignore
+                    case mec::Preferences::P_NULL:
+                    case mec::Preferences::P_ARRAY:
+                    case mec::Preferences::P_OBJECT:
+                    default:
+                        break;
                 }
             }
             createParam(args);
@@ -150,7 +154,7 @@ bool Module::loadModuleDefinitions(const mec::Preferences& module) {
             std::string displayname = page.getString(1);
             std::vector<std::string> paramIds;
             mec::Preferences::Array paramArray(page.getArray(2));
-            for ( int j = 0; j < paramArray.getSize(); j++) {
+            for (int j = 0; j < paramArray.getSize(); j++) {
                 paramIds.push_back(paramArray.getString(j));
             }
             createPage(id, displayname, paramIds);
@@ -171,44 +175,6 @@ void Module::dumpSettings() const {
             std::string d = presetvalue.paramId();
             ParamValue pv = presetvalue.value();
             switch (pv.type()) {
-            case ParamValue::T_Float :
-                d += "  " + std::to_string(pv.floatValue()) + " [F],";
-                break;
-            case ParamValue::T_String :
-            default:
-                d += pv.stringValue() + " [S],";
-                break;
-            }
-            LOG_1(d);
-        }
-    }
-    LOG_1("Midi Mapping");
-    for (auto cc : midi_mapping_) {
-        for(auto id : cc.second) {
-            LOG_1("CC : " <<  cc.first << " -> " << id);
-        }
-    }
-}
-
-
-void Module::dumpParameters() {
-    const char* IND = "    ";
-    // print by page , this will miss anything not on a page, but gives a clear way of setting things
-    LOG_1("Parameter Dump : " << displayName_ << " : " << type_);
-    LOG_1("----------------------");
-    for (std::string pageId : pageIds_) {
-        auto page = pages_[pageId];
-        if (page == nullptr) { LOG_1("Page not found: " << pageId); continue;}
-        LOG_1(page->id());
-        LOG_1(page->displayName());
-        for (std::string paramId : page->paramIds()) {
-            auto param = parameters_[paramId];
-            if (param == nullptr) { LOG_1("Parameter not found:" << paramId); continue;}
-            std::vector<ParamValue> args;
-            param->createArgs(args);
-            std::string d = IND;
-            for (auto pv : args) {
-                switch (pv.type()) {
                 case ParamValue::T_Float :
                     d += "  " + std::to_string(pv.floatValue()) + " [F],";
                     break;
@@ -216,6 +182,50 @@ void Module::dumpParameters() {
                 default:
                     d += pv.stringValue() + " [S],";
                     break;
+            }
+            LOG_1(d);
+        }
+    }
+    LOG_1("Midi Mapping");
+    for (auto cc : midi_mapping_) {
+        for (auto id : cc.second) {
+            LOG_1("CC : " << cc.first << " -> " << id);
+        }
+    }
+}
+
+
+void Module::dumpParameters() {
+    const char *IND = "    ";
+    // print by page , this will miss anything not on a page, but gives a clear way of setting things
+    LOG_1("Parameter Dump : " << displayName_ << " : " << type_);
+    LOG_1("----------------------");
+    for (std::string pageId : pageIds_) {
+        auto page = pages_[pageId];
+        if (page == nullptr) {
+            LOG_1("Page not found: " << pageId);
+            continue;
+        }
+        LOG_1(page->id());
+        LOG_1(page->displayName());
+        for (std::string paramId : page->paramIds()) {
+            auto param = parameters_[paramId];
+            if (param == nullptr) {
+                LOG_1("Parameter not found:" << paramId);
+                continue;
+            }
+            std::vector<ParamValue> args;
+            param->createArgs(args);
+            std::string d = IND;
+            for (auto pv : args) {
+                switch (pv.type()) {
+                    case ParamValue::T_Float :
+                        d += "  " + std::to_string(pv.floatValue()) + " [F],";
+                        break;
+                    case ParamValue::T_String :
+                    default:
+                        d += pv.stringValue() + " [S],";
+                        break;
                 }
             }
             LOG_1(d);
@@ -225,28 +235,34 @@ void Module::dumpParameters() {
 }
 
 void Module::dumpCurrentValues() {
-    const char* IND = "    ";
+    const char *IND = "    ";
     // print by page , this will miss anything not on a page, but gives a clear way of setting things
     LOG_1("Current Values Dump");
     LOG_1("-------------------");
     for (std::string pageId : pageIds_) {
         auto page = pages_[pageId];
-        if (page == nullptr) { LOG_1("Page not found: " << pageId); continue;}
+        if (page == nullptr) {
+            LOG_1("Page not found: " << pageId);
+            continue;
+        }
         LOG_1(page->id());
         LOG_1(page->displayName());
         for (auto paramId : page->paramIds()) {
             auto param = parameters_[paramId];
-            if (param == nullptr) { LOG_1("Parameter not found:" << paramId); continue;}
+            if (param == nullptr) {
+                LOG_1("Parameter not found:" << paramId);
+                continue;
+            }
             std::string d = IND + paramId + " : ";
             ParamValue cv = param->current();
             switch (cv.type()) {
-            case ParamValue::T_Float :
-                d += "  " + std::to_string(cv.floatValue()) + " [F],";
-                break;
-            case ParamValue::T_String :
-            default:
-                d += cv.stringValue() + " [S],";
-                break;
+                case ParamValue::T_Float :
+                    d += "  " + std::to_string(cv.floatValue()) + " [F],";
+                    break;
+                case ParamValue::T_String :
+                default:
+                    d += cv.stringValue() + " [S],";
+                    break;
             }
             LOG_1(d);
         }
@@ -254,7 +270,7 @@ void Module::dumpCurrentValues() {
     }
 }
 
-bool Module::loadSettings(const mec::Preferences& prefs) {
+bool Module::loadSettings(const mec::Preferences &prefs) {
     type_ = prefs.getString("module");
     mec::Preferences presets(prefs.getSubTree("presets"));
     if (presets.valid()) { // just ignore if not present
@@ -267,15 +283,21 @@ bool Module::loadSettings(const mec::Preferences& prefs) {
             for (EntityId paramId : params.getKeys()) {
                 mec::Preferences::Type t = params.getType(paramId);
                 switch (t) {
-                case mec::Preferences::P_BOOL:   preset.push_back(Preset(paramId, ParamValue(params.getBool(paramId) ? 1.0f : 0.0f ))); break;
-                case mec::Preferences::P_NUMBER: preset.push_back(Preset(paramId, ParamValue((float) params.getDouble(paramId)))); break;
-                case mec::Preferences::P_STRING: preset.push_back(Preset(paramId, ParamValue(params.getString(paramId)))); break;
-                //ignore
-                case mec::Preferences::P_NULL:
-                case mec::Preferences::P_ARRAY:
-                case mec::Preferences::P_OBJECT:
-                default:
-                    break;
+                    case mec::Preferences::P_BOOL:
+                        preset.push_back(Preset(paramId, ParamValue(params.getBool(paramId) ? 1.0f : 0.0f)));
+                        break;
+                    case mec::Preferences::P_NUMBER:
+                        preset.push_back(Preset(paramId, ParamValue((float) params.getDouble(paramId))));
+                        break;
+                    case mec::Preferences::P_STRING:
+                        preset.push_back(Preset(paramId, ParamValue(params.getString(paramId))));
+                        break;
+                        //ignore
+                    case mec::Preferences::P_NULL:
+                    case mec::Preferences::P_ARRAY:
+                    case mec::Preferences::P_OBJECT:
+                    default:
+                        break;
                 }
             } //for param
             presets_[presetId] = preset;
@@ -302,25 +324,25 @@ bool Module::loadSettings(const mec::Preferences& prefs) {
     return true;
 }
 
-bool Module::saveSettings(cJSON * root) {
+bool Module::saveSettings(cJSON *root) {
     cJSON *presets = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "module", type().c_str());
 
     // presets
     cJSON_AddItemToObject(root, "presets", presets);
     for (auto p : presets_) {
-        cJSON* preset = cJSON_CreateObject();
+        cJSON *preset = cJSON_CreateObject();
         cJSON_AddItemToObject(presets, p.first.c_str(), preset);
         for (auto v : p.second) {
             switch (v.value().type()) {
-            case ParamValue::T_String: {
-                cJSON_AddStringToObject(preset, v.paramId().c_str(), v.value().stringValue().c_str());
-                break;
-            }
-            case ParamValue::T_Float: {
-                cJSON_AddNumberToObject(preset, v.paramId().c_str(), v.value().floatValue());
-                break;
-            }
+                case ParamValue::T_String: {
+                    cJSON_AddStringToObject(preset, v.paramId().c_str(), v.value().stringValue().c_str());
+                    break;
+                }
+                case ParamValue::T_Float: {
+                    cJSON_AddNumberToObject(preset, v.paramId().c_str(), v.value().floatValue());
+                    break;
+                }
             }//switch
         }
     }
@@ -336,7 +358,7 @@ bool Module::saveSettings(cJSON * root) {
             cJSON *array = cJSON_CreateArray();
             cJSON_AddItemToObject(ccs, ccnum.c_str(), array);
             for (auto paramId : mm.second) {
-                cJSON* itm = cJSON_CreateString(paramId.c_str());
+                cJSON *itm = cJSON_CreateString(paramId.c_str());
                 cJSON_AddItemToArray(array, itm);
             }
         }
@@ -363,28 +385,28 @@ bool Module::updatePreset(std::string presetId) {
     return true;
 }
 
-std::vector<Preset>     Module::getPreset(std::string presetId) {
+std::vector<Preset> Module::getPreset(std::string presetId) {
     return presets_[presetId];
 }
 
-std::vector<EntityId>   Module::getParamsForCC(unsigned cc) {
+std::vector<EntityId> Module::getParamsForCC(unsigned cc) {
     return midi_mapping_[cc];
 }
 
-void Module::addMidiCCMapping(unsigned ccnum, const EntityId & paramId) {
+void Module::addMidiCCMapping(unsigned ccnum, const EntityId &paramId) {
     auto v = midi_mapping_[ccnum];
-    for(auto it = v.begin();it != v.end();it++) {
-        if(*it == paramId) {
+    for (auto it = v.begin(); it != v.end(); it++) {
+        if (*it == paramId) {
             return; // already preset
         }
     }
     midi_mapping_[ccnum].push_back(paramId);
 }
 
-void Module::removeMidiCCMapping(unsigned ccnum, const EntityId & paramId) {
+void Module::removeMidiCCMapping(unsigned ccnum, const EntityId &paramId) {
     auto v = midi_mapping_[ccnum];
-    for(auto it = v.begin();it != v.end();it++) {
-        if(*it == paramId) {
+    for (auto it = v.begin(); it != v.end(); it++) {
+        if (*it == paramId) {
             v.erase(it);
             midi_mapping_[ccnum] = v;
             return;

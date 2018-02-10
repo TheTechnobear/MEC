@@ -115,7 +115,7 @@ bool Rack::updatePreset(std::string presetId) {
             ret |= module->updatePreset(presetId);
         }
     }
-    currentPreset_=presetId;
+    currentPreset_ = presetId;
     return ret;
 }
 
@@ -144,16 +144,14 @@ bool Rack::applyPreset(std::string presetId) {
                 auto param = module->getParam(p.paramId());
                 if (param != nullptr) {
                     if (p.value().type() == ParamValue::T_Float) {
-                        if (p.value() != param->current()) {
-                            model()->changeParam(PS_PRESET, id(), module->id(), p.paramId(), p.value());
-                            ret = true;
-                        } //if chg
+                        model()->changeParam(PS_PRESET, id(), module->id(), p.paramId(), p.value());
+                        ret = true;
                     } //iffloat
                 } // ifpara
             }
         }
     }
-    currentPreset_=presetId;
+    currentPreset_ = presetId;
     return ret;
 }
 

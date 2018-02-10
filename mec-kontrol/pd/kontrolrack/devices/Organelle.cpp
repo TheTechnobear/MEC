@@ -46,11 +46,14 @@ public:
 
     virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
 
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &) { ; }
+    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                      const Kontrol::Page &) { ; }
 
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) { ; }
+    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                       const Kontrol::Parameter &) { ; }
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) { ; }
+    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                         const Kontrol::Parameter &) { ; }
 
     void displayPopup(const std::string &text, unsigned time);
 protected:
@@ -72,7 +75,6 @@ struct Pots {
 };
 
 
-
 class OParamMode : public OBaseMode {
 public:
     OParamMode(Organelle &p) : OBaseMode(p), currentPageNum_(0) { ; }
@@ -84,8 +86,10 @@ public:
     virtual void changeEncoder(unsigned encoder, float value) override;
     virtual void encoderButton(unsigned encoder, bool value) override;
     void module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
-    void page(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module, const Kontrol::Page &page) override;
+    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+                         const Kontrol::Parameter &) override;
+    void page(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+              const Kontrol::Page &page) override;
 private:
     void setPage(unsigned pagenum, bool UI);
     void display();
@@ -185,12 +189,12 @@ bool OParamMode::init() {
 
 void OParamMode::display() {
     parent_.clearDisplay();
-    unsigned sz = currentParams_.size(); 
+    unsigned sz = currentParams_.size();
     sz = sz < 4 ? sz : 4;
     for (unsigned int i = 0; i < sz; i++) {
         try {
             auto &param = currentParams_.at(i);
-            if (param != nullptr) parent_.displayParamLine(i+1, *param);
+            if (param != nullptr) parent_.displayParamLine(i + 1, *param);
         } catch (std::out_of_range) {
             return;
         }
@@ -222,7 +226,7 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
         auto paramId = param->id();
 
         float value = rawvalue / MAX_POT_VALUE;
-        pots_->rawValue[pot]=rawvalue;
+        pots_->rawValue[pot] = rawvalue;
 
         Kontrol::ParamValue calc = param->calcFloat(value);
 
@@ -285,7 +289,7 @@ void OParamMode::setPage(unsigned pagenum, bool UI) {
             }
             auto &page = pages_.at(0);
             currentParams_ = module->getParams(page);
-            if(currentParams_.size()==0) {
+            if (currentParams_.size() == 0) {
                 return;
             }
             currentPageNum_ = 0;
@@ -302,7 +306,7 @@ void OParamMode::setPage(unsigned pagenum, bool UI) {
 
         for (int i = 0; i < 4; i++) {
             pots_->locked_[i] = Pots::K_LOCKED;
-            changePot(i,pots_->rawValue[i]);
+            changePot(i, pots_->rawValue[i]);
         }
     } catch (std::out_of_range) { ;
     }
@@ -338,23 +342,24 @@ void OParamMode::encoderButton(unsigned enc, bool value) {
     }
 }
 
-void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module, const Kontrol::Parameter &param) {
+void OParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+                         const Kontrol::Parameter &param) {
     OBaseMode::changed(src, rack, module, param);
     if (popupTime_ > 0) return;
 
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
-    unsigned sz = currentParams_.size(); 
+    unsigned sz = currentParams_.size();
     sz = sz < 4 ? sz : 4;
     for (unsigned int i = 0; i < sz; i++) {
         try {
             auto &p = currentParams_.at(i);
             if (p->id() == param.id()) {
-                p->change(param.current());
-                parent_.displayParamLine(i+1, param);
+                p->change(param.current(), src == Kontrol::PS_PRESET);
+                parent_.displayParamLine(i + 1, param);
                 if (src != Kontrol::PS_LOCAL) {
                     //std::cerr << "locking " << param.id() << " src " << src << std::endl;
                     pots_->locked_[i] = Pots::K_LOCKED;
-                    changePot(i,pots_->rawValue[i]);
+                    changePot(i, pots_->rawValue[i]);
                 }
                 parent_.flipDisplay();
                 return;
@@ -370,7 +375,8 @@ void OParamMode::module(Kontrol::ParameterSource source, const Kontrol::Rack &ra
     if (currentPageNum_ < 0) setPage(0, false);
 }
 
-void OParamMode::page(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module, const Kontrol::Page &page) {
+void OParamMode::page(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+                      const Kontrol::Page &page) {
     OBaseMode::page(source, rack, module, page);
     if (currentPageNum_ < 0) setPage(0, false);
 }
@@ -695,7 +701,6 @@ void Organelle::send(const char *data, unsigned size) {
     PaUtil_WriteRingBuffer(&messageQueue_, (void *) &msg, 1);
     write_cond_.notify_one();
 }
-
 
 
 void Organelle::displayPopup(const std::string &text) {
