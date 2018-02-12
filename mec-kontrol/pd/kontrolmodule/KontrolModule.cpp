@@ -35,7 +35,7 @@ void *KontrolModule_new(t_symbol *name, t_symbol *type) {
             Kontrol::EntityId moduleId = name->s_name;
             std::string moduleType = type->s_name;
             if (rack->getModule(moduleId) == nullptr) {
-                Kontrol::KontrolModel::model()->createModule(Kontrol::PS_LOCAL, rackId, moduleId, moduleType,
+                Kontrol::KontrolModel::model()->createModule(Kontrol::CS_LOCAL, rackId, moduleId, moduleType,
                                                              moduleType);
                 rack->dumpParameters();
             }

@@ -23,13 +23,13 @@ public:
     }
     virtual void stop() { ; }
 
-    virtual void ping(const std::string& host, unsigned port) {;}
+    virtual void ping(ChangeSource src, unsigned port, const std::string &host) {;}
 
-    virtual void rack(ParameterSource, const Rack&) = 0;
-    virtual void module(ParameterSource, const Rack&, const Module&) = 0;
-    virtual void page(ParameterSource, const Rack&, const Module&, const Page&) = 0 ;
-    virtual void param(ParameterSource, const Rack&, const Module&, const Parameter&) = 0;
-    virtual void changed(ParameterSource, const Rack&, const Module&, const Parameter&) = 0;
+    virtual void rack(ChangeSource, const Rack&) = 0;
+    virtual void module(ChangeSource, const Rack&, const Module&) = 0;
+    virtual void page(ChangeSource, const Rack&, const Module&, const Page&) = 0 ;
+    virtual void param(ChangeSource, const Rack&, const Module&, const Parameter&) = 0;
+    virtual void changed(ChangeSource, const Rack&, const Module&, const Parameter&) = 0;
 };
 
 
@@ -61,13 +61,13 @@ public:
     std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Module>&, const std::shared_ptr<Page>&) const;
 
     std::shared_ptr<Rack> createRack(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId& rackId,
         const std::string& host,
         unsigned port) ;
 
     std::shared_ptr<Module> createModule(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
         const std::string& displayName,
@@ -75,14 +75,14 @@ public:
     ) const;
 
     std::shared_ptr<Parameter> createParam(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
         const std::vector<ParamValue>& args
     ) const;
 
     std::shared_ptr<Page> createPage(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
         const EntityId& pageId,
@@ -91,23 +91,23 @@ public:
     ) const;
 
     std::shared_ptr<Parameter> changeParam(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId& rackId,
         const EntityId& moduleId,
         const EntityId& paramId,
         ParamValue v) const;
 
-    void ping(const std::string& host, unsigned port) const;
+    void ping(ChangeSource src, const std::string& host, unsigned port) const;
 
     std::shared_ptr<Rack> createLocalRack(unsigned port);
     EntityId localRackId() { if(localRack_) return localRack_->id(); else return "";}
     std::shared_ptr<Rack> localRack() { return localRack_;}
 
-    void publishRack(ParameterSource, const Rack&) const;
-    void publishModule(ParameterSource, const Rack&, const Module&) const;
-    void publishPage(ParameterSource src, const Rack&, const Module&, const Page&) const;
-    void publishParam(ParameterSource src, const Rack&, const Module&, const Parameter&) const;
-    void publishChanged(ParameterSource src, const Rack&, const Module&, const Parameter&) const;
+    void publishRack(ChangeSource, const Rack&) const;
+    void publishModule(ChangeSource, const Rack&, const Module&) const;
+    void publishPage(ChangeSource src, const Rack&, const Module&, const Page&) const;
+    void publishParam(ChangeSource src, const Rack&, const Module&, const Parameter&) const;
+    void publishChanged(ChangeSource src, const Rack&, const Module&, const Parameter&) const;
 
     bool loadSettings(const EntityId& rackId, const std::string& filename);
     bool loadModuleDefinitions(const EntityId& rackId, const EntityId& moduleId, const std::string& filename);

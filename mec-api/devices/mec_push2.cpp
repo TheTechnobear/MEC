@@ -217,29 +217,29 @@ void Push2::processCC(unsigned cc, unsigned v) {
 }
 
 
-void Push2::rack(Kontrol::ParameterSource source, const Kontrol::Rack &rack) {
+void Push2::rack(Kontrol::ChangeSource source, const Kontrol::Rack &rack) {
     if(currentDisplayMode()) currentDisplayMode()->rack(source,rack);
     if(currentPadMode()) currentPadMode()->rack(source,rack);
 }
 
-void Push2::module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+void Push2::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     if(currentDisplayMode()) currentDisplayMode()->module(source,rack,module);
     if(currentPadMode()) currentPadMode()->module(source,rack,module);
 }
 
-void Push2::page(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void Push2::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                  const Kontrol::Page &page) {
     if(currentDisplayMode()) currentDisplayMode()->page(source,rack,module,page);
     if(currentPadMode()) currentPadMode()->page(source,rack,module,page);
 }
 
-void Push2::param(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void Push2::param(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                   const Kontrol::Parameter &parameter) {
     if(currentDisplayMode()) currentDisplayMode()->param(source,rack,module,parameter);
     if(currentPadMode()) currentPadMode()->param(source,rack,module,parameter);
 }
 
-void Push2::changed(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void Push2::changed(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                     const Kontrol::Parameter &parameter) {
     if(currentDisplayMode()) currentDisplayMode()->changed(source,rack,module,parameter);
     if(currentPadMode()) currentPadMode()->changed(source,rack,module,parameter);

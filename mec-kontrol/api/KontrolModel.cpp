@@ -25,19 +25,19 @@ void KontrolModel::publishMetaData() const {
 
 void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack) const {
     std::vector<std::shared_ptr<Module>> modules = getModules(rack);
-    publishRack(PS_LOCAL, *rack);
+    publishRack(CS_LOCAL, *rack);
     for (const auto &p : modules) {
         if (p != nullptr) publishMetaData(rack, p);
     }
 }
 
 void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std::shared_ptr<Module> &module) const {
-    publishModule(PS_LOCAL, *rack, *module);
+    publishModule(CS_LOCAL, *rack, *module);
     for (const auto param: module->getParams()) {
-        publishParam(PS_LOCAL, *rack, *module, *param);
+        publishParam(CS_LOCAL, *rack, *module, *param);
     }
     for (const auto page: module->getPages()) {
-        publishPage(PS_LOCAL, *rack, *module, *page);
+        publishPage(CS_LOCAL, *rack, *module, *page);
     }
 }
 
@@ -45,7 +45,7 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std:
 std::shared_ptr<Rack> KontrolModel::createLocalRack(unsigned port) {
     std::string host = "localhost";
     auto rackId = Rack::createId(host, port);
-    localRack_ = createRack(PS_LOCAL, rackId, host, port);
+    localRack_ = createRack(CS_LOCAL, rackId, host, port);
     return localRack_;
 }
 
@@ -145,7 +145,7 @@ void KontrolModel::addCallback(const std::string &id, const std::shared_ptr<Kont
 }
 
 std::shared_ptr<Rack> KontrolModel::createRack(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const std::string &host,
         unsigned port
@@ -159,7 +159,7 @@ std::shared_ptr<Rack> KontrolModel::createRack(
 }
 
 std::shared_ptr<Module> KontrolModel::createModule(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const EntityId &moduleId,
         const std::string &displayName,
@@ -178,7 +178,7 @@ std::shared_ptr<Module> KontrolModel::createModule(
 }
 
 std::shared_ptr<Page> KontrolModel::createPage(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const EntityId &moduleId,
         const EntityId &pageId,
@@ -197,7 +197,7 @@ std::shared_ptr<Page> KontrolModel::createPage(
 }
 
 std::shared_ptr<Parameter> KontrolModel::createParam(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const EntityId &moduleId,
         const std::vector<ParamValue> &args
@@ -214,7 +214,7 @@ std::shared_ptr<Parameter> KontrolModel::createParam(
 }
 
 std::shared_ptr<Parameter> KontrolModel::changeParam(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const EntityId &moduleId,
         const EntityId &paramId,
@@ -224,39 +224,39 @@ std::shared_ptr<Parameter> KontrolModel::changeParam(
     auto param = getParam(module, paramId);
     if (param == nullptr) return nullptr;
 
-    if (module->changeParam(paramId, v, src == PS_PRESET)) {
+    if (module->changeParam(paramId, v, src == CS_PRESET)) {
         publishChanged(src, *rack, *module, *param);
     }
     return param;
 }
 
 
-void KontrolModel::ping(const std::string &host, unsigned port) const {
+void KontrolModel::ping(ChangeSource src,const std::string &host, unsigned port) const {
     for (auto i : listeners_) {
-        (i.second)->ping(host, port);
+        (i.second)->ping(src, port, host);
     }
 }
 
-void KontrolModel::publishRack(ParameterSource src, const Rack &rack) const {
+void KontrolModel::publishRack(ChangeSource src, const Rack &rack) const {
     for (auto i : listeners_) {
         (i.second)->rack(src, rack);
     }
 }
 
-void KontrolModel::publishModule(ParameterSource src, const Rack &rack, const Module &module) const {
+void KontrolModel::publishModule(ChangeSource src, const Rack &rack, const Module &module) const {
     for (auto i : listeners_) {
         (i.second)->module(src, rack, module);
     }
 }
 
-void KontrolModel::publishPage(ParameterSource src, const Rack &rack, const Module &module, const Page &page) const {
+void KontrolModel::publishPage(ChangeSource src, const Rack &rack, const Module &module, const Page &page) const {
     for (auto i : listeners_) {
         (i.second)->page(src, rack, module, page);
     }
 
 }
 
-void KontrolModel::publishParam(ParameterSource src, const Rack &rack, const Module &module,
+void KontrolModel::publishParam(ChangeSource src, const Rack &rack, const Module &module,
                                 const Parameter &param) const {
     for (auto i : listeners_) {
         (i.second)->param(src, rack, module, param);
@@ -264,7 +264,7 @@ void KontrolModel::publishParam(ParameterSource src, const Rack &rack, const Mod
 
 }
 
-void KontrolModel::publishChanged(ParameterSource src, const Rack &rack, const Module &module,
+void KontrolModel::publishChanged(ChangeSource src, const Rack &rack, const Module &module,
                                   const Parameter &param) const {
     for (auto i : listeners_) {
         (i.second)->changed(src, rack, module, param);

@@ -52,28 +52,28 @@ void KontrolDevice::encoderButton(unsigned encoder, bool value) {
 
 }
 
-void KontrolDevice::rack(Kontrol::ParameterSource src, const Kontrol::Rack& rack) {
+void KontrolDevice::rack(Kontrol::ChangeSource src, const Kontrol::Rack& rack) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->rack(src, rack);
 }
 
-void KontrolDevice::module(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module) {
+void KontrolDevice::module(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->module(src, rack, module);
 }
 
-void KontrolDevice::page(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Page& page) {
+void KontrolDevice::page(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Page& page) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->page(src, rack, module, page);
 }
 
-void KontrolDevice::param(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+void KontrolDevice::param(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->param(src, rack, module, param);
 
 }
 
-void KontrolDevice::changed(Kontrol::ParameterSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+void KontrolDevice::changed(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->changed(src, rack, module,  param);
 }

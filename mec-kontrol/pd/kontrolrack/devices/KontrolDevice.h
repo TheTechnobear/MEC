@@ -38,11 +38,11 @@ public:
     virtual void encoderButton(unsigned encoder, bool value);
 
     //Kontrol::KontrolCallback
-    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack&);
-    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&);
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&);
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
+    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack&);
+    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&);
+    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&);
+    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
+    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
 
     virtual void midiCC(unsigned num, unsigned value);
 

@@ -8,6 +8,7 @@
 
 #include "Entity.h"
 #include "Parameter.h"
+#include "ChangeSource.h"
 
 namespace mec {
 class Preferences;
@@ -16,13 +17,6 @@ class Preferences;
 class cJSON;
 
 namespace Kontrol {
-
-enum ParameterSource {
-    PS_LOCAL,
-    PS_MIDI,
-    PS_PRESET,
-    PS_OSC
-};
 
 
 class Preset {

@@ -7,25 +7,25 @@
 
 class LoggerCallback : public Kontrol::KontrolCallback {
 public:
-    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack& rack)  {
+    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack& rack)  {
         LOG_1("rack >> " << rack.id());
     }
 
-    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack& rack, const Kontrol::Module& module) {
+    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack& rack, const Kontrol::Module& module) {
         LOG_1("module >> " << rack.id() << "." << module.id());
     }
 
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Page& page) {
+    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Page& page) {
         LOG_1("page >> " << rack.id() << "." << module.id() << "." << page.id());
         // page.dump();
     }
 
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
         LOG_1("param >> " << rack.id() << "." << module.id() << "." << param.id());
         param.dump();
     }
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
         LOG_1("changed >> " << rack.id() << "." << module.id() << "." << param.id());
         param.dump();
     }
@@ -46,12 +46,12 @@ int main (int argc, char** argv) {
     model->addCallback("logger", cb);
 
     std::string host = "localhost";
-    unsigned port = 9000;
+    unsigned port = 9001;
 
     Kontrol::EntityId rackId = Kontrol::Rack::createId(host, port);
     Kontrol::EntityId moduleId = "module1";
-    model->createRack(Kontrol::PS_LOCAL, rackId, host, port);
-    model->createModule(Kontrol::PS_LOCAL, rackId, moduleId, "Poly Synth", "polysynth");
+    model->createRack(Kontrol::CS_LOCAL, rackId, host, port);
+    model->createModule(Kontrol::CS_LOCAL, rackId, moduleId, "Poly Synth", "polysynth");
     model->loadModuleDefinitions(rackId, moduleId, file + "-module.json");
     model->loadSettings(rackId, file + "-rack.json");
 

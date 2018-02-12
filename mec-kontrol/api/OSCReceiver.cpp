@@ -34,9 +34,10 @@ public:
 
     virtual void ProcessMessage(const osc::ReceivedMessage &m,
                                 const IpEndpointName &remoteEndpoint) {
-        (void) remoteEndpoint; // suppress unused parameter warning
-
         try {
+            char host[IpEndpointName::ADDRESS_STRING_LENGTH];
+            remoteEndpoint.AddressAsString(host);
+            ChangeSource changedSrc = ChangeSource::createRemoteSource(host,remoteEndpoint.port);
             // std::cout << "received osc message: " << m.AddressPattern() << std::endl;
             if (std::strcmp(m.AddressPattern(), "/Kontrol/changed") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
@@ -45,11 +46,11 @@ public:
                 const char *paramId = (arg++)->AsString();
                 if (arg != m.ArgumentsEnd()) {
                     if (arg->IsString()) {
-                        receiver_.changeParam(PS_OSC, rackId, moduleId, paramId,
+                        receiver_.changeParam(changedSrc, rackId, moduleId, paramId,
                                               ParamValue(std::string(arg->AsString())));
 
                     } else if (arg->IsFloat()) {
-                        receiver_.changeParam(PS_OSC, rackId, moduleId, paramId, ParamValue(arg->AsFloat()));
+                        receiver_.changeParam(changedSrc, rackId, moduleId, paramId, ParamValue(arg->AsFloat()));
                     }
                 }
 
@@ -68,7 +69,7 @@ public:
                     arg++;
                 }
 
-                receiver_.createParam(PS_OSC, rackId, moduleId, params);
+                receiver_.createParam(changedSrc, rackId, moduleId, params);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/page") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "received page p1"<< std::endl;
@@ -84,7 +85,7 @@ public:
                 }
 
                 // std::cout << "received page " << id << std::endl;
-                receiver_.createPage(PS_OSC, rackId, moduleId, pageId, displayName, paramIds);
+                receiver_.createPage(changedSrc, rackId, moduleId, pageId, displayName, paramIds);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/module") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "received page p1"<< std::endl;
@@ -94,7 +95,7 @@ public:
                 const char *type = (arg++)->AsString();
 
                 // std::cout << "received module " << moduleId << std::endl;
-                receiver_.createModule(PS_OSC, rackId, moduleId, displayName, type);
+                receiver_.createModule(changedSrc, rackId, moduleId, displayName, type);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/rack") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 // std::cout << "received page p1"<< std::endl;
@@ -103,15 +104,12 @@ public:
                 unsigned port = (unsigned) (arg++)->AsInt32();
 
                 // std::cout << "received module " << moduleId << std::endl;
-                receiver_.createRack(PS_OSC, rackId, host, port);
+                receiver_.createRack(changedSrc, rackId, host, port);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/ping") == 0) {
                 osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
                 osc::int32 port;
                 args >> port >> osc::EndMessage;
-                char buf[IpEndpointName::ADDRESS_STRING_LENGTH];
-                remoteEndpoint.AddressAsString(buf);
-
-                receiver_.ping(std::string(buf), (unsigned) port);
+                receiver_.ping(changedSrc, std::string(host), (unsigned) port);
             }
         } catch (osc::Exception &e) {
             // std::err << "error while parsing message: "
@@ -174,7 +172,7 @@ void OSCReceiver::poll() {
 }
 
 void OSCReceiver::createRack(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const std::string &host,
         unsigned port) const {
@@ -182,7 +180,7 @@ void OSCReceiver::createRack(
 }
 
 void OSCReceiver::createModule(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const EntityId &moduleId,
         const std::string &displayName,
@@ -193,7 +191,7 @@ void OSCReceiver::createModule(
 
 
 void OSCReceiver::createParam(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const EntityId &moduleId,
         const std::vector<ParamValue> &args) const {
@@ -201,7 +199,7 @@ void OSCReceiver::createParam(
 }
 
 void OSCReceiver::changeParam(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const EntityId &moduleId,
         const EntityId &paramId,
@@ -210,7 +208,7 @@ void OSCReceiver::changeParam(
 }
 
 void OSCReceiver::createPage(
-        ParameterSource src,
+        ChangeSource src,
         const EntityId &rackId,
         const EntityId &moduleId,
         const EntityId &pageId,
@@ -220,8 +218,11 @@ void OSCReceiver::createPage(
     model_->createPage(src, rackId, moduleId, pageId, displayName, paramIds);
 }
 
-void OSCReceiver::ping(const std::string &host, unsigned port) {
-    model_->ping(host, port);
+void OSCReceiver::ping(
+        ChangeSource src,
+        const std::string &host,
+        unsigned port) {
+    model_->ping(src, host, port);
 }
 
 } // namespace

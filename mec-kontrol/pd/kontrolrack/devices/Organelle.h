@@ -32,7 +32,7 @@ public:
 
     bool midiLearn() { return midiLearnActive_; }
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
+    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
 
     Kontrol::EntityId currentRack() { return currentRackId_; }
 
@@ -42,8 +42,8 @@ public:
 
     void currentModule(const Kontrol::EntityId &p) { currentModuleId_ = p; }
 
-    void rack(Kontrol::ParameterSource source, const Kontrol::Rack &rack) override;
-    void module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
+    void rack(Kontrol::ChangeSource source, const Kontrol::Rack &rack) override;
+    void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
 
     void writePoll();
 

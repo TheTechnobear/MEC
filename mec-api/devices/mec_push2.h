@@ -39,17 +39,17 @@ public:
 
     virtual void processCC(unsigned cc, unsigned v) { ; }
 
-    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack &) override { ; }
+    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
-    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
+    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                       const Kontrol::Page &) override { ; }
 
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                        const Kontrol::Parameter &) override { ; };
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                          const Kontrol::Parameter &) override { ; }
 };
 
@@ -63,17 +63,17 @@ public:
 
     virtual void processCC(unsigned cc, unsigned v) { ; }
 
-    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack &) override { ; }
+    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
-    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
+    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                       const Kontrol::Page &) override { ; }
 
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                        const Kontrol::Parameter &) override { ; };
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                          const Kontrol::Parameter &) override { ; }
 };
 
@@ -102,13 +102,13 @@ public:
     bool midiCallback(double deltatime, std::vector<unsigned char> *message) override;
 
     // Kontrol::KontrolCallback
-    void rack(Kontrol::ParameterSource source, const Kontrol::Rack &rack) override;
-    void module(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
-    void page(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+    void rack(Kontrol::ChangeSource source, const Kontrol::Rack &rack) override;
+    void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
+    void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
               const Kontrol::Page &page) override;
-    void param(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+    void param(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                const Kontrol::Parameter &parameter) override;
-    void changed(Kontrol::ParameterSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+    void changed(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                  const Kontrol::Parameter &parameter) override;
 
 

@@ -58,7 +58,7 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
 
                 Kontrol::ParamValue calc = param->calcRelative(vel);
                 auto module = modules_[currentModule_];
-                model_->changeParam(Kontrol::PS_LOCAL, rack_->id(), module->id(), param->id(), calc);
+                model_->changeParam(Kontrol::CS_LOCAL, rack_->id(), module->id(), param->id(), calc);
             }
         } catch (std::out_of_range) {
 
@@ -122,15 +122,15 @@ void P2_ParamMode::setCurrentPage(int page) {
     }
 }
 
-void P2_ParamMode::rack(Kontrol::ParameterSource src, const Kontrol::Rack &rack) {
+void P2_ParamMode::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     P2_DisplayMode::rack(src, rack);
 }
 
-void P2_ParamMode::module(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+void P2_ParamMode::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     P2_DisplayMode::module(src, rack, module);
 }
 
-void P2_ParamMode::page(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void P2_ParamMode::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                         const Kontrol::Page &page) {
     P2_DisplayMode::page(src, rack, module, page);
     auto model = Kontrol::KontrolModel::model();
@@ -163,7 +163,7 @@ void P2_ParamMode::page(Kontrol::ParameterSource src, const Kontrol::Rack &rack,
     displayPage();
 }
 
-void P2_ParamMode::param(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void P2_ParamMode::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                          const Kontrol::Parameter &param) {
     P2_DisplayMode::param(src, rack, module, param);
     unsigned i = 0;
@@ -176,13 +176,13 @@ void P2_ParamMode::param(Kontrol::ParameterSource src, const Kontrol::Rack &rack
     }
 }
 
-void P2_ParamMode::changed(Kontrol::ParameterSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void P2_ParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                            const Kontrol::Parameter &param) {
     P2_DisplayMode::changed(src, rack, module, param);
     unsigned i = 0;
     for (auto p: params_) {
         if (p->id() == param.id()) {
-            p->change(param.current(), src == Kontrol::PS_PRESET);
+            p->change(param.current(), src == Kontrol::CS_PRESET);
             drawParam(i, param);
             return;
         }

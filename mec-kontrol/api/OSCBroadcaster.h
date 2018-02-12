@@ -1,7 +1,7 @@
 #pragma once
 
 #include "KontrolModel.h"
-
+#include "ChangeSource.h"
 
 #include <memory>
 #include <ip/UdpSocket.h>
@@ -20,7 +20,7 @@ public:
     static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
     static const std::string ADDRESS;
 
-    OSCBroadcaster(bool master);
+    OSCBroadcaster(Kontrol::ChangeSource src, bool master);
     ~OSCBroadcaster();
     bool connect(const std::string &host = ADDRESS, unsigned port = 9001);
     void stop();
@@ -28,12 +28,12 @@ public:
     void sendPing(unsigned port);
 
     // KontrolCallback
-    virtual void ping(const std::string &host, unsigned port);
-    virtual void rack(ParameterSource, const Rack &);
-    virtual void module(ParameterSource, const Rack &rack, const Module &);
-    virtual void page(ParameterSource src, const Rack &rack, const Module &module, const Page &p);
-    virtual void param(ParameterSource src, const Rack &rack, const Module &module, const Parameter &);
-    virtual void changed(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p);
+    virtual void ping(ChangeSource src, unsigned port, const std::string &host);
+    virtual void rack(ChangeSource, const Rack &);
+    virtual void module(ChangeSource, const Rack &rack, const Module &);
+    virtual void page(ChangeSource src, const Rack &rack, const Module &module, const Page &p);
+    virtual void param(ChangeSource src, const Rack &rack, const Module &module, const Parameter &);
+    virtual void changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p);
 
     virtual bool isThisHost(const std::string &host, unsigned port) { return host==host_ && port==port_;}
     bool isActive();
@@ -41,7 +41,7 @@ public:
 
 protected:
     void send(const char* data, unsigned size);
-    bool broadcastChange(ParameterSource src);
+    bool broadcastChange(ChangeSource src);
 
 private:
     struct OscMsg {
@@ -65,6 +65,7 @@ private:
     std::mutex write_lock_;
     std::condition_variable write_cond_;
     std::thread writer_thread_;
+    ChangeSource changeSource_;
 };
 
 } //namespace

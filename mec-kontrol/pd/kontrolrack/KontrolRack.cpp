@@ -10,19 +10,19 @@ static t_class *KontrolRack_class;
 class SendBroadcaster : public Kontrol::KontrolCallback {
 public:
     //Kontrol::KontrolCallback
-    virtual void ping(const std::string &host, unsigned port) { ; }
+    virtual void ping(Kontrol::ChangeSource src, unsigned port, const std::string &host) { ; }
 
-    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack &) { ; }
+    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack &) { ; }
 
-    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
+    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
 
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                       const Kontrol::Page &) { ; }
 
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                        const Kontrol::Parameter &) { ; }
 
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                          const Kontrol::Parameter &);
 };
 
@@ -158,9 +158,10 @@ void KontrolRack_connect(t_KontrolRack *x, t_floatarg f) {
     if (f > 0) {
         std::string host = "127.0.0.1";
         unsigned port = (unsigned) f;
-        std::string id = "pd.osc:" + host + ":" + std::to_string(port);
+        std::string srcId = host + ":" + std::to_string(port);
+        std::string id = "pd.osc:" + srcId;
         x->model_->removeCallback(id);
-        auto p = std::make_shared<Kontrol::OSCBroadcaster>(false);
+        auto p = std::make_shared<Kontrol::OSCBroadcaster>(Kontrol::ChangeSource(Kontrol::ChangeSource::REMOTE,srcId),false);
         if (p->connect(host, port)) {
             post("client connected %s", id.c_str());
             x->model_->addCallback(id, p);
@@ -211,7 +212,7 @@ void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value) {
     if (x->device_) x->device_->midiCC((unsigned) cc, (unsigned) value);
 }
 
-void SendBroadcaster::changed(Kontrol::ParameterSource,
+void SendBroadcaster::changed(Kontrol::ChangeSource,
                               const Kontrol::Rack &rack,
                               const Kontrol::Module &module,
                               const Kontrol::Parameter &param) {

@@ -24,15 +24,15 @@ class KontrolDeviceClientHandler : public Kontrol::KontrolCallback {
 public:
     KontrolDeviceClientHandler(KontrolDevice &kd) : this_(kd) {;}
     //Kontrol::KontrolCallback
-    virtual void ping(const std::string &host, unsigned port) { this_.newClient(host,port);}
+    virtual void ping(Kontrol::ChangeSource src, unsigned port, const std::string &host) { this_.newClient(src, host, port);}
 
-    virtual void rack(Kontrol::ParameterSource, const Kontrol::Rack &) { ; }
-    virtual void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
-    virtual void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack &) { ; }
+    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
+    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                       const Kontrol::Page &) { ; }
-    virtual void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                        const Kontrol::Parameter &) { ; }
-    virtual void changed(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &,
+    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                          const Kontrol::Parameter &) { ; }
 
     KontrolDevice& this_;
@@ -74,7 +74,7 @@ bool KontrolDevice::init(void *arg) {
     return active_;
 }
 
-void KontrolDevice::newClient(const std::string &host, unsigned port) {
+void KontrolDevice::newClient(Kontrol::ChangeSource src, const std::string &host, unsigned port) {
     for(auto client : clients_) {
         if (client->isThisHost(host, port)) {
             return;
@@ -82,7 +82,7 @@ void KontrolDevice::newClient(const std::string &host, unsigned port) {
     }
 
     std::string id = "client.osc:" + host + ":" + std::to_string(port);
-    auto client = std::make_shared<Kontrol::OSCBroadcaster>(true);
+    auto client = std::make_shared<Kontrol::OSCBroadcaster>(src,true);
     if(client->connect(host,port)) {
         clients_.push_back((client));
         model_->addCallback(id,client);

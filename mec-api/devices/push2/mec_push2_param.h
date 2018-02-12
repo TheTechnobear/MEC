@@ -14,15 +14,15 @@ public:
 
     void processCC(unsigned cc, unsigned v) override;
 
-    void rack(Kontrol::ParameterSource, const Kontrol::Rack &) override;
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
 
-    void module(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &) override;
+    void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 
-    void page(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &) override;
+    void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &) override;
 
-    void param(Kontrol::ParameterSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
 
-    void changed(Kontrol::ParameterSource src, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
+    void changed(Kontrol::ChangeSource src, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
 
     void setCurrentPage(int page);
 

@@ -144,7 +144,7 @@ bool Rack::applyPreset(std::string presetId) {
                 auto param = module->getParam(p.paramId());
                 if (param != nullptr) {
                     if (p.value().type() == ParamValue::T_Float) {
-                        model()->changeParam(PS_PRESET, id(), module->id(), p.paramId(), p.value());
+                        model()->changeParam(CS_PRESET, id(), module->id(), p.paramId(), p.value());
                         ret = true;
                     } //iffloat
                 } // ifpara
@@ -166,7 +166,7 @@ bool Rack::changeMidiCC(unsigned midiCC, unsigned midiValue) {
                 if (param != nullptr) {
                     ParamValue pv = param->calcMidi(midiValue);
                     if (pv != param->current()) {
-                        model()->changeParam(PS_MIDI, id(), module->id(), param->id(), pv);
+                        model()->changeParam(CS_MIDI, id(), module->id(), param->id(), pv);
                         ret = true;
                     }
                 }
@@ -192,7 +192,7 @@ void Rack::publishCurrentValues(const std::shared_ptr<Module> &module) const {
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();
         std::vector<std::shared_ptr<Page>> pages = module->getPages();
         for (auto p : params) {
-            model()->publishChanged(PS_LOCAL, *this, *module, *p);
+            model()->publishChanged(CS_LOCAL, *this, *module, *p);
         }
     }
 }
@@ -210,11 +210,11 @@ void Rack::publishMetaData(const std::shared_ptr<Module> &module) const {
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();
         std::vector<std::shared_ptr<Page>> pages = module->getPages();
         for (auto p : params) {
-            model()->publishParam(PS_LOCAL, *this, *module, *p);
+            model()->publishParam(CS_LOCAL, *this, *module, *p);
         }
         for (auto p : pages) {
             if (p != nullptr) {
-                model()->publishPage(PS_LOCAL, *this, *module, *p);
+                model()->publishPage(CS_LOCAL, *this, *module, *p);
             }
         }
     }

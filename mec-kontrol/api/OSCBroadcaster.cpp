@@ -8,7 +8,10 @@ namespace Kontrol {
 const std::string OSCBroadcaster::ADDRESS = "127.0.0.1";
 
 
-OSCBroadcaster::OSCBroadcaster(bool master) : master_(master), port_(0) {
+OSCBroadcaster::OSCBroadcaster(Kontrol::ChangeSource src, bool master) :
+        master_(master),
+        port_(0),
+        changeSource_(src) {
     PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), OscMsg::MAX_N_OSC_MSGS, msgData_);
 }
 
@@ -94,14 +97,12 @@ void OSCBroadcaster::sendPing(unsigned port) {
     send(ops.Data(), ops.Size());
 }
 
-bool OSCBroadcaster::broadcastChange(ParameterSource src) {
-    //FIXME: PS_OSC is too general
-    //we need to be broadcasting all changes, except back to orgin
-    return src != PS_OSC;
+bool OSCBroadcaster::broadcastChange(ChangeSource src) {
+    return src != changeSource_;
 }
 
 
-void OSCBroadcaster::ping(const std::string &host, unsigned port) {
+void OSCBroadcaster::ping(ChangeSource src, unsigned port, const std::string &host) {
     if (port == port_) {
         if (!master_) {
             bool wasActive = isActive();
@@ -116,7 +117,7 @@ void OSCBroadcaster::ping(const std::string &host, unsigned port) {
     }
 }
 
-void OSCBroadcaster::rack(ParameterSource src, const Rack &p) {
+void OSCBroadcaster::rack(ChangeSource src, const Rack &p) {
     if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
@@ -135,7 +136,7 @@ void OSCBroadcaster::rack(ParameterSource src, const Rack &p) {
 }
 
 
-void OSCBroadcaster::module(ParameterSource src, const Rack &rack, const Module &m) {
+void OSCBroadcaster::module(ChangeSource src, const Rack &rack, const Module &m) {
     if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
@@ -155,7 +156,7 @@ void OSCBroadcaster::module(ParameterSource src, const Rack &rack, const Module 
 }
 
 
-void OSCBroadcaster::page(ParameterSource src, const Rack &rack, const Module &module, const Page &p) {
+void OSCBroadcaster::page(ChangeSource src, const Rack &rack, const Module &module, const Page &p) {
     if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
@@ -178,7 +179,7 @@ void OSCBroadcaster::page(ParameterSource src, const Rack &rack, const Module &m
     send(ops.Data(), ops.Size());
 }
 
-void OSCBroadcaster::param(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p) {
+void OSCBroadcaster::param(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) {
     if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 
@@ -209,7 +210,7 @@ void OSCBroadcaster::param(ParameterSource src, const Rack &rack, const Module &
     send(ops.Data(), ops.Size());
 }
 
-void OSCBroadcaster::changed(ParameterSource src, const Rack &rack, const Module &module, const Parameter &p) {
+void OSCBroadcaster::changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) {
     if (!broadcastChange(src) ) return;
     if (!isActive()) return;
 

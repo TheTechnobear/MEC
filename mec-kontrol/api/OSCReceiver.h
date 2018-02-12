@@ -24,14 +24,14 @@ public:
     void stop();
 
     void createRack(
-            ParameterSource src,
+            ChangeSource src,
             const EntityId &rackId,
             const std::string &host,
             unsigned port
     ) const;
 
     void createModule(
-            ParameterSource src,
+            ChangeSource src,
             const EntityId &rackId,
             const EntityId &moduleId,
             const std::string &displayName,
@@ -39,14 +39,14 @@ public:
     ) const;
 
     void createParam(
-            ParameterSource src,
+            ChangeSource src,
             const EntityId &rackId,
             const EntityId &moduleId,
             const std::vector<ParamValue> &args
     ) const;
 
     void createPage(
-            ParameterSource src,
+            ChangeSource src,
             const EntityId &rackId,
             const EntityId &moduleId,
             const EntityId &pageId,
@@ -55,13 +55,16 @@ public:
     ) const;
 
     void changeParam(
-            ParameterSource src,
+            ChangeSource src,
             const EntityId &rackId,
             const EntityId &moduleId,
             const EntityId &paramId,
             ParamValue v) const;
 
-    void ping(const std::string &host, unsigned port);
+    void ping(
+            ChangeSource src,
+            const std::string &host,
+            unsigned port);
     unsigned int port() { return port_;}
 
     std::shared_ptr<UdpListeningReceiveSocket> socket() { return socket_; }
