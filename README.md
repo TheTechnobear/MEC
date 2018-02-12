@@ -20,8 +20,7 @@ Building on this core a number of integation 'applications' are provided.
 - macOS High Sierra (10.13)
 - Linux x86 (64 bit)
 - Linux Arm  - rPI, BBB, BBB+Bela, Organelle.
-
-(Windows is also planned, but lower priority)
+- Windows 10 (64 bit)- early experimental build for some parts
 
 
 ## Documentation

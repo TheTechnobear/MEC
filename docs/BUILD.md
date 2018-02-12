@@ -60,6 +60,41 @@ the bela web ui does not support a subdirectories, so the way install is
 this means we now have the mec-bela project in the 'normal' bela projects directory, but it refers to ~/projects/MEC, so you should push from ~/Projects/Mec
 
 
+# Building on Windows
+This is very early days, in fact I mainly compile for Windows just for testing/experiments
+
+currently, build support is only using  MINGW_W64 using pthreads
+    
+    download and install CMake Win32
+    download and install mingw-w64, take default options, including posix/pthreads
+    inside mingw-w64, you'll see mingw-w64.bat, run and it will set envionment variables
+    change to MEC directory 
+
+    mkdir build
+    cd build
+    mkdir build
+    cmake .. -G "MinGW Makefiles"
+    mingw32-make
+
+
+an alternative, is to use Jetbrains CLion IDE (its very good :) ) 
+with this, once you download mingw-w64, from the menu:
+
+     settings->build, execution and deployment -> toolchains
+     select MinGW, should say directory you installed into.. select this.
+
+
+note: currently some device support is disabled under windows, but this will be added soon.
+(primarily its missing libusb support)
+
+these build methods all use the mingw pthreads layer rather than being a true native windows build, this will need to be review to check performance and stability.
+similary a full native build would probably require a MSVC build, though its unclear if this provides any real advantage to an enduser.
+
+
+a final alternative is to build using the "Windows Subsystem for Linux"
+
+
+
 # Eigenharp PICO
 the decoder for the pico is not open source, so a dummy implementation is supplied as source.
 this will obviously not work though.
