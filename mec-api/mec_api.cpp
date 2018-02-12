@@ -5,11 +5,13 @@
 #include "mec_device.h"
 #include "mec_log.h"
 
-
+#ifndef WIN32
 #include "devices/mec_eigenharp.h"
 #include "devices/mec_soundplane.h"
-#include "devices/mec_mididevice.h"
 #include "devices/mec_push2.h"
+#endif
+
+#include "devices/mec_mididevice.h"
 #include "devices/mec_osct3d.h"
 #include "devices/mec_kontroldevice.h"
 
@@ -270,6 +272,8 @@ void MecApi_Impl::initDevices() {
         LOG_1("MecApi_Impl :: invalid preferences file");
         return;
     }
+
+#ifndef WIN32
     if (prefs_->exists("eigenharp")) {
         LOG_1("eigenharp initialise ");
         std::shared_ptr<Device> device = std::make_shared<Eigenharp>(*this);
@@ -303,22 +307,6 @@ void MecApi_Impl::initDevices() {
         }
     }
 
-    if (prefs_->exists("midi")) {
-        LOG_1("midi initialise ");
-        std::shared_ptr<Device> device = std::make_shared<MidiDevice>(*this);
-        if (device->init(prefs_->getSubTree("midi"))) {
-            if (device->isActive()) {
-                devices_.push_back(device);
-            } else {
-                LOG_1("midi init inactive ");
-                device->deinit();
-            }
-        } else {
-            LOG_1("midi init failed ");
-            device->deinit();
-        }
-    }
-
     if (prefs_->exists("push2")) {
         LOG_1("push2 initialise ");
         std::shared_ptr<Push2> device = std::make_shared<Push2>(*this);
@@ -335,6 +323,24 @@ void MecApi_Impl::initDevices() {
             device->deinit();
         }
     }
+#endif
+
+    if (prefs_->exists("midi")) {
+        LOG_1("midi initialise ");
+        std::shared_ptr<Device> device = std::make_shared<MidiDevice>(*this);
+        if (device->init(prefs_->getSubTree("midi"))) {
+            if (device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("midi init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("midi init failed ");
+            device->deinit();
+        }
+    }
+
 
     if (prefs_->exists("osct3d")) {
         LOG_1("osct3d initialise ");

@@ -40,12 +40,13 @@ void intHandler(int sig) {
 int main(int ac, char **av) {
     atexit(exitHandler);
 
+#ifndef WIN32
     // block sigint from other threads
     sigset_t sigset, oldset;
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGINT);
     pthread_sigmask(SIG_BLOCK, &sigset, &oldset);
-
+#endif
     int rc = 0;
 
     LOG_0("mec_app initialise ");
@@ -66,13 +67,14 @@ int main(int ac, char **av) {
         usleep(1000);
     }
 
+#ifndef WIN32
     // Install the signal handler for SIGINT.
     struct sigaction s;
     s.sa_handler = intHandler;
     sigemptyset(&s.sa_mask);
     s.sa_flags = 0;
     sigaction(SIGINT, &s, NULL);
-
+#endif
     // Restore the old signal mask only for this thread.
     pthread_sigmask(SIG_SETMASK, &oldset, NULL);
 
@@ -91,10 +93,12 @@ int main(int ac, char **av) {
     }
     LOG_0("mec_app mec thread stopped ");
 
+#ifndef WIN32
     // been told to stop, block SIGINT, to allow clean termination
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGINT);
     pthread_sigmask(SIG_BLOCK, &sigset, &oldset);
+#endif
 
     sleep(5);
     LOG_0("mec_app exit ");

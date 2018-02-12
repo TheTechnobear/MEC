@@ -5,7 +5,7 @@ project(oscpack)
 
 if (WIN32)
     set(IpSystemTypePath ip/win32)
-    set(LIBS ${LIBS} Ws2_32 winmm)
+    set(OSCPACKLIBS ${LIBS} Ws2_32 winmm)
 else (WIN32)
     set(IpSystemTypePath ip/posix)
 endif (WIN32)
@@ -43,6 +43,8 @@ target_include_directories(oscpack PUBLIC osc)
 target_include_directories(oscpack PUBLIC ip)
 target_include_directories(oscpack PUBLIC zeroconf)
 target_include_directories(oscpack PRIVATE .)
+
+target_link_libraries(oscpack ${OSCPACKLIBS})
 
 if (MSVC)
     # Force to always compile with W4
