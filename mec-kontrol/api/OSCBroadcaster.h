@@ -20,22 +20,29 @@ public:
     static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
     static const std::string ADDRESS;
 
-    OSCBroadcaster(Kontrol::ChangeSource src, bool master);
+    OSCBroadcaster(Kontrol::ChangeSource src, unsigned keepAlive, bool master);
     ~OSCBroadcaster();
     bool connect(const std::string &host = ADDRESS, unsigned port = 9001);
-    void stop();
+    void stop() override ;
 
     void sendPing(unsigned port);
 
     // KontrolCallback
-    virtual void ping(ChangeSource src, unsigned port, const std::string &host);
-    virtual void rack(ChangeSource, const Rack &);
-    virtual void module(ChangeSource, const Rack &rack, const Module &);
-    virtual void page(ChangeSource src, const Rack &rack, const Module &module, const Page &p);
-    virtual void param(ChangeSource src, const Rack &rack, const Module &module, const Parameter &);
-    virtual void changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p);
+    void rack(ChangeSource, const Rack &) override ;
+    void module(ChangeSource, const Rack &rack, const Module &) override ;
+    void page(ChangeSource src, const Rack &rack, const Module &module, const Page &p) override ;
+    void param(ChangeSource src, const Rack &rack, const Module &module, const Parameter &) override ;
+    void changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) override ;
 
-    virtual bool isThisHost(const std::string &host, unsigned port) { return host==host_ && port==port_;}
+
+    void ping(ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) override ;
+    void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override ;
+    void updatePreset(ChangeSource, const Rack &, std::string preset) override ;
+    void applyPreset(ChangeSource, const Rack &, std::string preset)  override ;
+    void saveSettings(ChangeSource, const Rack &)  override ;
+
+
+    bool isThisHost(const std::string &host, unsigned port) { return host==host_ && port==port_;}
     bool isActive();
     void writePoll();
 
@@ -56,6 +63,7 @@ private:
     std::shared_ptr<UdpTransmitSocket> socket_;
     char buffer_[OUTPUT_BUFFER_SIZE];
     std::chrono::steady_clock::time_point lastPing_;
+    unsigned keepAliveTime_;
 
     PaUtilRingBuffer messageQueue_;
     char msgData_[sizeof(OscMsg) * OscMsg::MAX_N_OSC_MSGS];

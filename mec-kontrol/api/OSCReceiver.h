@@ -11,6 +11,7 @@ namespace Kontrol {
 
 
 class KontrolOSCListener;
+
 class KontrolPacketListener;
 
 
@@ -61,11 +62,24 @@ public:
             const EntityId &paramId,
             ParamValue v) const;
 
-    void ping(
-            ChangeSource src,
-            const std::string &host,
-            unsigned port);
-    unsigned int port() { return port_;}
+    void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepalive);
+
+    void assignMidiCC(ChangeSource src,
+                      const EntityId &rackId,
+                      const EntityId &moduleId,
+                      const EntityId &paramId,
+                      unsigned midiCC);
+    void updatePreset(ChangeSource src,
+                      const EntityId &rackId,
+                      std::string preset);
+    void applyPreset(ChangeSource src,
+                     const EntityId &rackId,
+                     std::string preset);
+    void saveSettings(ChangeSource src,
+                      const EntityId &rackId);
+
+
+    unsigned int port() { return port_; }
 
     std::shared_ptr<UdpListeningReceiveSocket> socket() { return socket_; }
 
@@ -88,7 +102,6 @@ private:
     std::shared_ptr<KontrolOSCListener> oscListener_;
     PaUtilRingBuffer messageQueue_;
     char msgData_[sizeof(OscMsg) * OscMsg::MAX_N_OSC_MSGS];
-    bool ping_;
 };
 
 } //namespace

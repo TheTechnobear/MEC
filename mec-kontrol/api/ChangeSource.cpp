@@ -4,16 +4,16 @@ namespace Kontrol {
 
 ChangeSource::SrcId ChangeSource::nullId="";
 
-int operator==(const ChangeSource &a, const ChangeSource &b) {
+bool operator==(const ChangeSource &a, const ChangeSource &b) {
     if (a.type_ == b.type_) {
         // we only use id_ for remote sources
         return a.type_ != ChangeSource::SrcType::REMOTE
                || a.id_ == b.id_;
     }
-    return 0;
+    return false;
 }
 
-int operator!=(const ChangeSource &a, const ChangeSource &b) {
+bool operator!=(const ChangeSource &a, const ChangeSource &b) {
     return !(a == b);
 }
 

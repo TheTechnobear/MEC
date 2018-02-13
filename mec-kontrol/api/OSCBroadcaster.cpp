@@ -7,11 +7,13 @@ namespace Kontrol {
 
 const std::string OSCBroadcaster::ADDRESS = "127.0.0.1";
 
+#define POLL_TIMEOUT_MS 1000
 
-OSCBroadcaster::OSCBroadcaster(Kontrol::ChangeSource src, bool master) :
+OSCBroadcaster::OSCBroadcaster(Kontrol::ChangeSource src, unsigned keepAlive, bool master) :
         master_(master),
         port_(0),
-        changeSource_(src) {
+        changeSource_(src),
+        keepAliveTime_(keepAlive) {
     PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), OscMsg::MAX_N_OSC_MSGS, msgData_);
 }
 
@@ -61,14 +63,15 @@ void OSCBroadcaster::writePoll() {
             PaUtil_ReadRingBuffer(&messageQueue_, &msg, 1);
             socket_->Send(msg.buffer_, msg.size_);
         }
-        write_cond_.wait_for(lock, std::chrono::milliseconds(1000));
+        write_cond_.wait_for(lock, std::chrono::milliseconds(POLL_TIMEOUT_MS));
     }
 }
 
 bool OSCBroadcaster::isActive() {
     if (!socket_) return false;
-    static std::chrono::seconds timeOut(10); // twice normal ping time
+    if (keepAliveTime_ == 0) return true;
 
+    static std::chrono::seconds timeOut(keepAliveTime_); // twice normal ping time
     auto now = std::chrono::steady_clock::now();
     auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
     return dur < timeOut;
@@ -91,6 +94,7 @@ void OSCBroadcaster::sendPing(unsigned port) {
     ops << osc::BeginBundleImmediate
         << osc::BeginMessage("/Kontrol/ping")
         << (int32_t) port
+        << (int32_t) keepAliveTime_
         << osc::EndMessage
         << osc::EndBundle;
 
@@ -102,8 +106,9 @@ bool OSCBroadcaster::broadcastChange(ChangeSource src) {
 }
 
 
-void OSCBroadcaster::ping(ChangeSource src, unsigned port, const std::string &host) {
+void OSCBroadcaster::ping(ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) {
     if (port == port_) {
+        keepAliveTime_ = keepAlive;
         if (!master_) {
             bool wasActive = isActive();
             lastPing_ = std::chrono::steady_clock::now();
@@ -117,8 +122,74 @@ void OSCBroadcaster::ping(ChangeSource src, unsigned port, const std::string &ho
     }
 }
 
+void OSCBroadcaster::assignMidiCC(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p, unsigned midiCC) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/assignMidiCC")
+        << rack.id().c_str()
+        << module.id().c_str()
+        << p.id().c_str()
+        << (int32_t ) midiCC;
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+}
+
+void OSCBroadcaster::updatePreset(ChangeSource src, const Rack & rack, std::string preset) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/updatePreset")
+        << rack.id().c_str()
+        << preset.c_str();
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+}
+
+void OSCBroadcaster::applyPreset(ChangeSource src, const Rack & rack, std::string preset) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/applyPreset")
+        << rack.id().c_str()
+        << preset.c_str();
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+}
+
+void OSCBroadcaster::saveSettings(ChangeSource src, const Rack & rack)  {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/saveSettings")
+        << rack.id().c_str();
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+}
+
+
 void OSCBroadcaster::rack(ChangeSource src, const Rack &p) {
-    if (!broadcastChange(src) ) return;
+    if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -137,7 +208,7 @@ void OSCBroadcaster::rack(ChangeSource src, const Rack &p) {
 
 
 void OSCBroadcaster::module(ChangeSource src, const Rack &rack, const Module &m) {
-    if (!broadcastChange(src) ) return;
+    if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -157,7 +228,7 @@ void OSCBroadcaster::module(ChangeSource src, const Rack &rack, const Module &m)
 
 
 void OSCBroadcaster::page(ChangeSource src, const Rack &rack, const Module &module, const Page &p) {
-    if (!broadcastChange(src) ) return;
+    if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -180,7 +251,7 @@ void OSCBroadcaster::page(ChangeSource src, const Rack &rack, const Module &modu
 }
 
 void OSCBroadcaster::param(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) {
-    if (!broadcastChange(src) ) return;
+    if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -211,7 +282,7 @@ void OSCBroadcaster::param(ChangeSource src, const Rack &rack, const Module &mod
 }
 
 void OSCBroadcaster::changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) {
-    if (!broadcastChange(src) ) return;
+    if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);

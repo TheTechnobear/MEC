@@ -39,18 +39,18 @@ public:
 
     virtual void processCC(unsigned cc, unsigned v) { ; }
 
-    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
-    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
+    void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 
-    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                      const Kontrol::Page &) override { ; }
+    void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+              const Kontrol::Page &) override { ; }
 
-    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                       const Kontrol::Parameter &) override { ; };
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+               const Kontrol::Parameter &) override { ; };
 
-    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                         const Kontrol::Parameter &) override { ; }
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                 const Kontrol::Parameter &) override { ; }
 };
 
 class P2_PadMode : Kontrol::KontrolCallback {
@@ -63,18 +63,18 @@ public:
 
     virtual void processCC(unsigned cc, unsigned v) { ; }
 
-    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
-    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
+    void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 
-    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                      const Kontrol::Page &) override { ; }
+    void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+              const Kontrol::Page &) override { ; }
 
-    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                       const Kontrol::Parameter &) override { ; };
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+               const Kontrol::Parameter &) override { ; };
 
-    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                         const Kontrol::Parameter &) override { ; }
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                 const Kontrol::Parameter &) override { ; }
 };
 
 enum PushDisplayModes {
@@ -120,6 +120,7 @@ public:
 
 private:
     inline std::shared_ptr<P2_PadMode> currentPadMode() { return padModes_[currentPadMode_]; }
+
     inline std::shared_ptr<P2_DisplayMode> currentDisplayMode() { return displayModes_[currentDisplayMode_]; }
 
     bool processMidi(const MidiMsg &);

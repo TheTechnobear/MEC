@@ -28,11 +28,11 @@ int operator<(const ParamValue &lhs, const ParamValue &rhs) {
     return lhs.stringValue() > rhs.stringValue();
 }
 
-int operator!=(const ParamValue &lhs, const ParamValue &rhs) {
+bool operator!=(const ParamValue &lhs, const ParamValue &rhs) {
     return !(lhs == rhs);
 }
 
-int operator==(const ParamValue &lhs, const ParamValue &rhs) {
+bool operator==(const ParamValue &lhs, const ParamValue &rhs) {
     if (lhs.type() != rhs.type()) return false;
     switch (lhs.type()) {
         case ParamValue::T_Float : {

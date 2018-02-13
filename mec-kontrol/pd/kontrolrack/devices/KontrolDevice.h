@@ -11,7 +11,7 @@ class KontrolDevice;
 
 class DeviceMode :  public Kontrol::KontrolCallback {
 public:
-    virtual ~DeviceMode() {;}
+    virtual ~DeviceMode() override {;}
     virtual bool init() = 0;
     virtual void poll() = 0;
     virtual void activate() = 0;
@@ -31,20 +31,20 @@ public:
     void changeMode(unsigned);
     void addMode(unsigned mode, std::shared_ptr<DeviceMode>);
 
-    virtual bool init();
+    virtual bool init() ;
     virtual void poll();
     virtual void changePot(unsigned pot, float value);
     virtual void changeEncoder(unsigned encoder, float value);
     virtual void encoderButton(unsigned encoder, bool value);
 
     //Kontrol::KontrolCallback
-    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack&);
-    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&);
-    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&);
-    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
-    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&);
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack&) override;
+    void module(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&) override;
+    void page(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&) override;
+    void param(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) override;
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) override;
 
-    virtual void midiCC(unsigned num, unsigned value);
+    virtual void midiCC(unsigned num, unsigned value)  ;
 
     void sendPdMessage(const char* obj, float f);
     std::shared_ptr<Kontrol::KontrolModel> model() { return model_;}

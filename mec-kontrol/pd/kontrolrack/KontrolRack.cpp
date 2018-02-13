@@ -10,27 +10,26 @@ static t_class *KontrolRack_class;
 class SendBroadcaster : public Kontrol::KontrolCallback {
 public:
     //Kontrol::KontrolCallback
-    virtual void ping(Kontrol::ChangeSource src, unsigned port, const std::string &host) { ; }
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
-    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack &) { ; }
+    void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 
-    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
+    void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+              const Kontrol::Page &) override { ; }
 
-    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                      const Kontrol::Page &) { ; }
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+               const Kontrol::Parameter &) override { ; }
 
-    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                       const Kontrol::Parameter &) { ; }
-
-    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                         const Kontrol::Parameter &);
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                 const Kontrol::Parameter &) override;
 };
 
 // puredata methods implementation - start
 
 static const unsigned OSC_POLL_FREQUENCY = 1; // 10ms
 static const unsigned DEVICE_POLL_FREQUENCY = 1; // 10ms
-static const unsigned OSC_PING_FREQUENCY = (5 * 100); // 5 seconds
+static const unsigned OSC_PING_FREQUENCY_SEC = 5;
+static const unsigned OSC_PING_FREQUENCY = (OSC_PING_FREQUENCY_SEC * (1000/10) ) ; // 5 seconds
 
 
 // see https://github.com/pure-data/pure-data/blob/master/src/x_time.c
@@ -161,12 +160,15 @@ void KontrolRack_connect(t_KontrolRack *x, t_floatarg f) {
         std::string srcId = host + ":" + std::to_string(port);
         std::string id = "pd.osc:" + srcId;
         x->model_->removeCallback(id);
-        auto p = std::make_shared<Kontrol::OSCBroadcaster>(Kontrol::ChangeSource(Kontrol::ChangeSource::REMOTE,srcId),false);
+        auto p = std::make_shared<Kontrol::OSCBroadcaster>(
+                Kontrol::ChangeSource(Kontrol::ChangeSource::REMOTE, srcId),
+                OSC_PING_FREQUENCY_SEC,
+                false);
         if (p->connect(host, port)) {
             post("client connected %s", id.c_str());
             x->model_->addCallback(id, p);
             x->osc_broadcaster_ = p;
-            if(x->osc_receiver_) {
+            if (x->osc_receiver_) {
                 x->osc_broadcaster_->sendPing(x->osc_receiver_->port());
             }
         }

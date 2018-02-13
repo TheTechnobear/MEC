@@ -230,10 +230,65 @@ std::shared_ptr<Parameter> KontrolModel::changeParam(
     return param;
 }
 
+void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
+                                const EntityId &paramId, unsigned midiCC) {
+    if (rackId == localRack()->id()) {
+        localRack()->addMidiCCMapping(midiCC, moduleId, paramId);
+    } else {
+        auto rack = getRack(rackId);
+        auto module = getModule(rack, moduleId);
+        auto param = getParam(module, paramId);
+        if (param == nullptr) return;
 
-void KontrolModel::ping(ChangeSource src,const std::string &host, unsigned port) const {
+        for (auto i : listeners_) {
+            (i.second)->assignMidiCC(src, *rack, *module, *param, midiCC);
+        }
+    }
+}
+
+void KontrolModel::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
+    if (rackId == localRack()->id()) {
+        localRack()->updatePreset(preset);
+    } else {
+        auto rack = getRack(rackId);
+        if (rack == nullptr) return;
+        for (auto i : listeners_) {
+            (i.second)->updatePreset(src, *rack, preset);
+        }
+    }
+}
+
+void KontrolModel::applyPreset(ChangeSource src, const EntityId &rackId, std::string preset) {
+    if (rackId == localRack()->id()) {
+        localRack()->applyPreset(preset);
+    } else {
+        auto rack = getRack(rackId);
+        if (rack == nullptr) return;
+        for (auto i : listeners_) {
+            (i.second)->applyPreset(src, *rack, preset);
+        }
+    }
+}
+
+void KontrolModel::saveSettings(ChangeSource src, const EntityId &rackId) {
+    if (rackId == localRack()->id()) {
+        localRack()->saveSettings();
+    } else {
+        auto rack = getRack(rackId);
+        if (rack == nullptr) return;
+        for (auto i : listeners_) {
+            (i.second)->saveSettings(src, *rack);
+        }
+    }
+}
+
+void KontrolModel::ping(
+        ChangeSource src,
+        const std::string &host,
+        unsigned port,
+        unsigned keepAlive) const {
     for (auto i : listeners_) {
-        (i.second)->ping(src, port, host);
+        (i.second)->ping(src, port, host, keepAlive);
     }
 }
 

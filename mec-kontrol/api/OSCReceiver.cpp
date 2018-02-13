@@ -17,7 +17,8 @@ public:
                                const IpEndpointName &remoteEndpoint) {
         OSCReceiver::OscMsg msg;
         msg.origin_ = remoteEndpoint;
-        msg.size_ = (size > OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE ? OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE : size);
+        msg.size_ = (size > OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE ? OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE
+                                                                      : size);
         memcpy(msg.buffer_, data, (size_t) msg.size_);
         PaUtil_WriteRingBuffer(queue_, (void *) &msg, 1);
     }
@@ -37,7 +38,7 @@ public:
         try {
             char host[IpEndpointName::ADDRESS_STRING_LENGTH];
             remoteEndpoint.AddressAsString(host);
-            ChangeSource changedSrc = ChangeSource::createRemoteSource(host,remoteEndpoint.port);
+            ChangeSource changedSrc = ChangeSource::createRemoteSource(host, remoteEndpoint.port);
             // std::cout << "received osc message: " << m.AddressPattern() << std::endl;
             if (std::strcmp(m.AddressPattern(), "/Kontrol/changed") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
@@ -106,10 +107,35 @@ public:
                 // std::cout << "received module " << moduleId << std::endl;
                 receiver_.createRack(changedSrc, rackId, host, port);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/ping") == 0) {
-                osc::ReceivedMessageArgumentStream args = m.ArgumentStream();
-                osc::int32 port;
-                args >> port >> osc::EndMessage;
-                receiver_.ping(changedSrc, std::string(host), (unsigned) port);
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                unsigned port = (unsigned) (arg++)->AsInt32();
+                unsigned keepAlive = 0;
+                if (arg != m.ArgumentsEnd()) {
+                    keepAlive = (unsigned) (arg++)->AsInt32();
+                }
+                receiver_.ping(changedSrc, std::string(host), port, keepAlive);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/assignMidiCC") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+                const char *moduleId = (arg++)->AsString();
+                const char *paramId = (arg++)->AsString();
+                unsigned midiCC = (unsigned) (arg++)->AsInt32();
+                receiver_.assignMidiCC(changedSrc, rackId, moduleId, paramId, midiCC);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/updatePreset") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+                const char *preset = (arg++)->AsString();
+                receiver_.updatePreset(changedSrc, rackId, preset);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/applyPreset") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+                const char *preset = (arg++)->AsString();
+                receiver_.applyPreset(changedSrc, rackId, preset);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/saveSettings") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+                const char *preset = (arg++)->AsString();
+                receiver_.saveSettings(changedSrc, rackId);
             }
         } catch (osc::Exception &e) {
             // std::err << "error while parsing message: "
@@ -218,11 +244,28 @@ void OSCReceiver::createPage(
     model_->createPage(src, rackId, moduleId, pageId, displayName, paramIds);
 }
 
-void OSCReceiver::ping(
-        ChangeSource src,
-        const std::string &host,
-        unsigned port) {
-    model_->ping(src, host, port);
+void OSCReceiver::ping(ChangeSource src,
+                       const std::string &host,
+                       unsigned port,
+                       unsigned keepalive) {
+    model_->ping(src, host, port, keepalive);
+}
+
+void OSCReceiver::assignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
+                               const EntityId &paramId, unsigned midiCC) {
+    model_->assignMidiCC(src, rackId, moduleId, paramId, midiCC);
+}
+
+void OSCReceiver::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
+    model_->updatePreset(src, rackId, preset);
+}
+
+void OSCReceiver::applyPreset(ChangeSource src, const EntityId &rackId, std::string preset) {
+    model_->applyPreset(src, rackId, preset);
+}
+
+void OSCReceiver::saveSettings(ChangeSource src, const EntityId &rackId) {
+    model_->saveSettings(src, rackId);
 }
 
 } // namespace

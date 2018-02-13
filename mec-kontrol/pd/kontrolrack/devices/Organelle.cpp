@@ -32,28 +32,28 @@ class OBaseMode : public DeviceMode {
 public:
     OBaseMode(Organelle &p) : parent_(p), popupTime_(-1) { ; }
 
-    virtual bool init() { return true; }
+    bool init() override { return true; }
 
-    virtual void poll();
+    void poll() override;
 
-    virtual void changePot(unsigned, float) { ; }
+    void changePot(unsigned, float) override { ; }
 
-    virtual void changeEncoder(unsigned, float) { ; }
+    void changeEncoder(unsigned, float) override { ; }
 
-    virtual void encoderButton(unsigned, bool) { ; }
+    void encoderButton(unsigned, bool) override { ; }
 
-    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack &) { ; }
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
-    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) { ; }
+    void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 
-    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                      const Kontrol::Page &) { ; }
+    void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                      const Kontrol::Page &) override { ; }
 
-    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                       const Kontrol::Parameter &) { ; }
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                       const Kontrol::Parameter &) override { ; }
 
-    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                         const Kontrol::Parameter &) { ; }
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                         const Kontrol::Parameter &) override { ; }
 
     void displayPopup(const std::string &text, unsigned time);
 protected:
@@ -79,14 +79,14 @@ class OParamMode : public OBaseMode {
 public:
     OParamMode(Organelle &p) : OBaseMode(p), currentPageNum_(0) { ; }
 
-    virtual bool init() override;
-    virtual void poll() override;
-    virtual void activate() override;
-    virtual void changePot(unsigned pot, float value) override;
-    virtual void changeEncoder(unsigned encoder, float value) override;
-    virtual void encoderButton(unsigned encoder, bool value) override;
+    bool init() override;
+    void poll() override;
+    void activate() override;
+    void changePot(unsigned pot, float value) override;
+    void changeEncoder(unsigned encoder, float value) override;
+    void encoderButton(unsigned encoder, bool value) override;
     void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
-    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                          const Kontrol::Parameter &) override;
     void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
               const Kontrol::Page &page) override;
@@ -107,12 +107,12 @@ public:
     virtual std::string getItemText(unsigned idx) = 0;
     virtual void clicked(unsigned idx) = 0;
 
-    virtual bool init() { return true; }
+    bool init() override { return true; }
 
-    virtual void poll();
-    virtual void activate();
-    virtual void changeEncoder(unsigned encoder, float value);
-    virtual void encoderButton(unsigned encoder, bool value);
+    void poll() override ;
+    void activate() override ;
+    void changeEncoder(unsigned encoder, float value) override ;
+    void encoderButton(unsigned encoder, bool value) override ;
 
 protected:
     void display();
@@ -126,7 +126,7 @@ protected:
 //public:
 //    OFixedMenuMode(Organelle &p) : OMenuMode(p) { ; }
 //
-//    virtual unsigned getSize() { return items_.size(); };
+//    virtual unsigned getSize() override { return items_.size(); };
 //
 //    virtual std::string getItemText(unsigned i) { return items_[i]; }
 //
@@ -138,21 +138,21 @@ class OMainMenu : public OMenuMode {
 public:
     OMainMenu(Organelle &p) : OMenuMode(p) { ; }
 
-    virtual bool init();
-    virtual unsigned getSize();
-    virtual std::string getItemText(unsigned idx);
-    virtual void clicked(unsigned idx);
+    bool init() override;
+    unsigned getSize() override;
+    std::string getItemText(unsigned idx) override;
+    void clicked(unsigned idx) override;
 };
 
 class OPresetMenu : public OMenuMode {
 public:
     OPresetMenu(Organelle &p) : OMenuMode(p) { ; }
 
-    virtual bool init();
-    virtual void activate();
-    virtual unsigned getSize();
-    virtual std::string getItemText(unsigned idx);
-    virtual void clicked(unsigned idx);
+    bool init() override;
+    void activate() override;
+    unsigned getSize() override;
+    std::string getItemText(unsigned idx) override;
+    void clicked(unsigned idx) override;
 private:
     std::vector<std::string> presets_;
 };

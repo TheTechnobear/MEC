@@ -39,7 +39,7 @@ private:
 
 int operator>(const ParamValue&, const ParamValue&);
 int operator<(const ParamValue&, const ParamValue&);
-int operator==(const ParamValue&, const ParamValue&);
-int operator!=(const ParamValue&, const ParamValue&);
+bool operator==(const ParamValue&, const ParamValue&);
+bool operator!=(const ParamValue&, const ParamValue&);
 
 } //namespace

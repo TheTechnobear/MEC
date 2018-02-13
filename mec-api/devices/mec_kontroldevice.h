@@ -24,7 +24,7 @@ public:
     virtual void deinit();
     virtual bool isActive();
 
-    void newClient(Kontrol::ChangeSource src, const std::string &host, unsigned port);
+    void newClient(Kontrol::ChangeSource src, const std::string &host, unsigned port, unsigned keepalive);
     void processorRun();
 private:
 
