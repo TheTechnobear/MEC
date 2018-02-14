@@ -5,7 +5,7 @@
 namespace Kontrol {
 
 
-const std::string OSCBroadcaster::ADDRESS = "127.0.0.1";
+//const std::string OSCBroadcaster::ADDRESS = "127.0.0.1";
 
 #define POLL_TIMEOUT_MS 1000
 
@@ -71,10 +71,13 @@ bool OSCBroadcaster::isActive() {
     if (!socket_) return false;
     if (keepAliveTime_ == 0) return true;
 
-    static std::chrono::seconds timeOut(keepAliveTime_); // twice normal ping time
+    static std::chrono::seconds timeOut(keepAliveTime_ * 2); // twice normal ping time
     auto now = std::chrono::steady_clock::now();
     auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
-    return dur < timeOut;
+//    if(!(dur <= timeOut)) {
+//        std::cerr << "not active : " << dur.count() << std::endl;
+//    }
+    return dur <= timeOut;
 }
 
 
@@ -107,22 +110,51 @@ bool OSCBroadcaster::broadcastChange(ChangeSource src) {
 
 
 void OSCBroadcaster::ping(ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) {
+    // ping is a special case, here we are a protocol handler
+    // we therefore are responding only to messages coming from the orginal source
+
     if (port == port_) {
+
         keepAliveTime_ = keepAlive;
+        bool wasActive = isActive();
+        lastPing_ = std::chrono::steady_clock::now();
         if (!master_) {
-            bool wasActive = isActive();
-            lastPing_ = std::chrono::steady_clock::now();
-            //TODO: not sure I want reference to KontrolModel here!
             if (!wasActive) {
                 KontrolModel::model()->publishMetaData();
             }
         } else {
-            lastPing_ = std::chrono::steady_clock::now();
+            if ( keepAliveTime_ == 0 ||
+                (!wasActive && src == changeSource_)) {
+
+                EntityId rackId = Rack::createId(host_, port_);
+                std::cerr << " publishing meta data to " << rackId << std::endl;
+                for (auto r:KontrolModel::model()->getRacks()) {
+                    if (rackId != r->id()) {
+                        std::cerr << " publishing meta data to " << rackId << " for " << r->id() << std::endl;
+                        rack(CS_LOCAL, *r);
+                        for (auto m : r->getModules()) {
+                            module(CS_LOCAL, *r, *m);
+                            for (auto p :  m->getParams()) {
+                                param(CS_LOCAL, *r, *m, *p);
+                            }
+                            for (auto p : m->getPages()) {
+                                if (p != nullptr) {
+                                    page(CS_LOCAL, *r, *m, *p);
+                                }
+                            }
+                            for (auto p :  m->getParams()) {
+                                changed(CS_LOCAL, *r, *m, *p);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
-void OSCBroadcaster::assignMidiCC(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p, unsigned midiCC) {
+void OSCBroadcaster::assignMidiCC(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p,
+                                  unsigned midiCC) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
@@ -133,13 +165,32 @@ void OSCBroadcaster::assignMidiCC(ChangeSource src, const Rack &rack, const Modu
         << rack.id().c_str()
         << module.id().c_str()
         << p.id().c_str()
-        << (int32_t ) midiCC;
+        << (int32_t) midiCC;
 
     ops << osc::EndMessage
         << osc::EndBundle;
 }
 
-void OSCBroadcaster::updatePreset(ChangeSource src, const Rack & rack, std::string preset) {
+void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p,
+                                  unsigned midiCC) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/assignMidiCC")
+        << rack.id().c_str()
+        << module.id().c_str()
+        << p.id().c_str()
+        << (int32_t) midiCC;
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+}
+
+
+void OSCBroadcaster::updatePreset(ChangeSource src, const Rack &rack, std::string preset) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
@@ -156,7 +207,7 @@ void OSCBroadcaster::updatePreset(ChangeSource src, const Rack & rack, std::stri
     send(ops.Data(), ops.Size());
 }
 
-void OSCBroadcaster::applyPreset(ChangeSource src, const Rack & rack, std::string preset) {
+void OSCBroadcaster::applyPreset(ChangeSource src, const Rack &rack, std::string preset) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
@@ -172,7 +223,7 @@ void OSCBroadcaster::applyPreset(ChangeSource src, const Rack & rack, std::strin
     send(ops.Data(), ops.Size());
 }
 
-void OSCBroadcaster::saveSettings(ChangeSource src, const Rack & rack)  {
+void OSCBroadcaster::saveSettings(ChangeSource src, const Rack &rack) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 

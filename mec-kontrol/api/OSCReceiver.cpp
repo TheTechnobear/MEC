@@ -121,6 +121,13 @@ public:
                 const char *paramId = (arg++)->AsString();
                 unsigned midiCC = (unsigned) (arg++)->AsInt32();
                 receiver_.assignMidiCC(changedSrc, rackId, moduleId, paramId, midiCC);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/unassignMidiCC") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+                const char *moduleId = (arg++)->AsString();
+                const char *paramId = (arg++)->AsString();
+                unsigned midiCC = (unsigned) (arg++)->AsInt32();
+                receiver_.unassignMidiCC(changedSrc, rackId, moduleId, paramId, midiCC);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/updatePreset") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
@@ -134,7 +141,6 @@ public:
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/saveSettings") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
-                const char *preset = (arg++)->AsString();
                 receiver_.saveSettings(changedSrc, rackId);
             }
         } catch (osc::Exception &e) {
@@ -254,6 +260,11 @@ void OSCReceiver::ping(ChangeSource src,
 void OSCReceiver::assignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
                                const EntityId &paramId, unsigned midiCC) {
     model_->assignMidiCC(src, rackId, moduleId, paramId, midiCC);
+}
+
+void OSCReceiver::unassignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
+                               const EntityId &paramId, unsigned midiCC) {
+    model_->unassignMidiCC(src, rackId, moduleId, paramId, midiCC);
 }
 
 void OSCReceiver::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {

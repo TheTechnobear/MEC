@@ -69,6 +69,11 @@ public:
                       const EntityId &moduleId,
                       const EntityId &paramId,
                       unsigned midiCC);
+    void unassignMidiCC(ChangeSource src,
+                      const EntityId &rackId,
+                      const EntityId &moduleId,
+                      const EntityId &paramId,
+                      unsigned midiCC);
     void updatePreset(ChangeSource src,
                       const EntityId &rackId,
                       std::string preset);

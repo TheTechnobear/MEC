@@ -18,11 +18,10 @@ namespace Kontrol {
 class OSCBroadcaster : public KontrolCallback {
 public:
     static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
-    static const std::string ADDRESS;
 
     OSCBroadcaster(Kontrol::ChangeSource src, unsigned keepAlive, bool master);
     ~OSCBroadcaster();
-    bool connect(const std::string &host = ADDRESS, unsigned port = 9001);
+    bool connect(const std::string &host, unsigned port);
     void stop() override ;
 
     void sendPing(unsigned port);
@@ -37,6 +36,7 @@ public:
 
     void ping(ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) override ;
     void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override ;
+    void unassignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override ;
     void updatePreset(ChangeSource, const Rack &, std::string preset) override ;
     void applyPreset(ChangeSource, const Rack &, std::string preset)  override ;
     void saveSettings(ChangeSource, const Rack &)  override ;
@@ -45,6 +45,9 @@ public:
     bool isThisHost(const std::string &host, unsigned port) { return host==host_ && port==port_;}
     bool isActive();
     void writePoll();
+    std::string host() { return host_;}
+    unsigned port() { return port_;}
+
 
 protected:
     void send(const char* data, unsigned size);

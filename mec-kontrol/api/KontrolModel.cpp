@@ -39,11 +39,14 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std:
     for (const auto page: module->getPages()) {
         publishPage(CS_LOCAL, *rack, *module, *page);
     }
+    for (const auto param: module->getParams()) {
+        publishChanged(CS_LOCAL, *rack, *module, *param);
+    }
 }
 
 
 std::shared_ptr<Rack> KontrolModel::createLocalRack(unsigned port) {
-    std::string host = "localhost";
+    std::string host = "127.0.0.1";
     auto rackId = Rack::createId(host, port);
     localRack_ = createRack(CS_LOCAL, rackId, host, port);
     return localRack_;
@@ -232,7 +235,7 @@ std::shared_ptr<Parameter> KontrolModel::changeParam(
 
 void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
                                 const EntityId &paramId, unsigned midiCC) {
-    if (rackId == localRack()->id()) {
+    if (localRack() && rackId == localRack()->id()) {
         localRack()->addMidiCCMapping(midiCC, moduleId, paramId);
     } else {
         auto rack = getRack(rackId);
@@ -246,8 +249,26 @@ void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const 
     }
 }
 
+
+void KontrolModel::unassignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
+                                const EntityId &paramId, unsigned midiCC) {
+    if (localRack() && rackId == localRack()->id()) {
+        localRack()->removeMidiCCMapping(midiCC, moduleId, paramId);
+    } else {
+        auto rack = getRack(rackId);
+        auto module = getModule(rack, moduleId);
+        auto param = getParam(module, paramId);
+        if (param == nullptr) return;
+
+        for (auto i : listeners_) {
+            (i.second)->unassignMidiCC(src, *rack, *module, *param, midiCC);
+        }
+    }
+}
+
+
 void KontrolModel::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
-    if (rackId == localRack()->id()) {
+    if (localRack() && rackId == localRack()->id()) {
         localRack()->updatePreset(preset);
     } else {
         auto rack = getRack(rackId);
@@ -259,7 +280,7 @@ void KontrolModel::updatePreset(ChangeSource src, const EntityId &rackId, std::s
 }
 
 void KontrolModel::applyPreset(ChangeSource src, const EntityId &rackId, std::string preset) {
-    if (rackId == localRack()->id()) {
+    if (localRack() && rackId == localRack()->id()) {
         localRack()->applyPreset(preset);
     } else {
         auto rack = getRack(rackId);
@@ -271,7 +292,7 @@ void KontrolModel::applyPreset(ChangeSource src, const EntityId &rackId, std::st
 }
 
 void KontrolModel::saveSettings(ChangeSource src, const EntityId &rackId) {
-    if (rackId == localRack()->id()) {
+    if (localRack() && rackId == localRack()->id()) {
         localRack()->saveSettings();
     } else {
         auto rack = getRack(rackId);

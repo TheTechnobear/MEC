@@ -5,13 +5,12 @@
 namespace mec {
 
 
-
 static const unsigned OSC_POLL_MS = 50;
 
 ////////////////////////////////////////////////
 KontrolDevice::KontrolDevice(ICallback &cb) :
         active_(false), callback_(cb),
-        listenPort_(0){
+        listenPort_(0) {
     model_ = Kontrol::KontrolModel::model();
 }
 
@@ -22,21 +21,27 @@ KontrolDevice::~KontrolDevice() {
 
 class KontrolDeviceClientHandler : public Kontrol::KontrolCallback {
 public:
-    KontrolDeviceClientHandler(KontrolDevice &kd) : this_(kd) {;}
+    KontrolDeviceClientHandler(KontrolDevice &kd) : this_(kd) { ; }
+
     //Kontrol::KontrolCallback
     void ping(Kontrol::ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) override {
-        this_.newClient(src, host, port, keepAlive);}
+        this_.newClient(src, host, port, keepAlive);
+    }
 
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
-    void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
-    void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                      const Kontrol::Page &) override { ; }
-    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                       const Kontrol::Parameter &) override { ; }
-    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                         const Kontrol::Parameter &) override{ ; }
 
-    KontrolDevice& this_;
+    void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
+
+    void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+              const Kontrol::Page &) override { ; }
+
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+               const Kontrol::Parameter &) override { ; }
+
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                 const Kontrol::Parameter &) override { ; }
+
+    KontrolDevice &this_;
 };
 
 void *kontroldevice_processor_func(void *pKontrolDevice) {
@@ -80,7 +85,8 @@ void KontrolDevice::newClient(
         const std::string &host,
         unsigned port,
         unsigned keepalive) {
-    for(auto client : clients_) {
+
+    for (auto client : clients_) {
         if (client->isThisHost(host, port)) {
             return;
         }
@@ -89,29 +95,49 @@ void KontrolDevice::newClient(
     std::string id = "client.osc:" + host + ":" + std::to_string(port);
 
     auto client = std::make_shared<Kontrol::OSCBroadcaster>(src, keepalive, true);
-    if(client->connect(host,port)) {
+    if (client->connect(host, port)) {
+        LOG_0("KontrolDevice::new client " << client->host()  << " : " << client->port() << " KA = " << keepalive);
+        client->ping(src,port,host,keepalive);
         clients_.push_back((client));
-        model_->addCallback(id,client);
+        model_->addCallback(id, client);
     }
 }
 
 
 void KontrolDevice::processorRun() {
-    while(active_) {
+    while (active_) {
         if (osc_receiver_) {
             osc_receiver_->poll();
 
             static const std::chrono::seconds pingFrequency(5);
             std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
             auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
-            if (dur > pingFrequency) {
+            if (dur >= pingFrequency) {
                 lastPing_ = now;
+                bool inactive = false;
                 for (auto client : clients_) {
                     if (!client->isActive()) {
                         // not received a ping from this client
-                        LOG_0("KontrolDevice::Process... inactive client");
+                        inactive = true;
+                    } else {
+                        client->sendPing(osc_receiver_->port());
                     }
-                    client->sendPing(osc_receiver_->port());
+                }
+
+                // search for inactive clients and remove
+                while (inactive) {
+                    inactive = false;
+                    for (auto it = clients_.begin(); !inactive && it != clients_.end();) {
+                        auto client = *it;
+                        if (! client->isActive()) {
+                            LOG_0("KontrolDevice::Process... remove inactive client " << client->host()  << " : " << client->port());
+                            client->stop();
+                            clients_.erase(it);
+                            inactive = true;
+                        } else {
+                            it++;
+                        }
+                    }
                 }
             }
         }
@@ -127,14 +153,14 @@ bool KontrolDevice::process() {
 
 void KontrolDevice::deinit() {
     LOG_0("KontrolDevice::deinit");
-    for(auto client : clients_) {
+    for (auto client : clients_) {
         client->stop();
     }
     clients_.clear();
     if (osc_receiver_) osc_receiver_->stop();
 
     active_ = false;
-    if(processor_.joinable()) {
+    if (processor_.joinable()) {
         processor_.join();
     }
 }
