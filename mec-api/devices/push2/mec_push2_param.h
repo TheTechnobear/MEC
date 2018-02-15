@@ -34,13 +34,17 @@ private:
     Push2 &parent_;
     std::shared_ptr<Push2API::Push2> push2Api_;
     std::shared_ptr<Kontrol::KontrolModel> model_;
-    int currentModule_ = -1;
-    int currentPage_ = -1;
 
-    std::shared_ptr<Kontrol::Rack> rack_;
-    std::vector<std::shared_ptr<Kontrol::Module>> modules_;
-    std::vector<std::shared_ptr<Kontrol::Page>> pages_;
-    std::vector<std::shared_ptr<Kontrol::Parameter>> params_;
+    int moduleIdx_ = -1;
+    Kontrol::EntityId moduleId_;
+    int pageIdx_ = -1;
+    Kontrol::EntityId pageId_;
+    Kontrol::EntityId rackId_;
+
+//    std::shared_ptr<Kontrol::Rack> rack_;
+//    std::vector<std::shared_ptr<Kontrol::Module>> modules_;
+//    std::vector<std::shared_ptr<Kontrol::Page>> pages_;
+//    std::vector<std::shared_ptr<Kontrol::Parameter>> params_;
 };
 
 }
