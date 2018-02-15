@@ -25,7 +25,7 @@ public:
     virtual void param(ChangeSource, const Rack &, const Module &, const Parameter &) = 0;
     virtual void changed(ChangeSource, const Rack &, const Module &, const Parameter &) = 0;
 
-    virtual void ping(ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) { ; }
+    virtual void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) { ; }
 
     virtual void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) { ; }
     virtual void unassignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) { ; }

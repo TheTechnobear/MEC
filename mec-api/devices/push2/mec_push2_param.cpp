@@ -1,6 +1,6 @@
 #include "mec_push2_param.h"
 
-//#include <mec_log.h>
+#include <mec_log.h>
 
 namespace mec {
 std::string centreText(const std::string t) {
@@ -166,11 +166,14 @@ void P2_ParamMode::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack, co
 void P2_ParamMode::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                          const Kontrol::Parameter &param) {
     P2_DisplayMode::param(src, rack, module, param);
+//    LOG_0("P2_ParamMode::param " << param.id() << " : " << param.current().floatValue());
     unsigned i = 0;
     for (auto p: params_) {
         if (p->id() == param.id()) {
+            p->change(param.current(), src == Kontrol::CS_PRESET);
             drawParam(i, param);
             return;
+
         }
         i++;
     }
@@ -179,6 +182,7 @@ void P2_ParamMode::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack, c
 void P2_ParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                            const Kontrol::Parameter &param) {
     P2_DisplayMode::changed(src, rack, module, param);
+//    LOG_0("P2_ParamMode::changed " << param.id() << " : " << param.current().floatValue());
     unsigned i = 0;
     for (auto p: params_) {
         if (p->id() == param.id()) {

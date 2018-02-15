@@ -109,11 +109,9 @@ bool OSCBroadcaster::broadcastChange(ChangeSource src) {
 }
 
 
-void OSCBroadcaster::ping(ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) {
-    // ping is a special case, here we are a protocol handler
-    // we therefore are responding only to messages coming from the orginal source
-
-    if (port == port_) {
+void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) {
+    if ( (port_ == port) && (host_ == host) ) {
+        changeSource_ = src;
 
         keepAliveTime_ = keepAlive;
         bool wasActive = isActive();
@@ -123,11 +121,9 @@ void OSCBroadcaster::ping(ChangeSource src, unsigned port, const std::string &ho
                 KontrolModel::model()->publishMetaData();
             }
         } else {
-            if ( keepAliveTime_ == 0 ||
-                (!wasActive && src == changeSource_)) {
+            if ( keepAliveTime_ == 0 || !wasActive) {
 
                 EntityId rackId = Rack::createId(host_, port_);
-                std::cerr << " publishing meta data to " << rackId << std::endl;
                 for (auto r:KontrolModel::model()->getRacks()) {
                     if (rackId != r->id()) {
                         std::cerr << " publishing meta data to " << rackId << " for " << r->id() << std::endl;

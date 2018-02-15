@@ -34,7 +34,7 @@ public:
     void changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) override ;
 
 
-    void ping(ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) override ;
+    void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) override ;
     void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override ;
     void unassignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override ;
     void updatePreset(ChangeSource, const Rack &, std::string preset) override ;

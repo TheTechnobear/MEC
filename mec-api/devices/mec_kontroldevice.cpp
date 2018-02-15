@@ -24,7 +24,7 @@ public:
     KontrolDeviceClientHandler(KontrolDevice &kd) : this_(kd) { ; }
 
     //Kontrol::KontrolCallback
-    void ping(Kontrol::ChangeSource src, unsigned port, const std::string &host, unsigned keepAlive) override {
+    void ping(Kontrol::ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) override {
         this_.newClient(src, host, port, keepAlive);
     }
 
@@ -97,7 +97,8 @@ void KontrolDevice::newClient(
     auto client = std::make_shared<Kontrol::OSCBroadcaster>(src, keepalive, true);
     if (client->connect(host, port)) {
         LOG_0("KontrolDevice::new client " << client->host()  << " : " << client->port() << " KA = " << keepalive);
-        client->ping(src,port,host,keepalive);
+//        client->sendPing(listenPort_);
+        client->ping(src, host, port, keepalive);
         clients_.push_back((client));
         model_->addCallback(id, client);
     }

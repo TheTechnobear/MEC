@@ -39,7 +39,7 @@ public:
             char host[IpEndpointName::ADDRESS_STRING_LENGTH];
             remoteEndpoint.AddressAsString(host);
             ChangeSource changedSrc = ChangeSource::createRemoteSource(host, remoteEndpoint.port);
-            // std::cout << "received osc message: " << m.AddressPattern() << std::endl;
+            // std::err << "received osc message: " << m.AddressPattern() << std::endl;
             if (std::strcmp(m.AddressPattern(), "/Kontrol/changed") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
@@ -51,6 +51,7 @@ public:
                                               ParamValue(std::string(arg->AsString())));
 
                     } else if (arg->IsFloat()) {
+//                        std::cerr << "changed " << paramId << " : " << arg->AsFloat() << std::endl;
                         receiver_.changeParam(changedSrc, rackId, moduleId, paramId, ParamValue(arg->AsFloat()));
                     }
                 }
@@ -73,7 +74,7 @@ public:
                 receiver_.createParam(changedSrc, rackId, moduleId, params);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/page") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                // std::cout << "received page p1"<< std::endl;
+                // std::cerr << "received page p1"<< std::endl;
                 const char *rackId = (arg++)->AsString();
                 const char *moduleId = (arg++)->AsString();
                 const char *pageId = (arg++)->AsString();

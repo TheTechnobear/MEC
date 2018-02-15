@@ -309,7 +309,7 @@ void KontrolModel::ping(
         unsigned port,
         unsigned keepAlive) const {
     for (auto i : listeners_) {
-        (i.second)->ping(src, port, host, keepAlive);
+        (i.second)->ping(src, host, port, keepAlive);
     }
 }
 
