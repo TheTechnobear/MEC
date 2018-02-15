@@ -1,6 +1,6 @@
 #include "mec_push2_param.h"
 
-#include <mec_log.h>
+//#include <mec_log.h>
 
 namespace mec {
 std::string centreText(const std::string t) {
@@ -46,7 +46,6 @@ void P2_ParamMode::processNoteOff(unsigned, unsigned) {
 void P2_ParamMode::processCC(unsigned cc, unsigned v) {
     if (cc >= P2_ENCODER_CC_START && cc <= P2_ENCODER_CC_END) {
         unsigned idx = cc - P2_ENCODER_CC_START;
-        //TODO
         try {
             auto rack = model_->getRack(rackId_);
             auto module = model_->getModule(rack, moduleId_);
@@ -101,8 +100,8 @@ void P2_ParamMode::displayPage() {
     auto params = model_->getParams(module,page);
 
     unsigned int i = 0;
-    for (auto page : pages) {
-        push2Api_->drawCell8(5, i, centreText(page->displayName()).c_str(), VSCALE, HSCALE, page_clrs[i]);
+    for (auto cpage : pages) {
+        push2Api_->drawCell8(5, i, centreText(cpage->displayName()).c_str(), VSCALE, HSCALE, page_clrs[i]);
         parent_.sendCC(0, P2_TRACK_SELECT_CC_START + i, i == pageIdx_ ? 122 : 124);
 
         if (i == pageIdx_) {
