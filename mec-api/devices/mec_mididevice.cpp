@@ -40,7 +40,7 @@ bool MidiDevice::init(void *arg) {
     if (!input_device.empty()) {
 
         try {
-            midiInDevice_.reset(new RtMidiIn());
+            midiInDevice_.reset(new RtMidiIn(RtMidi::Api::UNSPECIFIED,"MEC MIDI IN DEVICE"));
         } catch (RtMidiError &error) {
             midiInDevice_.reset();
             LOG_0("MidiDevice RtMidiIn ctor error:" << error.what());
@@ -53,7 +53,7 @@ bool MidiDevice::init(void *arg) {
         for (unsigned i = 0; i < midiInDevice_->getPortCount() && !found; i++) {
             if (input_device.compare(midiInDevice_->getPortName(i)) == 0) {
                 try {
-                    midiInDevice_->openPort(i);
+                    midiInDevice_->openPort(i,"MIDI IN");
                     found = true;
                     LOG_1("Midi input opened :" << input_device);
                 } catch (RtMidiError &error) {
@@ -82,7 +82,7 @@ bool MidiDevice::init(void *arg) {
     if (!output_device.empty()) {
         bool virt = prefs.getBool("virtual output", false);
         try {
-            midiOutDevice_.reset(new RtMidiOut(RtMidi::Api::UNSPECIFIED, "MEC MIDI"));
+            midiOutDevice_.reset(new RtMidiOut(RtMidi::Api::UNSPECIFIED, "MEC MIDI OUT DEVICE"));
         } catch (RtMidiError &error) {
             midiOutDevice_.reset();
             LOG_0("MidiDevice RtMidiOut ctor error:" << error.what());
@@ -90,7 +90,7 @@ bool MidiDevice::init(void *arg) {
         }
         if (virt) {
             try {
-                midiOutDevice_->openVirtualPort(output_device);
+                midiOutDevice_->openVirtualPort("MIDI OUT");
                 LOG_0("Midi virtual output created :" << output_device);
                 virtualOpen_ = true;
             } catch (RtMidiError &error) {
@@ -104,7 +104,7 @@ bool MidiDevice::init(void *arg) {
             for (unsigned i = 0; i < midiOutDevice_->getPortCount() && !found; i++) {
                 if (output_device.compare(midiOutDevice_->getPortName(i)) == 0) {
                     try {
-                        midiOutDevice_->openPort(i);
+                        midiOutDevice_->openPort(i,"MIDI OUT");
                         LOG_0("Midi output opened :" << output_device);
                         found = true;
                     } catch (RtMidiError &error) {

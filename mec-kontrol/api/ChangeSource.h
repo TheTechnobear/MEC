@@ -7,7 +7,7 @@ namespace Kontrol {
 class ChangeSource {
 public:
     typedef std::string SrcId;
-    static SrcId nullId;
+    static const SrcId nullId;
 
     enum SrcType {
         LOCAL,
@@ -16,7 +16,7 @@ public:
         REMOTE
     };
 
-    ChangeSource(SrcType t,SrcId id=nullId);
+    ChangeSource(SrcType t,const SrcId& id=nullId);
     friend bool operator==(const ChangeSource& a,const ChangeSource& b);
 
     static ChangeSource createRemoteSource(const std::string& host, int port);
@@ -29,9 +29,9 @@ private:
 bool operator==(const ChangeSource& a,const ChangeSource& b);
 bool operator!=(const ChangeSource &a, const ChangeSource &b);
 
-const  ChangeSource CS_LOCAL = ChangeSource(ChangeSource::SrcType::LOCAL);
-const  ChangeSource CS_MIDI = ChangeSource(ChangeSource::SrcType::MIDI);
-const  ChangeSource CS_PRESET = ChangeSource(ChangeSource::SrcType::PRESET);
+extern const  ChangeSource CS_LOCAL;
+extern const  ChangeSource CS_MIDI;
+extern const  ChangeSource CS_PRESET;
 
 } // namespace
 

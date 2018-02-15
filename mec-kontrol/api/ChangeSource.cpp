@@ -2,7 +2,10 @@
 
 namespace Kontrol {
 
-ChangeSource::SrcId ChangeSource::nullId="";
+const ChangeSource::SrcId ChangeSource::nullId="";
+const ChangeSource CS_LOCAL = ChangeSource(ChangeSource::SrcType::LOCAL);
+const ChangeSource CS_MIDI = ChangeSource(ChangeSource::SrcType::MIDI);
+const ChangeSource CS_PRESET = ChangeSource(ChangeSource::SrcType::PRESET);
 
 bool operator==(const ChangeSource &a, const ChangeSource &b) {
     if (a.type_ == b.type_) {
@@ -18,7 +21,7 @@ bool operator!=(const ChangeSource &a, const ChangeSource &b) {
 }
 
 
-ChangeSource::ChangeSource(SrcType t, SrcId id) : type_(t), id_(id) {
+ChangeSource::ChangeSource(SrcType t, const SrcId& id) : type_(t), id_(id) {
     ;
 }
 

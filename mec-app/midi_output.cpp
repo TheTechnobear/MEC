@@ -5,7 +5,7 @@
 
 MidiOutput::MidiOutput() {
     try {
-        output_.reset(new RtMidiOut(RtMidi::Api::UNSPECIFIED, "MEC MIDI"));
+        output_.reset(new RtMidiOut(RtMidi::Api::UNSPECIFIED, "MEC MIDI OUTPUT"));
     } catch (RtMidiError &error) {
         LOG_0("Midi output ctor error:" << error.what());
     }
@@ -25,7 +25,7 @@ bool MidiOutput::create(const std::string &portname, bool virt) {
     virtualOpen_ = false;
     if (virt) {
         try {
-            output_->openVirtualPort(portname);
+            output_->openVirtualPort("MIDI OUT");
             LOG_0("Midi virtual output created :" << portname);
             virtualOpen_ = true; // port is open because it belongs to client
         } catch (RtMidiError &error) {
@@ -38,7 +38,7 @@ bool MidiOutput::create(const std::string &portname, bool virt) {
     for (unsigned i = 0; i < output_->getPortCount(); i++) {
         if (portname.compare(output_->getPortName(i)) == 0) {
             try {
-                output_->openPort(i);
+                output_->openPort(i,"MIDI OUT");
                 LOG_0("Midi output opened :" << portname);
             } catch (RtMidiError &error) {
                 LOG_0("Midi output create error:" << error.what());
