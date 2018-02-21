@@ -284,7 +284,7 @@ void *mecapi_proc(void *arg) {
         std::unique_lock<std::mutex> lock(waitMtx);
         while (keepRunning) {
             mecApi->process();
-            waitCond.wait_for(lock, std::chrono::milliseconds(1000));
+            waitCond.wait_for(lock, std::chrono::milliseconds(5));
         }
     }
 
