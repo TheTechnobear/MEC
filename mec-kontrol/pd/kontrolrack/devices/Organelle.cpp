@@ -9,6 +9,7 @@
 const unsigned int SCREEN_WIDTH = 21;
 
 static const int PAGE_SWITCH_TIMEOUT = 50;
+static const int MODULE_SWITCH_TIMEOUT = 50;
 //static const int PAGE_EXIT_TIMEOUT = 5;
 static const auto MENU_TIMEOUT = 350;
 
@@ -42,18 +43,20 @@ public:
 
     void encoderButton(unsigned, bool) override { ; }
 
+    void keyPress(unsigned, unsigned) override { ; }
+
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 
     void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                      const Kontrol::Page &) override { ; }
+              const Kontrol::Page &) override { ; }
 
     void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                       const Kontrol::Parameter &) override { ; }
+               const Kontrol::Parameter &) override { ; }
 
     void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                         const Kontrol::Parameter &) override { ; }
+                 const Kontrol::Parameter &) override { ; }
 
     void displayPopup(const std::string &text, unsigned time);
 protected:
@@ -77,7 +80,7 @@ struct Pots {
 
 class OParamMode : public OBaseMode {
 public:
-    OParamMode(Organelle &p) : OBaseMode(p), currentPageNum_(0) { ; }
+    OParamMode(Organelle &p) : OBaseMode(p), pageIdx_(-1) { ; }
 
     bool init() override;
     void poll() override;
@@ -85,18 +88,25 @@ public:
     void changePot(unsigned pot, float value) override;
     void changeEncoder(unsigned encoder, float value) override;
     void encoderButton(unsigned encoder, bool value) override;
+    void keyPress(unsigned, unsigned) override;
     void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
     void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                         const Kontrol::Parameter &) override;
+                 const Kontrol::Parameter &) override;
     void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
               const Kontrol::Page &page) override;
 private:
-    void setPage(unsigned pagenum, bool UI);
+    void setCurrentPage(unsigned pageIdx, bool UI);
     void display();
-    int currentPageNum_;
+
+    void activateShortcut(unsigned key);
+
     std::shared_ptr<Pots> pots_;
-    std::vector<std::shared_ptr<Kontrol::Parameter>> currentParams_;
-    std::vector<std::shared_ptr<Kontrol::Page>> pages_;
+
+    int pageIdx_ = -1;
+    Kontrol::EntityId pageId_;
+
+    bool encoderAction_ = false;
+    bool encoderDown_ = false;
 };
 
 class OMenuMode : public OBaseMode {
@@ -109,10 +119,10 @@ public:
 
     bool init() override { return true; }
 
-    void poll() override ;
-    void activate() override ;
-    void changeEncoder(unsigned encoder, float value) override ;
-    void encoderButton(unsigned encoder, bool value) override ;
+    void poll() override;
+    void activate() override;
+    void changeEncoder(unsigned encoder, float value) override;
+    void encoderButton(unsigned encoder, bool value) override;
 
 protected:
     void display();
@@ -170,15 +180,6 @@ void OBaseMode::poll() {
 
 bool OParamMode::init() {
     OBaseMode::init();
-    auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
-    if (module) pages_ = module->getPages();
-
-    if (pages_.size() > 0) {
-        currentPageNum_ = 0;
-        setPage(0, false);
-    } else currentPageNum_ = -1;
-
-
     pots_ = std::make_shared<Pots>();
     for (int i = 0; i < 4; i++) {
         pots_->rawValue[i] = std::numeric_limits<float>::max();
@@ -189,16 +190,23 @@ bool OParamMode::init() {
 
 void OParamMode::display() {
     parent_.clearDisplay();
-    unsigned sz = currentParams_.size();
-    sz = sz < 4 ? sz : 4;
-    for (unsigned int i = 0; i < sz; i++) {
-        try {
-            auto &param = currentParams_.at(i);
-            if (param != nullptr) parent_.displayParamLine(i + 1, *param);
-        } catch (std::out_of_range) {
-            return;
+
+    auto rack = parent_.model()->getRack(parent_.currentRack());
+    auto module = parent_.model()->getModule(rack, parent_.currentModule());
+    auto page = parent_.model()->getPage(module, pageId_);
+//    auto pages = parent_.model()->getPages(module);
+    auto params = parent_.model()->getParams(module, page);
+
+
+    unsigned int j = 0;
+    for (auto param : params) {
+        if (param != nullptr) {
+            parent_.displayParamLine(j + 1, *param);
         }
-    } // for
+        j++;
+        if (j == 8) break;
+    }
+
     parent_.flipDisplay();
 }
 
@@ -222,19 +230,26 @@ void OParamMode::poll() {
 void OParamMode::changePot(unsigned pot, float rawvalue) {
     OBaseMode::changePot(pot, rawvalue);
     try {
-        auto &param = currentParams_.at(pot);
+        auto rack = parent_.model()->getRack(parent_.currentRack());
+        auto module = parent_.model()->getModule(rack, parent_.currentModule());
+        auto page = parent_.model()->getPage(module, pageId_);
+//        auto pages = parent_.model()->getPages(module);
+        auto params = parent_.model()->getParams(module, page);
+
+        if (!(pot < params.size())) return;
+
+        auto &param = params[pot];
         auto paramId = param->id();
 
         Kontrol::ParamValue calc;
 
-        if (rawvalue!= std::numeric_limits<float>::max()) {
+        if (rawvalue != std::numeric_limits<float>::max()) {
             float value = rawvalue / MAX_POT_VALUE;
             calc = param->calcFloat(value);
             //std::cerr << "changePot " << pot << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
         }
 
         pots_->rawValue[pot] = rawvalue;
-        
 
 
         if (pots_->locked_[pot] != Pots::K_UNLOCKED) {
@@ -284,29 +299,27 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
 
 }
 
-void OParamMode::setPage(unsigned pagenum, bool UI) {
+void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
     auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
     if (module == nullptr) return;
 
     try {
-        if (currentPageNum_ < 0) {
-            // initialisation
-            pages_ = module->getPages();
-            if (pages_.size() == 0) {
-                return;
+        auto rack = parent_.model()->getRack(parent_.currentRack());
+        auto module = parent_.model()->getModule(rack, parent_.currentModule());
+        auto page = parent_.model()->getPage(module, pageId_);
+        auto pages = parent_.model()->getPages(module);
+//        auto params = parent_.model()->getParams(module,page);
+
+        if (pageIdx != pageIdx_ && pageIdx < pages.size()) {
+            pageIdx_ = pageIdx;
+
+            try {
+                pageId_ = pages[pageIdx_]->id();
+                display();
+            } catch (std::out_of_range) { ;
             }
-            auto &page = pages_.at(0);
-            currentParams_ = module->getParams(page);
-            if (currentParams_.size() == 0) {
-                return;
-            }
-            currentPageNum_ = 0;
-            display();
         }
 
-        auto &page = pages_.at(pagenum);
-        currentPageNum_ = pagenum;
-        currentParams_ = module->getParams(page);
         if (UI) {
             displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
             parent_.flipDisplay();
@@ -322,33 +335,69 @@ void OParamMode::setPage(unsigned pagenum, bool UI) {
 
 void OParamMode::changeEncoder(unsigned enc, float value) {
     OBaseMode::changeEncoder(enc, value);
-    if (currentPageNum_ < 0) {
-        setPage(0, false);
+    if (pageIdx_ < 0) {
+        setCurrentPage(0, false);
         return;
     }
 
-    unsigned pagenum = (unsigned) currentPageNum_;
+    unsigned pagenum = (unsigned) pageIdx_;
 
     if (value > 0) {
+        auto rack = parent_.model()->getRack(parent_.currentRack());
+        auto module = parent_.model()->getModule(rack, parent_.currentModule());
+//        auto page = parent_.model()->getPage(module,pageId_);
+        auto pages = parent_.model()->getPages(module);
+//        auto params = parent_.model()->getParams(module,page);
+
         // clockwise
         pagenum++;
-        pagenum = std::min(pagenum, (unsigned) pages_.size() - 1);
+        pagenum = std::min(pagenum, (unsigned) pages.size() - 1);
     } else {
         // anti clockwise
         if (pagenum > 0) pagenum--;
     }
 
-    if (pagenum != currentPageNum_) {
-        setPage(pagenum, true);
+    if (pagenum != pageIdx_) {
+        setCurrentPage(pagenum, true);
     }
 }
 
 void OParamMode::encoderButton(unsigned enc, bool value) {
     OBaseMode::encoderButton(enc, value);
-    if (value < 1.0) {
+    if (encoderAction_ && value == false) {
         parent_.changeMode(OM_MAINMENU);
     }
+    encoderDown_ = value;
+    encoderAction_ = value;
 }
+
+
+void OParamMode::keyPress(unsigned key, unsigned value) {
+    if (value == 0 && encoderDown_) {
+        activateShortcut(key);
+        encoderAction_ = false;
+    }
+}
+
+void OParamMode::activateShortcut(unsigned key) {
+    if (key > 0) {
+        unsigned moduleIdx = key - 1;
+        auto rack = parent_.model()->getRack(parent_.currentRack());
+        auto modules = parent_.model()->getModules(rack);
+        if(moduleIdx < modules.size()) {
+            auto module = modules[moduleIdx];
+            auto moduleId = module->id();
+            if(parent_.currentModule()!=moduleId) {
+                parent_.currentModule(moduleId);
+                pageIdx_ = -1;
+                setCurrentPage(0,false);
+                displayPopup(module->displayName(),MODULE_SWITCH_TIMEOUT);
+                parent_.flipDisplay();
+            }
+        }
+    }
+}
+
 
 void OParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                          const Kontrol::Parameter &param) {
@@ -356,11 +405,19 @@ void OParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, c
     if (popupTime_ > 0) return;
 
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
-    unsigned sz = currentParams_.size();
+
+    auto prack = parent_.model()->getRack(parent_.currentRack());
+    auto pmodule = parent_.model()->getModule(prack, parent_.currentModule());
+    auto page = parent_.model()->getPage(pmodule, pageId_);
+//    auto pages = parent_.model()->getPages(pmodule);
+    auto params = parent_.model()->getParams(pmodule, page);
+
+
+    unsigned sz = params.size();
     sz = sz < 4 ? sz : 4;
     for (unsigned int i = 0; i < sz; i++) {
         try {
-            auto &p = currentParams_.at(i);
+            auto &p = params.at(i);
             if (p->id() == param.id()) {
                 p->change(param.current(), src == Kontrol::CS_PRESET);
                 parent_.displayParamLine(i + 1, param);
@@ -380,13 +437,13 @@ void OParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, c
 
 void OParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     OBaseMode::module(source, rack, module);
-    if (currentPageNum_ < 0) setPage(0, false);
+    if (pageIdx_ < 0) setCurrentPage(0, false);
 }
 
 void OParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                       const Kontrol::Page &page) {
     OBaseMode::page(source, rack, module, page);
-    if (currentPageNum_ < 0) setPage(0, false);
+    if (pageIdx_ < 0) setCurrentPage(0, false);
 }
 
 void OMenuMode::activate() {
@@ -448,6 +505,7 @@ void OMenuMode::changeEncoder(unsigned, float value) {
             cur_ = cur;
             line = cur_ - top_ + 1;
             if (line <= 4) parent_.invertLine(line);
+            parent_.flipDisplay();
         }
     }
     popupTime_ = MENU_TIMEOUT;
@@ -720,7 +778,7 @@ void Organelle::displayPopup(const std::string &text) {
             << 100 << 34
             << 0
             << osc::EndMessage;
-        socket_->Send(ops.Data(), ops.Size());
+        send(ops.Data(), ops.Size());
     }
 
     {

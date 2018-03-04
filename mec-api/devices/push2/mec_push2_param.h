@@ -36,11 +36,11 @@ private:
     std::shared_ptr<Push2API::Push2> push2Api_;
     std::shared_ptr<Kontrol::KontrolModel> model_;
 
+    Kontrol::EntityId rackId_;
     int moduleIdx_ = -1;
     Kontrol::EntityId moduleId_;
     int pageIdx_ = -1;
     Kontrol::EntityId pageId_;
-    Kontrol::EntityId rackId_;
 
 };
 

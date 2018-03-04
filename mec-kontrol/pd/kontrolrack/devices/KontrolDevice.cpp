@@ -37,19 +37,21 @@ void KontrolDevice::poll() {
 void KontrolDevice::changePot(unsigned pot, float value) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->changePot(pot, value);
-
 }
 
 void KontrolDevice::changeEncoder(unsigned encoder, float value) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->changeEncoder(encoder, value);
-
 }
 
 void KontrolDevice::encoderButton(unsigned encoder, bool value) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->encoderButton(encoder, value);
+}
 
+void KontrolDevice::keyPress(unsigned key, unsigned value) {
+    auto m = modes_[currentMode_];
+    if (m != nullptr) m->keyPress(key, value);
 }
 
 void KontrolDevice::rack(Kontrol::ChangeSource src, const Kontrol::Rack& rack) {
@@ -70,7 +72,6 @@ void KontrolDevice::page(Kontrol::ChangeSource src, const Kontrol::Rack& rack, c
 void KontrolDevice::param(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->param(src, rack, module, param);
-
 }
 
 void KontrolDevice::changed(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {

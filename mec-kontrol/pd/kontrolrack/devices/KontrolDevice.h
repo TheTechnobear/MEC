@@ -18,6 +18,7 @@ public:
     virtual void changePot(unsigned pot, float value) = 0;
     virtual void changeEncoder(unsigned encoder, float value) = 0;
     virtual void encoderButton(unsigned encoder, bool value) = 0;
+    virtual void keyPress(unsigned key, unsigned value) = 0;
 
 protected:
 };
@@ -31,11 +32,12 @@ public:
     void changeMode(unsigned);
     void addMode(unsigned mode, std::shared_ptr<DeviceMode>);
 
-    virtual bool init() ;
+    virtual bool init();
     virtual void poll();
     virtual void changePot(unsigned pot, float value);
     virtual void changeEncoder(unsigned encoder, float value);
     virtual void encoderButton(unsigned encoder, bool value);
+    virtual void keyPress(unsigned key, unsigned value);
 
     //Kontrol::KontrolCallback
     void rack(Kontrol::ChangeSource, const Kontrol::Rack&) override;
@@ -44,7 +46,7 @@ public:
     void param(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) override;
     void changed(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) override;
 
-    virtual void midiCC(unsigned num, unsigned value)  ;
+    virtual void midiCC(unsigned num, unsigned value);
 
     void sendPdMessage(const char* obj, float f);
     std::shared_ptr<Kontrol::KontrolModel> model() { return model_;}

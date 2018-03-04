@@ -134,20 +134,18 @@ void KontrolRack_setup(void) {
                     (t_method) KontrolRack_midiCC, gensym("midiCC"),
                     A_DEFFLOAT, A_DEFFLOAT, A_NULL);
 
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_key, gensym("key"),
+                    A_DEFFLOAT, A_DEFFLOAT, A_NULL);
+
     // class_addmethod(KontrolRack_class,
-    //                 (t_method) KontrolRack_tilde_auxRaw, gensym("auxRaw"),
+    //                 (t_method) KontrolRack_vol, gensym("vol"),
     //                 A_DEFFLOAT, A_NULL);
     // class_addmethod(KontrolRack_class,
-    //                 (t_method) KontrolRack_tilde_vol, gensym("vol"),
+    //                 (t_method) KontrolRack_expRaw, gensym("expRaw"),
     //                 A_DEFFLOAT, A_NULL);
     // class_addmethod(KontrolRack_class,
-    //                 (t_method) KontrolRack_tilde_expRaw, gensym("expRaw"),
-    //                 A_DEFFLOAT, A_NULL);
-    // class_addmethod(KontrolRack_class,
-    //                 (t_method) KontrolRack_tilde_fsRaw, gensym("fsRaw"),
-    //                 A_DEFFLOAT, A_NULL);
-    // class_addmethod(KontrolRack_class,
-    //                 (t_method) KontrolRack_tilde_notesRaw, gensym("notesRaw"),
+    //                 (t_method) KontrolRack_fsRaw, gensym("fsRaw"),
     //                 A_DEFFLOAT, A_NULL);
 
 
@@ -244,6 +242,11 @@ void KontrolRack_knob4Raw(t_KontrolRack *x, t_floatarg f) {
 void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value) {
     if (x->device_) x->device_->midiCC((unsigned) cc, (unsigned) value);
 }
+
+void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value) {
+    if (x->device_) x->device_->keyPress((unsigned) key, (unsigned) value);
+}
+
 
 void SendBroadcaster::changed(Kontrol::ChangeSource,
                               const Kontrol::Rack &rack,
