@@ -150,6 +150,37 @@ void KontrolRack_setup(void) {
     //                 (t_method) KontrolRack_tilde_notesRaw, gensym("notesRaw"),
     //                 A_DEFFLOAT, A_NULL);
 
+
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_loadsettings, gensym("loadsettings"),
+                    A_DEFSYMBOL, A_NULL);
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_loadpreset, gensym("loadpreset"),
+                    A_DEFSYMBOL, A_NULL);
+
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_test, gensym("test"),
+                    A_NULL);
+}
+
+void KontrolRack_test(t_KontrolRack *x) {
+    t_pd *sendobj = gensym("pd-slot4")->s_thing;
+    if (!sendobj) {
+        post("send to ; failed");
+        return;
+    }
+
+    {
+        t_atom a[5];
+        SETSYMBOL(&a[0], gensym("obj"));
+        SETFLOAT(&a[1], 100);
+        SETFLOAT(&a[2], 100);
+        SETSYMBOL(&a[3], gensym("pd"));
+        SETSYMBOL(&a[4], gensym("slot1"));
+        pd_forwardmess(sendobj, 5, a);
+    }
 }
 
 
@@ -240,6 +271,36 @@ void SendBroadcaster::changed(Kontrol::ChangeSource,
         }
     }
     pd_forwardmess(sendobj, 1, &a);
+}
+
+
+
+void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings) {
+    if(settings!= nullptr && settings->s_name != nullptr && strlen(settings->s_name)>0) {
+        auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+        if (rack) {
+            std::string settingsId = settings->s_name;
+            post("loading settings : %s", settings->s_name);
+            rack->loadSettings(settingsId + "-rack.json");
+            rack->dumpSettings();
+        } else {
+            post("No local rack found");
+        };
+    }
+}
+
+void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset) {
+    if(preset!= nullptr && preset->s_name != nullptr && strlen(preset->s_name)>0) {
+        auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+        if (rack) {
+            std::string presetId = preset->s_name;
+            post("loading preset : %s", preset->s_name);
+            rack->applyPreset(presetId);
+            rack->dumpCurrentValues();
+        }
+    } else {
+        post("No local rack found");
+    }
 }
 
 // puredata methods implementation - end

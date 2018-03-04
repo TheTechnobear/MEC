@@ -295,6 +295,7 @@ void *mecapi_proc(void *arg) {
     LOG_0("mecapi_proc stopped");
 
     exitCode = 0; // success
+    return nullptr;
 }
 
 

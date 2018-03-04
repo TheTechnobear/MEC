@@ -17,9 +17,6 @@ extern "C" {
 void KontrolModule_free(t_KontrolModule *);
 void *KontrolModule_new(t_symbol *name, t_symbol *type);
 void KontrolModule_setup(void);
-
-void KontrolModule_loadsettings(t_KontrolModule *x, t_symbol *settings);
-void KontrolModule_loadpreset(t_KontrolModule *x, t_symbol *preset);
 }
 // puredata methods implementation - start
 
@@ -41,7 +38,7 @@ void *KontrolModule_new(t_symbol *name, t_symbol *type) {
             }
             Kontrol::KontrolModel::model()->loadModuleDefinitions(rackId, moduleId, moduleType + "-module.json");
         } else {
-            post("No local rack found, KontrolModule needs a KontrolRack instance");
+            post("cannot create %s : No local rack found, KontrolModule needs a KontrolRack instance" , name->s_name);
         }
     }
     return (void *) x;
@@ -54,42 +51,9 @@ void KontrolModule_setup(void) {
                                     sizeof(t_KontrolModule),
                                     CLASS_DEFAULT,
                                     A_SYMBOL, A_SYMBOL, A_NULL);
-    class_addmethod(KontrolModule_class,
-                    (t_method) KontrolModule_loadsettings, gensym("loadsettings"),
-                    A_DEFSYMBOL, A_NULL);
-    class_addmethod(KontrolModule_class,
-                    (t_method) KontrolModule_loadpreset, gensym("loadpreset"),
-                    A_DEFSYMBOL, A_NULL);
 }
 
 
-void KontrolModule_loadsettings(t_KontrolModule *x, t_symbol *settings) {
-    if(settings!= nullptr && settings->s_name != nullptr && strlen(settings->s_name)>0) {
-        auto rack = Kontrol::KontrolModel::model()->getLocalRack();
-        if (rack) {
-            std::string settingsId = settings->s_name;
-            post("loading settings : %s", settings->s_name);
-            rack->loadSettings(settingsId + "-rack.json");
-            rack->dumpSettings();
-        } else {
-            post("No local rack found, KontrolModule needs a KontrolRack instance");
-        };
-    }
-}
-
-void KontrolModule_loadpreset(t_KontrolModule *x, t_symbol *preset) {
-    if(preset!= nullptr && preset->s_name != nullptr && strlen(preset->s_name)>0) {
-        auto rack = Kontrol::KontrolModel::model()->getLocalRack();
-        if (rack) {
-            std::string presetId = preset->s_name;
-            post("loading preset : %s", preset->s_name);
-            rack->applyPreset(presetId);
-            rack->dumpCurrentValues();
-        }
-    } else {
-        post("No local rack found, KontrolModule needs a KontrolRack instance");
-    }
-}
 
 
 // puredata methods implementation - end

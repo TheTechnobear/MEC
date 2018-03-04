@@ -25,6 +25,7 @@ public:
     void changed(Kontrol::ChangeSource src, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
 
     void setCurrentPage(int page);
+    void setCurrentModule(int mod);
 
 private:
     void displayPage();
@@ -41,10 +42,6 @@ private:
     Kontrol::EntityId pageId_;
     Kontrol::EntityId rackId_;
 
-//    std::shared_ptr<Kontrol::Rack> rack_;
-//    std::vector<std::shared_ptr<Kontrol::Module>> modules_;
-//    std::vector<std::shared_ptr<Kontrol::Page>> pages_;
-//    std::vector<std::shared_ptr<Kontrol::Parameter>> params_;
 };
 
 }
