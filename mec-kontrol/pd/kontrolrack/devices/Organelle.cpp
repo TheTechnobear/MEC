@@ -314,7 +314,8 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
             pageIdx_ = pageIdx;
 
             try {
-                pageId_ = pages[pageIdx_]->id();
+                page = pages[pageIdx_];
+                pageId_ = page->id();
                 display();
             } catch (std::out_of_range) { ;
             }
