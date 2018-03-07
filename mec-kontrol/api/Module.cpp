@@ -56,9 +56,13 @@ std::shared_ptr<Page> Module::createPage(
         const std::vector<EntityId> paramIds
 ) {
     // std::cout << "Module::addPage " << id << std::endl;
+    auto page = pages_[pageId];
+    if(page == nullptr) {
+        pageIds_.push_back(pageId);
+    }
+
     auto p = std::make_shared<Page>(pageId, displayName, paramIds);
     pages_[pageId] = p;
-    pageIds_.push_back(pageId);
     return p;
 }
 
@@ -105,6 +109,12 @@ bool Module::loadModuleDefinitions(const mec::Preferences &module) {
 
     type_ = module.getString("name");
     displayName_ = module.getString("display");
+    parameters_.clear();
+    pages_.clear();
+    pageIds_.clear();
+    midi_mapping_.clear();
+    presets_.clear();
+    currentPreset_="";
 
     if (module.exists("parameters")) {
         // load parameters
@@ -274,6 +284,8 @@ bool Module::loadSettings(const mec::Preferences &prefs) {
     type_ = prefs.getString("module");
     mec::Preferences presets(prefs.getSubTree("presets"));
     if (presets.valid()) { // just ignore if not present
+        presets_.clear();
+        currentPreset_="";
 
         for (std::string presetId : presets.getKeys()) {
             mec::Preferences params(presets.getSubTree(presetId));
@@ -306,6 +318,7 @@ bool Module::loadSettings(const mec::Preferences &prefs) {
 
     mec::Preferences midimapping(prefs.getSubTree("midi-mapping"));
     if (midimapping.valid()) { // just ignore if not present
+        midi_mapping_.clear();
         mec::Preferences cc(midimapping.getSubTree("cc"));
         // only currently handling CC midi learn
         if (cc.valid()) {

@@ -34,7 +34,6 @@ void KontrolRack_free(t_KontrolRack *);
 void *KontrolRack_new(t_floatarg,t_floatarg);
 void KontrolRack_setup(void);
 
-void KontrolRack_test(t_KontrolRack *x);
 
 void KontrolRack_listen(t_KontrolRack *x, t_floatarg f);
 void KontrolRack_connect(t_KontrolRack *x, t_floatarg f);
@@ -50,5 +49,6 @@ void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value);
 
 void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset);
+void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol* mod);
 
 }

@@ -38,6 +38,7 @@ private:
 
     Kontrol::EntityId rackId_;
     int moduleIdx_ = -1;
+    std::string moduleType_;
     Kontrol::EntityId moduleId_;
     int pageIdx_ = -1;
     Kontrol::EntityId pageId_;

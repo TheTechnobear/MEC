@@ -102,6 +102,7 @@ private:
 
     std::shared_ptr<Pots> pots_;
 
+    std::string moduleType_;
     int pageIdx_ = -1;
     Kontrol::EntityId pageId_;
 
@@ -438,7 +439,10 @@ void OParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, c
 
 void OParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     OBaseMode::module(source, rack, module);
-    if (pageIdx_ < 0) setCurrentPage(0, false);
+    if( moduleType_ != module.type()) {
+        pageIdx_ = -1;
+    }
+    moduleType_ = module.type();
 }
 
 void OParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,

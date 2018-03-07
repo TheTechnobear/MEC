@@ -157,27 +157,46 @@ void KontrolRack_setup(void) {
                     (t_method) KontrolRack_loadpreset, gensym("loadpreset"),
                     A_DEFSYMBOL, A_NULL);
 
-
     class_addmethod(KontrolRack_class,
-                    (t_method) KontrolRack_test, gensym("test"),
-                    A_NULL);
+                    (t_method) KontrolRack_loadmodule, gensym("loadmodule"),
+                    A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
+
 }
 
-void KontrolRack_test(t_KontrolRack *x) {
-    t_pd *sendobj = gensym("pd-slot4")->s_thing;
-    if (!sendobj) {
-        post("send to ; failed");
+void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol* mod) {
+    if(modId== nullptr && modId->s_name == nullptr && strlen(modId->s_name)==0) {
+        post("loadmodule failed , invalid moduleId");
+        return;
+    }
+    if(mod== nullptr && mod->s_name == nullptr && strlen(mod->s_name)==0) {
+        post("loadmodule failed , invalid module for moduleId %s",modId->s_name);
         return;
     }
 
+    std::string pdObject = std::string("pd-")+std::string(modId->s_name);
+
+    t_pd *sendObj = gensym(pdObject.c_str())->s_thing;
+    if (!sendObj) {
+        post("loadmodule: unable to find %s",pdObject.c_str());
+        return;
+    }
+
+    post("loadmodule: loading %s into %s",mod->s_name, modId->s_name);
     {
-        t_atom a[5];
-        SETSYMBOL(&a[0], gensym("obj"));
-        SETFLOAT(&a[1], 100);
-        SETFLOAT(&a[2], 100);
-        SETSYMBOL(&a[3], gensym("pd"));
-        SETSYMBOL(&a[4], gensym("slot1"));
-        pd_forwardmess(sendobj, 5, a);
+        // clear the object
+        t_atom args[1];
+        SETSYMBOL(&args[0],gensym("clear"));
+        pd_forwardmess(sendObj, 1, args);
+    }
+
+    {
+        t_atom args[4];
+        SETSYMBOL(&args[0], gensym("obj"));
+        SETFLOAT(&args[1], 100);
+        SETFLOAT(&args[2], 100);
+        SETSYMBOL(&args[3], mod);
+        SETSYMBOL(&args[4], modId);
+        pd_forwardmess(sendObj, 5, args);
     }
 }
 

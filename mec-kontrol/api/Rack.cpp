@@ -207,6 +207,7 @@ void Rack::publishCurrentValues() const {
 
 void Rack::publishMetaData(const std::shared_ptr<Module> &module) const {
     if (module != nullptr) {
+        model()->publishModule(CS_LOCAL,*this,*module);
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();
         std::vector<std::shared_ptr<Page>> pages = module->getPages();
         for (auto p : params) {

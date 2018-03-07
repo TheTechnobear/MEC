@@ -75,7 +75,13 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
     } else if (cc >= P2_TRACK_SELECT_CC_START && cc <= P2_TRACK_SELECT_CC_END) {
         unsigned idx = cc - P2_TRACK_SELECT_CC_START;
         setCurrentModule(idx);
+    } else if (cc == P2_USER_CC) {
+        //DEBUG
+        auto rack = model_->getRack(rackId_);
+        auto module = model_->getModule(rack, moduleId_);
+        if(module!= nullptr) module->dumpCurrentValues();
     }
+
 }
 
 void P2_ParamMode::drawParam(unsigned pos, const Kontrol::Parameter &param) {
@@ -187,11 +193,19 @@ void P2_ParamMode::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, 
         for (auto mod : modules) {
             if (mod->id() == moduleId_) {
                 moduleIdx_ = i;
+
+                if(module.type()!=moduleType_) {
+                    // type has changed, so need to update the display
+                    pageIdx_ = -1;
+                    pageId_ ="";
+                }
                 break;
             }
             i++;
         }
+
     }
+    moduleType_ = module.type();
 //    LOG_0("P2_ParamMode::module" << module.id());
     displayPage();
 }

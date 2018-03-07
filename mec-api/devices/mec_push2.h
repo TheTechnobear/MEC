@@ -27,7 +27,10 @@ static const unsigned P2_DEV_SELECT_CC_START = 102;
 static const unsigned P2_DEV_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7;
 
 static const unsigned P2_TRACK_SELECT_CC_START = 20;
-static const unsigned P2_TRACK_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7;
+static const unsigned P2_TRACK_SELECT_CC_END = P2_TRACK_SELECT_CC_START + 7;
+
+static const unsigned P2_USER_CC = 59;
+
 
 class P2_DisplayMode : Kontrol::KontrolCallback {
 public:
