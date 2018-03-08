@@ -216,6 +216,19 @@ std::shared_ptr<Parameter> KontrolModel::createParam(
     return param;
 }
 
+void KontrolModel::createResource(ChangeSource src,
+                                  const EntityId &rackId,
+                                  const std::string &resType,
+                                  const std::string &resValue) const {
+    auto rack = getRack(rackId);
+    if (rack == nullptr) return;
+    rack->addResource(resType, resValue);
+    for (auto i : listeners_) {
+        (i.second)->resource(src, *rack, resType, resValue);
+    }
+}
+
+
 std::shared_ptr<Parameter> KontrolModel::changeParam(
         ChangeSource src,
         const EntityId &rackId,
@@ -251,7 +264,7 @@ void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const 
 
 
 void KontrolModel::unassignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
-                                const EntityId &paramId, unsigned midiCC) {
+                                  const EntityId &paramId, unsigned midiCC) {
     if (localRack() && rackId == localRack()->id()) {
         localRack()->removeMidiCCMapping(midiCC, moduleId, paramId);
     } else {
@@ -313,6 +326,19 @@ void KontrolModel::ping(
     }
 }
 
+
+void KontrolModel::loadModule(ChangeSource src,
+                              const EntityId &rackId,
+                              const EntityId &moduleId,
+                              const std::string &moduleType) {
+    auto rack = getRack(rackId);
+    if (rack == nullptr) return;
+    for (auto i : listeners_) {
+        (i.second)->loadModule(src, *rack, moduleId, moduleType);
+    }
+}
+
+
 void KontrolModel::publishRack(ChangeSource src, const Rack &rack) const {
     for (auto i : listeners_) {
         (i.second)->rack(src, rack);
@@ -346,6 +372,15 @@ void KontrolModel::publishChanged(ChangeSource src, const Rack &rack, const Modu
         (i.second)->changed(src, rack, module, param);
     }
 }
+
+
+void KontrolModel::publishResource(ChangeSource src, const Rack &rack,
+                                   const std::string &type, const std::string &res) const {
+    for (auto i : listeners_) {
+        (i.second)->resource(src, rack, type, res);
+    }
+}
+
 
 bool KontrolModel::loadModuleDefinitions(const EntityId &rackId, const EntityId &moduleId,
                                          const std::string &filename) {

@@ -41,6 +41,9 @@ public:
     void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                  const Kontrol::Parameter &) override { ; }
 
+    void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
+                  const std::string &, const std::string &) override { ; };
+
     KontrolDevice &this_;
 };
 
@@ -96,7 +99,7 @@ void KontrolDevice::newClient(
 
     auto client = std::make_shared<Kontrol::OSCBroadcaster>(src, keepalive, true);
     if (client->connect(host, port)) {
-        LOG_0("KontrolDevice::new client " << client->host()  << " : " << client->port() << " KA = " << keepalive);
+        LOG_0("KontrolDevice::new client " << client->host() << " : " << client->port() << " KA = " << keepalive);
 //        client->sendPing(listenPort_);
         client->ping(src, host, port, keepalive);
         clients_.push_back((client));
@@ -130,8 +133,9 @@ void KontrolDevice::processorRun() {
                     inactive = false;
                     for (auto it = clients_.begin(); !inactive && it != clients_.end();) {
                         auto client = *it;
-                        if (! client->isActive()) {
-                            LOG_0("KontrolDevice::Process... remove inactive client " << client->host()  << " : " << client->port());
+                        if (!client->isActive()) {
+                            LOG_0("KontrolDevice::Process... remove inactive client " << client->host() << " : "
+                                                                                      << client->port());
                             client->stop();
                             clients_.erase(it);
                             inactive = true;

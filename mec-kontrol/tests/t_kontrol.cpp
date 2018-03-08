@@ -7,31 +7,39 @@
 
 class LoggerCallback : public Kontrol::KontrolCallback {
 public:
-    virtual void rack(Kontrol::ChangeSource, const Kontrol::Rack& rack)  {
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &rack) override {
         LOG_1("rack >> " << rack.id());
     }
 
-    virtual void module(Kontrol::ChangeSource, const Kontrol::Rack& rack, const Kontrol::Module& module) {
+    void module(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &module) override {
         LOG_1("module >> " << rack.id() << "." << module.id());
     }
 
-    virtual void page(Kontrol::ChangeSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Page& page) {
+    void page(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &module,
+              const Kontrol::Page &page) override {
         LOG_1("page >> " << rack.id() << "." << module.id() << "." << page.id());
         // page.dump();
     }
 
-    virtual void param(Kontrol::ChangeSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &module,
+               const Kontrol::Parameter &param) override {
         LOG_1("param >> " << rack.id() << "." << module.id() << "." << param.id());
         param.dump();
     }
 
-    virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &module,
+                 const Kontrol::Parameter &param) override {
         LOG_1("changed >> " << rack.id() << "." << module.id() << "." << param.id());
         param.dump();
     }
+
+    void resource(Kontrol::ChangeSource, const Kontrol::Rack &rack,
+                  const std::string &resType, const std::string &res) override {
+        LOG_1("resource >> " << rack.id() << " " << resType << " " << res);
+    }
 };
 
-int main (int argc, char** argv) {
+int main(int argc, char **argv) {
     LOG_0("test kontrol started");
     std::string file;
     if (argc > 1) {

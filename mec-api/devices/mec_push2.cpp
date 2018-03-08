@@ -90,7 +90,7 @@ bool Push2::init(void *arg) {
 }
 
 void Push2::processorRun() {
-    while(active_) {
+    while (active_) {
         push2Api_->render();
 
         while (PaUtil_GetRingBufferReadAvailable(&midiQueue_)) {
@@ -109,9 +109,9 @@ bool Push2::process() {
 
 void Push2::deinit() {
     LOG_0("Push2::deinit");
-    active_=false;
+    active_ = false;
 
-    if(processor_.joinable()) {
+    if (processor_.joinable()) {
         processor_.join();
     }
 
@@ -144,16 +144,16 @@ bool Push2::processMidi(const MidiMsg &midimsg) {
     MecMsg msg;
     switch (type) {
         case 0x90: { // note on
-                if (midimsg.data[2] > 0) {
-                    processNoteOn(midimsg.data[1], midimsg.data[2]);
-                } else {
-                    processNoteOff(midimsg.data[1], 100);
-                }
+            if (midimsg.data[2] > 0) {
+                processNoteOn(midimsg.data[1], midimsg.data[2]);
+            } else {
+                processNoteOff(midimsg.data[1], 100);
+            }
             break;
         }
 
         case 0x80: { // note off
-                processNoteOff(midimsg.data[1], midimsg.data[2]);
+            processNoteOff(midimsg.data[1], midimsg.data[2]);
             break;
         }
         case 0xA0: { // poly pressure
@@ -218,32 +218,40 @@ void Push2::processCC(unsigned cc, unsigned v) {
 
 
 void Push2::rack(Kontrol::ChangeSource source, const Kontrol::Rack &rack) {
-    if(currentDisplayMode()) currentDisplayMode()->rack(source,rack);
-    if(currentPadMode()) currentPadMode()->rack(source,rack);
+    if (currentDisplayMode()) currentDisplayMode()->rack(source, rack);
+    if (currentPadMode()) currentPadMode()->rack(source, rack);
 }
 
 void Push2::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
-    if(currentDisplayMode()) currentDisplayMode()->module(source,rack,module);
-    if(currentPadMode()) currentPadMode()->module(source,rack,module);
+    if (currentDisplayMode()) currentDisplayMode()->module(source, rack, module);
+    if (currentPadMode()) currentPadMode()->module(source, rack, module);
 }
 
 void Push2::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                  const Kontrol::Page &page) {
-    if(currentDisplayMode()) currentDisplayMode()->page(source,rack,module,page);
-    if(currentPadMode()) currentPadMode()->page(source,rack,module,page);
+    if (currentDisplayMode()) currentDisplayMode()->page(source, rack, module, page);
+    if (currentPadMode()) currentPadMode()->page(source, rack, module, page);
 }
 
 void Push2::param(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                   const Kontrol::Parameter &parameter) {
-    if(currentDisplayMode()) currentDisplayMode()->param(source,rack,module,parameter);
-    if(currentPadMode()) currentPadMode()->param(source,rack,module,parameter);
+    if (currentDisplayMode()) currentDisplayMode()->param(source, rack, module, parameter);
+    if (currentPadMode()) currentPadMode()->param(source, rack, module, parameter);
 }
 
 void Push2::changed(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                     const Kontrol::Parameter &parameter) {
-    if(currentDisplayMode()) currentDisplayMode()->changed(source,rack,module,parameter);
-    if(currentPadMode()) currentPadMode()->changed(source,rack,module,parameter);
+    if (currentDisplayMode()) currentDisplayMode()->changed(source, rack, module, parameter);
+    if (currentPadMode()) currentPadMode()->changed(source, rack, module, parameter);
 }
+
+
+void Push2::resource(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
+                     const std::string& resType, const std::string &resValue) {
+    if (currentDisplayMode()) currentDisplayMode()->resource(source, rack, resType, resValue);
+    if (currentPadMode()) currentPadMode()->resource(source, rack, resType, resValue);
+}
+
 
 } // namespace
 

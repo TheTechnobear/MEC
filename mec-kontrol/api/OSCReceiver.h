@@ -62,6 +62,11 @@ public:
             const EntityId &paramId,
             ParamValue v) const;
 
+    void createResource(ChangeSource src,
+                        const EntityId &rackId,
+                        const std::string &resType,
+                        const std::string &resValue) const;
+
     void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepalive);
 
     void assignMidiCC(ChangeSource src,
@@ -70,10 +75,10 @@ public:
                       const EntityId &paramId,
                       unsigned midiCC);
     void unassignMidiCC(ChangeSource src,
-                      const EntityId &rackId,
-                      const EntityId &moduleId,
-                      const EntityId &paramId,
-                      unsigned midiCC);
+                        const EntityId &rackId,
+                        const EntityId &moduleId,
+                        const EntityId &paramId,
+                        unsigned midiCC);
     void updatePreset(ChangeSource src,
                       const EntityId &rackId,
                       std::string preset);
@@ -82,7 +87,10 @@ public:
                      std::string preset);
     void saveSettings(ChangeSource src,
                       const EntityId &rackId);
-
+    void loadModule(ChangeSource src,
+                    const EntityId &rackId,
+                    const EntityId &moduleId,
+                    const std::string &moduleType);
 
     unsigned int port() { return port_; }
 

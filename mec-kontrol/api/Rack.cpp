@@ -219,6 +219,15 @@ void Rack::publishMetaData(const std::shared_ptr<Module> &module) const {
             }
         }
     }
+    for(auto rt : resources_) {
+        for(auto res : rt.second) {
+            model()->publishResource(CS_LOCAL,*this,rt.first, res);
+        }
+    }
+}
+
+void Rack::addResource(const std::string& type, const std::string& resource) {
+    resources_[type].insert(resource);
 }
 
 void Rack::publishMetaData() const {

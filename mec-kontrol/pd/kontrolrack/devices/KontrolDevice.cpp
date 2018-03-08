@@ -54,29 +54,38 @@ void KontrolDevice::keyPress(unsigned key, unsigned value) {
     if (m != nullptr) m->keyPress(key, value);
 }
 
-void KontrolDevice::rack(Kontrol::ChangeSource src, const Kontrol::Rack& rack) {
+void KontrolDevice::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->rack(src, rack);
 }
 
-void KontrolDevice::module(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module) {
+void KontrolDevice::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->module(src, rack, module);
 }
 
-void KontrolDevice::page(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Page& page) {
+void KontrolDevice::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+                         const Kontrol::Page &page) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->page(src, rack, module, page);
 }
 
-void KontrolDevice::param(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+void KontrolDevice::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+                          const Kontrol::Parameter &param) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->param(src, rack, module, param);
 }
 
-void KontrolDevice::changed(Kontrol::ChangeSource src, const Kontrol::Rack& rack, const Kontrol::Module& module, const Kontrol::Parameter& param) {
+void KontrolDevice::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+                            const Kontrol::Parameter &param) {
     auto m = modes_[currentMode_];
-    if (m != nullptr) m->changed(src, rack, module,  param);
+    if (m != nullptr) m->changed(src, rack, module, param);
+}
+
+void KontrolDevice::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const std::string &resType,
+                             const std::string &resValue) {
+    auto m = modes_[currentMode_];
+    if (m != nullptr) m->resource(src, rack, resType, resValue);
 }
 
 
@@ -93,9 +102,12 @@ static t_pd *get_object(const char *s) {
     return x;
 }
 
-void KontrolDevice::sendPdMessage(const char* obj, float f) {
-    t_pd* sendobj = get_object(obj);
-    if (!sendobj) { post("KontrolDevice::sendPdMessage to %s failed", obj); return; }
+void KontrolDevice::sendPdMessage(const char *obj, float f) {
+    t_pd *sendobj = get_object(obj);
+    if (!sendobj) {
+        post("KontrolDevice::sendPdMessage to %s failed", obj);
+        return;
+    }
 
     t_atom a;
     SETFLOAT(&a, f);

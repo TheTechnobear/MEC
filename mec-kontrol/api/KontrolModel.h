@@ -24,10 +24,12 @@ public:
     virtual void page(ChangeSource, const Rack &, const Module &, const Page &) = 0;
     virtual void param(ChangeSource, const Rack &, const Module &, const Parameter &) = 0;
     virtual void changed(ChangeSource, const Rack &, const Module &, const Parameter &) = 0;
+    virtual void resource(ChangeSource, const Rack &, const std::string &, const std::string &) = 0;
 
     virtual void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) { ; }
 
     virtual void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) { ; }
+
     virtual void unassignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) { ; }
 
     virtual void updatePreset(ChangeSource, const Rack &, std::string preset) { ; }
@@ -35,6 +37,8 @@ public:
     virtual void applyPreset(ChangeSource, const Rack &, std::string preset) { ; }
 
     virtual void saveSettings(ChangeSource, const Rack &) { ; }
+
+    virtual void loadModule(ChangeSource, const Rack &, const EntityId &, const std::string &) { ; }
 
     virtual void stop() { ; }
 };
@@ -104,6 +108,12 @@ public:
             const EntityId &paramId,
             ParamValue v) const;
 
+    void createResource(ChangeSource src,
+                        const EntityId &rackId,
+                        const std::string &resType,
+                        const std::string &resValue) const;
+
+
     void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) const;
 
     void assignMidiCC(ChangeSource src,
@@ -112,10 +122,10 @@ public:
                       const EntityId &paramId,
                       unsigned midiCC);
     void unassignMidiCC(ChangeSource src,
-                      const EntityId &rackId,
-                      const EntityId &moduleId,
-                      const EntityId &paramId,
-                      unsigned midiCC);
+                        const EntityId &rackId,
+                        const EntityId &moduleId,
+                        const EntityId &paramId,
+                        unsigned midiCC);
     void updatePreset(ChangeSource src,
                       const EntityId &rackId,
                       std::string preset);
@@ -125,6 +135,10 @@ public:
     void saveSettings(ChangeSource src,
                       const EntityId &rackId);
 
+    void loadModule(ChangeSource src,
+                    const EntityId &rackId,
+                    const EntityId &moduleId,
+                    const std::string &moduleType);
 
     std::shared_ptr<Rack> createLocalRack(unsigned port);
 
@@ -137,6 +151,7 @@ public:
     void publishPage(ChangeSource src, const Rack &, const Module &, const Page &) const;
     void publishParam(ChangeSource src, const Rack &, const Module &, const Parameter &) const;
     void publishChanged(ChangeSource src, const Rack &, const Module &, const Parameter &) const;
+    void publishResource(ChangeSource src, const Rack &, const std::string &, const std::string &) const;
 
     bool loadSettings(const EntityId &rackId, const std::string &filename);
     bool loadModuleDefinitions(const EntityId &rackId, const EntityId &moduleId, const std::string &filename);

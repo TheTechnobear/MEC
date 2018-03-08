@@ -9,9 +9,10 @@
 
 class KontrolDevice;
 
-class DeviceMode :  public Kontrol::KontrolCallback {
+class DeviceMode : public Kontrol::KontrolCallback {
 public:
-    virtual ~DeviceMode() override {;}
+    virtual ~DeviceMode() override { ; }
+
     virtual bool init() = 0;
     virtual void poll() = 0;
     virtual void activate() = 0;
@@ -24,7 +25,7 @@ protected:
 };
 
 
-class KontrolDevice : public Kontrol::KontrolCallback  {
+class KontrolDevice : public Kontrol::KontrolCallback {
 public:
     KontrolDevice();
     virtual ~KontrolDevice();
@@ -40,16 +41,21 @@ public:
     virtual void keyPress(unsigned key, unsigned value);
 
     //Kontrol::KontrolCallback
-    void rack(Kontrol::ChangeSource, const Kontrol::Rack&) override;
-    void module(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&) override;
-    void page(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Page&) override;
-    void param(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) override;
-    void changed(Kontrol::ChangeSource, const Kontrol::Rack&, const Kontrol::Module&, const Kontrol::Parameter&) override;
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
+    void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
+    void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &) override;
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+               const Kontrol::Parameter &) override;
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                 const Kontrol::Parameter &) override;
+    void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &) override;
 
     virtual void midiCC(unsigned num, unsigned value);
 
-    void sendPdMessage(const char* obj, float f);
-    std::shared_ptr<Kontrol::KontrolModel> model() { return model_;}
+    void sendPdMessage(const char *obj, float f);
+
+    std::shared_ptr<Kontrol::KontrolModel> model() { return model_; }
+
 protected:
     std::shared_ptr<Kontrol::KontrolModel> model_;
     std::map<unsigned, std::shared_ptr<DeviceMode>> modes_;

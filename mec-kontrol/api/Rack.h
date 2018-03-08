@@ -7,14 +7,13 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <set>
 
 
 namespace Kontrol {
 
 class Module;
 class KontrolModel;
-
-
 
 class Rack : public Entity {
 public:
@@ -32,6 +31,7 @@ public:
     std::vector<std::shared_ptr<Module>>  getModules();
     std::shared_ptr<Module> getModule(const EntityId& moduleId);
     void addModule(const std::shared_ptr<Module>& module);
+
 
     bool loadModuleDefinitions(const EntityId& moduleId, const mec::Preferences& prefs);
 
@@ -59,6 +59,10 @@ public:
     void publishCurrentValues(const std::shared_ptr<Module>& module) const;
     void publishCurrentValues() const;
 
+    const std::set<std::string>& getResources(const std::string& type);
+    void addResource(const std::string& type, const std::string& resource);
+
+
     void dumpSettings() const;
     void dumpParameters();
     void dumpCurrentValues();
@@ -70,6 +74,7 @@ private:
     std::string host_;
     unsigned port_;
     std::unordered_map<EntityId, std::shared_ptr<Module>> modules_;
+    std::unordered_map<std::string, std::set<std::string>> resources_;
 
     std::string settingsFile_;
     std::shared_ptr<mec::Preferences> settings_;

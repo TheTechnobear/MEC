@@ -14,7 +14,6 @@
 namespace Kontrol {
 
 
-
 class OSCBroadcaster : public KontrolCallback {
 public:
     static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
@@ -22,35 +21,39 @@ public:
     OSCBroadcaster(Kontrol::ChangeSource src, unsigned keepAlive, bool master);
     ~OSCBroadcaster();
     bool connect(const std::string &host, unsigned port);
-    void stop() override ;
+    void stop() override;
 
     void sendPing(unsigned port);
 
     // KontrolCallback
-    void rack(ChangeSource, const Rack &) override ;
-    void module(ChangeSource, const Rack &rack, const Module &) override ;
-    void page(ChangeSource src, const Rack &rack, const Module &module, const Page &p) override ;
-    void param(ChangeSource src, const Rack &rack, const Module &module, const Parameter &) override ;
-    void changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) override ;
+    void rack(ChangeSource, const Rack &) override;
+    void module(ChangeSource, const Rack &rack, const Module &) override;
+    void page(ChangeSource src, const Rack &rack, const Module &module, const Page &p) override;
+    void param(ChangeSource src, const Rack &rack, const Module &module, const Parameter &) override;
+    void changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) override;
+    void resource(ChangeSource, const Rack &, const std::string &, const std::string &) override;
 
 
-    void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) override ;
-    void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override ;
-    void unassignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override ;
-    void updatePreset(ChangeSource, const Rack &, std::string preset) override ;
-    void applyPreset(ChangeSource, const Rack &, std::string preset)  override ;
-    void saveSettings(ChangeSource, const Rack &)  override ;
+    void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) override;
+    void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override;
+    void unassignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override;
+    void updatePreset(ChangeSource, const Rack &, std::string preset) override;
+    void applyPreset(ChangeSource, const Rack &, std::string preset) override;
+    void saveSettings(ChangeSource, const Rack &) override;
+    void loadModule(ChangeSource, const Rack &, const EntityId &, const std::string &) override;
 
+    bool isThisHost(const std::string &host, unsigned port) { return host == host_ && port == port_; }
 
-    bool isThisHost(const std::string &host, unsigned port) { return host==host_ && port==port_;}
     bool isActive();
     void writePoll();
-    std::string host() { return host_;}
-    unsigned port() { return port_;}
+
+    std::string host() { return host_; }
+
+    unsigned port() { return port_; }
 
 
 protected:
-    void send(const char* data, unsigned size);
+    void send(const char *data, unsigned size);
     bool broadcastChange(ChangeSource src);
 
 private:

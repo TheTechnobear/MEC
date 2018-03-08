@@ -58,6 +58,9 @@ public:
     void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                  const Kontrol::Parameter &) override { ; }
 
+    void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &,
+                  const std::string &) override { ; };
+
     void displayPopup(const std::string &text, unsigned time);
 protected:
     Organelle &parent_;
@@ -386,14 +389,14 @@ void OParamMode::activateShortcut(unsigned key) {
         unsigned moduleIdx = key - 1;
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto modules = parent_.model()->getModules(rack);
-        if(moduleIdx < modules.size()) {
+        if (moduleIdx < modules.size()) {
             auto module = modules[moduleIdx];
             auto moduleId = module->id();
-            if(parent_.currentModule()!=moduleId) {
+            if (parent_.currentModule() != moduleId) {
                 parent_.currentModule(moduleId);
                 pageIdx_ = -1;
-                setCurrentPage(0,false);
-                displayPopup(module->displayName(),MODULE_SWITCH_TIMEOUT);
+                setCurrentPage(0, false);
+                displayPopup(module->displayName(), MODULE_SWITCH_TIMEOUT);
                 parent_.flipDisplay();
             }
         }
@@ -439,7 +442,7 @@ void OParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, c
 
 void OParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     OBaseMode::module(source, rack, module);
-    if( moduleType_ != module.type()) {
+    if (moduleType_ != module.type()) {
         pageIdx_ = -1;
     }
     moduleType_ = module.type();

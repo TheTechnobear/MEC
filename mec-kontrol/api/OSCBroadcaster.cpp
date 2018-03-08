@@ -110,7 +110,7 @@ bool OSCBroadcaster::broadcastChange(ChangeSource src) {
 
 
 void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) {
-    if ( (port_ == port) && (host_ == host) ) {
+    if ((port_ == port) && (host_ == host)) {
         changeSource_ = src;
 
         keepAliveTime_ = keepAlive;
@@ -121,7 +121,7 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
                 KontrolModel::model()->publishMetaData();
             }
         } else {
-            if ( keepAliveTime_ == 0 || !wasActive) {
+            if (keepAliveTime_ == 0 || !wasActive) {
 
                 EntityId rackId = Rack::createId(host_, port_);
                 for (auto r:KontrolModel::model()->getRacks()) {
@@ -168,7 +168,7 @@ void OSCBroadcaster::assignMidiCC(ChangeSource src, const Rack &rack, const Modu
 }
 
 void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p,
-                                  unsigned midiCC) {
+                                    unsigned midiCC) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
@@ -227,6 +227,25 @@ void OSCBroadcaster::saveSettings(ChangeSource src, const Rack &rack) {
     ops << osc::BeginBundleImmediate
         << osc::BeginMessage("/Kontrol/saveSettings")
         << rack.id().c_str();
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+}
+
+
+void OSCBroadcaster::loadModule(ChangeSource src, const Rack &rack, const EntityId &moduleId,
+                                const std::string &modType) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/loadModule")
+        << rack.id().c_str()
+        << moduleId.c_str()
+        << modType.c_str();
 
     ops << osc::EndMessage
         << osc::EndBundle;
@@ -355,5 +374,25 @@ void OSCBroadcaster::changed(ChangeSource src, const Rack &rack, const Module &m
 
     send(ops.Data(), ops.Size());
 }
+
+void OSCBroadcaster::resource(ChangeSource src, const Rack &rack, const std::string &type, const std::string &res) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/resource")
+        << rack.id().c_str()
+        << type.c_str()
+        << res.c_str();
+
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+}
+
 
 } // namespace

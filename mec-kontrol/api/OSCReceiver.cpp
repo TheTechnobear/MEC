@@ -251,6 +251,14 @@ void OSCReceiver::createPage(
     model_->createPage(src, rackId, moduleId, pageId, displayName, paramIds);
 }
 
+
+void OSCReceiver::createResource(ChangeSource src,
+                                 const EntityId &rackId,
+                                 const std::string &resType,
+                                 const std::string &resValue) const {
+    model_->createResource(src, rackId, resType, resValue);
+}
+
 void OSCReceiver::ping(ChangeSource src,
                        const std::string &host,
                        unsigned port,
@@ -264,7 +272,7 @@ void OSCReceiver::assignMidiCC(ChangeSource src, const EntityId &rackId, const E
 }
 
 void OSCReceiver::unassignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
-                               const EntityId &paramId, unsigned midiCC) {
+                                 const EntityId &paramId, unsigned midiCC) {
     model_->unassignMidiCC(src, rackId, moduleId, paramId, midiCC);
 }
 
@@ -279,5 +287,14 @@ void OSCReceiver::applyPreset(ChangeSource src, const EntityId &rackId, std::str
 void OSCReceiver::saveSettings(ChangeSource src, const EntityId &rackId) {
     model_->saveSettings(src, rackId);
 }
+
+
+void OSCReceiver::loadModule(ChangeSource src,
+                             const EntityId &rackId,
+                             const EntityId &moduleId,
+                             const std::string &moduleType) {
+    model_->loadModule(src, rackId, moduleId, moduleType);
+}
+
 
 } // namespace
