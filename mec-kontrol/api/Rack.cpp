@@ -226,9 +226,24 @@ void Rack::publishMetaData(const std::shared_ptr<Module> &module) const {
     }
 }
 
+std::set<std::string> Rack::getResourceTypes() {
+    std::set<std::string> resTypes;
+    for(auto r : resources_) {
+        resTypes.insert(r.first);
+    }
+    return resTypes;
+}
+
+
 void Rack::addResource(const std::string& type, const std::string& resource) {
     resources_[type].insert(resource);
 }
+
+
+const std::set<std::string>& Rack::getResources(const std::string& type) {
+    return resources_[type];
+}
+
 
 void Rack::publishMetaData() const {
     for (auto p : modules_) {

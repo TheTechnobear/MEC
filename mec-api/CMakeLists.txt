@@ -10,6 +10,8 @@ if (NOT WIN32)
             devices/mec_push2.h
             devices/push2/mec_push2_param.cpp
             devices/push2/mec_push2_param.h
+            devices/push2/mec_push2_device.cpp
+            devices/push2/mec_push2_device.h
             devices/push2/mec_push2_play.h
             devices/push2/mec_push2_play.cpp
             devices/mec_soundplane.cpp

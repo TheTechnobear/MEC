@@ -23,6 +23,10 @@ static const unsigned P2_ENCODER_CC_START = 71;
 static const unsigned P2_ENCODER_CC_END = P2_ENCODER_CC_START + 7;
 static const unsigned P2_ENCODER_CC_VOLUME = 79;
 
+static const unsigned P2_NOTE_ENCODER_START = 0;
+static const unsigned P2_NOTE_ENCODER_END = P2_NOTE_ENCODER_START + 7;
+
+
 static const unsigned P2_DEV_SELECT_CC_START = 102;
 static const unsigned P2_DEV_SELECT_CC_END = P2_DEV_SELECT_CC_START + 7;
 
@@ -30,6 +34,8 @@ static const unsigned P2_TRACK_SELECT_CC_START = 20;
 static const unsigned P2_TRACK_SELECT_CC_END = P2_TRACK_SELECT_CC_START + 7;
 
 static const unsigned P2_USER_CC = 59;
+static const unsigned P2_DEVICE_CC = 110;
+static const unsigned P2_BROWSE_CC = 111;
 
 
 class P2_DisplayMode : Kontrol::KontrolCallback {
@@ -88,7 +94,8 @@ public:
 };
 
 enum PushDisplayModes {
-    P2D_Param
+    P2D_Param,
+    P2D_Device
 };
 
 enum PushPadModes {
@@ -130,6 +137,13 @@ public:
     void changePadMode(PushPadModes);
     void processorRun();
 
+    void currentRack(const Kontrol::EntityId id) { rackId_ = id;}
+    void currentModule(const Kontrol::EntityId id) { moduleId_ = id;}
+    void currentPage(const Kontrol::EntityId id) { pageId_ = id;}
+
+    Kontrol::EntityId currentRack()     { return rackId_;}
+    Kontrol::EntityId currentModule()   { return moduleId_;}
+    Kontrol::EntityId currentPage()     { return pageId_;}
 private:
     inline std::shared_ptr<P2_PadMode> currentPadMode() { return padModes_[currentPadMode_]; }
 
@@ -144,6 +158,10 @@ private:
     std::map<unsigned, std::shared_ptr<P2_PadMode>> padModes_;
     PushDisplayModes currentDisplayMode_;
     std::map<unsigned, std::shared_ptr<P2_DisplayMode>> displayModes_;
+
+    Kontrol::EntityId rackId_;
+    Kontrol::EntityId moduleId_;
+    Kontrol::EntityId pageId_;
 
 
     // push display

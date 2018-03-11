@@ -2,7 +2,7 @@
 #include "push2lib.h"
 #include "push1font.h"
 
-#include <stdarg.h> 
+#include <stdarg.h>
 #include <memory.h>
 
 namespace Push2API {
@@ -28,7 +28,7 @@ static uint16_t VID = 0x2982, PID = 0x1967;
 
 #define HDR_PKT_SZ 0x10
 static uint8_t headerPkt[HDR_PKT_SZ] =
-    {0xef, 0xcd, 0xab, 0x89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};// rev engineered
+        {0xef, 0xcd, 0xab, 0x89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};// rev engineered
 // { 0xFF, 0xCC, 0xAA, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,0x00, 0x00, 0x00, 0x00 }; //ableton
 
 
@@ -73,21 +73,21 @@ void Push2::clearRow(unsigned row, unsigned vscale) {
     }
 }
 
-void Push2::drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr) {
-    unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
-    // static const unsigned CELL_OFFSET_8[8] = { 0, 24, 48, 72, 96, 120, 144, 168 };
-    if (cell < 8) {
-        drawText(row, (CH_COLS / 8) * cell, str, vscale, hscale, clr);
-    }
-}
 
-void Push2::drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, uint16_t clr) {
-    drawText(row, col, str, (int) strlen(str), vscale, hscale, clr);
+void Push2::drawText(unsigned row, unsigned col,
+                     const char *str,
+                     unsigned vscale, unsigned hscale,
+                     uint16_t clr,
+                     bool invert) {
+    drawText(row, col, str, (int) strlen(str), vscale, hscale, clr, invert);
 }
 
 
-void Push2::drawText(unsigned row, unsigned col, const char *str, unsigned ln, unsigned vscale, unsigned hscale,
-                     uint16_t colour) {
+void Push2::drawText(unsigned row, unsigned col,
+                     const char *str, unsigned ln,
+                     unsigned vscale, unsigned hscale,
+                     uint16_t colour,
+                     bool invert) {
     unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
     unsigned CH_ROWS = ((HEIGHT / F_HEIGHT) / vscale);
     if (row > CH_ROWS) return;
@@ -124,6 +124,7 @@ void Push2::drawText(unsigned row, unsigned col, const char *str, unsigned ln, u
                         int bpos = bl + ((((c * F_WIDTH) + pix) * hscale) + hs);
                         // dataPkt_[bpos] = ( (clr & 0x00FF) << 8 ) | ( (clr & 0xFF00) >> 8);
                         if (bpos < (DATA_PKT_SZ / 2)) {
+                            if(invert) clr = ~ clr;
                             dataPkt_[bpos] = clr;
                         }
                     }
@@ -136,7 +137,7 @@ void Push2::drawText(unsigned row, unsigned col, const char *str, unsigned ln, u
 void Push2::p1_drawCell8(unsigned row, unsigned cell, const char *str) {
     static const unsigned P1_CELL_OFFSET_8[8] = {0, 12, 24, 36, 48, 60, 72, 84};
     if (cell < 8) {
-        drawText(row, P1_CELL_OFFSET_8[cell], str, P1_VSCALE, P1_HSCALE, MONO_CLR);
+        drawText(row, P1_CELL_OFFSET_8[cell], str, P1_VSCALE, P1_HSCALE, MONO_CLR, false);
     }
 }
 
@@ -144,10 +145,25 @@ void Push2::p1_drawCell8(unsigned row, unsigned cell, const char *str) {
 void Push2::p1_drawCell4(unsigned row, unsigned cell, const char *str) {
     static const unsigned P1_CELL_OFFSET_4[4] = {3, 27, 51, 75};
     if (cell < 4) {
-        drawText(row, P1_CELL_OFFSET_4[cell], str, strlen(str), P1_VSCALE, P1_HSCALE, MONO_CLR);
+        drawText(row, P1_CELL_OFFSET_4[cell], str, strlen(str), P1_VSCALE, P1_HSCALE, MONO_CLR, false);
     }
 }
 
+void Push2::drawInvertedCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr) {
+    unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
+    // static const unsigned CELL_OFFSET_8[8] = { 0, 24, 48, 72, 96, 120, 144, 168 };
+    if (cell < 8) {
+        drawText(row, (CH_COLS / 8) * cell, str, vscale, hscale, clr,true);
+    }
+}
+
+void Push2::drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr) {
+    unsigned CH_COLS = (WIDTH / F_WIDTH) / hscale;
+    // static const unsigned CELL_OFFSET_8[8] = { 0, 24, 48, 72, 96, 120, 144, 168 };
+    if (cell < 8) {
+        drawText(row, (CH_COLS / 8) * cell, str, vscale, hscale, clr,false);
+    }
+}
 
 
 
@@ -173,7 +189,8 @@ int Push2::render() {
 int Push2::init() {
     const struct libusb_version *version;
     version = libusb_get_version();
-    std::cout << "Using libusb " << version->major << "." << version->minor << "." << version->micro << "." << version->nano << std::endl;
+    std::cout << "Using libusb " << version->major << "." << version->minor << "." << version->micro << "."
+              << version->nano << std::endl;
     int r = libusb_init(NULL);
     libusb_set_debug(NULL, LIBUSB_LOG_LEVEL_INFO);
     static uint16_t vid = VID, pid = PID;

@@ -31,7 +31,7 @@ P2_ParamMode::P2_ParamMode(mec::Push2 &parent, const std::shared_ptr<Push2API::P
           push2Api_(api),
           pageIdx_(-1),
           moduleIdx_(-1) {
-    model_ = Kontrol::KontrolModel::model();;
+    model_ = Kontrol::KontrolModel::model();
 }
 
 void P2_ParamMode::processNoteOn(unsigned, unsigned) {
@@ -47,22 +47,22 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
     if (cc >= P2_ENCODER_CC_START && cc <= P2_ENCODER_CC_END) {
         unsigned idx = cc - P2_ENCODER_CC_START;
         try {
-            auto rack = model_->getRack(rackId_);
-            auto module = model_->getModule(rack, moduleId_);
-            auto page = model_->getPage(module, pageId_);
-            auto params = model_->getParams(module, page);
+            auto pRack = model_->getRack(parent_.currentRack());
+            auto pModule = model_->getModule(pRack, parent_.currentModule());
+            auto pPage = model_->getPage(pModule, parent_.currentPage());
+            auto pParams = model_->getParams(pModule, pPage);
 
-            if (idx >= params.size()) return;
+            if (idx >= pParams.size()) return;
 
-            auto &param = params[idx];
+            auto &param = pParams[idx];
             // auto page = pages_[currentPage_]
             if (param != nullptr) {
                 const int steps = 1;
                 // LOG_0("v = " << v);
-                float vel = v & 0x40 ? (128.0f - (float) v) / (128.0f * steps) * -1.0f : float(v) / (128.0f * steps);
+                float value = v & 0x40 ? (128.0f - (float) v) / (128.0f * steps) * -1.0f : float(v) / (128.0f * steps);
 
-                Kontrol::ParamValue calc = param->calcRelative(vel);
-                model_->changeParam(Kontrol::CS_LOCAL, rackId_, module->id(), param->id(), calc);
+                Kontrol::ParamValue calc = param->calcRelative(value);
+                model_->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
             }
         } catch (std::out_of_range) {
 
@@ -77,11 +77,10 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
         setCurrentModule(idx);
     } else if (cc == P2_USER_CC) {
         //DEBUG
-        auto rack = model_->getRack(rackId_);
-        auto module = model_->getModule(rack, moduleId_);
-        if(module!= nullptr) module->dumpCurrentValues();
+        auto pRack = model_->getRack(parent_.currentRack());
+        auto pModule = model_->getModule(pRack, parent_.currentModule());
+        if (pModule != nullptr) pModule->dumpCurrentValues();
     }
-
 }
 
 void P2_ParamMode::drawParam(unsigned pos, const Kontrol::Parameter &param) {
@@ -99,22 +98,22 @@ void P2_ParamMode::displayPage() {
     for (unsigned int i = P2_DEV_SELECT_CC_START; i < P2_DEV_SELECT_CC_END; i++) { parent_.sendCC(0, i, 0); }
     for (unsigned int i = P2_TRACK_SELECT_CC_START; i < P2_TRACK_SELECT_CC_END; i++) { parent_.sendCC(0, i, 0); }
 
-    auto rack = model_->getRack(rackId_);
-    auto modules = model_->getModules(rack);
-    auto module = model_->getModule(rack, moduleId_);
-    auto page = model_->getPage(module, pageId_);
-    auto pages = model_->getPages(module);
-    auto params = model_->getParams(module, page);
+    auto pRack = model_->getRack(parent_.currentRack());
+    auto pModules = model_->getModules(pRack);
+    auto pModule = model_->getModule(pRack, parent_.currentModule());
+    auto pPage = model_->getPage(pModule, parent_.currentPage());
+    auto pPages = model_->getPages(pModule);
+    auto pParams = model_->getParams(pModule, pPage);
 
     // draw pages
     unsigned int i = 0;
-    for (auto cpage : pages) {
+    for (auto cpage : pPages) {
         push2Api_->drawCell8(0, i, centreText(cpage->displayName()).c_str(), VSCALE, HSCALE, page_clrs[i]);
         parent_.sendCC(0, P2_DEV_SELECT_CC_START + i, i == pageIdx_ ? 122 : 124);
 
         if (i == pageIdx_) {
             unsigned int j = 0;
-            for (auto param : params) {
+            for (auto param : pParams) {
                 if (param != nullptr) {
                     drawParam(j, *param);
                 }
@@ -128,7 +127,7 @@ void P2_ParamMode::displayPage() {
 
     // draw modules
     i = 0;
-    for (auto mod : modules) {
+    for (auto mod : pModules) {
         push2Api_->drawCell8(5, i, centreText(mod->displayName()).c_str(), VSCALE, HSCALE, page_clrs[i]);
         parent_.sendCC(0, P2_TRACK_SELECT_CC_START + i, i == moduleIdx_ ? 122 : 124);
         i++;
@@ -138,15 +137,19 @@ void P2_ParamMode::displayPage() {
 
 
 void P2_ParamMode::setCurrentModule(int moduleIdx) {
-    auto rack = model_->getRack(rackId_);
+    auto pRack = model_->getRack(parent_.currentRack());
+    auto pModules = model_->getModules(pRack);
+//    auto pModule = model_->getModule(pRack, parent_.currentModule());
+////    auto pPage = model_->getPage(pModule, parent_.currentPage());
+//    auto pPages = model_->getPages(pModule);
+////    auto pParams = model_->getParams(pModule, pPage);
 
-    auto modules = model_->getModules(rack);
 
-    if (moduleIdx != moduleIdx_ && moduleIdx < modules.size()) {
+    if (moduleIdx != moduleIdx_ && moduleIdx < pModules.size()) {
         moduleIdx_ = moduleIdx;
 
         try {
-            moduleId_ = modules[moduleIdx_]->id();
+            parent_.currentModule(pModules[moduleIdx_]->id());
 
             pageIdx_ = -1;
             setCurrentPage(0);
@@ -157,17 +160,20 @@ void P2_ParamMode::setCurrentModule(int moduleIdx) {
 
 
 void P2_ParamMode::setCurrentPage(int pageIdx) {
-    auto rack = model_->getRack(rackId_);
-    auto module = model_->getModule(rack, moduleId_);
-//    auto page = model_->getPage(module,pageId_);
-    auto pages = model_->getPages(module);
-//    auto params = model_->getParams(module,page);
+    auto pRack = model_->getRack(parent_.currentRack());
+    auto pModule = model_->getModule(pRack, parent_.currentModule());
+//    auto pPage = model_->getPage(pModule, parent_.currentPage());
+    auto pPages = model_->getPages(pModule);
+//    auto pParams = model_->getParams(pModule, pPage);
 
-    if (pageIdx != pageIdx_ && pageIdx < pages.size()) {
+    if(pPages.size()==0) {
+        parent_.currentPage("");
+        displayPage();
+    } else if (pageIdx != pageIdx_ && pageIdx < pPages.size()) {
         pageIdx_ = pageIdx;
 
         try {
-            pageId_ = pages[pageIdx_]->id();
+            parent_.currentPage(pPages[pageIdx_]->id());
             displayPage();
         } catch (std::out_of_range) { ;
         }
@@ -176,28 +182,28 @@ void P2_ParamMode::setCurrentPage(int pageIdx) {
 
 void P2_ParamMode::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     P2_DisplayMode::rack(src, rack);
-    if (rackId_.length() == 0) rackId_ = rack.id();
+    if (parent_.currentRack().length() == 0) parent_.currentRack(rack.id());
 }
 
 void P2_ParamMode::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     P2_DisplayMode::module(src, rack, module);
-    if (rackId_ != rack.id()) return;
-    if (moduleId_.length() == 0) {
-        moduleId_ = module.id();
+    if (parent_.currentRack() != rack.id()) return;
+    if (parent_.currentModule().length() == 0) {
+        parent_.currentModule(module.id());
         setCurrentModule(0);
     } else {
         // adjust moduleidx
-        auto prack = model_->getRack(rackId_);
+        auto prack = model_->getRack(parent_.currentRack());
         auto modules = model_->getModules(prack);
         unsigned int i = 0;
         for (auto mod : modules) {
-            if (mod->id() == moduleId_) {
+            if (mod->id() == parent_.currentModule()) {
                 moduleIdx_ = i;
 
-                if(module.type()!=moduleType_) {
+                if (module.type() != moduleType_) {
                     // type has changed, so need to update the display
                     pageIdx_ = -1;
-                    pageId_ ="";
+                    parent_.currentPage("");
                 }
                 break;
             }
@@ -213,14 +219,14 @@ void P2_ParamMode::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, 
 void P2_ParamMode::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                         const Kontrol::Page &page) {
     P2_DisplayMode::page(src, rack, module, page);
-    if (rackId_ != rack.id()) return;
-    if (moduleId_ != module.id()) return;
+    if (parent_.currentRack() != rack.id()) return;
+    if (parent_.currentModule() != module.id()) return;
 
-    if (pageId_.length() == 0) {
-        auto prack = model_->getRack(rackId_);
-        auto pmodule = model_->getModule(prack, moduleId_);
-        auto ppages = model_->getPages(pmodule);
-        if (ppages.size() > 0) {
+    if (parent_.currentPage().length() == 0) {
+        auto pRack = model_->getRack(parent_.currentRack());
+        auto pModule = model_->getModule(pRack, parent_.currentModule());
+        auto pPages = model_->getPages(pModule);
+        if (pPages.size() > 0) {
             setCurrentPage(0);
         }
     }
@@ -234,13 +240,13 @@ void P2_ParamMode::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack, c
     P2_DisplayMode::param(src, rack, module, param);
 //    LOG_0("P2_ParamMode::param " << param.id() << " : " << param.current().floatValue());
 
-    if (rackId_ != rack.id()) return;
-    if (moduleId_ != module.id()) return;
+    if (parent_.currentRack() != rack.id()) return;
+    if (parent_.currentModule() != module.id()) return;
 
-    auto pRack = model_->getRack(rackId_);
-    auto pModule = model_->getModule(pRack, moduleId_);
-    auto pPage = model_->getPage(pModule, pageId_);
-//    auto pPages = model_->pModule(pModule);
+    auto pRack = model_->getRack(parent_.currentRack());
+    auto pModule = model_->getModule(pRack, parent_.currentModule());
+    auto pPage = model_->getPage(pModule, parent_.currentPage());
+//    auto pPages = model_->getPages(pModule);
     auto pParams = model_->getParams(pModule, pPage);
 
     unsigned i = 0;
@@ -259,10 +265,10 @@ void P2_ParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                            const Kontrol::Parameter &param) {
     P2_DisplayMode::changed(src, rack, module, param);
 //    LOG_0("P2_ParamMode::changed " << param.id() << " : " << param.current().floatValue());
-    auto pRack = model_->getRack(rackId_);
-    auto pModule = model_->getModule(pRack, moduleId_);
-    auto pPage = model_->getPage(pModule, pageId_);
-//    auto pPages = model_->pModule(pModule);
+    auto pRack = model_->getRack(parent_.currentRack());
+    auto pModule = model_->getModule(pRack, parent_.currentModule());
+    auto pPage = model_->getPage(pModule, parent_.currentPage());
+//    auto pPages = model_->getPages(pModule);
     auto pParams = model_->getParams(pModule, pPage);
 
     unsigned i = 0;
@@ -274,6 +280,18 @@ void P2_ParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
         }
         i++;
     }
+}
+
+void P2_ParamMode::activate() {
+    P2_DisplayMode::activate();
+    displayPage();
+    for (int i = P2_DEV_SELECT_CC_START; i <= P2_DEV_SELECT_CC_END; i++) {
+        parent_.sendCC(0, i, 0);
+    }
+    for (int i = P2_TRACK_SELECT_CC_START; i <= P2_TRACK_SELECT_CC_END; i++) {
+        parent_.sendCC(0, i, 0);
+    }
+
 }
 
 } //namespace

@@ -26,7 +26,7 @@ public:
 
     void setCurrentPage(int page);
     void setCurrentModule(int mod);
-
+    void activate() override;
 private:
     void displayPage();
 
@@ -36,13 +36,9 @@ private:
     std::shared_ptr<Push2API::Push2> push2Api_;
     std::shared_ptr<Kontrol::KontrolModel> model_;
 
-    Kontrol::EntityId rackId_;
     int moduleIdx_ = -1;
     std::string moduleType_;
-    Kontrol::EntityId moduleId_;
     int pageIdx_ = -1;
-    Kontrol::EntityId pageId_;
-
 };
 
 }

@@ -29,10 +29,14 @@ public:
 
     static const unsigned P1_VSCALE = 5;
     static const unsigned P1_HSCALE = 2;
-    void drawText(unsigned row, unsigned col, const char *str, unsigned ln, unsigned vscale, unsigned hscale,
-                  uint16_t clr);
-    void drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, uint16_t clr);
+    void drawText(unsigned row, unsigned col,
+                  const char *str, unsigned ln,
+                  unsigned vscale, unsigned hscale,
+                  uint16_t clr, bool invert);
+    void drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, uint16_t clr,bool invert);
+
     void drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr);
+    void drawInvertedCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr);
 
     void p1_drawCell8(unsigned row, unsigned cell, const char *str);
     void p1_drawCell4(unsigned row, unsigned cell, const char *str);

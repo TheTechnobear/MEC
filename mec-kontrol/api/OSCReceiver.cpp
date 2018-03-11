@@ -90,7 +90,6 @@ public:
                 receiver_.createPage(changedSrc, rackId, moduleId, pageId, displayName, paramIds);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/module") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                // std::cout << "received page p1"<< std::endl;
                 const char *rackId = (arg++)->AsString();
                 const char *moduleId = (arg++)->AsString();
                 const char *displayName = (arg++)->AsString();
@@ -100,12 +99,11 @@ public:
                 receiver_.createModule(changedSrc, rackId, moduleId, displayName, type);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/rack") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                // std::cout << "received page p1"<< std::endl;
                 const char *rackId = (arg++)->AsString();
                 const char *host = (arg++)->AsString();
                 unsigned port = (unsigned) (arg++)->AsInt32();
 
-                // std::cout << "received module " << moduleId << std::endl;
+                // std::cout << "received rack " << rackId << std::endl;
                 receiver_.createRack(changedSrc, rackId, host, port);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/ping") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
@@ -115,6 +113,15 @@ public:
                     keepAlive = (unsigned) (arg++)->AsInt32();
                 }
                 receiver_.ping(changedSrc, std::string(host), port, keepAlive);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/resource") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+//                 std::cout << "received resource p1"<< std::endl;
+                const char *rackId = (arg++)->AsString();
+                const char *resType = (arg++)->AsString();
+                const char *resValue = (arg++)->AsString();
+
+//                 std::cout << "received resource " << rackId <<  " : " << resType << " : " << resValue << std::endl;
+                receiver_.createResource(changedSrc, rackId, resType, resValue);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/assignMidiCC") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
@@ -143,6 +150,12 @@ public:
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
                 receiver_.saveSettings(changedSrc, rackId);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/loadModule") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+                const char *modId = (arg++)->AsString();
+                const char *modType = (arg++)->AsString();
+                receiver_.loadModule(changedSrc, rackId, modId, modType);
             }
         } catch (osc::Exception &e) {
             // std::err << "error while parsing message: "

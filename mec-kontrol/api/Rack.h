@@ -59,6 +59,7 @@ public:
     void publishCurrentValues(const std::shared_ptr<Module>& module) const;
     void publishCurrentValues() const;
 
+    std::set<std::string> getResourceTypes();
     const std::set<std::string>& getResources(const std::string& type);
     void addResource(const std::string& type, const std::string& resource);
 

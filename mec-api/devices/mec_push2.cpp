@@ -3,6 +3,7 @@
 #include "mec_log.h"
 #include "../mec_voice.h"
 #include "push2/mec_push2_param.h"
+#include "push2/mec_push2_device.h"
 #include "push2/mec_push2_play.h"
 
 
@@ -76,7 +77,10 @@ bool Push2::init(void *arg) {
 
         // setup initial modes
         addDisplayMode(P2D_Param, std::make_shared<P2_ParamMode>(*this, push2Api_));
+        addDisplayMode(P2D_Device, std::make_shared<P2_DeviceMode>(*this, push2Api_));
         changeDisplayMode(P2D_Param);
+
+
         addPadMode(P2P_Play, std::make_shared<P2_PlayMode>(*this, push2Api_));
         changePadMode(P2P_Play);
 
@@ -84,6 +88,7 @@ bool Push2::init(void *arg) {
         processor_ = std::thread(push2_processor_func, this);
         LOG_0("Push2::init - complete");
 
+        sendCC(0,P2_DEVICE_CC,127);
         return active_;
     }
     return false;
@@ -212,8 +217,22 @@ void Push2::processNoteOff(unsigned n, unsigned v) {
 
 
 void Push2::processCC(unsigned cc, unsigned v) {
-    currentDisplayMode()->processCC(cc, v);
-    currentPadMode()->processCC(cc, v);
+    switch(cc) {
+        case P2_DEVICE_CC: {
+            if(v>0) {
+                if(currentDisplayMode_!=P2D_Device) {
+                    changeDisplayMode(P2D_Device);
+                } else {
+                    changeDisplayMode(P2D_Param);
+                }
+            }
+            break;
+        }
+        default: {
+            currentDisplayMode()->processCC(cc, v);
+            currentPadMode()->processCC(cc, v);
+        }
+    }
 }
 
 
