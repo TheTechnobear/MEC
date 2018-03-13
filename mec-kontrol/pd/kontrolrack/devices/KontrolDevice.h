@@ -50,6 +50,9 @@ public:
                  const Kontrol::Parameter &) override;
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &) override;
 
+    void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
+                    const std::string &) override;
+
     virtual void midiCC(unsigned num, unsigned value);
 
     void sendPdMessage(const char *obj, float f);

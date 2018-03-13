@@ -88,6 +88,11 @@ void KontrolDevice::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rac
     if (m != nullptr) m->resource(src, rack, resType, resValue);
 }
 
+void KontrolDevice::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
+                            const Kontrol::EntityId &moduleId, const std::string &modType) {
+    auto m = modes_[currentMode_];
+    if (m != nullptr) m->loadModule(source, rack, moduleId, modType);
+}
 
 void KontrolDevice::midiCC(unsigned num, unsigned value) {
     auto rack = model()->getLocalRack();

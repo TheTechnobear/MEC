@@ -25,7 +25,8 @@ static const float MAX_POT_VALUE = 1023.0F;
 enum OrganelleModes {
     OM_PARAMETER,
     OM_MAINMENU,
-    OM_PRESETMENU
+    OM_PRESETMENU,
+    OM_MODULEMENU
 };
 
 
@@ -97,6 +98,10 @@ public:
                  const Kontrol::Parameter &) override;
     void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
               const Kontrol::Page &page) override;
+
+    void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
+                    const std::string &) override;
+
 private:
     void setCurrentPage(unsigned pageIdx, bool UI);
     void display();
@@ -136,17 +141,18 @@ protected:
 };
 
 
-//class OFixedMenuMode : public OMenuMode {
-//public:
-//    OFixedMenuMode(Organelle &p) : OMenuMode(p) { ; }
-//
-//    virtual unsigned getSize() override { return items_.size(); };
-//
-//    virtual std::string getItemText(unsigned i) { return items_[i]; }
-//
-//protected:
-//    std::vector<std::string> items_;
-//};
+class OFixedMenuMode : public OMenuMode {
+public:
+    OFixedMenuMode(Organelle &p) : OMenuMode(p) { ; }
+
+    unsigned getSize() override { return items_.size(); };
+
+    std::string getItemText(unsigned i) override { return items_[i]; }
+
+protected:
+    std::vector<std::string> items_;
+    unsigned selectedIdx_ = 0;
+};
 
 class OMainMenu : public OMenuMode {
 public:
@@ -169,6 +175,15 @@ public:
     void clicked(unsigned idx) override;
 private:
     std::vector<std::string> presets_;
+};
+
+
+class OModuleMenu : public OFixedMenuMode {
+public:
+    OModuleMenu(Organelle &p) : OFixedMenuMode(p) { ; }
+
+    void activate() override;
+    void clicked(unsigned idx) override;
 };
 
 
@@ -454,6 +469,18 @@ void OParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, c
     if (pageIdx_ < 0) setCurrentPage(0, false);
 }
 
+
+void OParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
+                            const Kontrol::EntityId &moduleId, const std::string &modType) {
+    OBaseMode::loadModule(source, rack, moduleId, modType);
+    if (parent_.currentModule() == moduleId) {
+        if (moduleType_ != modType) {
+            pageIdx_ = -1;
+            moduleType_ = modType;
+        }
+    }
+}
+
 void OMenuMode::activate() {
     display();
     popupTime_ = MENU_TIMEOUT;
@@ -582,7 +609,7 @@ void OMainMenu::clicked(unsigned idx) {
             break;
         }
         case MMI_MODULE: {
-            parent_.changeMode(OM_PARAMETER);
+            parent_.changeMode(OM_MODULEMENU);
             break;
         }
         case MMI_PRESET: {
@@ -692,6 +719,38 @@ void OPresetMenu::clicked(unsigned idx) {
 }
 
 
+void OModuleMenu::activate() {
+    auto rack = model()->getRack(parent_.currentRack());
+    auto module = model()->getModule(rack, parent_.currentModule());
+    if (module == nullptr) return;
+    int idx = 0;
+    auto res = rack->getResources("module");
+    items_.clear();
+    for (auto modtype : res) {
+        items_.push_back(modtype);
+        if (modtype == module->type()) {
+            selectedIdx_ = idx;
+        }
+    }
+    OFixedMenuMode::activate();
+}
+
+
+void OModuleMenu::clicked(unsigned idx) {
+    if (idx < getSize()) {
+        auto rack = model()->getRack(parent_.currentRack());
+        auto module = model()->getModule(rack, parent_.currentModule());
+        if (module == nullptr) return;
+
+        auto modtype = items_[idx];
+        if (modtype != module->type()) {
+            //FIXME, workaround since changing the module needs to tell params to change page
+            parent_.changeMode(OM_PARAMETER);
+            model()->loadModule(Kontrol::CS_LOCAL, rack->id(), module->id(), modtype);
+        }
+    }
+    parent_.changeMode(OM_PARAMETER);
+}
 
 
 // Organelle implmentation
@@ -719,6 +778,7 @@ bool Organelle::init() {
     addMode(OM_PARAMETER, std::make_shared<OParamMode>(*this));
     addMode(OM_MAINMENU, std::make_shared<OMainMenu>(*this));
     addMode(OM_PRESETMENU, std::make_shared<OPresetMenu>(*this));
+    addMode(OM_MODULEMENU, std::make_shared<OModuleMenu>(*this));
 
     if (KontrolDevice::init()) {
         midiLearn(false);
