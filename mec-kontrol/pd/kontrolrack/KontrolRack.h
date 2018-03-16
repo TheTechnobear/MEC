@@ -48,7 +48,9 @@ void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value);
 void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value);
 
 void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings);
+void KontrolRack_savesettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset);
+void KontrolRack_updatepreset(t_KontrolRack *x, t_symbol *preset);
 void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol* mod);
 
 void KontrolRack_loadresources(t_KontrolRack *x);

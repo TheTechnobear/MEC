@@ -3,7 +3,7 @@
 #include <osc/OscReceivedElements.h>
 #include <osc/OscPacketListener.h>
 
-//#include <mec_log.h>
+#include <mec_log.h>
 
 
 namespace Kontrol {
@@ -17,6 +17,15 @@ public:
                                const IpEndpointName &remoteEndpoint) {
         OSCReceiver::OscMsg msg;
         msg.origin_ = remoteEndpoint;
+
+//        {
+//            static unsigned maxsize = 0;
+//            if(size>maxsize) {
+//                maxsize = size;
+//                LOG_0("KontrolPacketListener MAXSIZE " << maxsize);
+//            }
+//        }
+
         msg.size_ = (size > OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE ? OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE
                                                                       : size);
         memcpy(msg.buffer_, data, (size_t) msg.size_);
@@ -95,7 +104,7 @@ public:
                 const char *displayName = (arg++)->AsString();
                 const char *type = (arg++)->AsString();
 
-                // std::cout << "received module " << moduleId << std::endl;
+//                 std::cout << "received module " << moduleId << std::endl;
                 receiver_.createModule(changedSrc, rackId, moduleId, displayName, type);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/rack") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();

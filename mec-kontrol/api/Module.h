@@ -14,49 +14,85 @@ namespace mec {
 class Preferences;
 }
 
-class cJSON;
-
 namespace Kontrol {
 
+class KontrolModel;
 
-class Preset {
+typedef std::unordered_map<unsigned, std::vector<EntityId>> MidiMap;
+
+class ModulePresetValue {
 public:
-    Preset(const EntityId& paramId, const ParamValue& v) : 
-        paramId_(paramId), value_(v) {;}
-    const EntityId& paramId() { return paramId_;}
-    ParamValue value() { return value_;}
+    ModulePresetValue(const EntityId &paramId, const ParamValue &v) :
+            paramId_(paramId), value_(v) { ; }
+    ModulePresetValue(const ModulePresetValue& src) : paramId_(src.paramId_), value_(src.value_) { ; }
+
+    const EntityId &paramId() { return paramId_; }
+
+    ParamValue value() { return value_; }
+
 private:
     EntityId paramId_;
     ParamValue value_;
 };
 
+class ModulePreset {
+public:
+    ModulePreset() {;}
+    ModulePreset(std::string moduleType,
+           const std::vector<ModulePresetValue> &values,
+           const MidiMap& midimap) :
+            moduleType_(moduleType),
+            values_(values),
+            midi_map_(midimap) {
+        ;
+    }
 
+    ModulePreset(const ModulePreset &src) : moduleType_(src.moduleType_), midi_map_(src.midi_map_), values_(src.values_) { ; }
+
+    ModulePreset &operator=(const ModulePreset &src) {
+        moduleType_ = src.moduleType_;
+        midi_map_ = src.midi_map_;
+        values_ = src.values_;
+        return *this;
+    };
+
+    const std::string& moduleType() const { return moduleType_; }
+    const MidiMap &midiMap() const { return midi_map_; }
+    const std::vector<ModulePresetValue>& values() const { return values_; }
+
+private:
+    std::string moduleType_;
+    std::unordered_map<unsigned, std::vector<EntityId>> midi_map_; // key CC id, value = paramId
+    std::vector<ModulePresetValue> values_;
+};
 
 
 class Module : public Entity {
 public:
-    Module( const std::string& id, 
-            const std::string& displayName,
-            const std::string& type)
-        : Entity(id, displayName), type_(type) {
+    Module(const std::string &id,
+           const std::string &displayName,
+           const std::string &type)
+            : Entity(id, displayName), type_(type) {
         ;
     }
 
-    std::shared_ptr<Parameter>  createParam(const std::vector<ParamValue>& args);
-    bool changeParam(const EntityId& paramId, const ParamValue& value, bool force);
+    static std::shared_ptr<KontrolModel> model();
 
-    std::shared_ptr<Page>  createPage(
-        const EntityId& pageId,
-        const std::string& displayName,
-        const std::vector<EntityId> paramIds
+    std::shared_ptr<Parameter> createParam(const std::vector<ParamValue> &args);
+    bool changeParam(const EntityId &paramId, const ParamValue &value, bool force);
+
+    std::shared_ptr<Page> createPage(
+            const EntityId &pageId,
+            const std::string &displayName,
+            const std::vector<EntityId> paramIds
     );
 
 
-    std::shared_ptr<Page>                   getPage(const EntityId& pageId);
-    std::shared_ptr<Parameter>              getParam(const EntityId& paramId);
-    std::vector<std::shared_ptr<Page>>      getPages();
+    std::shared_ptr<Page> getPage(const EntityId &pageId);
+    std::shared_ptr<Parameter> getParam(const EntityId &paramId);
+    std::vector<std::shared_ptr<Page>> getPages();
     std::vector<std::shared_ptr<Parameter>> getParams();
-    std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Page>&);
+    std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Page> &);
 
     // unsigned    getPageCount() { return pageIds_.size();}
     // std::string getPageId(unsigned pageNum) { return pageNum < pageIds_.size() ? pageIds_[pageNum] : "";}
@@ -64,39 +100,28 @@ public:
     // std::string getParamId(const std::string& pageId, unsigned paramNum);
     // std::shared_ptr<Parameter> getParam(const std::string paramId) { return parameters_[paramId]; }
 
-    std::string type() const {return type_;};
+    std::string type() const { return type_; };
 
-    bool loadModuleDefinitions(const mec::Preferences& prefs);
-    void dumpSettings() const;
+    bool loadModuleDefinitions(const mec::Preferences &prefs);
     void dumpParameters();
     void dumpCurrentValues();
 
 
-    bool loadSettings(const mec::Preferences& prefs);
-    bool saveSettings(cJSON* root);
+    std::vector<EntityId> getParamsForCC(unsigned cc);
 
-    std::string currentPreset() { return currentPreset_;}
-    std::vector<std::string> getPresetList();
-    bool updatePreset(std::string presetId);
-    std::vector<Preset>     getPreset(std::string presetId);
-    std::vector<EntityId>   getParamsForCC(unsigned cc);
-
-    void addMidiCCMapping(unsigned ccnum, const EntityId& paramId);
-    void removeMidiCCMapping(unsigned ccnum, const EntityId& paramId);
+    void addMidiCCMapping(unsigned ccnum, const EntityId &paramId);
+    void removeMidiCCMapping(unsigned ccnum, const EntityId &paramId);
+    MidiMap getMidiMapping() { return midi_mapping_;}
+    void setMidiMapping(const MidiMap& map) { midi_mapping_ = map;}
 private:
     std::string type_;
+
     std::vector<std::string> pageIds_; // ordered list of page id, for presentation
-    std::unordered_map<std::string, std::shared_ptr<Parameter> >parameters_; // key = paramId
-    std::unordered_map<std::string, std::shared_ptr<Page> >pages_; // key = pageId
+    std::unordered_map<std::string, std::shared_ptr<Parameter> > parameters_; // key = paramId
+    std::unordered_map<std::string, std::shared_ptr<Page> > pages_; // key = pageId
+    MidiMap midi_mapping_; // key CC id, value = paramId
 
-    std::string currentPreset_;
-
-    std::unordered_map<unsigned, std::vector<EntityId>> midi_mapping_; // key CC id, value = paramId
-    std::unordered_map<std::string, std::vector<Preset>> presets_; // key = presetid
 };
-
-
-
 
 
 } //namespace

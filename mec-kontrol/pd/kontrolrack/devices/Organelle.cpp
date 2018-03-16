@@ -587,7 +587,7 @@ std::string OMainMenu::getItemText(unsigned idx) {
             return "No Preset";
         }
         case MMI_SAVE:
-            return "Save Settings";
+            return "Save";
         case MMI_LEARN: {
             if (parent_.midiLearn()) {
                 return "Midi Learn        [X]";
@@ -638,7 +638,7 @@ void OMainMenu::clicked(unsigned idx) {
 
 // preset menu
 enum PresetMenuItms {
-    PMI_SAVE,
+    PMI_UPDATE,
     PMI_NEW,
     PMI_SEP,
     PMI_LAST
@@ -672,8 +672,8 @@ unsigned OPresetMenu::getSize() {
 
 std::string OPresetMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case PMI_SAVE:
-            return "Save Preset";
+        case PMI_UPDATE:
+            return "Update Preset";
         case PMI_NEW:
             return "New Preset";
         case PMI_SEP:
@@ -686,7 +686,7 @@ std::string OPresetMenu::getItemText(unsigned idx) {
 
 void OPresetMenu::clicked(unsigned idx) {
     switch (idx) {
-        case PMI_SAVE: {
+        case PMI_UPDATE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 rack->updatePreset(rack->currentPreset());

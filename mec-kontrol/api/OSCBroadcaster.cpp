@@ -1,6 +1,7 @@
 #include "OSCBroadcaster.h"
 
 #include <osc/OscOutboundPacketStream.h>
+#include <mec_log.h>
 
 namespace Kontrol {
 
@@ -83,6 +84,13 @@ bool OSCBroadcaster::isActive() {
 
 void OSCBroadcaster::send(const char *data, unsigned size) {
     OscMsg msg;
+//    {
+//        static unsigned maxsize = 0;
+//        if(size>maxsize) {
+//            maxsize = size;
+//            LOG_0("OSCBroadcaster MAXSIZE " << maxsize);
+//        }
+//    }
     msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
     memcpy(msg.buffer_, data, (size_t) msg.size_);
     PaUtil_WriteRingBuffer(&messageQueue_, (void *) &msg, 1);
@@ -276,6 +284,8 @@ void OSCBroadcaster::rack(ChangeSource src, const Rack &p) {
 void OSCBroadcaster::module(ChangeSource src, const Rack &rack, const Module &m) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
+
+//    LOG_0("OSCBroadcaster::module " << m.id());
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 

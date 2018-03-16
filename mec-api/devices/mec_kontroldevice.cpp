@@ -5,7 +5,7 @@
 namespace mec {
 
 
-static const unsigned OSC_POLL_MS = 50;
+static const unsigned OSC_POLL_MS = 10;
 
 ////////////////////////////////////////////////
 KontrolDevice::KontrolDevice(ICallback &cb) :

@@ -174,7 +174,13 @@ void KontrolRack_setup(void) {
                     (t_method) KontrolRack_loadsettings, gensym("loadsettings"),
                     A_DEFSYMBOL, A_NULL);
     class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_savesettings, gensym("savesettings"),
+                    A_DEFSYMBOL, A_NULL);
+    class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_loadpreset, gensym("loadpreset"),
+                    A_DEFSYMBOL, A_NULL);
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_updatepreset, gensym("updatepreset"),
                     A_DEFSYMBOL, A_NULL);
 
     class_addmethod(KontrolRack_class,
@@ -245,12 +251,13 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
 
     {
         // loadbang
-        t_atom args[4];
+        t_atom args[5];
         SETSYMBOL(&args[0], gensym("obj"));
         SETFLOAT(&args[1], 400);
         SETFLOAT(&args[2], 0);
-        SETSYMBOL(&args[3], gensym("loadbang"));
-        pd_forwardmess(sendObj, 4, args);
+        SETSYMBOL(&args[3], gensym("r"));
+        SETSYMBOL(&args[4], gensym("rackloaded"));
+        pd_forwardmess(sendObj, 5, args);
 
     }
     {
@@ -389,6 +396,20 @@ void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings) {
     }
 }
 
+void KontrolRack_savesettings(t_KontrolRack *x, t_symbol *settings) {
+    if (settings != nullptr && settings->s_name != nullptr && strlen(settings->s_name) > 0) {
+        auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+        if (rack) {
+            std::string settingsId = settings->s_name;
+            post("saving settings : %s", settings->s_name);
+            rack->saveSettings(settingsId + "-rack.json");
+        } else {
+            post("No local rack found");
+        };
+    }
+}
+
+
 void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset) {
     if (preset != nullptr && preset->s_name != nullptr && strlen(preset->s_name) > 0) {
         auto rack = Kontrol::KontrolModel::model()->getLocalRack();
@@ -397,6 +418,19 @@ void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset) {
             post("loading preset : %s", preset->s_name);
             rack->applyPreset(presetId);
             rack->dumpCurrentValues();
+        }
+    } else {
+        post("No local rack found");
+    }
+}
+
+void KontrolRack_updatepreset(t_KontrolRack *x, t_symbol *preset) {
+    if (preset != nullptr && preset->s_name != nullptr && strlen(preset->s_name) > 0) {
+        auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+        if (rack) {
+            std::string presetId = preset->s_name;
+            post("update preset : %s", preset->s_name);
+            rack->updatePreset(presetId);
         }
     } else {
         post("No local rack found");

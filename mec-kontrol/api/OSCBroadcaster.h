@@ -58,8 +58,8 @@ protected:
 
 private:
     struct OscMsg {
-        static const int MAX_N_OSC_MSGS = 64;
-        static const int MAX_OSC_MESSAGE_SIZE = 512;
+        static const int MAX_N_OSC_MSGS = 128;
+        static const int MAX_OSC_MESSAGE_SIZE = 256;
         int size_;
         char buffer_[MAX_OSC_MESSAGE_SIZE];
     };
