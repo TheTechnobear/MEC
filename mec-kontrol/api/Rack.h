@@ -2,6 +2,7 @@
 
 #include "Entity.h"
 #include "ParamValue.h"
+#include "Parameter.h"
 
 #include <map>
 #include <unordered_map>
@@ -15,7 +16,64 @@ class cJSON;
 namespace Kontrol {
 
 class Module;
-class ModulePreset;
+
+typedef std::unordered_map<unsigned, std::vector<EntityId>> MidiMap;
+
+class ModulePresetValue {
+public:
+    ModulePresetValue(const EntityId &paramId, const ParamValue &v) :
+            paramId_(paramId), value_(v) { ; }
+
+    ModulePresetValue(const ModulePresetValue &src) : paramId_(src.paramId_), value_(src.value_) { ; }
+
+    const EntityId &paramId() { return paramId_; }
+
+    ParamValue value() { return value_; }
+
+private:
+    EntityId paramId_;
+    ParamValue value_;
+};
+
+
+class ModulePreset {
+public:
+    ModulePreset() { ; }
+
+    ModulePreset(std::string moduleType,
+                 const std::vector<ModulePresetValue> &values,
+                 const MidiMap &midimap) :
+            moduleType_(moduleType),
+            values_(values),
+            midi_map_(midimap) {
+        ;
+    }
+
+    ModulePreset(const ModulePreset &src) : moduleType_(src.moduleType_), midi_map_(src.midi_map_),
+                                            values_(src.values_) { ; }
+
+    ModulePreset &operator=(const ModulePreset &src) {
+        moduleType_ = src.moduleType_;
+        midi_map_ = src.midi_map_;
+        values_ = src.values_;
+        return *this;
+    };
+
+    const std::string &moduleType() const { return moduleType_; }
+
+    const MidiMap &midiMap() const { return midi_map_; }
+
+    const std::vector<ModulePresetValue> &values() const { return values_; }
+
+private:
+    std::string moduleType_;
+    std::unordered_map<unsigned, std::vector<EntityId>> midi_map_; // key CC id, value = paramId
+    std::vector<ModulePresetValue> values_;
+};
+
+
+
+
 class KontrolModel;
 
 class Rack : public Entity {
@@ -78,10 +136,10 @@ public:
 
 private:
     typedef std::unordered_map<EntityId, ModulePreset> RackPreset;
-    bool loadModulePreset(RackPreset& rackPreset, const EntityId &moduleId, const mec::Preferences &prefs);
-    bool saveModulePreset(ModulePreset&, cJSON *root);
-    bool updateModulePreset(std::shared_ptr<Module> module, ModulePreset& modulePreset);
-    bool applyModulePreset(std::shared_ptr<Module> module, const ModulePreset& modulePreset);
+    bool loadModulePreset(RackPreset &rackPreset, const EntityId &moduleId, const mec::Preferences &prefs);
+    bool saveModulePreset(ModulePreset &, cJSON *root);
+    bool updateModulePreset(std::shared_ptr<Module> module, ModulePreset &modulePreset);
+    bool applyModulePreset(std::shared_ptr<Module> module, const ModulePreset &modulePreset);
 
     std::string host_;
     unsigned port_;

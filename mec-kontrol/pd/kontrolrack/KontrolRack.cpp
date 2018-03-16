@@ -231,7 +231,7 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     auto module = Kontrol::KontrolModel::model()->getModule(rack, modId->s_name);
     if (module == nullptr) {
-        post("unable to initialise moduled %s %s", modId->s_name , mod->s_name);
+        post("unable to initialise moduled %s %s", modId->s_name, mod->s_name);
     }
 
     {
@@ -272,7 +272,7 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     }
 
     {
-        std::string sym = std::string("loaddefs-")+modId->s_name;
+        std::string sym = std::string("loaddefs-") + modId->s_name;
         t_atom args[5];
         SETSYMBOL(&args[0], gensym("obj"));
         SETFLOAT(&args[1], 400);
@@ -502,7 +502,7 @@ void PdCallback::loadModule(Kontrol::ChangeSource, const Kontrol::Rack &r,
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack && rack->id() == r.id()) {
         // load the module
-        std::string mod = std::string("modules/")+mType;
+        std::string mod = std::string("modules/") + mType;
         t_symbol *modId = gensym(mId.c_str());
         t_symbol *modType = gensym(mod.c_str());
         KontrolRack_loadmodule(x_, modId, modType);

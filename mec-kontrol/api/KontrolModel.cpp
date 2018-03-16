@@ -26,8 +26,8 @@ void KontrolModel::publishMetaData() const {
 void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack) const {
     std::vector<std::shared_ptr<Module>> modules = getModules(rack);
     publishRack(CS_LOCAL, *rack);
-    for(auto resType:rack->getResourceTypes()) {
-        for(auto res : rack->getResources(resType)) {
+    for (auto resType:rack->getResourceTypes()) {
+        for (auto res : rack->getResources(resType)) {
             publishResource(CS_LOCAL, *rack, resType, res);
         }
     }
