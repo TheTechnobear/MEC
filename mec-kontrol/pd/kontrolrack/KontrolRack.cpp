@@ -189,6 +189,32 @@ void KontrolRack_setup(void) {
 
 }
 
+void KontrolRack_sendMsg(t_pd *sendObj, const char *msg) {
+    t_atom args[1];
+    SETSYMBOL(&args[0], gensym(msg));
+    pd_forwardmess(sendObj, 1, args);
+}
+
+void KontrolRack_obj(t_pd *sendObj, unsigned x, unsigned y, const char *obj, const char *arg) {
+    t_atom args[5];
+    SETSYMBOL(&args[0], gensym("obj"));
+    SETFLOAT(&args[1], x);
+    SETFLOAT(&args[2], y);
+    SETSYMBOL(&args[3], gensym(obj));
+    SETSYMBOL(&args[4], gensym(arg));
+    pd_forwardmess(sendObj, 5, args);
+}
+
+void KontrolRack_connect(t_pd *sendObj, unsigned fromObj, unsigned fromLet, unsigned toObj, unsigned toLet) {
+    t_atom args[5];
+    SETSYMBOL(&args[0], gensym("connect"));
+    SETFLOAT(&args[1], fromObj);
+    SETFLOAT(&args[2], fromLet);
+    SETFLOAT(&args[3], toObj);
+    SETFLOAT(&args[4], toLet);
+    pd_forwardmess(sendObj, 5, args);
+}
+
 void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     if (modId == nullptr && modId->s_name == nullptr && strlen(modId->s_name) == 0) {
         post("loadmodule failed , invalid moduleId");
@@ -209,24 +235,19 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     }
 
     post("loadmodule: loading %s into %s", mod->s_name, modId->s_name);
-    {
-        // clear the object
-        t_atom args[1];
-        SETSYMBOL(&args[0], gensym("clear"));
-        pd_forwardmess(sendObj, 1, args);
-    }
 
-    {
-        // create module
-        t_symbol *modSym = gensym(pdModule.c_str());
-        t_atom args[5];
-        SETSYMBOL(&args[0], gensym("obj"));
-        SETFLOAT(&args[1], 100);
-        SETFLOAT(&args[2], 100);
-        SETSYMBOL(&args[3], modSym);
-        SETSYMBOL(&args[4], modId);
-        pd_forwardmess(sendObj, 5, args);
-    }
+    KontrolRack_sendMsg(sendObj, "clear");
+
+    KontrolRack_obj(sendObj, 10, 10, "r~", (std::string("inL-") + modId->s_name).c_str()); //obj0
+    KontrolRack_obj(sendObj, 110, 10, "r~", (std::string("inR-") + modId->s_name).c_str()); //obj1
+    KontrolRack_obj(sendObj, 10, 60, pdModule.c_str(), modId->s_name); // obj2
+    KontrolRack_obj(sendObj, 10, 110, "s~", (std::string("outL-") + modId->s_name).c_str()); // obj3
+    KontrolRack_obj(sendObj, 110, 110, "s~", (std::string("outR-") + modId->s_name).c_str()); // obj4
+
+    KontrolRack_connect(sendObj, 0, 0, 2, 0);
+    KontrolRack_connect(sendObj, 1, 0, 2, 1);
+    KontrolRack_connect(sendObj, 2, 0, 3, 0);
+    KontrolRack_connect(sendObj, 2, 1, 4, 0);
 
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     auto module = Kontrol::KontrolModel::model()->getModule(rack, modId->s_name);
@@ -240,66 +261,27 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
         t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
         if (sendobj != nullptr) {
             std::string file = std::string(mod->s_name) + "/" + module->type() + "-module.json";
-            t_symbol *fileSym = gensym(file.c_str());
-            t_atom args[1];
-            SETSYMBOL(&args[0], fileSym);
-            pd_forwardmess(sendobj, 1, args);
+            KontrolRack_sendMsg(sendobj, file.c_str());
         }
-
     }
 
+    KontrolRack_obj(sendObj, 400, 1, "r", "rackloaded"); //obj5
 
-    {
-        // loadbang
-        t_atom args[5];
-        SETSYMBOL(&args[0], gensym("obj"));
-        SETFLOAT(&args[1], 400);
-        SETFLOAT(&args[2], 0);
-        SETSYMBOL(&args[3], gensym("r"));
-        SETSYMBOL(&args[4], gensym("rackloaded"));
-        pd_forwardmess(sendObj, 5, args);
-
-    }
     {
         std::string file = std::string(mod->s_name) + "/" + module->type() + "-module.json";
         t_symbol *fileSym = gensym(file.c_str());
         t_atom args[4];
         SETSYMBOL(&args[0], gensym("msg"));
         SETFLOAT(&args[1], 400);
-        SETFLOAT(&args[2], 50);
+        SETFLOAT(&args[2], 60);
         SETSYMBOL(&args[3], fileSym);
-        pd_forwardmess(sendObj, 4, args);
+        pd_forwardmess(sendObj, 4, args); //obj6
     }
 
-    {
-        std::string sym = std::string("loaddefs-") + modId->s_name;
-        t_atom args[5];
-        SETSYMBOL(&args[0], gensym("obj"));
-        SETFLOAT(&args[1], 400);
-        SETFLOAT(&args[2], 100);
-        SETSYMBOL(&args[3], gensym("send"));
-        SETSYMBOL(&args[4], gensym(sym.c_str()));
-        pd_forwardmess(sendObj, 5, args);
-    }
-
-    {
-        t_atom args[5];
-        SETSYMBOL(&args[0], gensym("connect"));
-        SETFLOAT(&args[1], 1);
-        SETFLOAT(&args[2], 0);
-        SETFLOAT(&args[3], 2);
-        SETFLOAT(&args[4], 0);
-        pd_forwardmess(sendObj, 5, args);
-    }
-    {
-        t_atom args[5];
-        SETSYMBOL(&args[0], gensym("connect"));
-        SETFLOAT(&args[1], 2);
-        SETFLOAT(&args[2], 0);
-        SETFLOAT(&args[3], 3);
-        SETFLOAT(&args[4], 0);
-        pd_forwardmess(sendObj, 5, args);
-    }
+    std::string sym = std::string("loaddefs-") + modId->s_name;
+    KontrolRack_obj(sendObj, 400, 110, "send", sym.c_str()); //obj7
+    KontrolRack_connect(sendObj, 5, 0, 6, 0);
+    KontrolRack_connect(sendObj, 6, 0, 7, 0);
 
     {
         // send a fake loadbang after its loaded

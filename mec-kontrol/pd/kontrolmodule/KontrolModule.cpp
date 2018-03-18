@@ -40,11 +40,9 @@ void *KontrolModule_new(t_symbol *name, t_symbol *type) {
                                                          moduleId, moduleType,
                                                          moduleType);
             rack->dumpParameters();
-            std::cerr << "after dump" <<  rackId <<  " : " << moduleId << ":" << moduleType << std::endl;
             x->rackId = gensym(rackId.c_str());
             x->moduleId = gensym(moduleId.c_str());
             x->moduleType = gensym(moduleType.c_str());
-            std::cerr << "success" << std::endl;
         } else {
             post("cannot create %s : No local rack found, KontrolModule needs a KontrolRack instance", name->s_name);
         }
