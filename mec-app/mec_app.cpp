@@ -1,4 +1,17 @@
+#ifndef _WIN32
+
 #include <unistd.h>
+
+#else
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+inline void usleep(unsigned int u) { Sleep(u / 1000); }
+inline void sleep(unsigned int seconds) { Sleep(seconds * 1000); }
+
+#endif
+
 #include <signal.h>
 #include <string.h>
 
@@ -74,9 +87,9 @@ int main(int ac, char **av) {
     sigemptyset(&s.sa_mask);
     s.sa_flags = 0;
     sigaction(SIGINT, &s, NULL);
-#endif
     // Restore the old signal mask only for this thread.
     pthread_sigmask(SIG_SETMASK, &oldset, NULL);
+#endif
 
     {
         std::unique_lock<std::mutex> lock(waitMtx);
