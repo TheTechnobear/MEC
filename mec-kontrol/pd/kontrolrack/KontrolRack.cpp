@@ -1,6 +1,10 @@
 #include "KontrolRack.h"
 
-#include <dirent.h>
+#ifndef _WIN32
+#   include <dirent.h>
+#else
+#   include "dirent_win.h"
+#endif
 #include <sys/stat.h>
 
 #include <algorithm>
@@ -445,7 +449,9 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
                     post("KontrolRack::module found: %s", namelist[i]->d_name);
                 }
             }
+            free(namelist[i]);
         }
+        free(namelist);
     }
 }
 

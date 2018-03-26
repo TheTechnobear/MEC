@@ -5,6 +5,8 @@ project(KontrolRack)
 
 set(KONTROL_HOST_SRC
         KontrolRack.cpp
+        dirent_win.cpp
+        dirent_win.h
         devices/KontrolDevice.cpp
         devices/Organelle.cpp
         )
