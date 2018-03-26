@@ -113,7 +113,7 @@ void *KontrolRack_new(t_floatarg serverport, t_floatarg clientport) {
     return (void *) x;
 }
 
-void KontrolRack_setup(void) {
+EXTERN void KontrolRack_setup(void) {
     KontrolRack_class = class_new(gensym("KontrolRack"),
                                   (t_newmethod) KontrolRack_new,
                                   (t_method) KontrolRack_free,

@@ -32,7 +32,7 @@ extern "C" {
 void KontrolRack_tick(t_KontrolRack *x);
 void KontrolRack_free(t_KontrolRack *);
 void *KontrolRack_new(t_floatarg,t_floatarg);
-void KontrolRack_setup(void);
+EXTERN void KontrolRack_setup(void);
 
 
 void KontrolRack_listen(t_KontrolRack *x, t_floatarg f);
