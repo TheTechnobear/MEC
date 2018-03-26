@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #include <mec_log.h>
 
 namespace Kontrol {

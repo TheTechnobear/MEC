@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+#include <algorithm>
 #include <clocale>
 
 /*****
