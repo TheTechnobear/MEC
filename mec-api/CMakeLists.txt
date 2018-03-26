@@ -67,6 +67,6 @@ if(NOT WIN32)
 endif()
 
 target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api cjson oscpack rtmidi)
-
+set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
 add_subdirectory(tests)
 

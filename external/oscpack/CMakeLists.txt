@@ -10,7 +10,7 @@ else (WIN32)
     set(IpSystemTypePath ip/posix)
 endif (WIN32)
 
-add_library(oscpack SHARED
+add_library(oscpack STATIC
 
         ip/IpEndpointName.h
         ip/IpEndpointName.cpp

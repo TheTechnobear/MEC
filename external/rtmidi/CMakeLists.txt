@@ -24,4 +24,6 @@ elseif (UNIX)
     target_link_libraries(rtmidi ${ALSA_LIBRARIES})
 endif (APPLE)
 
+set_target_properties(rtmidi PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
+
 target_include_directories(rtmidi PUBLIC .)
