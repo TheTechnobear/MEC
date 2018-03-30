@@ -45,6 +45,7 @@ target_include_directories(oscpack PUBLIC zeroconf)
 target_include_directories(oscpack PRIVATE .)
 
 target_link_libraries(oscpack ${OSCPACKLIBS})
+set_target_properties(oscpack PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
 
 if (MSVC)
     # Force to always compile with W4

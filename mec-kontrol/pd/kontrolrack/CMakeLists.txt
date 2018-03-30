@@ -5,6 +5,8 @@ project(KontrolRack)
 
 set(KONTROL_HOST_SRC
         KontrolRack.cpp
+        dirent_win.cpp
+        dirent_win.h
         devices/KontrolDevice.cpp
         devices/Organelle.cpp
         )
@@ -38,8 +40,10 @@ elseif (${WIN32})
 endif ()
 
 # Removes some warning for Microsoft Visual C.
-if (${MSVC})
+if (${WIN32})
     target_compile_definitions(${PROJECT_NAME} PRIVATE PD_INTERNAL)
-    set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS /wd4091 /wd4996")
+    if (${MSVC})
+        set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS /wd4091 /wd4996")
+    endif ()
 endif ()
 

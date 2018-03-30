@@ -8,6 +8,7 @@
 
 #include "mec_log.h"
 
+#include <algorithm>
 
 namespace mec {
 

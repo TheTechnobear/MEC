@@ -6,6 +6,7 @@
 #include <osc/OscPacketListener.h>
 #include <ip/UdpSocket.h>
 
+#include <algorithm>
 
 #include "mec_log.h"
 #include "../mec_voice.h"

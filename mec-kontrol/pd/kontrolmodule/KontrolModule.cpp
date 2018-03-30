@@ -19,7 +19,7 @@ typedef struct _KontrolModule {
 extern "C" {
 void KontrolModule_free(t_KontrolModule *);
 void *KontrolModule_new(t_symbol *name, t_symbol *type);
-void KontrolModule_setup(void);
+EXTERN void KontrolModule_setup(void);
 void KontrolModule_loaddefinitions(t_KontrolModule *x, t_symbol *defs);
 }
 // puredata methods implementation - start

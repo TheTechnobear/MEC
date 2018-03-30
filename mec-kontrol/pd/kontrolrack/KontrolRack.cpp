@@ -1,8 +1,13 @@
 #include "KontrolRack.h"
 
-#include <dirent.h>
+#ifndef _WIN32
+#   include <dirent.h>
+#else
+#   include "dirent_win.h"
+#endif
 #include <sys/stat.h>
 
+#include <algorithm>
 #include <clocale>
 
 /*****
@@ -113,7 +118,7 @@ void *KontrolRack_new(t_floatarg serverport, t_floatarg clientport) {
     return (void *) x;
 }
 
-void KontrolRack_setup(void) {
+EXTERN void KontrolRack_setup(void) {
     KontrolRack_class = class_new(gensym("KontrolRack"),
                                   (t_newmethod) KontrolRack_new,
                                   (t_method) KontrolRack_free,
@@ -444,7 +449,9 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
                     post("KontrolRack::module found: %s", namelist[i]->d_name);
                 }
             }
+            free(namelist[i]);
         }
+        free(namelist);
     }
 }
 

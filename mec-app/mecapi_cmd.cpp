@@ -1,7 +1,22 @@
-#include <unistd.h>
-#include <string.h>
+#ifndef _MSC_VER
 
+#include <unistd.h>
 #include <pthread.h>
+
+#else
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+inline void sleep(unsigned int seconds) { Sleep(seconds * 1000); }
+
+inline void pthread_exit(void *value_ptr)
+{
+    ExitProcess(*(int*)value_ptr);
+}
+
+#endif
+#include <string.h>
 
 #include <osc/OscOutboundPacketStream.h>
 #include <ip/UdpSocket.h>

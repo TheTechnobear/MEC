@@ -2,6 +2,7 @@
 
 #include <osc/OscOutboundPacketStream.h>
 //#include <cmath>
+#include <algorithm>
 
 #include "../../m_pd.h"
 

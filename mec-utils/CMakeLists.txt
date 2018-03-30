@@ -13,7 +13,5 @@ include_directories(
 )
 
 add_library(mec-utils SHARED ${MECUTILS_SRC})
-
+set_target_properties(mec-utils PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
 target_link_libraries(mec-utils cjson)
-
-
