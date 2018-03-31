@@ -412,7 +412,7 @@ void OParamMode::activateShortcut(unsigned key) {
                 parent_.currentModule(moduleId);
                 pageIdx_ = -1;
                 setCurrentPage(0, false);
-                displayPopup(module->displayName(), MODULE_SWITCH_TIMEOUT);
+                displayPopup(module->id() + ":" + module->displayName(), MODULE_SWITCH_TIMEOUT);
                 parent_.flipDisplay();
             }
         }
@@ -557,11 +557,11 @@ void OMenuMode::encoderButton(unsigned, bool value) {
 
 /// main menu
 enum MainMenuItms {
-    MMI_HOME,
     MMI_MODULE,
     MMI_PRESET,
     MMI_LEARN,
     MMI_SAVE,
+    MMI_HOME,
     MMI_SIZE
 };
 
@@ -576,10 +576,14 @@ unsigned OMainMenu::getSize() {
 
 std::string OMainMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case MMI_HOME:
-            return "Home";
-        case MMI_MODULE:
-            return parent_.currentModule();
+        case MMI_MODULE: {
+            auto rack = model()->getRack(parent_.currentRack());
+            auto module = model()->getModule(rack,parent_.currentModule());
+            if(module== nullptr)
+                return parent_.currentModule();
+            else
+                return parent_.currentModule() + ":" + module->displayName();
+        }
         case MMI_PRESET: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
@@ -595,6 +599,8 @@ std::string OMainMenu::getItemText(unsigned idx) {
             }
             return "Midi Learn        [ ]";
         }
+        case MMI_HOME:
+            return "Home";
         default:
             break;
     }
@@ -604,11 +610,6 @@ std::string OMainMenu::getItemText(unsigned idx) {
 
 void OMainMenu::clicked(unsigned idx) {
     switch (idx) {
-        case MMI_HOME: {
-            parent_.changeMode(OM_PARAMETER);
-            parent_.sendPdMessage("goHome", 1.0);
-            break;
-        }
         case MMI_MODULE: {
             parent_.changeMode(OM_MODULEMENU);
             break;
@@ -630,6 +631,11 @@ void OMainMenu::clicked(unsigned idx) {
                 rack->saveSettings();
             }
             parent_.changeMode(OM_PARAMETER);
+            break;
+        }
+        case MMI_HOME: {
+            parent_.changeMode(OM_PARAMETER);
+            parent_.sendPdMessage("goHome", 1.0);
             break;
         }
         default:
@@ -843,8 +849,8 @@ void Organelle::displayPopup(const std::string &text) {
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gFillArea")
             << PATCH_SCREEN
-            << 14 << 14
-            << 100 << 34
+            << 4 << 14
+            << 114 << 34
             << 0
             << osc::EndMessage;
         send(ops.Data(), ops.Size());
@@ -854,8 +860,8 @@ void Organelle::displayPopup(const std::string &text) {
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gBox")
             << PATCH_SCREEN
-            << 14 << 14
-            << 100 << 34
+            << 4 << 14
+            << 114 << 34
             << 1
             << osc::EndMessage;
         send(ops.Data(), ops.Size());
@@ -865,7 +871,7 @@ void Organelle::displayPopup(const std::string &text) {
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gPrintln")
             << PATCH_SCREEN
-            << 20 << 24
+            << 8 << 24
             << 16 << 1
             << text.c_str()
             << osc::EndMessage;

@@ -263,6 +263,7 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     auto module = Kontrol::KontrolModel::model()->getModule(rack, modId->s_name);
     if (module == nullptr) {
         post("unable to initialise moduled %s %s", modId->s_name, mod->s_name);
+        return;
     }
 
     {
