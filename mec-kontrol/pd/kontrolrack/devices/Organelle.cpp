@@ -968,7 +968,7 @@ void Organelle::rack(Kontrol::ChangeSource source, const Kontrol::Rack &rack) {
 void Organelle::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     if (currentModuleId_.empty()) {
         currentRackId_ = rack.id();
-        currentModuleId_ = module.id();
+        currentModule(module.id());
     }
     KontrolDevice::module(source, rack, module);
 }
@@ -1008,3 +1008,8 @@ void Organelle::flipDisplay() {
     send(ops.Data(), ops.Size());
 }
 
+
+void Organelle::currentModule(const Kontrol::EntityId & moduleId) {
+    currentModuleId_ = moduleId;
+    model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
+}

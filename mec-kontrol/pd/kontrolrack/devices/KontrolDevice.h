@@ -50,6 +50,8 @@ public:
                  const Kontrol::Parameter &) override;
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &) override;
 
+    void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
+
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
                     const std::string &) override;
 

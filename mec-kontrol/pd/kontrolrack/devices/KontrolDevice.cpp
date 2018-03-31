@@ -88,10 +88,10 @@ void KontrolDevice::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rac
     if (m != nullptr) m->resource(src, rack, resType, resValue);
 }
 
-void KontrolDevice::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
-                            const Kontrol::EntityId &moduleId, const std::string &modType) {
+void KontrolDevice::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                               const Kontrol::EntityId &moduleId, const std::string &modType) {
     auto m = modes_[currentMode_];
-    if (m != nullptr) m->loadModule(source, rack, moduleId, modType);
+    if (m != nullptr) m->loadModule(src, rack, moduleId, modType);
 }
 
 void KontrolDevice::midiCC(unsigned num, unsigned value) {
@@ -101,6 +101,10 @@ void KontrolDevice::midiCC(unsigned num, unsigned value) {
     }
 }
 
+void KontrolDevice::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+    auto m = modes_[currentMode_];
+    if (m != nullptr) m->activeModule(src, rack, module);
+}
 
 static t_pd *get_object(const char *s) {
     t_pd *x = gensym(s)->s_thing;

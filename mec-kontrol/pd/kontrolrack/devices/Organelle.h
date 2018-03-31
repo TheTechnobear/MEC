@@ -35,12 +35,10 @@ public:
     virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
 
     Kontrol::EntityId currentRack() { return currentRackId_; }
-
     void currentRack(const Kontrol::EntityId &p) { currentRackId_ = p; }
 
     Kontrol::EntityId currentModule() { return currentModuleId_; }
-
-    void currentModule(const Kontrol::EntityId &p) { currentModuleId_ = p; }
+    void currentModule(const Kontrol::EntityId &modId);
 
     void rack(Kontrol::ChangeSource source, const Kontrol::Rack &rack) override;
     void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;

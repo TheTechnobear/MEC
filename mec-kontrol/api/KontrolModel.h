@@ -26,6 +26,8 @@ public:
     virtual void changed(ChangeSource, const Rack &, const Module &, const Parameter &) = 0;
     virtual void resource(ChangeSource, const Rack &, const std::string &, const std::string &) = 0;
 
+    virtual void activeModule(ChangeSource, const Rack &, const Module &) { ; }
+
     virtual void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) { ; }
 
     virtual void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) { ; }
@@ -113,6 +115,7 @@ public:
                         const std::string &resType,
                         const std::string &resValue) const;
 
+    void activeModule(ChangeSource src, const EntityId &rackId ,const EntityId &moduleId);
 
     void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) const;
 

@@ -221,6 +221,18 @@ std::shared_ptr<Parameter> KontrolModel::createParam(
     return param;
 }
 
+
+void KontrolModel::activeModule(ChangeSource src, const EntityId &rackId ,const EntityId &moduleId) {
+    auto rack = getRack(rackId);
+    auto module = getModule(rack, moduleId);
+    if (module != nullptr) {
+        for (auto i : listeners_) {
+            (i.second)->activeModule(src, *rack, *module);
+        }
+    }
+}
+
+
 void KontrolModel::createResource(ChangeSource src,
                                   const EntityId &rackId,
                                   const std::string &resType,
