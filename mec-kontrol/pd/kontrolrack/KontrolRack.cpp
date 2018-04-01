@@ -1,10 +1,13 @@
 #include "KontrolRack.h"
 
 #ifndef _WIN32
+
 #   include <dirent.h>
+
 #else
 #   include "dirent_win.h"
 #endif
+
 #include <sys/stat.h>
 
 #include <algorithm>
@@ -31,7 +34,7 @@ public:
               const Kontrol::Page &) override { ; }
 
     void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-               const Kontrol::Parameter &) override { ; }
+               const Kontrol::Parameter &) override;
 
     void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                  const Kontrol::Parameter &) override;
@@ -197,14 +200,14 @@ EXTERN void KontrolRack_setup(void) {
 }
 
 void KontrolRack_sendMsg(t_pd *sendObj, const char *msg) {
-    if(sendObj== nullptr || msg== nullptr) return;
+    if (sendObj == nullptr || msg == nullptr) return;
     t_atom args[1];
     SETSYMBOL(&args[0], gensym(msg));
     pd_forwardmess(sendObj, 1, args);
 }
 
 void KontrolRack_obj(t_pd *sendObj, unsigned x, unsigned y, const char *obj, const char *arg) {
-    if(sendObj== nullptr || obj== nullptr || arg== nullptr) return;
+    if (sendObj == nullptr || obj == nullptr || arg == nullptr) return;
     t_atom args[5];
     SETSYMBOL(&args[0], gensym("obj"));
     SETFLOAT(&args[1], x);
@@ -215,7 +218,7 @@ void KontrolRack_obj(t_pd *sendObj, unsigned x, unsigned y, const char *obj, con
 }
 
 void KontrolRack_connect(t_pd *sendObj, unsigned fromObj, unsigned fromLet, unsigned toObj, unsigned toLet) {
-    if(sendObj== nullptr) return;
+    if (sendObj == nullptr) return;
     t_atom args[5];
     SETSYMBOL(&args[0], gensym("connect"));
     SETFLOAT(&args[1], fromObj);
@@ -492,6 +495,9 @@ void PdCallback::changed(Kontrol::ChangeSource,
                          const Kontrol::Module &module,
                          const Kontrol::Parameter &param) {
 
+    auto prack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (prack== nullptr || prack->id() != rack.id()) return;
+
     std::string sendsym = param.id() + "-" + module.id();
     t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
 
@@ -516,6 +522,14 @@ void PdCallback::changed(Kontrol::ChangeSource,
     pd_forwardmess(sendobj, 1, &a);
 }
 
+void PdCallback::param(Kontrol::ChangeSource src,
+                       const Kontrol::Rack &rack,
+                       const Kontrol::Module &module,
+                       const Kontrol::Parameter &param) {
+    PdCallback::changed(src, rack, module, param);
+}
+
+
 void PdCallback::loadModule(Kontrol::ChangeSource, const Kontrol::Rack &r,
                             const Kontrol::EntityId &mId, const std::string &mType) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
@@ -530,12 +544,12 @@ void PdCallback::loadModule(Kontrol::ChangeSource, const Kontrol::Rack &r,
     }
 }
 
-void PdCallback::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &r, const Kontrol::Module & m) {
+void PdCallback::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &r, const Kontrol::Module &m) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack && rack->id() == r.id()) {
         t_pd *sendobj = gensym("activeModule")->s_thing;
         if (sendobj != nullptr) {
-            KontrolRack_sendMsg(sendobj,m.id().c_str());
+            KontrolRack_sendMsg(sendobj, m.id().c_str());
         }
 //        post("active module changed to : %s", m.id().c_str());
     }
