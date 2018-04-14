@@ -173,6 +173,8 @@ void OSCBroadcaster::assignMidiCC(ChangeSource src, const Rack &rack, const Modu
 
     ops << osc::EndMessage
         << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
 }
 
 void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p,
@@ -183,7 +185,7 @@ void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Mo
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage("/Kontrol/assignMidiCC")
+        << osc::BeginMessage("/Kontrol/unassignMidiCC")
         << rack.id().c_str()
         << module.id().c_str()
         << p.id().c_str()
@@ -191,6 +193,8 @@ void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Mo
 
     ops << osc::EndMessage
         << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
 }
 
 
