@@ -62,6 +62,44 @@ static const unsigned OSC_PING_FREQUENCY = (OSC_PING_FREQUENCY_SEC * (1000 / 10)
 // see https://github.com/pure-data/pure-data/blob/master/src/x_time.c
 static const float TICK_MS = 1.0f * 10.0f; // 10.ms
 
+// helper methods
+void KontrolRack_sendMsg(t_pd *sendObj, const char *msg) {
+    if (sendObj == nullptr || msg == nullptr) return;
+    t_atom args[1];
+    SETSYMBOL(&args[0], gensym(msg));
+    pd_forwardmess(sendObj, 1, args);
+}
+
+void KontrolRack_sendMsg(t_pd *sendObj, t_symbol *symbol) {
+    if (sendObj == nullptr || symbol == nullptr) return;
+    t_atom args[1];
+    SETSYMBOL(&args[0], symbol);
+    pd_forwardmess(sendObj, 1, args);
+}
+
+void KontrolRack_obj(t_pd *sendObj, unsigned x, unsigned y, const char *obj, const char *arg) {
+    if (sendObj == nullptr || obj == nullptr || arg == nullptr) return;
+    t_atom args[5];
+    SETSYMBOL(&args[0], gensym("obj"));
+    SETFLOAT(&args[1], x);
+    SETFLOAT(&args[2], y);
+    SETSYMBOL(&args[3], gensym(obj));
+    SETSYMBOL(&args[4], gensym(arg));
+    pd_forwardmess(sendObj, 5, args);
+}
+
+void KontrolRack_connectObjs(t_pd *sendObj, unsigned fromObj, unsigned fromLet, unsigned toObj, unsigned toLet) {
+    if (sendObj == nullptr) return;
+    t_atom args[5];
+    SETSYMBOL(&args[0], gensym("connect"));
+    SETFLOAT(&args[1], fromObj);
+    SETFLOAT(&args[2], fromLet);
+    SETFLOAT(&args[3], toObj);
+    SETFLOAT(&args[4], toLet);
+    pd_forwardmess(sendObj, 5, args);
+}
+
+
 
 /// main PD methods
 void KontrolRack_tick(t_KontrolRack *x) {
@@ -77,6 +115,16 @@ void KontrolRack_tick(t_KontrolRack *x) {
     if (x->osc_broadcaster_ && x->osc_receiver_
         && x->pollCount_ % OSC_PING_FREQUENCY == 0) {
         x->osc_broadcaster_->sendPing(x->osc_receiver_->port());
+    }
+
+    // FIXME: currently during startup the active module may not be received,
+    // as module is not loaded currently, so as a workaorund send activemodule
+    // every few seconds
+    if (x->active_module_ != nullptr && x->pollCount_ % 1000) {
+        t_pd *sendobj = gensym("activeModule")->s_thing;
+        if (sendobj != nullptr) {
+            KontrolRack_sendMsg(sendobj, x->active_module_);
+        }
     }
 
     clock_delay(x->x_clock, 1);
@@ -95,7 +143,7 @@ void KontrolRack_free(t_KontrolRack *x) {
 void *KontrolRack_new(t_floatarg serverport, t_floatarg clientport) {
     t_KontrolRack *x = (t_KontrolRack *) pd_new(KontrolRack_class);
 
-
+    x->active_module_ = nullptr;
     x->osc_receiver_ = nullptr;
 
     x->pollCount_ = 0;
@@ -199,34 +247,6 @@ EXTERN void KontrolRack_setup(void) {
 
 }
 
-void KontrolRack_sendMsg(t_pd *sendObj, const char *msg) {
-    if (sendObj == nullptr || msg == nullptr) return;
-    t_atom args[1];
-    SETSYMBOL(&args[0], gensym(msg));
-    pd_forwardmess(sendObj, 1, args);
-}
-
-void KontrolRack_obj(t_pd *sendObj, unsigned x, unsigned y, const char *obj, const char *arg) {
-    if (sendObj == nullptr || obj == nullptr || arg == nullptr) return;
-    t_atom args[5];
-    SETSYMBOL(&args[0], gensym("obj"));
-    SETFLOAT(&args[1], x);
-    SETFLOAT(&args[2], y);
-    SETSYMBOL(&args[3], gensym(obj));
-    SETSYMBOL(&args[4], gensym(arg));
-    pd_forwardmess(sendObj, 5, args);
-}
-
-void KontrolRack_connect(t_pd *sendObj, unsigned fromObj, unsigned fromLet, unsigned toObj, unsigned toLet) {
-    if (sendObj == nullptr) return;
-    t_atom args[5];
-    SETSYMBOL(&args[0], gensym("connect"));
-    SETFLOAT(&args[1], fromObj);
-    SETFLOAT(&args[2], fromLet);
-    SETFLOAT(&args[3], toObj);
-    SETFLOAT(&args[4], toLet);
-    pd_forwardmess(sendObj, 5, args);
-}
 
 void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     if (modId == nullptr && modId->s_name == nullptr && strlen(modId->s_name) == 0) {
@@ -257,10 +277,10 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     KontrolRack_obj(sendObj, 10, 110, "s~", (std::string("outL-") + modId->s_name).c_str()); // obj3
     KontrolRack_obj(sendObj, 110, 110, "s~", (std::string("outR-") + modId->s_name).c_str()); // obj4
 
-    KontrolRack_connect(sendObj, 0, 0, 2, 0);
-    KontrolRack_connect(sendObj, 1, 0, 2, 1);
-    KontrolRack_connect(sendObj, 2, 0, 3, 0);
-    KontrolRack_connect(sendObj, 2, 1, 4, 0);
+    KontrolRack_connectObjs(sendObj, 0, 0, 2, 0);
+    KontrolRack_connectObjs(sendObj, 1, 0, 2, 1);
+    KontrolRack_connectObjs(sendObj, 2, 0, 3, 0);
+    KontrolRack_connectObjs(sendObj, 2, 1, 4, 0);
 
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     auto module = Kontrol::KontrolModel::model()->getModule(rack, modId->s_name);
@@ -287,12 +307,12 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
         SETFLOAT(&args[1], 400);
         SETFLOAT(&args[2], 30);
         SETSYMBOL(&args[3], gensym("t"));
-        SETSYMBOL(&args[4], gensym("s"));
-        SETSYMBOL(&args[5], gensym("s"));
+        SETSYMBOL(&args[4], gensym("b"));
+        SETSYMBOL(&args[5], gensym("b"));
         pd_forwardmess(sendObj, 6, args);
 
     }
-    KontrolRack_connect(sendObj, 5, 0, 6, 0);
+    KontrolRack_connectObjs(sendObj, 5, 0, 6, 0);
 
 
     {
@@ -305,20 +325,20 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
         SETSYMBOL(&args[3], fileSym);
         pd_forwardmess(sendObj, 4, args); //obj7
     }
-    KontrolRack_connect(sendObj, 6, 1, 7, 0);
+    KontrolRack_connectObjs(sendObj, 6, 1, 7, 0);
 
     {
         std::string sym = std::string("loaddefs-") + modId->s_name;
         KontrolRack_obj(sendObj, 400, 110, "send", sym.c_str()); //obj8
     }
 
-    KontrolRack_connect(sendObj, 7, 0, 8, 0);
+    KontrolRack_connectObjs(sendObj, 7, 0, 8, 0);
     {
         std::string sym = std::string("loadbang-") + modId->s_name;
         KontrolRack_obj(sendObj, 600, 110, "send", sym.c_str()); //obj9
     }
 
-    KontrolRack_connect(sendObj, 6, 0, 9, 0);
+    KontrolRack_connectObjs(sendObj, 6, 0, 9, 0);
 
 
     {
@@ -326,15 +346,19 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
         std::string sendsym = std::string("loadbang-") + modId->s_name;
         t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
         if (sendobj != nullptr) {
-            t_atom args[1];
-            SETFLOAT(&args[0], 1);
-            pd_forwardmess(sendobj, 1, args);
+            pd_bang(sendobj);
         } else {
             post("loadbang missing for %s", sendsym.c_str());
         }
     }
-}
 
+    if (x->active_module_ != nullptr) {
+        t_pd *sendobj = gensym("activeModule")->s_thing;
+        if (sendobj != nullptr) {
+            KontrolRack_sendMsg(sendobj, x->active_module_);
+        }
+    }
+}
 
 void KontrolRack_connect(t_KontrolRack *x, t_floatarg f) {
     if (f > 0) {
@@ -496,7 +520,7 @@ void PdCallback::changed(Kontrol::ChangeSource,
                          const Kontrol::Parameter &param) {
 
     auto prack = Kontrol::KontrolModel::model()->getLocalRack();
-    if (prack== nullptr || prack->id() != rack.id()) return;
+    if (prack == nullptr || prack->id() != rack.id()) return;
 
     std::string sendsym = param.id() + "-" + module.id();
     t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
@@ -547,9 +571,10 @@ void PdCallback::loadModule(Kontrol::ChangeSource, const Kontrol::Rack &r,
 void PdCallback::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &r, const Kontrol::Module &m) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack && rack->id() == r.id()) {
+        x_->active_module_ = gensym(m.id().c_str());
         t_pd *sendobj = gensym("activeModule")->s_thing;
         if (sendobj != nullptr) {
-            KontrolRack_sendMsg(sendobj, m.id().c_str());
+            KontrolRack_sendMsg(sendobj, x_->active_module_);
         }
 //        post("active module changed to : %s", m.id().c_str());
     }
