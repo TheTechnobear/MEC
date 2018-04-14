@@ -47,6 +47,7 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std:
     for (const auto param: module->getParams()) {
         publishChanged(CS_LOCAL, *rack, *module, *param);
     }
+    publishMidiMapping(CS_LOCAL, *rack, *module, module->getMidiMapping());
 }
 
 
@@ -273,6 +274,8 @@ void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const 
         auto param = getParam(module, paramId);
         if (param == nullptr) return;
 
+        rack->addMidiCCMapping(midiCC, moduleId, paramId);
+
         for (auto i : listeners_) {
             (i.second)->assignMidiCC(src, *rack, *module, *param, midiCC);
         }
@@ -398,6 +401,19 @@ void KontrolModel::publishResource(ChangeSource src, const Rack &rack,
     }
 }
 
+void KontrolModel::publishMidiMapping(ChangeSource src, const Rack &rack, const Module &module,
+                                      const MidiMap &midiMap) const {
+    for (auto k : midiMap) {
+        for (auto j : k.second) {
+            auto parameter = module.getParam(j);
+            if (parameter) {
+                for (auto i : listeners_) {
+                    (i.second)->assignMidiCC(src, rack, module, *parameter, k.first);
+                }
+            }
+        }
+    }
+}
 
 bool KontrolModel::loadModuleDefinitions(const EntityId &rackId, const EntityId &moduleId,
                                          const std::string &filename) {

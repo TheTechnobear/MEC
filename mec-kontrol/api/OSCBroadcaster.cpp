@@ -149,6 +149,14 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
                             for (auto p :  m->getParams()) {
                                 changed(CS_LOCAL, *r, *m, *p);
                             }
+                            for (auto midiMap : m->getMidiMapping()) {
+                                for (auto j : midiMap.second) {
+                                    auto parameter = m->getParam(j);
+                                    if (parameter) {
+                                        assignMidiCC(CS_LOCAL, *r, *m, *parameter, midiMap.first);
+                                    }
+                                }
+                            }
                         }
                     }
                 }

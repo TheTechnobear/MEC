@@ -74,6 +74,12 @@ std::shared_ptr<Parameter> Module::getParam(const EntityId &paramId) {
     return parameters_[paramId];
 }
 
+std::shared_ptr<Parameter> Module::getParam(const EntityId & paramId) const
+{
+    auto parameter = parameters_.find(paramId);
+    return parameter != parameters_.end() ? parameter->second : nullptr;
+}
+
 std::vector<std::shared_ptr<Page>> Module::getPages() {
     std::vector<std::shared_ptr<Page>> ret;
     for (auto p : pageIds_) {
