@@ -20,7 +20,7 @@ public:
     //KontrolDevice
     virtual bool init() override;
 
-    void displayPopup(const std::string &text);
+    void displayPopup(const std::string &text,bool dblLine);
     void displayParamLine(unsigned line, const Kontrol::Parameter &p);
     void displayLine(unsigned line, const char *);
     void invertLine(unsigned line);

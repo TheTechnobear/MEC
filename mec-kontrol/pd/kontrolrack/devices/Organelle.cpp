@@ -63,7 +63,7 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &,
                   const std::string &) override { ; };
 
-    void displayPopup(const std::string &text, unsigned time);
+    void displayPopup(const std::string &text, unsigned time, bool dblline);
 protected:
     Organelle &parent_;
 
@@ -152,7 +152,6 @@ public:
 
 protected:
     std::vector<std::string> items_;
-    unsigned selectedIdx_ = 0;
 };
 
 class OMainMenu : public OMenuMode {
@@ -188,9 +187,9 @@ public:
 };
 
 
-void OBaseMode::displayPopup(const std::string &text, unsigned time) {
+void OBaseMode::displayPopup(const std::string &text, unsigned time, bool dblline) {
     popupTime_ = time;
-    parent_.displayPopup(text);
+    parent_.displayPopup(text, dblline);
 }
 
 void OBaseMode::poll() {
@@ -342,7 +341,7 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
         }
 
         if (UI) {
-            displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT);
+            displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT, false);
             parent_.flipDisplay();
         }
 
@@ -412,7 +411,7 @@ void OParamMode::activateShortcut(unsigned key) {
                 parent_.currentModule(moduleId);
                 pageIdx_ = -1;
                 setCurrentPage(0, false);
-                displayPopup(module->id() + ":" + module->displayName(), MODULE_SWITCH_TIMEOUT);
+                displayPopup(module->id() + ":" + module->displayName(), MODULE_SWITCH_TIMEOUT, true);
                 parent_.flipDisplay();
             }
         }
@@ -736,8 +735,10 @@ void OModuleMenu::activate() {
     for (auto modtype : res) {
         items_.push_back(modtype);
         if (modtype == module->type()) {
-            selectedIdx_ = idx;
+            cur_=idx;
+            top_=idx;
         }
+        idx++;
     }
     OFixedMenuMode::activate();
 }
@@ -844,7 +845,7 @@ void Organelle::send(const char *data, unsigned size) {
 }
 
 
-void Organelle::displayPopup(const std::string &text) {
+void Organelle::displayPopup(const std::string &text,bool dblline) {
     {
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gFillArea")
@@ -867,11 +868,22 @@ void Organelle::displayPopup(const std::string &text) {
         send(ops.Data(), ops.Size());
     }
 
+    if(dblline){
+        osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+        ops << osc::BeginMessage("/oled/gBox")
+            << PATCH_SCREEN
+            << 6 << 16
+            << 110 << 30
+            << 1
+            << osc::EndMessage;
+        send(ops.Data(), ops.Size());
+    }
+
     {
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gPrintln")
             << PATCH_SCREEN
-            << 8 << 24
+            << 10 << 24
             << 16 << 1
             << text.c_str()
             << osc::EndMessage;

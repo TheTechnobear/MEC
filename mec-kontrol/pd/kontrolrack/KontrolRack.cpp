@@ -117,16 +117,6 @@ void KontrolRack_tick(t_KontrolRack *x) {
         x->osc_broadcaster_->sendPing(x->osc_receiver_->port());
     }
 
-    // FIXME: currently during startup the active module may not be received,
-    // as module is not loaded currently, so as a workaorund send activemodule
-    // every few seconds
-    if (x->active_module_ != nullptr && x->pollCount_ % 1000) {
-        t_pd *sendobj = gensym("activeModule")->s_thing;
-        if (sendobj != nullptr) {
-            KontrolRack_sendMsg(sendobj, x->active_module_);
-        }
-    }
-
     clock_delay(x->x_clock, 1);
 }
 
@@ -294,7 +284,7 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
         std::string sendsym = std::string("loaddefs-") + modId->s_name;
         t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
         if (sendobj != nullptr) {
-            std::string file = std::string(mod->s_name) + "/" + module->type() + "-module.json";
+            std::string file = std::string(mod->s_name) + "/module.json";
             KontrolRack_sendMsg(sendobj, file.c_str());
         }
     }
@@ -316,7 +306,7 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
 
 
     {
-        std::string file = std::string(mod->s_name) + "/" + module->type() + "-module.json";
+        std::string file = std::string(mod->s_name) + "/module.json";
         t_symbol *fileSym = gensym(file.c_str());
         t_atom args[4];
         SETSYMBOL(&args[0], gensym("msg"));
