@@ -561,8 +561,21 @@ void PdCallback::loadModule(Kontrol::ChangeSource, const Kontrol::Rack &r,
 void PdCallback::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &r, const Kontrol::Module &m) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack && rack->id() == r.id()) {
+        t_pd *sendobj;
+        sendobj = gensym("screenLine5")->s_thing;
+        if (sendobj != nullptr) {
+            KontrolRack_sendMsg(sendobj,"   ");
+        }
+
+        sendobj = gensym("led")->s_thing;
+        if (sendobj != nullptr) {
+            t_atom args[1];
+            SETFLOAT(&args[0], 0);
+            pd_forwardmess(sendobj, 1, args);
+        }
+
         x_->active_module_ = gensym(m.id().c_str());
-        t_pd *sendobj = gensym("activeModule")->s_thing;
+        sendobj = gensym("activeModule")->s_thing;
         if (sendobj != nullptr) {
             KontrolRack_sendMsg(sendobj, x_->active_module_);
         }
