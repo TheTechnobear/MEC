@@ -275,7 +275,7 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     auto module = Kontrol::KontrolModel::model()->getModule(rack, modId->s_name);
     if (module == nullptr) {
-        post("unable to initialise moduled %s %s", modId->s_name, mod->s_name);
+        post("unable to initialise module %s %s", modId->s_name, mod->s_name);
         return;
     }
 
@@ -330,6 +330,25 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
 
     KontrolRack_connectObjs(sendObj, 6, 0, 9, 0);
 
+    // now initialise the module
+    {
+        // clear aux label and led
+        t_pd *sendobj;
+        std::string sendsym;
+        sendsym = std::string("aux-label-") + modId->s_name;
+        sendobj = gensym(sendsym.c_str())->s_thing;
+        if (sendobj != nullptr) {
+            KontrolRack_sendMsg(sendobj, "   ");
+        }
+
+        sendsym = std::string("aux-led-") + modId->s_name;
+        sendobj = gensym(sendsym.c_str())->s_thing;
+        if (sendobj != nullptr) {
+            t_atom args[1];
+            SETFLOAT(&args[0], 0);
+            pd_forwardmess(sendobj, 1, args);
+        }
+    }
 
     {
         // send a fake loadbang after its loaded
