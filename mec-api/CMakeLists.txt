@@ -53,11 +53,7 @@ include_directories(
         "devices/push2"
         "devices/eigenharp"
         "devices/soundplanelite"
-        "${PROJECT_SOURCE_DIR}/../mec-utils"
         "${PROJECT_SOURCE_DIR}/../mec-kontrol/api"
-        "${PROJECT_SOURCE_DIR}/../external/cJSON"
-        "${PROJECT_SOURCE_DIR}/../external/oscpack"
-        "${PROJECT_SOURCE_DIR}/../external/rtmidi"
 )
 
 add_library(mec-api SHARED ${MECAPI_SRC})
@@ -70,3 +66,4 @@ target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api cjso
 set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
 add_subdirectory(tests)
 
+target_include_directories(mec-api PUBLIC .)

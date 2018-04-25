@@ -39,10 +39,10 @@ add_library(oscpack SHARED
 
         )
 
-target_include_directories(oscpack PUBLIC osc)
-target_include_directories(oscpack PUBLIC ip)
-target_include_directories(oscpack PUBLIC zeroconf)
-target_include_directories(oscpack PRIVATE .)
+#target_include_directories(oscpack PUBLIC osc)
+#target_include_directories(oscpack PUBLIC ip)
+#target_include_directories(oscpack PUBLIC zeroconf)
+target_include_directories(oscpack PUBLIC .)
 
 target_link_libraries(oscpack ${OSCPACKLIBS})
 set_target_properties(oscpack PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)

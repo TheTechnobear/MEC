@@ -11,7 +11,6 @@ set(KONTROLMODULE_SRC
 include_directories(
         "${PROJECT_SOURCE_DIR}/.."
         "${PROJECT_SOURCE_DIR}/../../api"
-        "${PROJECT_SOURCE_DIR}/../../../external/oscpack"
 )
 
 add_library(KontrolModule SHARED ${KONTROLMODULE_SRC})

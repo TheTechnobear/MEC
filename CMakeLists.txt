@@ -66,6 +66,8 @@ add_subdirectory(external/oscpack oscpack)
 add_subdirectory(external/portaudio portaudio)
 add_subdirectory(external/cJSON cjson)
 add_subdirectory(external/rtmidi rtmidi)
+add_subdirectory(external/moodycamel)
+
 
 add_subdirectory(mec-utils)
 add_subdirectory(mec-api)

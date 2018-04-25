@@ -15,12 +15,6 @@ set(KONTROL_API_SRC
         ChangeSource.h
         )
 
-include_directories(
-        "${PROJECT_SOURCE_DIR}/../../mec-utils"
-        "${PROJECT_SOURCE_DIR}/../../external/oscpack"
-        "${PROJECT_SOURCE_DIR}/../../external/portaudio"
-        "${PROJECT_SOURCE_DIR}/../../external/cJson"
-)
 
 add_library(mec-kontrol-api SHARED ${KONTROL_API_SRC})
 set_target_properties(mec-kontrol-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
