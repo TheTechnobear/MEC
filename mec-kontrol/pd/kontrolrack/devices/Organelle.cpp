@@ -763,8 +763,7 @@ void OModuleMenu::clicked(unsigned idx) {
 
 // Organelle implmentation
 
-Organelle::Organelle() {
-    PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), OscMsg::MAX_N_OSC_MSGS, msgData_);
+Organelle::Organelle() : messageQueue_(OscMsg::MAX_N_OSC_MSGS){
 }
 
 Organelle::~Organelle() {
@@ -775,7 +774,8 @@ void Organelle::stop() {
     running_ = false;
     if (socket_) {
         writer_thread_.join();
-        PaUtil_FlushRingBuffer(&messageQueue_);
+        OscMsg msg;
+        while(messageQueue_.try_dequeue(msg));
     }
     socket_.reset();
 }
@@ -826,9 +826,8 @@ bool Organelle::connect() {
 void Organelle::writePoll() {
     std::unique_lock<std::mutex> lock(write_lock_);
     while (running_) {
-        while (PaUtil_GetRingBufferReadAvailable(&messageQueue_)) {
-            OscMsg msg;
-            PaUtil_ReadRingBuffer(&messageQueue_, &msg, 1);
+        OscMsg msg;
+        while (messageQueue_.try_dequeue(msg)) {
             socket_->Send(msg.buffer_, msg.size_);
         }
         write_cond_.wait_for(lock, std::chrono::milliseconds(1000));
@@ -840,8 +839,7 @@ void Organelle::send(const char *data, unsigned size) {
     OscMsg msg;
     msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
     memcpy(msg.buffer_, data, (size_t) msg.size_);
-    PaUtil_WriteRingBuffer(&messageQueue_, (void *) &msg, 1);
-    write_cond_.notify_one();
+    messageQueue_.enqueue(msg);
 }
 
 

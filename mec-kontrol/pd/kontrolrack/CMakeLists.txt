@@ -19,7 +19,7 @@ include_directories(
 
 add_library(KontrolRack SHARED ${KONTROL_HOST_SRC})
 
-target_link_libraries(KontrolRack mec-kontrol-api oscpack portaudio)
+target_link_libraries(KontrolRack mec-kontrol-api oscpack)
 
 ### setup for pure data
 

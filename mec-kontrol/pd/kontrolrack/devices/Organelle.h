@@ -7,7 +7,7 @@
 #include <ip/UdpSocket.h>
 
 #include <string>
-#include <pa_ringbuffer.h>
+#include <readerwriterqueue.h>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -66,8 +66,7 @@ private:
     std::string asDisplayString(const Kontrol::Parameter &p, unsigned width) const;
     std::shared_ptr<UdpTransmitSocket> socket_;
 
-    PaUtilRingBuffer messageQueue_;
-    char msgData_[sizeof(OscMsg) * OscMsg::MAX_N_OSC_MSGS];
+    moodycamel::ReaderWriterQueue<OscMsg> messageQueue_;
     bool running_;
     std::mutex write_lock_;
     std::condition_variable write_cond_;

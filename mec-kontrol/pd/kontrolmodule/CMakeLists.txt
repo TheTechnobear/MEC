@@ -15,7 +15,7 @@ include_directories(
 
 add_library(KontrolModule SHARED ${KONTROLMODULE_SRC})
 
-target_link_libraries(KontrolModule mec-kontrol-api oscpack portaudio)
+target_link_libraries(KontrolModule mec-kontrol-api oscpack)
 
 
 ### setup for pure data

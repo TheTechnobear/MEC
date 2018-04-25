@@ -18,7 +18,7 @@ set(KONTROL_API_SRC
 
 add_library(mec-kontrol-api SHARED ${KONTROL_API_SRC})
 set_target_properties(mec-kontrol-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
-target_link_libraries(mec-kontrol-api mec-utils oscpack portaudio cjson)
+target_link_libraries(mec-kontrol-api mec-utils oscpack cjson moodycamel)
 
 # add_subdirectory(tests)
 

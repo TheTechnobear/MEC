@@ -14,8 +14,8 @@ OSCBroadcaster::OSCBroadcaster(Kontrol::ChangeSource src, unsigned keepAlive, bo
         master_(master),
         port_(0),
         changeSource_(src),
-        keepAliveTime_(keepAlive) {
-    PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), OscMsg::MAX_N_OSC_MSGS, msgData_);
+        keepAliveTime_(keepAlive),
+        messageQueue_(OscMsg::MAX_N_OSC_MSGS) {
 }
 
 OSCBroadcaster::~OSCBroadcaster() {
@@ -49,7 +49,8 @@ void OSCBroadcaster::stop() {
     running_ = false;
     if (socket_) {
         writer_thread_.join();
-        PaUtil_FlushRingBuffer(&messageQueue_);
+        OscMsg msg;
+        while(messageQueue_.try_dequeue(msg));
     }
     port_ = 0;
     socket_.reset();
@@ -59,10 +60,9 @@ void OSCBroadcaster::stop() {
 void OSCBroadcaster::writePoll() {
     std::unique_lock<std::mutex> lock(write_lock_);
     while (running_) {
-        while (PaUtil_GetRingBufferReadAvailable(&messageQueue_)) {
-            OscMsg msg;
-            PaUtil_ReadRingBuffer(&messageQueue_, &msg, 1);
-            socket_->Send(msg.buffer_, msg.size_);
+        OscMsg msg;
+        while (messageQueue_.try_dequeue(msg)) {
+            socket_->Send(msg.buffer_, (size_t) msg.size_);
         }
         write_cond_.wait_for(lock, std::chrono::milliseconds(POLL_TIMEOUT_MS));
     }
@@ -83,7 +83,6 @@ bool OSCBroadcaster::isActive() {
 
 
 void OSCBroadcaster::send(const char *data, unsigned size) {
-    OscMsg msg;
 //    {
 //        static unsigned maxsize = 0;
 //        if(size>maxsize) {
@@ -91,9 +90,10 @@ void OSCBroadcaster::send(const char *data, unsigned size) {
 //            LOG_0("OSCBroadcaster MAXSIZE " << maxsize);
 //        }
 //    }
+    OscMsg msg;
     msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
     memcpy(msg.buffer_, data, (size_t) msg.size_);
-    PaUtil_WriteRingBuffer(&messageQueue_, (void *) &msg, 1);
+    messageQueue_.enqueue(msg);
     write_cond_.notify_one();
 }
 

@@ -5,10 +5,10 @@
 
 #include <memory>
 #include <ip/UdpSocket.h>
-#include <pa_ringbuffer.h>
 #include <chrono>
 #include <thread>
 #include <mutex>
+#include <readerwriterqueue.h>
 #include <condition_variable>
 
 namespace Kontrol {
@@ -71,14 +71,14 @@ private:
     std::chrono::steady_clock::time_point lastPing_;
     unsigned keepAliveTime_;
 
-    PaUtilRingBuffer messageQueue_;
-    char msgData_[sizeof(OscMsg) * OscMsg::MAX_N_OSC_MSGS];
+    moodycamel::ReaderWriterQueue<OscMsg> messageQueue_;
     bool master_;
 
     bool running_;
     std::mutex write_lock_;
     std::condition_variable write_cond_;
     std::thread writer_thread_;
+
     ChangeSource changeSource_;
 };
 

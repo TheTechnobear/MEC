@@ -5,7 +5,7 @@
 #include <memory>
 
 #include <ip/UdpSocket.h>
-#include <pa_ringbuffer.h>
+#include <readerwriterqueue.h>
 
 namespace Kontrol {
 
@@ -113,8 +113,7 @@ private:
     std::shared_ptr<UdpListeningReceiveSocket> socket_;
     std::shared_ptr<PacketListener> packetListener_;
     std::shared_ptr<KontrolOSCListener> oscListener_;
-    PaUtilRingBuffer messageQueue_;
-    char msgData_[sizeof(OscMsg) * OscMsg::MAX_N_OSC_MSGS];
+    moodycamel::ReaderWriterQueue<OscMsg> messageQueue_;
 };
 
 } //namespace

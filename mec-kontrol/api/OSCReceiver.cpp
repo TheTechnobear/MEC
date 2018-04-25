@@ -10,13 +10,11 @@ namespace Kontrol {
 
 class KontrolPacketListener : public PacketListener {
 public:
-    KontrolPacketListener(PaUtilRingBuffer *queue) : queue_(queue) {
+    KontrolPacketListener(moodycamel::ReaderWriterQueue<OSCReceiver::OscMsg>& queue) : queue_(queue) {
     }
 
     virtual void ProcessPacket(const char *data, int size,
                                const IpEndpointName &remoteEndpoint) {
-        OSCReceiver::OscMsg msg;
-        msg.origin_ = remoteEndpoint;
 
 //        {
 //            static unsigned maxsize = 0;
@@ -25,15 +23,16 @@ public:
 //                LOG_0("KontrolPacketListener MAXSIZE " << maxsize);
 //            }
 //        }
-
+        OSCReceiver::OscMsg msg;
+        msg.origin_ = remoteEndpoint;
         msg.size_ = (size > OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE ? OSCReceiver::OscMsg::MAX_OSC_MESSAGE_SIZE
                                                                       : size);
         memcpy(msg.buffer_, data, (size_t) msg.size_);
-        PaUtil_WriteRingBuffer(queue_, (void *) &msg, 1);
+        queue_.enqueue(msg);
     }
 
 private:
-    PaUtilRingBuffer *queue_;
+    moodycamel::ReaderWriterQueue<OSCReceiver::OscMsg>& queue_;
 };
 
 
@@ -177,9 +176,8 @@ private:
 };
 
 OSCReceiver::OSCReceiver(const std::shared_ptr<KontrolModel> &param)
-        : model_(param), port_(0) {
-    PaUtil_InitializeRingBuffer(&messageQueue_, sizeof(OscMsg), OscMsg::MAX_N_OSC_MSGS, msgData_);
-    packetListener_ = std::make_shared<KontrolPacketListener>(&messageQueue_);
+        : model_(param), port_(0), messageQueue_(OscMsg::MAX_N_OSC_MSGS) {
+    packetListener_ = std::make_shared<KontrolPacketListener>(messageQueue_);
     oscListener_ = std::make_shared<KontrolOSCListener>(*this);
 }
 
@@ -212,16 +210,16 @@ void OSCReceiver::stop() {
     if (socket_) {
         socket_->AsynchronousBreak();
         receive_thread_.join();
-        PaUtil_FlushRingBuffer(&messageQueue_);
+        OscMsg msg;
+        while(messageQueue_.try_dequeue(msg));
     }
     port_ = 0;
     socket_.reset();
 }
 
 void OSCReceiver::poll() {
-    while (PaUtil_GetRingBufferReadAvailable(&messageQueue_)) {
-        OscMsg msg;
-        PaUtil_ReadRingBuffer(&messageQueue_, &msg, 1);
+    OscMsg msg;
+    while (messageQueue_.try_dequeue(msg)) {
         oscListener_->ProcessPacket(msg.buffer_, msg.size_, msg.origin_);
     }
 }
