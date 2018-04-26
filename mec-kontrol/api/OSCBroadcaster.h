@@ -71,12 +71,10 @@ private:
     std::chrono::steady_clock::time_point lastPing_;
     unsigned keepAliveTime_;
 
-    moodycamel::ReaderWriterQueue<OscMsg> messageQueue_;
+    moodycamel::BlockingReaderWriterQueue<OscMsg> messageQueue_;
     bool master_;
 
     bool running_;
-    std::mutex write_lock_;
-    std::condition_variable write_cond_;
     std::thread writer_thread_;
 
     ChangeSource changeSource_;

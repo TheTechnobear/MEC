@@ -15,8 +15,19 @@ void *push2_proc(void *);
 void getWaitTime(struct timespec& ts, int t);
 
 
-extern std::condition_variable  waitCond;
-extern std::mutex waitMtx;
 extern volatile bool keepRunning;
+
+class mecAppLock {
+public:
+    mecAppLock();
+    ~mecAppLock();
+    std::unique_lock<std::mutex>& lock() { return lock_;}
+private:
+    std::unique_lock<std::mutex> lock_;
+};
+
+void mec_initAppLock();
+void mec_waitFor(mecAppLock& lock,  unsigned mSec);
+void mec_notifyAll();
 
 #endif

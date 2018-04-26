@@ -42,7 +42,7 @@ public:
             case mec::ICallback::SHUTDOWN: {
                 LOG_0("mec requesting shutdown");
                 keepRunning = 0;
-                waitCond.notify_all();
+                mec_notifyAll();
                 break;
             }
             default: {
@@ -296,10 +296,10 @@ void *mecapi_proc(void *arg) {
     mecApi->init();
 
     {
-        std::unique_lock<std::mutex> lock(waitMtx);
+        mecAppLock lock;
         while (keepRunning) {
             mecApi->process();
-            waitCond.wait_for(lock, std::chrono::milliseconds(5));
+            mec_waitFor(lock,5);
         }
     }
 

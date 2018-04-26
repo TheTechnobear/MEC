@@ -66,9 +66,7 @@ private:
     std::string asDisplayString(const Kontrol::Parameter &p, unsigned width) const;
     std::shared_ptr<UdpTransmitSocket> socket_;
 
-    moodycamel::ReaderWriterQueue<OscMsg> messageQueue_;
+    moodycamel::BlockingReaderWriterQueue<OscMsg> messageQueue_;
     bool running_;
-    std::mutex write_lock_;
-    std::condition_variable write_cond_;
     std::thread writer_thread_;
 };

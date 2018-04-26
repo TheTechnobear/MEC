@@ -824,13 +824,9 @@ bool Organelle::connect() {
 
 
 void Organelle::writePoll() {
-    std::unique_lock<std::mutex> lock(write_lock_);
     while (running_) {
         OscMsg msg;
-        while (messageQueue_.try_dequeue(msg)) {
-            socket_->Send(msg.buffer_, msg.size_);
-        }
-        write_cond_.wait_for(lock, std::chrono::milliseconds(1000));
+        messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(1000));
     }
 }
 

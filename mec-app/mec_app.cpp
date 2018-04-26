@@ -2,6 +2,10 @@
 
 #include <unistd.h>
 
+#ifdef __COBALT__
+#include <xenomai/init.h>
+#endif
+
 #else
 
 #define WIN32_LEAN_AND_MEAN
@@ -15,20 +19,56 @@ inline void sleep(unsigned int seconds) { Sleep(seconds * 1000); }
 #include <signal.h>
 #include <string.h>
 
-// #include <osc/OscOutboundPacketStream.h>
-// #include <osc/OscReceivedElements.h>
-// #include <osc/OscPacketListener.h>
-// #include <ip/UdpSocket.h>
-
 #include "mec_app.h"
 #include <mec_prefs.h>
 
-// for signal
+#ifndef __COBALT__
 
-
-std::condition_variable  waitCond;
+std::condition_variable waitCond;
 std::mutex waitMtx;
 
+mecAppLock::mecAppLock() : lock_(waitMtx) {
+}
+mecAppLock:: ~mecAppLock() {
+}
+
+void mec_initAppLock() {
+}
+
+void mec_waitFor(mecAppLock& lock,  unsigned mSec) {
+    waitCond.wait_for(lock.lock(), std::chrono::milliseconds(mSec));
+}
+void mec_notifyAll() {
+    waitCond.notify_all();
+}
+#else
+
+pthread_mutex_t waitMtx;
+pthread_cond_t waitCond;
+
+void mec_initAppLock() {
+    pthread_mutex_init(&waitMtx,0);
+    pthread_cond_init(&waitCond,0);
+}
+
+void mec_waitFor(mecAppLock& lock,  unsigned mSec) {
+    struct timeval tp;
+    struct timespec ts;
+    int rc = gettimeofday(&tp, NULL);
+    ts.tv_sec = tp.tv_sec;
+    ts.tv_nsec = tp.tv_usec * 1000;
+
+    ts.tv_nsec += mSec * 1000000;
+    ts.tv_sec += ts.tv_nsec / 1000000000L;
+    ts.tv_nsec = ts.tv_nsec % 1000000000L;
+
+    pthread_cond_timedwait(&waitCond,&waitMtx, ts);
+}
+void mec_notifyAll() {
+    pthread_cond_broadcast(&waitCond);
+}
+
+#endif
 
 
 volatile bool keepRunning = true;
@@ -42,7 +82,7 @@ void intHandler(int sig) {
     if (sig == SIGINT) {
         LOG_0("mec_app int handler called");
         keepRunning = 0;
-        waitCond.notify_all();
+        mec_notifyAll();
     }
 }
 
@@ -60,7 +100,16 @@ int main(int ac, char **av) {
     sigaddset(&sigset, SIGINT);
     pthread_sigmask(SIG_BLOCK, &sigset, &oldset);
 #endif
-    int rc = 0;
+
+
+#ifdef __COBALT__
+    {
+        int argc = 0;
+        char *const *argv;
+        xenomai_init(&argc, &argv);
+    }
+#endif
+
 
     LOG_0("mec_app initialise ");
 
@@ -92,16 +141,16 @@ int main(int ac, char **av) {
 #endif
 
     {
-        std::unique_lock<std::mutex> lock(waitMtx);
+        mecAppLock lock;
         LOG_0("mec_app running ");
         while (keepRunning) {
-            waitCond.wait_for(lock, std::chrono::milliseconds(1000));
+            mec_waitFor(lock, 5000);
         }
 
     }
 
     LOG_0("mec_app wait for mec thread ");
-    if(mec_thread.joinable()) {
+    if (mec_thread.joinable()) {
         mec_thread.join();
     }
     LOG_0("mec_app mec thread stopped ");

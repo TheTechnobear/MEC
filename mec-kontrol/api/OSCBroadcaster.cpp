@@ -58,13 +58,9 @@ void OSCBroadcaster::stop() {
 
 
 void OSCBroadcaster::writePoll() {
-    std::unique_lock<std::mutex> lock(write_lock_);
     while (running_) {
         OscMsg msg;
-        while (messageQueue_.try_dequeue(msg)) {
-            socket_->Send(msg.buffer_, (size_t) msg.size_);
-        }
-        write_cond_.wait_for(lock, std::chrono::milliseconds(POLL_TIMEOUT_MS));
+        messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(POLL_TIMEOUT_MS));
     }
 }
 
@@ -94,7 +90,6 @@ void OSCBroadcaster::send(const char *data, unsigned size) {
     msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
     memcpy(msg.buffer_, data, (size_t) msg.size_);
     messageQueue_.enqueue(msg);
-    write_cond_.notify_one();
 }
 
 void OSCBroadcaster::sendPing(unsigned port) {
