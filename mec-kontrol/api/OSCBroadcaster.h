@@ -68,7 +68,11 @@ private:
     unsigned int port_;
     std::shared_ptr<UdpTransmitSocket> socket_;
     char buffer_[OUTPUT_BUFFER_SIZE];
+#ifdef __COBALT__
+    struct timespec lastPing_;
+#else
     std::chrono::steady_clock::time_point lastPing_;
+#endif
     unsigned keepAliveTime_;
 
     moodycamel::BlockingReaderWriterQueue<OscMsg> messageQueue_;

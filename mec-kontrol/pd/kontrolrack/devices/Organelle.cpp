@@ -804,8 +804,10 @@ bool Organelle::init() {
 }
 
 void *organelle_write_thread_func(void *aObj) {
+    post("start organelle write thead");
     Organelle *pThis = static_cast<Organelle *>(aObj);
     pThis->writePoll();
+    post("organelle write thread ended");
     return nullptr;
 }
 
@@ -818,7 +820,14 @@ bool Organelle::connect() {
         return false;
     }
     running_ = true;
+#ifdef __COBALT__
+    post("organelle use pthread for COBALT");
+    pthread_t ph = writer_thread_.native_handle();
+    pthread_create(&ph, 0,organelle_write_thread_func,this);
+#else
     writer_thread_ = std::thread(organelle_write_thread_func, this);
+#endif
+
     return true;
 }
 
@@ -826,7 +835,9 @@ bool Organelle::connect() {
 void Organelle::writePoll() {
     while (running_) {
         OscMsg msg;
-        messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(1000));
+        if(messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(1000))) {
+            socket_->Send(msg.buffer_, (size_t) msg.size_);
+        }
     }
 }
 

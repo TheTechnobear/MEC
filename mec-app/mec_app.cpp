@@ -52,22 +52,29 @@ void mec_initAppLock() {
 }
 
 void mec_waitFor(mecAppLock& lock,  unsigned mSec) {
-    struct timeval tp;
-    struct timespec ts;
-    int rc = gettimeofday(&tp, NULL);
-    ts.tv_sec = tp.tv_sec;
-    ts.tv_nsec = tp.tv_usec * 1000;
+    
+	unsigned long long t = mSec * 1000;
+    struct timespec ts = { t/1000000ULL, 1000ULL*(t%1000000ULL) };
 
-    ts.tv_nsec += mSec * 1000000;
-    ts.tv_sec += ts.tv_nsec / 1000000000L;
-    ts.tv_nsec = ts.tv_nsec % 1000000000L;
+    clock_gettime(CLOCK_REALTIME, &ts);
 
-    pthread_cond_timedwait(&waitCond,&waitMtx, ts);
+    t += (ts.tv_nsec/1000ULL);
+    ts.tv_nsec = 0;
+    ts.tv_sec += t/1000000ULL;
+    ts.tv_nsec += 1000ULL*(t%1000000ULL);
+
+    pthread_cond_timedwait(&waitCond,&waitMtx,&ts);
 }
 void mec_notifyAll() {
     pthread_cond_broadcast(&waitCond);
 }
 
+mecAppLock::mecAppLock() {
+    pthread_mutex_lock(&waitMtx);
+}
+mecAppLock:: ~mecAppLock() {
+    pthread_mutex_unlock(&waitMtx);
+}
 #endif
 
 

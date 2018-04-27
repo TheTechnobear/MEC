@@ -41,7 +41,12 @@ bool OSCBroadcaster::connect(const std::string &host, unsigned port) {
         return false;
     }
     running_ = true;
+#ifdef __COBALT__
+    pthread_t ph = writer_thread_.native_handle();
+    pthread_create(&ph, 0,osc_broadcaster_write_thread_func,this);
+#else
     writer_thread_ = std::thread(osc_broadcaster_write_thread_func, this);
+#endif 
     return true;
 }
 
@@ -60,20 +65,26 @@ void OSCBroadcaster::stop() {
 void OSCBroadcaster::writePoll() {
     while (running_) {
         OscMsg msg;
-        messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(POLL_TIMEOUT_MS));
+        if(messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(POLL_TIMEOUT_MS))) {
+            socket_->Send(msg.buffer_, (size_t) msg.size_);
+        }
     }
 }
 
 bool OSCBroadcaster::isActive() {
     if (!socket_) return false;
     if (keepAliveTime_ == 0) return true;
-
+#ifdef __COBALT__
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    int timeOut = keepAliveTime_ * 2 ;
+    int dur = lastPing_.tv_sec - now.tv_sec;
+#else 
     static std::chrono::seconds timeOut(keepAliveTime_ * 2); // twice normal ping time
     auto now = std::chrono::steady_clock::now();
     auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
-//    if(!(dur <= timeOut)) {
-//        std::cerr << "not active : " << dur.count() << std::endl;
-//    }
+//    if(!(dur <= timeOut)) { std::cerr << "not active : " << dur.count() << std::endl; 
+#endif 
     return dur <= timeOut;
 }
 
@@ -118,7 +129,11 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
 
         keepAliveTime_ = keepAlive;
         bool wasActive = isActive();
+#ifdef __COBALT__
+        clock_gettime(CLOCK_REALTIME, &lastPing_);
+#else
         lastPing_ = std::chrono::steady_clock::now();
+#endif
         if (!master_) {
             if (!wasActive) {
                 KontrolModel::model()->publishMetaData();

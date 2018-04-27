@@ -10,11 +10,6 @@
 --wrap sem_open
 --wrap sem_close
 --wrap sem_unlink
---wrap clock_getres
---wrap clock_gettime
---wrap clock_settime
---wrap clock_nanosleep
---wrap nanosleep
 --wrap pthread_mutex_init
 --wrap pthread_mutex_destroy
 --wrap pthread_mutex_lock
@@ -27,5 +22,4 @@
 --wrap pthread_cond_timedwait
 --wrap pthread_cond_signal
 --wrap pthread_cond_broadcast
---wrap gettimeofday
---wrap time
+--wrap clock_gettime
