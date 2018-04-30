@@ -468,6 +468,7 @@ bool Rack::applyModulePreset(std::shared_ptr<Module> module, const ModulePreset 
     }
 
     module->setMidiMapping(modulePreset.midiMap());
+    module->setModulationMapping(modulePreset.modulationMap());
 
     return ret;
 }

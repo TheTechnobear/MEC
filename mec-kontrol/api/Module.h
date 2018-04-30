@@ -70,7 +70,7 @@ public:
     void addModulationMapping(unsigned bus, const EntityId &paramId);
     void removeModulationMapping(unsigned bus, const EntityId &paramId);
     MidiMap getModulationMapping() { return modulation_mapping_; }
-    void setModulationMapping(const MidiMap &map) { modulation_mapping_ = map; }
+    void setModulationMapping(const ModulationMap &map) { modulation_mapping_ = map; }
 
 private:
     std::string type_;
