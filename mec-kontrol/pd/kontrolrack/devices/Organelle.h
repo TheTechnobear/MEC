@@ -29,8 +29,14 @@ public:
 
     void midiCC(unsigned num, unsigned value) override;
     void midiLearn(bool b);
-
     bool midiLearn() { return midiLearnActive_; }
+
+    void digital(unsigned bus, bool value) override;
+
+    void analog(unsigned bus, float value) override;
+    void modulationLearn(bool b);
+    bool modulationLearn() { return modulationLearnActive_; }
+
 
     virtual void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
 
@@ -62,6 +68,7 @@ private:
     Kontrol::EntityId currentModuleId_;
     Kontrol::EntityId lastParamId_; // for midi learn
     bool midiLearnActive_;
+    bool modulationLearnActive_;
 
     std::string asDisplayString(const Kontrol::Parameter &p, unsigned width) const;
     std::shared_ptr<UdpTransmitSocket> socket_;

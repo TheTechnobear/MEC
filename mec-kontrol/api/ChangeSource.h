@@ -13,7 +13,8 @@ public:
         LOCAL,
         MIDI,
         PRESET,
-        REMOTE
+        REMOTE,
+        MODULATION
     };
 
     ChangeSource(SrcType t,const SrcId& id=nullId);
@@ -41,6 +42,7 @@ bool operator!=(const ChangeSource &a, const ChangeSource &b);
 
 extern MEC_KONTROL_API const  ChangeSource CS_LOCAL;
 extern MEC_KONTROL_API const  ChangeSource CS_MIDI;
+extern MEC_KONTROL_API const  ChangeSource CS_MODULATION;
 extern MEC_KONTROL_API const  ChangeSource CS_PRESET;
 
 } // namespace

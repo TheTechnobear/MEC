@@ -144,6 +144,20 @@ public:
                 const char *paramId = (arg++)->AsString();
                 unsigned midiCC = (unsigned) (arg++)->AsInt32();
                 receiver_.unassignMidiCC(changedSrc, rackId, moduleId, paramId, midiCC);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/assignModulation") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+                const char *moduleId = (arg++)->AsString();
+                const char *paramId = (arg++)->AsString();
+                unsigned bus = (unsigned) (arg++)->AsInt32();
+                receiver_.assignModulation(changedSrc, rackId, moduleId, paramId, bus);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/unassignModulation") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+                const char *moduleId = (arg++)->AsString();
+                const char *paramId = (arg++)->AsString();
+                unsigned bus = (unsigned) (arg++)->AsInt32();
+                receiver_.unassignModulation(changedSrc, rackId, moduleId, paramId, bus);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/updatePreset") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
@@ -295,6 +309,18 @@ void OSCReceiver::unassignMidiCC(ChangeSource src, const EntityId &rackId, const
                                  const EntityId &paramId, unsigned midiCC) {
     model_->unassignMidiCC(src, rackId, moduleId, paramId, midiCC);
 }
+
+
+void OSCReceiver::assignModulation(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
+                               const EntityId &paramId, unsigned bus) {
+    model_->assignModulation(src, rackId, moduleId, paramId, bus);
+}
+
+void OSCReceiver::unassignModulation(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
+                                 const EntityId &paramId, unsigned bus) {
+    model_->unassignModulation(src, rackId, moduleId, paramId, bus);
+}
+
 
 void OSCReceiver::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
     model_->updatePreset(src, rackId, preset);

@@ -198,9 +198,6 @@ EXTERN void KontrolRack_setup(void) {
                     (t_method) KontrolRack_encbut, gensym("encbut"),
                     A_DEFFLOAT, A_NULL);
 
-    class_addmethod(KontrolRack_class,
-                    (t_method) KontrolRack_midiCC, gensym("midiCC"),
-                    A_DEFFLOAT, A_DEFFLOAT, A_NULL);
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_key, gensym("key"),
@@ -215,6 +212,20 @@ EXTERN void KontrolRack_setup(void) {
     // class_addmethod(KontrolRack_class,
     //                 (t_method) KontrolRack_fsRaw, gensym("fsRaw"),
     //                 A_DEFFLOAT, A_NULL);
+
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_midiCC, gensym("midiCC"),
+                    A_DEFFLOAT, A_DEFFLOAT, A_NULL);
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_analog, gensym("analog"),
+                    A_DEFFLOAT, A_DEFFLOAT, A_NULL);
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_digital, gensym("digital"),
+                    A_DEFFLOAT, A_DEFFLOAT, A_NULL);
+
 
 
 
@@ -234,7 +245,6 @@ EXTERN void KontrolRack_setup(void) {
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_loadmodule, gensym("loadmodule"),
                     A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
-
 }
 
 
@@ -488,6 +498,14 @@ void KontrolRack_updatepreset(t_KontrolRack *x, t_symbol *preset) {
     } else {
         post("No local rack found");
     }
+}
+
+void KontrolRack_analog(t_KontrolRack *x, t_floatarg bus, t_floatarg value) {
+    if (x->device_) x->device_->analog((unsigned) bus, value);
+}
+
+void KontrolRack_digital(t_KontrolRack *x, t_floatarg bus, t_floatarg value) {
+    if (x->device_) x->device_->digital((unsigned) bus, (bool) value > 0.5);
 }
 
 

@@ -79,6 +79,20 @@ public:
                         const EntityId &moduleId,
                         const EntityId &paramId,
                         unsigned midiCC);
+
+
+    void assignModulation(ChangeSource src,
+                      const EntityId &rackId,
+                      const EntityId &moduleId,
+                      const EntityId &paramId,
+                      unsigned bus);
+    void unassignModulation(ChangeSource src,
+                        const EntityId &rackId,
+                        const EntityId &moduleId,
+                        const EntityId &paramId,
+                        unsigned bus);
+
+
     void updatePreset(ChangeSource src,
                       const EntityId &rackId,
                       std::string preset);

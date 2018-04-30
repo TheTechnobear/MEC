@@ -101,6 +101,20 @@ void KontrolDevice::midiCC(unsigned num, unsigned value) {
     }
 }
 
+void KontrolDevice::digital(unsigned bus, bool value) {
+//    auto rack = model()->getLocalRack();
+//    if (rack != nullptr) {
+//        rack->changeDigital(bus, value);
+//    }
+}
+
+void KontrolDevice::analog(unsigned bus, float value) {
+    auto rack = model()->getLocalRack();
+    if (rack != nullptr) {
+        rack->changeModulation(bus, value);
+    }
+}
+
 void KontrolDevice::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->activeModule(src, rack, module);

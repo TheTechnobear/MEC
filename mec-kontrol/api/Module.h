@@ -59,15 +59,18 @@ public:
     void dumpParameters();
     void dumpCurrentValues();
 
-
     std::vector<EntityId> getParamsForCC(unsigned cc);
-
     void addMidiCCMapping(unsigned ccnum, const EntityId &paramId);
     void removeMidiCCMapping(unsigned ccnum, const EntityId &paramId);
-
     MidiMap getMidiMapping() { return midi_mapping_; }
-
     void setMidiMapping(const MidiMap &map) { midi_mapping_ = map; }
+
+
+    std::vector<EntityId> getParamsForModulation(unsigned bus);
+    void addModulationMapping(unsigned bus, const EntityId &paramId);
+    void removeModulationMapping(unsigned bus, const EntityId &paramId);
+    MidiMap getModulationMapping() { return modulation_mapping_; }
+    void setModulationMapping(const MidiMap &map) { modulation_mapping_ = map; }
 
 private:
     std::string type_;
@@ -76,6 +79,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Parameter> > parameters_; // key = paramId
     std::unordered_map<std::string, std::shared_ptr<Page> > pages_; // key = pageId
     MidiMap midi_mapping_; // key CC id, value = paramId
+    ModulationMap modulation_mapping_; // key bus id, value = paramId
 
 };
 

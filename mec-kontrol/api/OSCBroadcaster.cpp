@@ -193,7 +193,7 @@ void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Mo
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage("/Kontrol/assignMidiCC")
+        << osc::BeginMessage("/Kontrol/unassignMidiCC")
         << rack.id().c_str()
         << module.id().c_str()
         << p.id().c_str()
@@ -201,6 +201,42 @@ void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Mo
 
     ops << osc::EndMessage
         << osc::EndBundle;
+}
+
+
+void OSCBroadcaster::assignModulation(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p, unsigned bus) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/assignModulation")
+        << rack.id().c_str()
+        << module.id().c_str()
+        << p.id().c_str()
+        << (int32_t) bus;
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+}
+
+void OSCBroadcaster::unassignModulation(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p, unsigned bus) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/unassignModulation")
+        << rack.id().c_str()
+        << module.id().c_str()
+        << p.id().c_str()
+        << (int32_t) bus;
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
 }
 
 

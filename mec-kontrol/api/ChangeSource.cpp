@@ -6,6 +6,7 @@ const ChangeSource::SrcId ChangeSource::nullId="";
 const ChangeSource CS_LOCAL = ChangeSource(ChangeSource::SrcType::LOCAL);
 const ChangeSource CS_MIDI = ChangeSource(ChangeSource::SrcType::MIDI);
 const ChangeSource CS_PRESET = ChangeSource(ChangeSource::SrcType::PRESET);
+const ChangeSource CS_MODULATION = ChangeSource(ChangeSource::SrcType::MODULATION);
 
 bool operator==(const ChangeSource &a, const ChangeSource &b) {
     if (a.type_ == b.type_) {

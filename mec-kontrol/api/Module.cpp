@@ -273,5 +273,35 @@ void Module::removeMidiCCMapping(unsigned ccnum, const EntityId &paramId) {
     }
 }
 
+std::vector<EntityId> Module::getParamsForModulation(unsigned bus) {
+    return modulation_mapping_[bus];
+
+}
+
+void Module::addModulationMapping(unsigned bus, const EntityId &paramId) {
+    auto v = modulation_mapping_[bus];
+    for (auto it = v.begin(); it != v.end(); it++) {
+        if (*it == paramId) {
+            return; // already preset
+        }
+    }
+    modulation_mapping_[bus].push_back(paramId);
+}
+
+
+void Module::removeModulationMapping(unsigned bus, const EntityId &paramId) {
+    auto v = modulation_mapping_[bus];
+    for (auto it = v.begin(); it != v.end(); it++) {
+        if (*it == paramId) {
+            v.erase(it);
+            modulation_mapping_[bus] = v;
+            return;
+        }
+    }
+}
+
+
+
+
 
 } //namespace

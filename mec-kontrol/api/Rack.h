@@ -19,6 +19,8 @@ class Module;
 
 typedef std::unordered_map<unsigned, std::vector<EntityId>> MidiMap;
 
+typedef std::unordered_map<unsigned, std::vector<EntityId>> ModulationMap;
+
 class ModulePresetValue {
 public:
     ModulePresetValue(const EntityId &paramId, const ParamValue &v) :
@@ -42,19 +44,24 @@ public:
 
     ModulePreset(std::string moduleType,
                  const std::vector<ModulePresetValue> &values,
-                 const MidiMap &midimap) :
+                 const MidiMap &midimap,
+                 const ModulationMap &modmap) :
             moduleType_(moduleType),
             values_(values),
-            midi_map_(midimap) {
+            midi_map_(midimap),
+            mod_map_(modmap) {
         ;
     }
 
-    ModulePreset(const ModulePreset &src) : moduleType_(src.moduleType_), midi_map_(src.midi_map_),
+    ModulePreset(const ModulePreset &src) : moduleType_(src.moduleType_),
+                                            midi_map_(src.midi_map_),
+                                            mod_map_(src.mod_map_),
                                             values_(src.values_) { ; }
 
     ModulePreset &operator=(const ModulePreset &src) {
         moduleType_ = src.moduleType_;
         midi_map_ = src.midi_map_;
+        mod_map_ = src.mod_map_;
         values_ = src.values_;
         return *this;
     };
@@ -62,12 +69,14 @@ public:
     const std::string &moduleType() const { return moduleType_; }
 
     const MidiMap &midiMap() const { return midi_map_; }
+    const ModulationMap &modulationMap() const { return mod_map_; }
 
     const std::vector<ModulePresetValue> &values() const { return values_; }
 
 private:
     std::string moduleType_;
-    std::unordered_map<unsigned, std::vector<EntityId>> midi_map_; // key CC id, value = paramId
+    MidiMap midi_map_; // key CC id, value = paramId
+    ModulationMap mod_map_; // key bus id, value = paramId
     std::vector<ModulePresetValue> values_;
 };
 
@@ -112,6 +121,12 @@ public:
     bool changeMidiCC(unsigned midiCC, unsigned midiValue);
     void addMidiCCMapping(unsigned ccnum, const EntityId &moduleId, const EntityId &paramId);
     void removeMidiCCMapping(unsigned ccnum, const EntityId &moduleId, const EntityId &paramId);
+
+
+    bool changeModulation(unsigned bus, float value);
+    void addModulationMapping(unsigned bus, const EntityId &moduleId, const EntityId &paramId);
+    void removeModulationMapping(unsigned bus, const EntityId &moduleId, const EntityId &paramId);
+
 
     static std::shared_ptr<KontrolModel> model();
 

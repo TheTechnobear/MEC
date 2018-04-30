@@ -57,6 +57,10 @@ public:
 
     virtual void midiCC(unsigned num, unsigned value);
 
+    virtual void digital(unsigned bus, bool value);
+    virtual void analog(unsigned bus, float value);
+
+
     void sendPdMessage(const char *obj, float f);
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return model_; }

@@ -212,6 +212,40 @@ void Rack::removeMidiCCMapping(unsigned ccnum, const EntityId &moduleId, const E
     if (module != nullptr) module->removeMidiCCMapping(ccnum, paramId);
 }
 
+
+bool Rack::changeModulation(unsigned bus, float value) {
+    bool ret = false;
+    for (auto m : modules_) {
+        auto module = m.second;
+        if (module != nullptr) {
+            std::vector<EntityId> mmvec = module->getParamsForModulation(bus);
+            for (auto paramId : mmvec) {
+                auto param = module->getParam(paramId);
+                if (param != nullptr) {
+                    ParamValue pv = param->calcFloat(value);
+                    if (pv != param->current()) {
+                        model()->changeParam(CS_MODULATION, id(), module->id(), param->id(), pv);
+                        ret = true;
+                    }
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+void Rack::addModulationMapping(unsigned bus, const EntityId &moduleId, const EntityId &paramId) {
+    auto module = getModule(moduleId);
+    if (module != nullptr) module->addModulationMapping(bus, paramId);
+}
+
+void Rack::removeModulationMapping(unsigned bus, const EntityId &moduleId, const EntityId &paramId) {
+    auto module = getModule(moduleId);
+    if (module != nullptr) module->removeModulationMapping(bus, paramId);
+}
+
+
+
 void Rack::publishCurrentValues(const std::shared_ptr<Module> &module) const {
     if (module != nullptr) {
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();
@@ -325,7 +359,26 @@ bool Rack::loadModulePreset(RackPreset &rackPreset, const EntityId &moduleId, co
         }
     }
 
-    rackPreset[moduleId] = ModulePreset(moduleType, presetValues, midimap);
+    mec::Preferences modmapping(prefs.getSubTree("mod-mapping"));
+    ModulationMap modmap;
+    if (modmapping.valid()) { // just ignore if not present
+        mec::Preferences bus(modmapping.getSubTree("bus"));
+        if (bus.valid()) {
+            for (std::string busstr : bus.getKeys()) {
+                unsigned busnum = std::stoi(busstr);
+                mec::Preferences::Array array = bus.getArray(busstr);
+                if (array.valid()) {
+                    for (int i = 0; i < array.getSize(); i++) {
+                        EntityId paramId = array.getString(i);
+                        modmap[busnum].push_back(paramId);
+                    }
+                }
+            }
+        }
+    }
+
+
+    rackPreset[moduleId] = ModulePreset(moduleType, presetValues, midimap,modmap);
 
     return true;
 }
@@ -366,6 +419,25 @@ bool Rack::saveModulePreset(ModulePreset &modulepreset, cJSON *root) {
             }
         }
     }
+
+
+    // modulation mapping
+    cJSON *modulation = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "mod-mapping", modulation);
+    cJSON *buss = cJSON_CreateObject();
+    cJSON_AddItemToObject(modulation, "bus", buss);
+    for (auto mm : modulepreset.modulationMap()) {
+        if (mm.second.size() > 0) {
+            std::string busnum = std::to_string(mm.first);
+            cJSON *array = cJSON_CreateArray();
+            cJSON_AddItemToObject(buss, busnum.c_str(), array);
+            for (auto paramId : mm.second) {
+                cJSON *itm = cJSON_CreateString(paramId.c_str());
+                cJSON_AddItemToArray(array, itm);
+            }
+        }
+    }
+
     return true;
 }
 
@@ -378,7 +450,7 @@ bool Rack::updateModulePreset(std::shared_ptr<Module> module, ModulePreset &modu
         presetValues.push_back(ModulePresetValue(p->id(), p->current()));
     }
 
-    modulePreset = ModulePreset(module->type(), presetValues, module->getMidiMapping());
+    modulePreset = ModulePreset(module->type(), presetValues, module->getMidiMapping(), module->getModulationMapping());
     return ret;
 }
 

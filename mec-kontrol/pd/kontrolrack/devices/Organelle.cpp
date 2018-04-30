@@ -558,7 +558,8 @@ void OMenuMode::encoderButton(unsigned, bool value) {
 enum MainMenuItms {
     MMI_MODULE,
     MMI_PRESET,
-    MMI_LEARN,
+    MMI_MIDILEARN,
+    MMI_MODLEARN,
     MMI_SAVE,
     MMI_HOME,
     MMI_SIZE
@@ -577,8 +578,8 @@ std::string OMainMenu::getItemText(unsigned idx) {
     switch (idx) {
         case MMI_MODULE: {
             auto rack = model()->getRack(parent_.currentRack());
-            auto module = model()->getModule(rack,parent_.currentModule());
-            if(module== nullptr)
+            auto module = model()->getModule(rack, parent_.currentModule());
+            if (module == nullptr)
                 return parent_.currentModule();
             else
                 return parent_.currentModule() + ":" + module->displayName();
@@ -592,11 +593,17 @@ std::string OMainMenu::getItemText(unsigned idx) {
         }
         case MMI_SAVE:
             return "Save";
-        case MMI_LEARN: {
+        case MMI_MIDILEARN: {
             if (parent_.midiLearn()) {
                 return "Midi Learn        [X]";
             }
             return "Midi Learn        [ ]";
+        }
+        case MMI_MODLEARN: {
+            if (parent_.modulationLearn()) {
+                return "Mod Learn         [X]";
+            }
+            return "Mod Learn         [ ]";
         }
         case MMI_HOME:
             return "Home";
@@ -617,9 +624,18 @@ void OMainMenu::clicked(unsigned idx) {
             parent_.changeMode(OM_PRESETMENU);
             break;
         }
-        case MMI_LEARN: {
+        case MMI_MIDILEARN: {
             parent_.midiLearn(!parent_.midiLearn());
-            displayItem(MMI_LEARN);
+            displayItem(MMI_MIDILEARN);
+            displayItem(MMI_MODLEARN);
+            parent_.flipDisplay();
+            // parent_.changeMode(OM_PARAMETER);
+            break;
+        }
+        case MMI_MODLEARN: {
+            parent_.modulationLearn(!parent_.modulationLearn());
+            displayItem(MMI_MIDILEARN);
+            displayItem(MMI_MODLEARN);
             parent_.flipDisplay();
             // parent_.changeMode(OM_PARAMETER);
             break;
@@ -735,8 +751,8 @@ void OModuleMenu::activate() {
     for (auto modtype : res) {
         items_.push_back(modtype);
         if (modtype == module->type()) {
-            cur_=idx;
-            top_=idx;
+            cur_ = idx;
+            top_ = idx;
         }
         idx++;
     }
@@ -763,7 +779,7 @@ void OModuleMenu::clicked(unsigned idx) {
 
 // Organelle implmentation
 
-Organelle::Organelle() : messageQueue_(OscMsg::MAX_N_OSC_MSGS){
+Organelle::Organelle() : messageQueue_(OscMsg::MAX_N_OSC_MSGS) {
 }
 
 Organelle::~Organelle() {
@@ -775,7 +791,7 @@ void Organelle::stop() {
     if (socket_) {
         writer_thread_.join();
         OscMsg msg;
-        while(messageQueue_.try_dequeue(msg));
+        while (messageQueue_.try_dequeue(msg));
     }
     socket_.reset();
 }
@@ -835,7 +851,7 @@ bool Organelle::connect() {
 void Organelle::writePoll() {
     while (running_) {
         OscMsg msg;
-        if(messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(1000))) {
+        if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(1000))) {
             socket_->Send(msg.buffer_, (size_t) msg.size_);
         }
     }
@@ -850,7 +866,7 @@ void Organelle::send(const char *data, unsigned size) {
 }
 
 
-void Organelle::displayPopup(const std::string &text,bool dblline) {
+void Organelle::displayPopup(const std::string &text, bool dblline) {
     {
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gFillArea")
@@ -873,7 +889,7 @@ void Organelle::displayPopup(const std::string &text,bool dblline) {
         send(ops.Data(), ops.Size());
     }
 
-    if(dblline){
+    if (dblline) {
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gBox")
             << PATCH_SCREEN
@@ -976,7 +992,7 @@ void Organelle::changed(Kontrol::ChangeSource src,
                         const Kontrol::Module &module,
                         const Kontrol::Parameter &param) {
 
-    if (midiLearnActive_
+    if ((midiLearnActive_ || modulationLearnActive_)
         && rack.id() == currentRackId_
         && module.id() == currentModuleId_) {
         lastParamId_ = param.id();
@@ -998,7 +1014,14 @@ void Organelle::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, 
 
 void Organelle::midiLearn(bool b) {
     lastParamId_ = "";
+    modulationLearnActive_ = false;
     midiLearnActive_ = b;
+}
+
+void Organelle::modulationLearn(bool b) {
+    lastParamId_ = "";
+    midiLearnActive_ = false;
+    modulationLearnActive_ = b;
 }
 
 
@@ -1023,6 +1046,72 @@ void Organelle::midiCC(unsigned num, unsigned value) {
     KontrolDevice::midiCC(num, value);
 }
 
+
+void Organelle::digital(unsigned bus, bool value) {
+    // for now, use a digital bus 1 and 2 for up n down preset
+    if (bus == 1 || bus == 2) {
+        static bool last[2] = {false, false};
+        if (value && !last[bus - 1]) {
+            last[bus - 1] = true;
+            auto rack = model()->getRack(currentRack());
+            if (rack != nullptr) {
+                auto presets = rack->getPresetList();
+                auto cur = rack->currentPreset();
+                int idx = 0;
+                int found = false;
+                for (auto p : presets) {
+                    if (p == cur) {
+                        found = true;
+                    }
+                    if (!found) idx++;
+                }
+                if (found) {
+                    if (bus == 2) {
+                        idx++;
+                        if (idx >= presets.size()) idx = 0;
+                    } else {
+                        idx--;
+                        if (idx < 0) idx = presets.size() - 1;
+                        if (idx < 0) idx = 0;
+                    }
+                } else {
+                    idx = 0;
+                }
+                rack->applyPreset(presets[idx]);
+            }
+        } else {
+            last[bus - 1] = false;
+        }
+
+
+    }
+    KontrolDevice::digital(bus, value);
+    return;
+
+}
+
+void Organelle::analog(unsigned bus, float value) {
+    //std::cerr << "analog " << bus << " " << value << std::endl;
+    if (modulationLearnActive_) {
+        if (!lastParamId_.empty()) {
+            auto rack = model()->getRack(currentRackId_);
+            if (rack != nullptr) {
+                if (value > 0.1) {
+                    rack->addModulationMapping(bus, currentModuleId_, lastParamId_);
+                    lastParamId_ = "";
+                } else {
+                    //std::cerr << "modulation unlearn" << bus << " " << lastParamId_ << std::endl;
+                    rack->removeModulationMapping(bus, currentModuleId_, lastParamId_);
+                    lastParamId_ = "";
+                }
+            }
+        }
+    }
+    // update param model
+    KontrolDevice::analog(bus, value);
+}
+
+
 void Organelle::flipDisplay() {
     osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
     ops << osc::BeginMessage("/oled/gFlip")
@@ -1032,7 +1121,7 @@ void Organelle::flipDisplay() {
 }
 
 
-void Organelle::currentModule(const Kontrol::EntityId & moduleId) {
+void Organelle::currentModule(const Kontrol::EntityId &moduleId) {
     currentModuleId_ = moduleId;
     model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
 }

@@ -42,6 +42,10 @@ public:
     void saveSettings(ChangeSource, const Rack &) override;
     void loadModule(ChangeSource, const Rack &, const EntityId &, const std::string &) override;
 
+    void assignModulation(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned bus) override;
+    void unassignModulation(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned bus) override;
+
+
     bool isThisHost(const std::string &host, unsigned port) { return host == host_ && port == port_; }
 
     bool isActive();

@@ -297,6 +297,47 @@ void KontrolModel::unassignMidiCC(ChangeSource src, const EntityId &rackId, cons
 }
 
 
+void KontrolModel::assignModulation(ChangeSource src,
+                      const EntityId &rackId,
+                      const EntityId &moduleId,
+                      const EntityId &paramId,
+                      unsigned bus) {
+    if (localRack() && rackId == localRack()->id()) {
+        localRack()->addModulationMapping(bus, moduleId, paramId);
+    } else {
+        auto rack = getRack(rackId);
+        auto module = getModule(rack, moduleId);
+        auto param = getParam(module, paramId);
+        if (param == nullptr) return;
+
+        for (auto i : listeners_) {
+            (i.second)->assignModulation(src, *rack, *module, *param, bus);
+        }
+    }
+}
+
+void KontrolModel::unassignModulation(ChangeSource src,
+                        const EntityId &rackId,
+                        const EntityId &moduleId,
+                        const EntityId &paramId,
+                        unsigned bus) {
+    if (localRack() && rackId == localRack()->id()) {
+        localRack()->removeModulationMapping(bus, moduleId, paramId);
+    } else {
+        auto rack = getRack(rackId);
+        auto module = getModule(rack, moduleId);
+        auto param = getParam(module, paramId);
+        if (param == nullptr) return;
+
+        for (auto i : listeners_) {
+            (i.second)->unassignModulation(src, *rack, *module, *param, bus);
+        }
+    }
+
+}
+
+
+
 void KontrolModel::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
     if (localRack() && rackId == localRack()->id()) {
         localRack()->updatePreset(preset);

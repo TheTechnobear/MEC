@@ -31,8 +31,10 @@ public:
     virtual void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) { ; }
 
     virtual void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) { ; }
-
     virtual void unassignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) { ; }
+
+    virtual void assignModulation(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned bus) { ; }
+    virtual void unassignModulation(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned bus) { ; }
 
     virtual void updatePreset(ChangeSource, const Rack &, std::string preset) { ; }
 
@@ -129,6 +131,19 @@ public:
                         const EntityId &moduleId,
                         const EntityId &paramId,
                         unsigned midiCC);
+
+    void assignModulation(ChangeSource src,
+                      const EntityId &rackId,
+                      const EntityId &moduleId,
+                      const EntityId &paramId,
+                      unsigned bus);
+    void unassignModulation(ChangeSource src,
+                        const EntityId &rackId,
+                        const EntityId &moduleId,
+                        const EntityId &paramId,
+                        unsigned bus);
+
+
     void updatePreset(ChangeSource src,
                       const EntityId &rackId,
                       std::string preset);
