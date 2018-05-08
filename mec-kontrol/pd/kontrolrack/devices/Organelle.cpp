@@ -64,6 +64,8 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &,
                   const std::string &) override { ; };
 
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+
     void displayPopup(const std::string &text, unsigned time, bool dblline);
 protected:
     Organelle &parent_;

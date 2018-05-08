@@ -37,6 +37,10 @@ public:
                   const std::string &resType, const std::string &res) override {
         LOG_1("resource >> " << rack.id() << " " << resType << " " << res);
     }
+
+    virtual void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &rack) override {
+        LOG_1("deleteRack >> " << rack.id());
+    }
 };
 
 int main(int argc, char **argv) {

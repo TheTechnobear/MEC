@@ -131,6 +131,11 @@ public:
 
 //                 std::cout << "received resource " << rackId <<  " : " << resType << " : " << resValue << std::endl;
                 receiver_.createResource(changedSrc, rackId, resType, resValue);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/deleteRack") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = (arg++)->AsString();
+
+                receiver_.deleteRack(changedSrc, rackId);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/assignMidiCC") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
@@ -279,6 +284,11 @@ void OSCReceiver::createResource(ChangeSource src,
                                  const std::string &resType,
                                  const std::string &resValue) const {
     model_->createResource(src, rackId, resType, resValue);
+}
+
+void OSCReceiver::deleteRack(ChangeSource src, const EntityId & rackId)
+{
+	model_->deleteRack(src, rackId);
 }
 
 void OSCReceiver::ping(ChangeSource src,

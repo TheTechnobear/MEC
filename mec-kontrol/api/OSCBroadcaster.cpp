@@ -404,5 +404,22 @@ void OSCBroadcaster::resource(ChangeSource src, const Rack &rack, const std::str
     send(ops.Data(), ops.Size());
 }
 
+void OSCBroadcaster::deleteRack(ChangeSource src, const Rack &rack)
+{
+	if (!broadcastChange(src)) return;
+	if (!isActive()) return;
+
+	osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+	ops << osc::BeginBundleImmediate
+		<< osc::BeginMessage("/Kontrol/deleteRack")
+		<< rack.id().c_str();
+
+	ops << osc::EndMessage
+		<< osc::EndBundle;
+
+	send(ops.Data(), ops.Size());
+}
+
 
 } // namespace

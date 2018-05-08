@@ -49,6 +49,7 @@ public:
     void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                  const Kontrol::Parameter &) override;
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &) override;
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
 
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 

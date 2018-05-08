@@ -88,6 +88,10 @@ void KontrolDevice::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rac
     if (m != nullptr) m->resource(src, rack, resType, resValue);
 }
 
+void KontrolDevice::deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &)
+{
+}
+
 void KontrolDevice::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                                const Kontrol::EntityId &moduleId, const std::string &modType) {
     auto m = modes_[currentMode_];
