@@ -55,8 +55,8 @@ public:
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
                     const std::string &) override;
 
-    virtual void midiCC(unsigned num, unsigned value);
 
+    virtual void midiCC(unsigned num, unsigned value);
     virtual void digital(unsigned bus, bool value);
     virtual void analog(unsigned bus, float value);
 
@@ -65,8 +65,32 @@ public:
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return model_; }
 
-protected:
+
+    void midiLearn(bool b);
+
+    bool midiLearn() { return midiLearnActive_; }
+
+    void modulationLearn(bool b);
+
+    bool modulationLearn() { return modulationLearnActive_; }
+
+    Kontrol::EntityId currentRack() { return currentRackId_; }
+
+    void currentRack(const Kontrol::EntityId &p) { currentRackId_ = p; }
+
+    Kontrol::EntityId currentModule() { return currentModuleId_; }
+
+    void currentModule(const Kontrol::EntityId &modId);
+
+
+private:
     std::shared_ptr<Kontrol::KontrolModel> model_;
     std::map<unsigned, std::shared_ptr<DeviceMode>> modes_;
     unsigned currentMode_;
+    Kontrol::EntityId currentRackId_;
+    Kontrol::EntityId currentModuleId_;
+    Kontrol::EntityId lastParamId_; // for midi learn
+    bool midiLearnActive_;
+    bool modulationLearnActive_;
+
 };

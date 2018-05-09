@@ -13,6 +13,11 @@
 #include <algorithm>
 #include <clocale>
 
+
+#include "devices/Organelle.h"
+#include "devices/Bela.h"
+
+
 /*****
 represents the device interface, of which there is always one
 ******/
@@ -130,8 +135,40 @@ void KontrolRack_free(t_KontrolRack *x) {
     // Kontrol::ParameterModel::free();
 }
 
-void *KontrolRack_new(t_floatarg serverport, t_floatarg clientport) {
+void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     t_KontrolRack *x = (t_KontrolRack *) pd_new(KontrolRack_class);
+
+    int clientport = 0;
+    int serverport = 0;
+    std::string device = "organelle";
+    int argcount = 0;
+
+    if(argcount < argc) {
+        t_atom* arg = argv + argcount;
+        if(arg->a_type == A_FLOAT) {
+            // old format: [serverport] [clientport]
+            serverport = atom_getfloat(arg);
+            argcount++;
+            if(argcount < argc) {
+                arg = argv + argcount;
+                clientport = atom_getfloat(arg);
+            }
+        } else if (arg->a_type == A_SYMBOL) {
+            // new format: [device] [serverport] [clientport]
+            t_symbol* sym = atom_getsymbol(arg);
+            device = sym->s_name;
+            argcount++;
+            if(argcount < argc) {
+                arg = argv + argcount;
+                serverport = atom_getfloat(arg);
+                argcount++;
+                if(argcount < argc) {
+                    arg = argv + argcount;
+                    clientport = atom_getfloat(arg);
+                }
+            }
+        }
+    }
 
     x->active_module_ = nullptr;
     x->osc_receiver_ = nullptr;
@@ -141,15 +178,25 @@ void *KontrolRack_new(t_floatarg serverport, t_floatarg clientport) {
 
     x->model_->createLocalRack((unsigned int) clientport);
 
-    x->device_ = std::make_shared<Organelle>();
-    x->device_->init();
+    if(device=="organelle") {
+        post("KontrolRack: device = %s", device.c_str());
+        x->device_ = std::make_shared<Organelle>();
+    } else if (device == "bela") {
+        post("KontrolRack: device = %s", device.c_str());
+        x->device_ = std::make_shared<Bela>();
+    } else {
+        post("KontrolRack: unknown device = %s", device.c_str());
+    }
 
-    x->device_->currentRack(x->model_->localRackId());
+    if(x->device_) {
+        x->device_->init();
+        x->device_->currentRack(x->model_->localRackId());
+    }
 
     x->model_->addCallback("pd.send", std::make_shared<PdCallback>(x));
     x->model_->addCallback("pd.dev", x->device_);
 
-    if (clientport) KontrolRack_listen(x, clientport);
+    KontrolRack_listen(x, clientport);
     KontrolRack_connect(x, serverport);
 
     x->x_clock = clock_new(x, (t_method) KontrolRack_tick);
@@ -167,8 +214,7 @@ EXTERN void KontrolRack_setup(void) {
                                   (t_method) KontrolRack_free,
                                   sizeof(t_KontrolRack),
                                   CLASS_DEFAULT,
-                                  A_DEFFLOAT,
-                                  A_DEFFLOAT,
+                                  A_GIMME,
                                   A_NULL);
 
     class_addmethod(KontrolRack_class,
@@ -225,8 +271,6 @@ EXTERN void KontrolRack_setup(void) {
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_digital, gensym("digital"),
                     A_DEFFLOAT, A_DEFFLOAT, A_NULL);
-
-
 
 
     class_addmethod(KontrolRack_class,

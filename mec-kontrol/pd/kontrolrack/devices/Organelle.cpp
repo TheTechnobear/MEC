@@ -805,9 +805,6 @@ bool Organelle::init() {
     addMode(OM_MODULEMENU, std::make_shared<OModuleMenu>(*this));
 
     if (KontrolDevice::init()) {
-        midiLearn(false);
-        lastParamId_ = "";
-
         // setup mother.pd for reasonable behaviour, basically takeover
         sendPdMessage("midiOutGate", 0.0f);
         // sendPdMessage("midiInGate",0.0f);
@@ -987,131 +984,6 @@ void Organelle::invertLine(unsigned line) {
 
 }
 
-void Organelle::changed(Kontrol::ChangeSource src,
-                        const Kontrol::Rack &rack,
-                        const Kontrol::Module &module,
-                        const Kontrol::Parameter &param) {
-
-    if ((midiLearnActive_ || modulationLearnActive_)
-        && rack.id() == currentRackId_
-        && module.id() == currentModuleId_) {
-        lastParamId_ = param.id();
-    }
-    KontrolDevice::changed(src, rack, module, param);
-}
-
-void Organelle::rack(Kontrol::ChangeSource source, const Kontrol::Rack &rack) {
-    KontrolDevice::rack(source, rack);
-}
-
-void Organelle::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
-    if (currentModuleId_.empty()) {
-        currentRackId_ = rack.id();
-        currentModule(module.id());
-    }
-    KontrolDevice::module(source, rack, module);
-}
-
-void Organelle::midiLearn(bool b) {
-    lastParamId_ = "";
-    modulationLearnActive_ = false;
-    midiLearnActive_ = b;
-}
-
-void Organelle::modulationLearn(bool b) {
-    lastParamId_ = "";
-    midiLearnActive_ = false;
-    modulationLearnActive_ = b;
-}
-
-
-void Organelle::midiCC(unsigned num, unsigned value) {
-    //std::cerr << "midiCC " << num << " " << value << std::endl;
-    if (midiLearnActive_) {
-        if (!lastParamId_.empty()) {
-            auto rack = model()->getRack(currentRackId_);
-            if (rack != nullptr) {
-                if (value > 0) {
-                    rack->addMidiCCMapping(num, currentModuleId_, lastParamId_);
-                    lastParamId_ = "";
-                } else {
-                    //std::cerr << "midiCC unlearn" << num << " " << lastParamId_ << std::endl;
-                    rack->removeMidiCCMapping(num, currentModuleId_, lastParamId_);
-                    lastParamId_ = "";
-                }
-            }
-        }
-    }
-    // update param model
-    KontrolDevice::midiCC(num, value);
-}
-
-
-void Organelle::digital(unsigned bus, bool value) {
-    // for now, use a digital bus 1 and 2 for up n down preset
-    if (bus == 1 || bus == 2) {
-        static bool last[2] = {false, false};
-        if (value && !last[bus - 1]) {
-            last[bus - 1] = true;
-            auto rack = model()->getRack(currentRack());
-            if (rack != nullptr) {
-                auto presets = rack->getPresetList();
-                auto cur = rack->currentPreset();
-                int idx = 0;
-                int found = false;
-                for (auto p : presets) {
-                    if (p == cur) {
-                        found = true;
-                    }
-                    if (!found) idx++;
-                }
-                if (found) {
-                    if (bus == 2) {
-                        idx++;
-                        if (idx >= presets.size()) idx = 0;
-                    } else {
-                        idx--;
-                        if (idx < 0) idx = presets.size() - 1;
-                        if (idx < 0) idx = 0;
-                    }
-                } else {
-                    idx = 0;
-                }
-                rack->applyPreset(presets[idx]);
-            }
-        } else {
-            last[bus - 1] = false;
-        }
-
-
-    }
-    KontrolDevice::digital(bus, value);
-    return;
-
-}
-
-void Organelle::analog(unsigned bus, float value) {
-    //std::cerr << "analog " << bus << " " << value << std::endl;
-    if (modulationLearnActive_) {
-        if (!lastParamId_.empty()) {
-            auto rack = model()->getRack(currentRackId_);
-            if (rack != nullptr) {
-                if (value > 0.1) {
-                    rack->addModulationMapping(bus, currentModuleId_, lastParamId_);
-                    lastParamId_ = "";
-                } else {
-                    //std::cerr << "modulation unlearn" << bus << " " << lastParamId_ << std::endl;
-                    rack->removeModulationMapping(bus, currentModuleId_, lastParamId_);
-                    lastParamId_ = "";
-                }
-            }
-        }
-    }
-    // update param model
-    KontrolDevice::analog(bus, value);
-}
-
-
 void Organelle::flipDisplay() {
     osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
     ops << osc::BeginMessage("/oled/gFlip")
@@ -1121,7 +993,3 @@ void Organelle::flipDisplay() {
 }
 
 
-void Organelle::currentModule(const Kontrol::EntityId &moduleId) {
-    currentModuleId_ = moduleId;
-    model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
-}

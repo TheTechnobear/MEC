@@ -8,7 +8,6 @@
 #include <OSCBroadcaster.h>
 
 #include "devices/KontrolDevice.h"
-#include "devices/Organelle.h"
 
 #include <memory>
 #include <unordered_map>
@@ -19,7 +18,7 @@ typedef struct _KontrolRack {
     t_clock *x_clock;
 
     std::shared_ptr<Kontrol::KontrolModel> model_;
-    std::shared_ptr<Organelle> device_;
+    std::shared_ptr<KontrolDevice> device_;
 
     long pollCount_;
     std::shared_ptr<Kontrol::OSCReceiver> osc_receiver_;
@@ -32,7 +31,7 @@ typedef struct _KontrolRack {
 extern "C" {
 void KontrolRack_tick(t_KontrolRack *x);
 void KontrolRack_free(t_KontrolRack *);
-void *KontrolRack_new(t_floatarg,t_floatarg);
+void *KontrolRack_new(t_symbol*, int argc, t_atom *argv);
 EXTERN void KontrolRack_setup(void);
 
 

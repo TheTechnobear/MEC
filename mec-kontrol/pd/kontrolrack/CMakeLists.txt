@@ -9,6 +9,7 @@ set(KONTROL_HOST_SRC
         dirent_win.h
         devices/KontrolDevice.cpp
         devices/Organelle.cpp
+        devices/Bela.cpp
         )
 
 

@@ -23,6 +23,8 @@ void KontrolDevice::addMode(unsigned mode, std::shared_ptr<DeviceMode> handler) 
 bool KontrolDevice::init() {
     //FIXME: cannot create shared_ptr like this
     //model_->addCallback("pd.kdevice", std::shared_ptr<KontrolDevice>(this));
+    midiLearn(false);
+    lastParamId_ = "";
     for (auto m : modes_) {
         if (m.second != nullptr) m.second->init();
     }
@@ -60,6 +62,10 @@ void KontrolDevice::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
 }
 
 void KontrolDevice::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+    if (currentModuleId_.empty()) {
+        currentRackId_ = rack.id();
+        currentModule(module.id());
+    }
     auto m = modes_[currentMode_];
     if (m != nullptr) m->module(src, rack, module);
 }
@@ -78,6 +84,13 @@ void KontrolDevice::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack, 
 
 void KontrolDevice::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                             const Kontrol::Parameter &param) {
+    // set last param for midi learn
+    if ((midiLearnActive_ || modulationLearnActive_)
+        && rack.id() == currentRackId_
+        && module.id() == currentModuleId_) {
+        lastParamId_ = param.id();
+    }
+
     auto m = modes_[currentMode_];
     if (m != nullptr) m->changed(src, rack, module, param);
 }
@@ -95,6 +108,22 @@ void KontrolDevice::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &r
 }
 
 void KontrolDevice::midiCC(unsigned num, unsigned value) {
+    if (midiLearnActive_) {
+        if (!lastParamId_.empty()) {
+            auto rack = model()->getRack(currentRackId_);
+            if (rack != nullptr) {
+                if (value > 0) {
+                    rack->addMidiCCMapping(num, currentModuleId_, lastParamId_);
+                    lastParamId_ = "";
+                } else {
+                    //std::cerr << "midiCC unlearn" << num << " " << lastParamId_ << std::endl;
+                    rack->removeMidiCCMapping(num, currentModuleId_, lastParamId_);
+                    lastParamId_ = "";
+                }
+            }
+        }
+    }
+
     auto rack = model()->getLocalRack();
     if (rack != nullptr) {
         rack->changeMidiCC(num, value);
@@ -109,11 +138,44 @@ void KontrolDevice::digital(unsigned bus, bool value) {
 }
 
 void KontrolDevice::analog(unsigned bus, float value) {
+    //std::cerr << "analog " << bus << " " << value << std::endl;
+    if (modulationLearnActive_) {
+        if (!lastParamId_.empty()) {
+            auto rack = model()->getRack(currentRackId_);
+            if (rack != nullptr) {
+                if (value > 0.1) {
+                    rack->addModulationMapping(bus, currentModuleId_, lastParamId_);
+                    lastParamId_ = "";
+                } else {
+                    //std::cerr << "modulation unlearn" << bus << " " << lastParamId_ << std::endl;
+                    rack->removeModulationMapping(bus, currentModuleId_, lastParamId_);
+                    lastParamId_ = "";
+                }
+            }
+        }
+    }
+
     auto rack = model()->getLocalRack();
+    // update param model
     if (rack != nullptr) {
         rack->changeModulation(bus, value);
     }
 }
+
+
+void KontrolDevice::midiLearn(bool b) {
+    lastParamId_ = "";
+    modulationLearnActive_ = false;
+    midiLearnActive_ = b;
+}
+
+void KontrolDevice::modulationLearn(bool b) {
+    lastParamId_ = "";
+    midiLearnActive_ = false;
+    modulationLearnActive_ = b;
+}
+
+
 
 void KontrolDevice::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     auto m = modes_[currentMode_];
@@ -135,4 +197,9 @@ void KontrolDevice::sendPdMessage(const char *obj, float f) {
     t_atom a;
     SETFLOAT(&a, f);
     pd_forwardmess(sendobj, 1, &a);
+}
+
+void KontrolDevice::currentModule(const Kontrol::EntityId &moduleId) {
+    currentModuleId_ = moduleId;
+    model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
 }

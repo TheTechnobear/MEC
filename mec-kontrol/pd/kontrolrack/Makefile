@@ -66,6 +66,7 @@ common.sources = \
 	$(kontrol.sources) \
 	devices/KontrolDevice.cpp \
 	devices/Organelle.cpp \
+	devices/Bela.cpp \
 
 
 # input source file (class name == source file basename)
