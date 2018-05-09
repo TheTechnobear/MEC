@@ -124,6 +124,7 @@ void KontrolRack_tick(t_KontrolRack *x) {
 
 void KontrolRack_free(t_KontrolRack *x) {
     clock_free(x->x_clock);
+    x->model_->deleteRack(Kontrol::CS_LOCAL, x->model_->localRackId());
     x->model_->clearCallbacks();
     if (x->osc_receiver_) x->osc_receiver_->stop();
     x->osc_receiver_.reset();
