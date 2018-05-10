@@ -27,7 +27,8 @@ enum OrganelleModes {
     OM_PARAMETER,
     OM_MAINMENU,
     OM_PRESETMENU,
-    OM_MODULEMENU
+    OM_MODULEMENU,
+    OM_MODULESELECTMENU
 };
 
 
@@ -102,6 +103,7 @@ public:
 
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
                     const std::string &) override;
+    void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 
 private:
     void setCurrentPage(unsigned pageIdx, bool UI);
@@ -139,6 +141,7 @@ protected:
     void displayItem(unsigned idx);
     unsigned cur_;
     unsigned top_;
+    bool clickedDown_;
 };
 
 
@@ -181,6 +184,14 @@ private:
 class OModuleMenu : public OFixedMenuMode {
 public:
     OModuleMenu(Organelle &p) : OFixedMenuMode(p) { ; }
+
+    void activate() override;
+    void clicked(unsigned idx) override;
+};
+
+class OModuleSelectMenu : public OFixedMenuMode {
+public:
+    OModuleSelectMenu(Organelle &p) : OFixedMenuMode(p) { ; }
 
     void activate() override;
     void clicked(unsigned idx) override;
@@ -400,6 +411,13 @@ void OParamMode::keyPress(unsigned key, unsigned value) {
 }
 
 void OParamMode::activateShortcut(unsigned key) {
+    if (key == 0) {
+        encoderDown_ = false;
+        encoderAction_ = false;
+        parent_.changeMode(OM_MODULESELECTMENU);
+        return;
+    }
+
     if (key > 0) {
         unsigned moduleIdx = key - 1;
         auto rack = parent_.model()->getRack(parent_.currentRack());
@@ -415,6 +433,15 @@ void OParamMode::activateShortcut(unsigned key) {
                 parent_.flipDisplay();
             }
         }
+    }
+}
+
+void OParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rack & rack, const Kontrol::Module&) {
+    if(rack.id() == parent_.currentRack()) {
+        pageIdx_ = -1;
+        setCurrentPage(0, false);
+//        displayPopup(module->id() + ":" + module->displayName(), MODULE_SWITCH_TIMEOUT, true);
+        parent_.flipDisplay();
     }
 }
 
@@ -484,6 +511,7 @@ void OParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &r
 void OMenuMode::activate() {
     display();
     popupTime_ = MENU_TIMEOUT;
+    clickedDown_ = false;
 }
 
 void OMenuMode::poll() {
@@ -548,9 +576,10 @@ void OMenuMode::changeEncoder(unsigned, float value) {
 
 
 void OMenuMode::encoderButton(unsigned, bool value) {
-    if (value < 1.0) {
+    if (clickedDown_ && value < 1.0) {
         clicked(cur_);
     }
+    clickedDown_ = value;
 }
 
 
@@ -577,8 +606,8 @@ std::string OMainMenu::getItemText(unsigned idx) {
     switch (idx) {
         case MMI_MODULE: {
             auto rack = model()->getRack(parent_.currentRack());
-            auto module = model()->getModule(rack,parent_.currentModule());
-            if(module== nullptr)
+            auto module = model()->getModule(rack, parent_.currentModule());
+            if (module == nullptr)
                 return parent_.currentModule();
             else
                 return parent_.currentModule() + ":" + module->displayName();
@@ -735,8 +764,8 @@ void OModuleMenu::activate() {
     for (auto modtype : res) {
         items_.push_back(modtype);
         if (modtype == module->type()) {
-            cur_=idx;
-            top_=idx;
+            cur_ = idx;
+            top_ = idx;
         }
         idx++;
     }
@@ -759,6 +788,43 @@ void OModuleMenu::clicked(unsigned idx) {
     }
     parent_.changeMode(OM_PARAMETER);
 }
+
+
+void OModuleSelectMenu::activate() {
+    auto rack = model()->getRack(parent_.currentRack());
+    auto cmodule = model()->getModule(rack, parent_.currentModule());
+    if (cmodule == nullptr) return;
+    int idx = 0;
+    items_.clear();
+    for (auto module : rack->getModules()) {
+        std::string desc = module->id() + ":" + module->displayName();
+        items_.push_back(desc);
+        if (module->id() == cmodule->id()) {
+            cur_ = idx;
+            top_ = idx;
+        }
+        idx++;
+    }
+    OFixedMenuMode::activate();
+}
+
+
+void OModuleSelectMenu::clicked(unsigned idx) {
+    parent_.changeMode(OM_PARAMETER);
+    if (idx < getSize()) {
+        unsigned moduleIdx = idx;
+        auto rack = parent_.model()->getRack(parent_.currentRack());
+        auto modules = parent_.model()->getModules(rack);
+        if (moduleIdx < modules.size()) {
+            auto module = modules[moduleIdx];
+            auto moduleId = module->id();
+            if (parent_.currentModule() != moduleId) {
+                parent_.currentModule(moduleId);
+            }
+        }
+    }
+}
+
 
 
 // Organelle implmentation
@@ -787,6 +853,7 @@ bool Organelle::init() {
     addMode(OM_MAINMENU, std::make_shared<OMainMenu>(*this));
     addMode(OM_PRESETMENU, std::make_shared<OPresetMenu>(*this));
     addMode(OM_MODULEMENU, std::make_shared<OModuleMenu>(*this));
+    addMode(OM_MODULESELECTMENU, std::make_shared<OModuleSelectMenu>(*this));
 
     if (KontrolDevice::init()) {
         midiLearn(false);
@@ -845,16 +912,41 @@ void Organelle::send(const char *data, unsigned size) {
 }
 
 
-void Organelle::displayPopup(const std::string &text,bool dblline) {
-    {
-        osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
-        ops << osc::BeginMessage("/oled/gFillArea")
-            << PATCH_SCREEN
-            << 4 << 14
-            << 114 << 34
-            << 0
-            << osc::EndMessage;
-        send(ops.Data(), ops.Size());
+void Organelle::displayPopup(const std::string &text, bool dblline) {
+    if (dblline) {
+        {
+            osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+            ops << osc::BeginMessage("/oled/gFillArea")
+                << PATCH_SCREEN
+                << 2 << 12
+                << 118 << 38
+                << 0
+                << osc::EndMessage;
+            send(ops.Data(), ops.Size());
+        }
+
+        {
+            osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+            ops << osc::BeginMessage("/oled/gBox")
+                << PATCH_SCREEN
+                << 2 << 12
+                << 118 << 38
+                << 1
+                << osc::EndMessage;
+            send(ops.Data(), ops.Size());
+        }
+
+    } else {
+        {
+            osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+            ops << osc::BeginMessage("/oled/gFillArea")
+                << PATCH_SCREEN
+                << 4 << 14
+                << 114 << 34
+                << 0
+                << osc::EndMessage;
+            send(ops.Data(), ops.Size());
+        }
     }
 
     {
@@ -868,23 +960,14 @@ void Organelle::displayPopup(const std::string &text,bool dblline) {
         send(ops.Data(), ops.Size());
     }
 
-    if(dblline){
-        osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
-        ops << osc::BeginMessage("/oled/gBox")
-            << PATCH_SCREEN
-            << 6 << 16
-            << 110 << 30
-            << 1
-            << osc::EndMessage;
-        send(ops.Data(), ops.Size());
-    }
-
     {
+        int txtsize = 16;
+        if (text.length() > 12) txtsize = 8;
         osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gPrintln")
             << PATCH_SCREEN
             << 10 << 24
-            << 16 << 1
+            << txtsize << 1
             << text.c_str()
             << osc::EndMessage;
         send(ops.Data(), ops.Size());
@@ -1027,7 +1110,7 @@ void Organelle::flipDisplay() {
 }
 
 
-void Organelle::currentModule(const Kontrol::EntityId & moduleId) {
+void Organelle::currentModule(const Kontrol::EntityId &moduleId) {
     currentModuleId_ = moduleId;
     model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
 }
