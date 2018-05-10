@@ -61,8 +61,10 @@ Bela::~Bela() {
 }
 
 bool Bela::init() {
-    addMode(BELA_MAIN, std::make_shared<BelaMainMode>(*this));
-    changeMode(BELA_MAIN);
+    if( KontrolDevice::init() ) {
+	    addMode(BELA_MAIN, std::make_shared<BelaMainMode>(*this));
+	    changeMode(BELA_MAIN);
+    }
     return true;
 }
 
