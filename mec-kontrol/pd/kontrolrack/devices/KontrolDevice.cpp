@@ -2,6 +2,8 @@
 
 #include "../../m_pd.h"
 
+//#include <iostream>
+
 KontrolDevice::KontrolDevice() {
     model_ = Kontrol::KontrolModel::model();
 }
@@ -24,6 +26,7 @@ bool KontrolDevice::init() {
     //FIXME: cannot create shared_ptr like this
     //model_->addCallback("pd.kdevice", std::shared_ptr<KontrolDevice>(this));
     midiLearn(false);
+    modulationLearn(false);
     lastParamId_ = "";
     for (auto m : modes_) {
         if (m.second != nullptr) m.second->init();
@@ -138,12 +141,12 @@ void KontrolDevice::digital(unsigned bus, bool value) {
 }
 
 void KontrolDevice::analog(unsigned bus, float value) {
-    //std::cerr << "analog " << bus << " " << value << std::endl;
     if (modulationLearnActive_) {
         if (!lastParamId_.empty()) {
             auto rack = model()->getRack(currentRackId_);
             if (rack != nullptr) {
                 if (value > 0.1) {
+                    //std::cerr << "modulation learn" << bus << " " << lastParamId_ << std::endl;
                     rack->addModulationMapping(bus, currentModuleId_, lastParamId_);
                     lastParamId_ = "";
                 } else {
