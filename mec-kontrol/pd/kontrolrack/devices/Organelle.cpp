@@ -340,14 +340,19 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
         auto pages = parent_.model()->getPages(module);
 //        auto params = parent_.model()->getParams(module,page);
 
-        if (pageIdx != pageIdx_ && pageIdx < pages.size()) {
-            pageIdx_ = pageIdx;
+        if (pageIdx_ != pageIdx) {
+            if (pageIdx < pages.size()) {
+                pageIdx_ = pageIdx;
 
-            try {
-                page = pages[pageIdx_];
-                pageId_ = page->id();
-                display();
-            } catch (std::out_of_range) { ;
+                try {
+                    page = pages[pageIdx_];
+                    pageId_ = page->id();
+                    display();
+                } catch (std::out_of_range) { ;
+                }
+            } else {
+                // if no pages, or page selected is out of range, display blank
+                parent_.clearDisplay();
             }
         }
 
@@ -427,8 +432,6 @@ void OParamMode::activateShortcut(unsigned key) {
             auto moduleId = module->id();
             if (parent_.currentModule() != moduleId) {
                 parent_.currentModule(moduleId);
-                pageIdx_ = -1;
-                setCurrentPage(0, false);
                 displayPopup(module->id() + ":" + module->displayName(), MODULE_SWITCH_TIMEOUT, true);
                 parent_.flipDisplay();
             }
@@ -436,11 +439,10 @@ void OParamMode::activateShortcut(unsigned key) {
     }
 }
 
-void OParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rack & rack, const Kontrol::Module&) {
-    if(rack.id() == parent_.currentRack()) {
+void OParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &) {
+    if (rack.id() == parent_.currentRack()) {
         pageIdx_ = -1;
         setCurrentPage(0, false);
-//        displayPopup(module->id() + ":" + module->displayName(), MODULE_SWITCH_TIMEOUT, true);
         parent_.flipDisplay();
     }
 }
