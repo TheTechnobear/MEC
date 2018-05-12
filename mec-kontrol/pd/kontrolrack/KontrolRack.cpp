@@ -361,6 +361,21 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
         }
     }
 
+
+    {
+        // send a loadbang global after its loaded
+        // this lets other modules know a new module has 'entered the system'
+        std::string sendsym = std::string("loadbang-global");
+        t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
+        if (sendobj != nullptr) {
+            pd_bang(sendobj);
+        } else {
+            post("loadbang missing for %s", sendsym.c_str());
+        }
+    }
+
+
+
     if (x->active_module_ != nullptr) {
         t_pd *sendobj = gensym("activeModule")->s_thing;
         if (sendobj != nullptr) {
