@@ -57,6 +57,8 @@ protected:
     bool broadcastChange(ChangeSource src);
 
 private:
+    void flush();
+
     struct OscMsg {
         static const int MAX_N_OSC_MSGS = 128;
         static const int MAX_OSC_MESSAGE_SIZE = 256;

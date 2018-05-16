@@ -239,6 +239,21 @@ EXTERN void KontrolRack_setup(void) {
 
 }
 
+// Called from OS specific library unload methods.
+void KontrolRack_cleanup(void)
+{
+    auto model = Kontrol::KontrolModel::model();
+    if (model)
+    {
+        // Delete the local rack on exiting, if there is one.
+        auto localRackId = model->localRackId();
+        if (!localRackId.empty())
+        {
+            model->deleteRack(Kontrol::CS_LOCAL, localRackId);
+            model->clearCallbacks(); // Triggers stop() and in turn flushes the deleteRack message.
+        }
+    }
+}
 
 void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     if (modId == nullptr && modId->s_name == nullptr && strlen(modId->s_name) == 0) {

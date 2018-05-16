@@ -56,3 +56,5 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol* mod);
 
 void KontrolRack_loadresources(t_KontrolRack *x);
 }
+
+extern void KontrolRack_cleanup(void);
