@@ -32,6 +32,10 @@ add_executable(mec-app ${MEC_SRC})
 # target_link_libraries (mec-app mec-api mec-kontrol-api oscpack rtmidi)
 target_link_libraries(mec-app mec-api oscpack rtmidi)
 
+if (UNIX AND NOT APPLE)
+    target_link_libraries(mec-app pthread)
+endif()
+
 if (APPLE)
     target_link_libraries(mec-app "-framework CoreMIDI")
 endif (APPLE)
