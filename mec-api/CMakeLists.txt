@@ -2,10 +2,38 @@
 # MEC library
 project(mec-api)
 
-if (NOT WIN32)
-    set(MECDEVICES_SRC
+if (NOT DISABLE_SOUNDPLANELITE)
+    set(SOUNDPLANELITE_SRC
+            devices/mec_soundplane.cpp
+            devices/mec_soundplane.h
+            )
+
+    add_subdirectory(devices/soundplanelite)
+
+    set(SOUNDPLANELITE_LIB mec-soundplane)
+
+    include_directories("devices/soundplanelite")
+else()
+    add_definitions(-DDISABLE_SOUNDPLANELITE=1)
+endif()
+
+if (NOT DISABLE_EIGENHARP)
+    set(EIGENHARP_SRC
             devices/mec_eigenharp.cpp
             devices/mec_eigenharp.h
+            )
+
+    add_subdirectory(devices/eigenharp)
+
+    set(EIGENHARP_LIB mec-eigenharp)
+
+    include_directories("devices/eigenharp")
+else()
+    add_definitions(-DDISABLE_EIGENHARP=1)
+endif()
+
+if (NOT DISABLE_PUSH2)
+    set(PUSH2_SRC
             devices/mec_push2.cpp
             devices/mec_push2.h
             devices/push2/mec_push2_param.cpp
@@ -14,14 +42,16 @@ if (NOT WIN32)
             devices/push2/mec_push2_device.h
             devices/push2/mec_push2_play.h
             devices/push2/mec_push2_play.cpp
-            devices/mec_soundplane.cpp
-            devices/mec_soundplane.h
             )
 
-    add_subdirectory(devices/eigenharp)
-    add_subdirectory(devices/soundplanelite)
     add_subdirectory(devices/push2)
-endif ()
+
+    set(PUSH2_LIB mec-push2)
+
+    include_directories("devices/push2")
+else()
+    add_definitions(-DDISABLE_PUSH2=1)
+endif()
 
 set(MECAPI_SRC
         mec_api.cpp
@@ -47,12 +77,12 @@ set(MECAPI_SRC
         devices/mec_kontroldevice.cpp
         devices/mec_kontroldevice.h
         ${MECDEVICES_SRC}
+        ${SOUNDPLANELITE_SRC}
+        ${EIGENHARP_SRC}
+        ${PUSH2_SRC}
         )
 
 include_directories(
-        "devices/push2"
-        "devices/eigenharp"
-        "devices/soundplanelite"
         "${PROJECT_SOURCE_DIR}/../mec-utils"
         "${PROJECT_SOURCE_DIR}/../mec-kontrol/api"
         "${PROJECT_SOURCE_DIR}/../external/cJSON"
@@ -62,9 +92,7 @@ include_directories(
 
 add_library(mec-api SHARED ${MECAPI_SRC})
 
-if(NOT WIN32)
-    set(MEC_DEVICE_LIBS mec-eigenharp mec-soundplane mec-push2)
-endif()
+set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB})
 
 target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api cjson oscpack rtmidi)
 set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)

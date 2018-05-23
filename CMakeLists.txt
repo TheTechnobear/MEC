@@ -11,6 +11,10 @@ set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
 
 if(WIN32)
     message("windows support limited")
+    set(DISABLE_LIBUSB 1)
+    set(DISABLE_EIGENHARP 1)
+    set(DISABLE_SOUNDPLANELITE 1)
+    set(DISABLE_PUSH2 1)
 endif()
 
 if (APPLE)
@@ -58,7 +62,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release/bin)
 
 ############
-if(NOT WIN32)
+if(NOT DISABLE_LIBUSB)
 add_subdirectory(external/libusb libusb)
 endif()
 
