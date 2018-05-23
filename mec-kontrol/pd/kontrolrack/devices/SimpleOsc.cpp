@@ -1,7 +1,10 @@
 #include "SimpleOsc.h"
 
-#include <osc/OscOutboundPacketStream.h>
 #include <algorithm>
+
+#include <osc/OscOutboundPacketStream.h>
+#include <osc/OscReceivedElements.h>
+#include <osc/OscPacketListener.h>
 
 #include "../../m_pd.h"
 
@@ -13,10 +16,11 @@ static const int MODULE_SWITCH_TIMEOUT = 50;
 //static const int PAGE_EXIT_TIMEOUT = 5;
 static const auto MENU_TIMEOUT = 350;
 
-static const float MAX_POT_VALUE = 1023.0F;
+static const float MAX_POT_VALUE = 1.0F;
 
 static const char *OSC_CLIENT_HOST = "127.0.0.1";
 static const unsigned OSC_CLIENT_PORT = 8000;
+static const unsigned OSC_HOST_PORT = 8001;
 static const unsigned OSC_WRITE_POLL_WAIT_TIMEOUT = 1000;
 
 enum SimpleOscModes {
@@ -114,6 +118,10 @@ public:
                   const std::string &) override { ; };
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+
+
+    void nextPage();
+    void prevPage();
 
 private:
     void setCurrentPage(unsigned pageIdx, bool UI);
@@ -217,6 +225,7 @@ public:
     unsigned getSize() override;
     std::string getItemText(unsigned idx) override;
     void clicked(unsigned idx) override;
+    void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 };
 
 class OscPresetMenu : public OscMenuMode {
@@ -264,8 +273,6 @@ void OscBaseMode::poll() {
 //------ OscParamMode
 
 void OscParamMode::display() {
-    parent_.clearDisplay();
-
     auto rack = parent_.model()->getRack(parent_.currentRack());
     auto module = parent_.model()->getModule(rack, parent_.currentModule());
     auto page = parent_.model()->getPage(module, pageId_);
@@ -330,6 +337,13 @@ void OscParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
         auto page = parent_.model()->getPage(module, pageId_);
         auto pages = parent_.model()->getPages(module);
 //        auto params = parent_.model()->getParams(module,page);
+
+        std::string md = "";
+        std::string pd = "";
+        if (module) md = module->displayName();
+        if (page) pd = page->displayName();
+        parent_.displayTitle(md, pd);
+
 
         if (pageIdx_ != pageIdx) {
             if (pageIdx < pages.size()) {
@@ -442,6 +456,40 @@ void OscParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack 
             pageIdx_ = -1;
             moduleType_ = modType;
         }
+    }
+}
+
+void OscParamMode::nextPage() {
+    if (pageIdx_ < 0) {
+        setCurrentPage(0, false);
+        return;
+    }
+
+    unsigned pagenum = (unsigned) pageIdx_;
+
+    auto rack = parent_.model()->getRack(parent_.currentRack());
+    auto module = parent_.model()->getModule(rack, parent_.currentModule());
+//        auto page = parent_.model()->getPage(module,pageId_);
+    auto pages = parent_.model()->getPages(module);
+//        auto params = parent_.model()->getParams(module,page);
+    pagenum++;
+    pagenum = std::min(pagenum, (unsigned) pages.size() - 1);
+
+    if (pagenum != pageIdx_) {
+        setCurrentPage(pagenum, true);
+    }
+}
+
+void OscParamMode::prevPage() {
+    if (pageIdx_ < 0) {
+        setCurrentPage(0, false);
+        return;
+    }
+    unsigned pagenum = (unsigned) pageIdx_;
+    if (pagenum > 0) pagenum--;
+
+    if (pagenum != pageIdx_) {
+        setCurrentPage(pagenum, true);
     }
 }
 
@@ -612,6 +660,9 @@ void OscMainMenu::clicked(unsigned idx) {
             break;
     }
 }
+void OscMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) {
+    display();
+}
 
 // preset menu
 enum OscPresetMenuItms {
@@ -771,7 +822,94 @@ void OscModuleSelectMenu::clicked(unsigned idx) {
 
 // SimpleOsc implmentation
 
-SimpleOsc::SimpleOsc() : messageQueue_(OscMsg::MAX_N_OSC_MSGS) {
+
+class SimpleOscPacketListener : public PacketListener {
+public:
+    SimpleOscPacketListener(moodycamel::ReaderWriterQueue<SimpleOsc::OscMsg> &queue) : queue_(queue) {
+    }
+
+    virtual void ProcessPacket(const char *data, int size,
+                               const IpEndpointName &remoteEndpoint) {
+
+        SimpleOsc::OscMsg msg;
+//        msg.origin_ = remoteEndpoint;
+        msg.size_ = (size > SimpleOsc::OscMsg::MAX_OSC_MESSAGE_SIZE ? SimpleOsc::OscMsg::MAX_OSC_MESSAGE_SIZE
+                                                                    : size);
+        memcpy(msg.buffer_, data, (size_t) msg.size_);
+        msg.origin_ = remoteEndpoint;
+        queue_.enqueue(msg);
+    }
+
+private:
+    moodycamel::ReaderWriterQueue<SimpleOsc::OscMsg> &queue_;
+};
+
+
+class SimpleOSCListener : public osc::OscPacketListener {
+public:
+    SimpleOSCListener(SimpleOsc &recv) : receiver_(recv) { ; }
+
+
+    virtual void ProcessMessage(const osc::ReceivedMessage &m,
+                                const IpEndpointName &remoteEndpoint) {
+        try {
+            char host[IpEndpointName::ADDRESS_STRING_LENGTH];
+            remoteEndpoint.AddressAsString(host);
+//            post("received simpe osc message: %s", m.AddressPattern());
+            if (std::strcmp(m.AddressPattern(), "/NavDown") == 0) {
+                receiver_.changeEncoder(0, 1);
+            } else if (std::strcmp(m.AddressPattern(), "/NavUp") == 0) {
+                receiver_.changeEncoder(0, 0);
+            } else if (std::strcmp(m.AddressPattern(), "/NavActivate") == 0) {
+                receiver_.encoderButton(0, 1);
+                receiver_.encoderButton(0, 0);
+            } else if (std::strcmp(m.AddressPattern(), "/PageNext") == 0) {
+                receiver_.nextPage();
+            } else if (std::strcmp(m.AddressPattern(), "/PagePrev") == 0) {
+                receiver_.prevPage();
+            } else if (std::strcmp(m.AddressPattern(), "/ModuleNext") == 0) {
+                receiver_.nextModule();
+            } else if (std::strcmp(m.AddressPattern(), "/ModulePrev") == 0) {
+                receiver_.prevModule();
+                post("prev module");
+            } else if (std::strcmp(m.AddressPattern(), "/P1Ctrl") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                float val = 0;
+                if (arg->IsFloat()) val = arg->AsFloat();
+                else if (arg->IsInt32()) val = arg->AsInt32();
+                receiver_.changePot(0, val);
+            } else if (std::strcmp(m.AddressPattern(), "/P2Ctrl") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                float val = 0;
+                if (arg->IsFloat()) val = arg->AsFloat();
+                else if (arg->IsInt32()) val = arg->AsInt32();
+                receiver_.changePot(1, val);
+            } else if (std::strcmp(m.AddressPattern(), "/P3Ctrl") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                float val = 0;
+                if (arg->IsFloat()) val = arg->AsFloat();
+                else if (arg->IsInt32()) val = arg->AsInt32();
+                receiver_.changePot(2, val);
+            } else if (std::strcmp(m.AddressPattern(), "/P4Ctrl") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                float val = 0;
+                if (arg->IsFloat()) val = arg->AsFloat();
+                else if (arg->IsInt32()) val = arg->AsInt32();
+                receiver_.changePot(3, val);
+            }
+        } catch (osc::Exception &e) {
+            post("simple osc message exception: %s %s", m.AddressPattern(), e.what());
+        }
+    }
+
+private:
+    SimpleOsc &receiver_;
+};
+
+
+SimpleOsc::SimpleOsc() : writeMessageQueue_(OscMsg::MAX_N_OSC_MSGS), readMessageQueue_(OscMsg::MAX_N_OSC_MSGS) {
+    packetListener_ = std::make_shared<SimpleOscPacketListener>(readMessageQueue_);
+    oscListener_ = std::make_shared<SimpleOSCListener>(*this);
 }
 
 SimpleOsc::~SimpleOsc() {
@@ -780,12 +918,22 @@ SimpleOsc::~SimpleOsc() {
 
 void SimpleOsc::stop() {
     running_ = false;
-    if (socket_) {
+
+    if (writeSocket_) {
         writer_thread_.join();
         OscMsg msg;
-        while (messageQueue_.try_dequeue(msg));
+        while (writeMessageQueue_.try_dequeue(msg));
     }
-    socket_.reset();
+    writeSocket_.reset();
+
+    if (readSocket_) {
+        readSocket_->AsynchronousBreak();
+        receive_thread_.join();
+        OscMsg msg;
+        while (readMessageQueue_.try_dequeue(msg));
+    }
+    listenPort_ = 0;
+    readSocket_.reset();
 }
 
 
@@ -801,6 +949,7 @@ bool SimpleOsc::init() {
 
     if (KontrolDevice::init()) {
         connect();
+        listen(OSC_HOST_PORT);
         paramDisplay_->init();
         paramDisplay_->activate();
         changeMode(OSM_MAINMENU);
@@ -818,17 +967,24 @@ void *simpleosc_write_thread_func(void *aObj) {
 }
 
 bool SimpleOsc::connect() {
+    if (writeSocket_) {
+        writer_thread_.join();
+        OscMsg msg;
+        while (writeMessageQueue_.try_dequeue(msg));
+    }
+    writeSocket_.reset();
+
     try {
-        socket_ = std::shared_ptr<UdpTransmitSocket>(
+        writeSocket_ = std::shared_ptr<UdpTransmitSocket>(
                 new UdpTransmitSocket(IpEndpointName(OSC_CLIENT_HOST, OSC_CLIENT_PORT)));
     } catch (const std::runtime_error &e) {
         post("could not connect to simple osc host for screen updates");
-        socket_.reset();
+        writeSocket_.reset();
         return false;
     }
     running_ = true;
 #ifdef __COBALT__
-    post("organelle use pthread for COBALT");
+    post("simpleosc use pthread for COBALT");
     pthread_t ph = writer_thread_.native_handle();
     pthread_create(&ph, 0,simpleosc_write_thread_func,this);
 #else
@@ -842,8 +998,8 @@ bool SimpleOsc::connect() {
 void SimpleOsc::writePoll() {
     while (running_) {
         OscMsg msg;
-        if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(OSC_WRITE_POLL_WAIT_TIMEOUT))) {
-            socket_->Send(msg.buffer_, (size_t) msg.size_);
+        if (writeMessageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(OSC_WRITE_POLL_WAIT_TIMEOUT))) {
+            writeSocket_->Send(msg.buffer_, (size_t) msg.size_);
         }
     }
 }
@@ -853,7 +1009,55 @@ void SimpleOsc::send(const char *data, unsigned size) {
     OscMsg msg;
     msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
     memcpy(msg.buffer_, data, (size_t) msg.size_);
-    messageQueue_.enqueue(msg);
+    writeMessageQueue_.enqueue(msg);
+}
+
+
+void *simpleosc_read_thread_func(void *pReceiver) {
+    SimpleOsc *pThis = static_cast<SimpleOsc *>(pReceiver);
+    pThis->readSocket()->Run();
+    return nullptr;
+}
+
+bool SimpleOsc::listen(unsigned port) {
+
+    if (readSocket_) {
+        readSocket_->AsynchronousBreak();
+        receive_thread_.join();
+        OscMsg msg;
+        while (readMessageQueue_.try_dequeue(msg));
+    }
+    listenPort_ = 0;
+    readSocket_.reset();
+
+
+    listenPort_ = port;
+    try {
+        readSocket_ = std::make_shared<UdpListeningReceiveSocket>(
+                IpEndpointName(IpEndpointName::ANY_ADDRESS, listenPort_),
+                packetListener_.get());
+
+#ifdef __COBALT__
+        post("simpleosc use pthread for COBALT");
+    pthread_t ph = receive_thread_.native_handle();
+    pthread_create(&ph, 0,simpleosc_read_thread_func,this);
+#else
+        receive_thread_ = std::thread(simpleosc_read_thread_func, this);
+#endif
+    } catch (const std::runtime_error &e) {
+        listenPort_ = 0;
+        return false;
+    }
+    return true;
+}
+
+
+void SimpleOsc::poll() {
+    OscMsg msg;
+    while (readMessageQueue_.try_dequeue(msg)) {
+        oscListener_->ProcessPacket(msg.buffer_, msg.size_, msg.origin_);
+    }
+    KontrolDevice::poll();
 }
 
 
@@ -922,17 +1126,18 @@ void SimpleOsc::displayParamNum(unsigned num, const Kontrol::Parameter &param) {
             << osc::EndMessage;
         send(ops.Data(), ops.Size());
     }
-
-    {
-        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
-        std::string field = "/" + p + "Ctrl";
-        const char *addr = field.c_str();
-        float v = param.asFloat(param.current());
-        ops << osc::BeginMessage(addr)
-            << v
-            << osc::EndMessage;
-        send(ops.Data(), ops.Size());
-    }
+// TODO? this is not correct, since the control has more accuracy than our representation
+// possibly do just when page loads?
+//    {
+//        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+//        std::string field = "/" + p + "Ctrl";
+//        const char *addr = field.c_str();
+//        float v = param.asFloat(param.current());
+//        ops << osc::BeginMessage(addr)
+//            << v
+//            << osc::EndMessage;
+//        send(ops.Data(), ops.Size());
+//    }
 
     {
         osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
@@ -946,7 +1151,7 @@ void SimpleOsc::displayParamNum(unsigned num, const Kontrol::Parameter &param) {
 }
 
 void SimpleOsc::displayLine(unsigned line, const char *disp) {
-    if (socket_ == nullptr) return;
+    if (writeSocket_ == nullptr) return;
 
     {
         osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
@@ -972,3 +1177,59 @@ void SimpleOsc::invertLine(unsigned line) {
 }
 
 
+void SimpleOsc::displayTitle(const std::string &module, const std::string &page) {
+    {
+        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+        ops << osc::BeginMessage("/module")
+            << module.c_str()
+            << osc::EndMessage;
+        send(ops.Data(), ops.Size());
+    }
+
+    {
+        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+        ops << osc::BeginMessage("/page")
+            << page.c_str()
+            << osc::EndMessage;
+        send(ops.Data(), ops.Size());
+    }
+}
+
+
+void SimpleOsc::nextPage() {
+    paramDisplay_->nextPage();
+}
+
+void SimpleOsc::prevPage() {
+    paramDisplay_->prevPage();
+}
+
+void SimpleOsc::nextModule() {
+    auto rack = model()->getRack(currentRack());
+    auto modules = model()->getModules(rack);
+    bool found = false;
+    for (auto module:modules) {
+        if (found) {
+            currentModule(module->id());
+            return;
+        }
+        if (module->id() == currentModule()) {
+            found = true;
+        }
+    }
+}
+
+void SimpleOsc::prevModule() {
+    auto rack = model()->getRack(currentRack());
+    auto modules = model()->getModules(rack);
+    Kontrol::EntityId prevId;
+    for (auto module:modules) {
+        if (module->id() == currentModule()) {
+            if (!prevId.empty()) {
+                currentModule(prevId);
+                return;
+            }
+        }
+        prevId = module->id();
+    }
+}

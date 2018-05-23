@@ -9,8 +9,6 @@
 #include <string>
 #include <readerwriterqueue.h>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
 
 class Organelle : public KontrolDevice {
 public:
