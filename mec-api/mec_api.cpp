@@ -5,11 +5,16 @@
 #include "mec_device.h"
 #include "mec_log.h"
 
-#ifndef WIN32
-#include "devices/mec_eigenharp.h"
-#include "devices/mec_soundplane.h"
-#include "devices/mec_push2.h"
+#if !DISABLE_EIGENHARP
+#   include "devices/mec_eigenharp.h"
 #endif
+#if !DISABLE_SOUNDPLANELITE
+#   include "devices/mec_soundplane.h"
+#endif
+#if !DISABLE_PUSH2
+#   include "devices/mec_push2.h"
+#endif
+
 
 #include "devices/mec_mididevice.h"
 #include "devices/mec_osct3d.h"
@@ -273,7 +278,7 @@ void MecApi_Impl::initDevices() {
         return;
     }
 
-#ifndef WIN32
+#if !DISABLE_EIGENHARP
     if (prefs_->exists("eigenharp")) {
         LOG_1("eigenharp initialise ");
         std::shared_ptr<Device> device = std::make_shared<Eigenharp>(*this);
@@ -289,7 +294,9 @@ void MecApi_Impl::initDevices() {
             device->deinit();
         }
     }
+#endif
 
+#if !DISABLE_SOUNDPLANELITE
     if (prefs_->exists("soundplane")) {
         LOG_1("soundplane initialise");
         std::shared_ptr<Device> device = std::make_shared<Soundplane>(*this);
@@ -306,7 +313,9 @@ void MecApi_Impl::initDevices() {
             device->deinit();
         }
     }
+#endif
 
+#if !DISABLE_PUSH2
     if (prefs_->exists("push2")) {
         LOG_1("push2 initialise ");
         std::shared_ptr<Push2> device = std::make_shared<Push2>(*this);
