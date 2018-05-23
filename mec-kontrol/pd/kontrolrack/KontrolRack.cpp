@@ -191,6 +191,8 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     } else if (device == "simpleosc") {
         post("KontrolRack: device = %s", device.c_str());
         x->device_ = std::make_shared<SimpleOsc>();
+    } else if (device == "none") {
+        post("KontrolRack: not using a device");
     } else {
         post("KontrolRack: unknown device = %s", device.c_str());
     }
@@ -198,10 +200,10 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     if(x->device_) {
         x->device_->init();
         x->device_->currentRack(x->model_->localRackId());
+        x->model_->addCallback("pd.dev", x->device_);
     }
 
     x->model_->addCallback("pd.send", std::make_shared<PdCallback>(x));
-    x->model_->addCallback("pd.dev", x->device_);
 
     KontrolRack_listen(x, clientport);
     KontrolRack_connect(x, serverport);
