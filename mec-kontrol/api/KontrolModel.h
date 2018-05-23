@@ -155,6 +155,7 @@ public:
     void publishParam(ChangeSource src, const Rack &, const Module &, const Parameter &) const;
     void publishChanged(ChangeSource src, const Rack &, const Module &, const Parameter &) const;
     void publishResource(ChangeSource src, const Rack &, const std::string &, const std::string &) const;
+    void publishMidiMapping(ChangeSource src, const Rack &, const Module &, const MidiMap &midiMap) const;
 
     bool loadSettings(const EntityId &rackId, const std::string &filename);
     bool loadModuleDefinitions(const EntityId &rackId, const EntityId &moduleId, const std::string &filename);

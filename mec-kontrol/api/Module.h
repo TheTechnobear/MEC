@@ -43,6 +43,7 @@ public:
 
     std::shared_ptr<Page> getPage(const EntityId &pageId);
     std::shared_ptr<Parameter> getParam(const EntityId &paramId);
+    std::shared_ptr<Parameter> getParam(const EntityId &paramId) const;
     std::vector<std::shared_ptr<Page>> getPages();
     std::vector<std::shared_ptr<Parameter>> getParams();
     std::vector<std::shared_ptr<Parameter>> getParams(const std::shared_ptr<Page> &);
