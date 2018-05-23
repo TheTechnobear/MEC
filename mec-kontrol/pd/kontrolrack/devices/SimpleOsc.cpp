@@ -65,6 +65,9 @@ public:
                   const std::string &) override { ; };
 
     void displayPopup(const std::string &text, unsigned time, bool dblline);
+
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+
 protected:
     SimpleOsc &parent_;
 
@@ -99,13 +102,18 @@ public:
 
 
     void encoderButton(unsigned, bool) override { ; }
+
     void keyPress(unsigned, unsigned) override { ; }
+
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+
     void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                const Kontrol::Parameter &) override { ; }
+
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &,
                   const std::string &) override { ; };
 
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
 private:
     void setCurrentPage(unsigned pageIdx, bool UI);
@@ -116,57 +124,58 @@ private:
     Kontrol::EntityId pageId_;
 
     SimpleOsc &parent_;
+
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
 };
 
 class OscCompoundMode : public OscBaseMode {
 public:
-    OscCompoundMode(SimpleOsc& p, OscParamMode& param) : OscBaseMode(p), params_(param) {
+    OscCompoundMode(SimpleOsc &p, OscParamMode &param) : OscBaseMode(p), params_(param) {
     }
 
     void changePot(unsigned pot, float value) override {
-        OscBaseMode::changePot(pot,value);
-        params_.changePot(pot,value);
+        OscBaseMode::changePot(pot, value);
+        params_.changePot(pot, value);
     }
 
     void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override {
-        OscBaseMode::module(source,rack,module);
-        params_.module(source,rack,module);
+        OscBaseMode::module(source, rack, module);
+        params_.module(source, rack, module);
     }
-    void changed(Kontrol::ChangeSource source, const Kontrol::Rack & rack, const Kontrol::Module &module,
+
+    void changed(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                  const Kontrol::Parameter &param) override {
-        OscBaseMode::changed(source,rack,module,param);
-        params_.changed(source,rack,module,param);
+        OscBaseMode::changed(source, rack, module, param);
+        params_.changed(source, rack, module, param);
 
     }
+
     void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
               const Kontrol::Page &page) override {
-        OscBaseMode::page(source,rack,module,page);
-        params_.page(source,rack,module,page);
+        OscBaseMode::page(source, rack, module, page);
+        params_.page(source, rack, module, page);
     }
 
-    void loadModule(Kontrol::ChangeSource source, const Kontrol::Rack & rack, const Kontrol::EntityId & moduleId,
+    void loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::EntityId &moduleId,
                     const std::string &modType) override {
-        OscBaseMode::loadModule(source,rack,moduleId,modType);
-        params_.loadModule(source,rack,moduleId,modType);
+        OscBaseMode::loadModule(source, rack, moduleId, modType);
+        params_.loadModule(source, rack, moduleId, modType);
     }
 
-    void activeModule(Kontrol::ChangeSource source, const Kontrol::Rack & rack, const Kontrol::Module &module) override {
-        OscBaseMode::activeModule(source,rack,module);
-        params_.activeModule(source,rack,module);
+    void activeModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override {
+        OscBaseMode::activeModule(source, rack, module);
+        params_.activeModule(source, rack, module);
     }
-
 
 
 private:
-    OscParamMode& params_;
+    OscParamMode &params_;
 };
-
 
 
 class OscMenuMode : public OscCompoundMode {
 public:
-    OscMenuMode(SimpleOsc &p,OscParamMode& pa) : OscCompoundMode(p,pa), cur_(0), top_(0) { ; }
+    OscMenuMode(SimpleOsc &p, OscParamMode &pa) : OscCompoundMode(p, pa), cur_(0), top_(0) { ; }
 
     virtual unsigned getSize() = 0;
     virtual std::string getItemText(unsigned idx) = 0;
@@ -190,7 +199,7 @@ protected:
 
 class OscFixedMenuMode : public OscMenuMode {
 public:
-    OscFixedMenuMode(SimpleOsc &p,OscParamMode& pa) : OscMenuMode(p,pa) { ; }
+    OscFixedMenuMode(SimpleOsc &p, OscParamMode &pa) : OscMenuMode(p, pa) { ; }
 
     unsigned getSize() override { return items_.size(); };
 
@@ -202,7 +211,7 @@ protected:
 
 class OscMainMenu : public OscMenuMode {
 public:
-    OscMainMenu(SimpleOsc &p,OscParamMode& pa) : OscMenuMode(p,pa) { ; }
+    OscMainMenu(SimpleOsc &p, OscParamMode &pa) : OscMenuMode(p, pa) { ; }
 
     bool init() override;
     unsigned getSize() override;
@@ -212,7 +221,7 @@ public:
 
 class OscPresetMenu : public OscMenuMode {
 public:
-    OscPresetMenu(SimpleOsc &p,OscParamMode& pa) : OscMenuMode(p,pa) { ; }
+    OscPresetMenu(SimpleOsc &p, OscParamMode &pa) : OscMenuMode(p, pa) { ; }
 
     bool init() override;
     void activate() override;
@@ -226,7 +235,7 @@ private:
 
 class OscModuleMenu : public OscFixedMenuMode {
 public:
-    OscModuleMenu(SimpleOsc &p,OscParamMode& pa) : OscFixedMenuMode(p,pa) { ; }
+    OscModuleMenu(SimpleOsc &p, OscParamMode &pa) : OscFixedMenuMode(p, pa) { ; }
 
     void activate() override;
     void clicked(unsigned idx) override;
@@ -234,7 +243,7 @@ public:
 
 class OscModuleSelectMenu : public OscFixedMenuMode {
 public:
-    OscModuleSelectMenu(SimpleOsc &p,OscParamMode& pa) : OscFixedMenuMode(p,pa) { ; }
+    OscModuleSelectMenu(SimpleOsc &p, OscParamMode &pa) : OscFixedMenuMode(p, pa) { ; }
 
     void activate() override;
     void clicked(unsigned idx) override;
@@ -435,6 +444,7 @@ void OscParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack 
         }
     }
 }
+
 //---- OscMenuMode
 void OscMenuMode::activate() {
     display();
@@ -784,10 +794,10 @@ bool SimpleOsc::init() {
     paramDisplay_ = std::make_shared<OscParamMode>(*this);
 
     // add modes before KD init
-    addMode(OSM_MAINMENU, std::make_shared<OscMainMenu>(*this,*paramDisplay_));
-    addMode(OSM_PRESETMENU, std::make_shared<OscPresetMenu>(*this,*paramDisplay_));
-    addMode(OSM_MODULEMENU, std::make_shared<OscModuleMenu>(*this,*paramDisplay_));
-    addMode(OSM_MODULESELECTMENU, std::make_shared<OscModuleSelectMenu>(*this,*paramDisplay_));
+    addMode(OSM_MAINMENU, std::make_shared<OscMainMenu>(*this, *paramDisplay_));
+    addMode(OSM_PRESETMENU, std::make_shared<OscPresetMenu>(*this, *paramDisplay_));
+    addMode(OSM_MODULEMENU, std::make_shared<OscModuleMenu>(*this, *paramDisplay_));
+    addMode(OSM_MODULESELECTMENU, std::make_shared<OscModuleSelectMenu>(*this, *paramDisplay_));
 
     if (KontrolDevice::init()) {
         connect();

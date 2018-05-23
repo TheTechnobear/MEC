@@ -26,6 +26,8 @@ public:
     virtual void changed(ChangeSource, const Rack &, const Module &, const Parameter &) = 0;
     virtual void resource(ChangeSource, const Rack &, const std::string &, const std::string &) = 0;
 
+    virtual void deleteRack(ChangeSource, const Rack &) = 0;
+
     virtual void activeModule(ChangeSource, const Rack &, const Module &) { ; }
 
     virtual void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) { ; }
@@ -117,6 +119,9 @@ public:
                         const std::string &resType,
                         const std::string &resValue) const;
 
+    void deleteRack(ChangeSource src,
+                    const EntityId &rackId);
+
     void activeModule(ChangeSource src, const EntityId &rackId ,const EntityId &moduleId);
 
     void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) const;
@@ -170,6 +175,7 @@ public:
     void publishParam(ChangeSource src, const Rack &, const Module &, const Parameter &) const;
     void publishChanged(ChangeSource src, const Rack &, const Module &, const Parameter &) const;
     void publishResource(ChangeSource src, const Rack &, const std::string &, const std::string &) const;
+    void publishMidiMapping(ChangeSource src, const Rack &, const Module &, const MidiMap &midiMap) const;
 
     bool loadSettings(const EntityId &rackId, const std::string &filename);
     bool loadModuleDefinitions(const EntityId &rackId, const EntityId &moduleId, const std::string &filename);

@@ -44,6 +44,8 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string &, const std::string &) override { ; };
 
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+
     KontrolDevice &this_;
 };
 
@@ -136,8 +138,10 @@ void KontrolDevice::processorRun() {
                         if (!client->isActive()) {
                             LOG_0("KontrolDevice::Process... remove inactive client " << client->host() << " : "
                                                                                       << client->port());
+                            Kontrol::EntityId rackId = Kontrol::Rack::createId(client->host(), client->port());
                             client->stop();
                             clients_.erase(it);
+                            model_->deleteRack(Kontrol::CS_LOCAL, rackId);
                             inactive = true;
                         } else {
                             it++;

@@ -40,6 +40,8 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &,
                   const std::string &) override { ; };
 
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+
 protected:
     Bela &parent_;
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }

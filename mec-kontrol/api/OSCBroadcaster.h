@@ -32,7 +32,7 @@ public:
     void param(ChangeSource src, const Rack &rack, const Module &module, const Parameter &) override;
     void changed(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p) override;
     void resource(ChangeSource, const Rack &, const std::string &, const std::string &) override;
-
+    void deleteRack(ChangeSource, const Rack &) override;
 
     void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) override;
     void assignMidiCC(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned midiCC) override;
@@ -61,9 +61,11 @@ protected:
     bool broadcastChange(ChangeSource src);
 
 private:
+    void flush();
+
     struct OscMsg {
         static const int MAX_N_OSC_MSGS = 128;
-        static const int MAX_OSC_MESSAGE_SIZE = 256;
+        static const int MAX_OSC_MESSAGE_SIZE = 512;
         int size_;
         char buffer_[MAX_OSC_MESSAGE_SIZE];
     };

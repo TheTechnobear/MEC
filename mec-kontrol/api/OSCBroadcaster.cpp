@@ -54,8 +54,7 @@ void OSCBroadcaster::stop() {
     running_ = false;
     if (socket_) {
         writer_thread_.join();
-        OscMsg msg;
-        while(messageQueue_.try_dequeue(msg));
+        flush();
     }
     port_ = 0;
     socket_.reset();
@@ -68,6 +67,13 @@ void OSCBroadcaster::writePoll() {
         if(messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(POLL_TIMEOUT_MS))) {
             socket_->Send(msg.buffer_, (size_t) msg.size_);
         }
+    }
+}
+
+void OSCBroadcaster::flush() {
+    OscMsg msg;
+    while(messageQueue_.try_dequeue(msg)) {
+        socket_->Send(msg.buffer_, (size_t) msg.size_);
     }
 }
 
@@ -159,6 +165,14 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
                             for (auto p :  m->getParams()) {
                                 changed(CS_LOCAL, *r, *m, *p);
                             }
+                            for (auto midiMap : m->getMidiMapping()) {
+                                for (auto j : midiMap.second) {
+                                    auto parameter = m->getParam(j);
+                                    if (parameter) {
+                                        assignMidiCC(CS_LOCAL, *r, *m, *parameter, midiMap.first);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -183,6 +197,8 @@ void OSCBroadcaster::assignMidiCC(ChangeSource src, const Rack &rack, const Modu
 
     ops << osc::EndMessage
         << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
 }
 
 void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p,
@@ -201,6 +217,8 @@ void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Mo
 
     ops << osc::EndMessage
         << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
 }
 
 
@@ -448,6 +466,23 @@ void OSCBroadcaster::resource(ChangeSource src, const Rack &rack, const std::str
         << osc::EndBundle;
 
     send(ops.Data(), ops.Size());
+}
+
+void OSCBroadcaster::deleteRack(ChangeSource src, const Rack &rack)
+{
+	if (!broadcastChange(src)) return;
+	if (!isActive()) return;
+
+	osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+	ops << osc::BeginBundleImmediate
+		<< osc::BeginMessage("/Kontrol/deleteRack")
+		<< rack.id().c_str();
+
+	ops << osc::EndMessage
+		<< osc::EndBundle;
+
+	send(ops.Data(), ops.Size());
 }
 
 

@@ -47,6 +47,7 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std:
     for (const auto param: module->getParams()) {
         publishChanged(CS_LOCAL, *rack, *module, *param);
     }
+    publishMidiMapping(CS_LOCAL, *rack, *module, module->getMidiMapping());
 }
 
 
@@ -222,6 +223,21 @@ std::shared_ptr<Parameter> KontrolModel::createParam(
 }
 
 
+void KontrolModel::deleteRack(ChangeSource src, const EntityId &rackId)
+{
+    if (localRack_ && localRack_->id() == rackId)
+        localRack_ = nullptr;
+    auto rack = getRack(rackId);
+    if (rack)
+    {
+        for (auto i : listeners_) {
+            (i.second)->deleteRack(src, *rack);
+        }
+    }
+    racks_.erase(rackId);
+}
+
+
 void KontrolModel::activeModule(ChangeSource src, const EntityId &rackId ,const EntityId &moduleId) {
     auto rack = getRack(rackId);
     auto module = getModule(rack, moduleId);
@@ -272,6 +288,8 @@ void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const 
         auto module = getModule(rack, moduleId);
         auto param = getParam(module, paramId);
         if (param == nullptr) return;
+
+        rack->addMidiCCMapping(midiCC, moduleId, paramId);
 
         for (auto i : listeners_) {
             (i.second)->assignMidiCC(src, *rack, *module, *param, midiCC);
@@ -439,6 +457,19 @@ void KontrolModel::publishResource(ChangeSource src, const Rack &rack,
     }
 }
 
+void KontrolModel::publishMidiMapping(ChangeSource src, const Rack &rack, const Module &module,
+                                      const MidiMap &midiMap) const {
+    for (auto k : midiMap) {
+        for (auto j : k.second) {
+            auto parameter = module.getParam(j);
+            if (parameter) {
+                for (auto i : listeners_) {
+                    (i.second)->assignMidiCC(src, rack, module, *parameter, k.first);
+                }
+            }
+        }
+    }
+}
 
 bool KontrolModel::loadModuleDefinitions(const EntityId &rackId, const EntityId &moduleId,
                                          const std::string &filename) {
