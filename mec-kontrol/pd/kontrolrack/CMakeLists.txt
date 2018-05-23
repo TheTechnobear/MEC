@@ -11,6 +11,11 @@ set(KONTROL_HOST_SRC
         devices/Organelle.cpp
         )
 
+if (${WIN32})
+    list(APPEND KONTROL_HOST_SRC KontrolWin.cpp)
+else ()
+    list(APPEND KONTROL_HOST_SRC KontrolPosix.cpp)
+endif()
 
 include_directories(
         "${PROJECT_SOURCE_DIR}/.."

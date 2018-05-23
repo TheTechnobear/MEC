@@ -26,6 +26,8 @@ public:
     virtual void changed(ChangeSource, const Rack &, const Module &, const Parameter &) = 0;
     virtual void resource(ChangeSource, const Rack &, const std::string &, const std::string &) = 0;
 
+    virtual void deleteRack(ChangeSource, const Rack &) = 0;
+
     virtual void activeModule(ChangeSource, const Rack &, const Module &) { ; }
 
     virtual void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) { ; }
@@ -114,6 +116,9 @@ public:
                         const EntityId &rackId,
                         const std::string &resType,
                         const std::string &resValue) const;
+
+    void deleteRack(ChangeSource src,
+                    const EntityId &rackId);
 
     void activeModule(ChangeSource src, const EntityId &rackId ,const EntityId &moduleId);
 

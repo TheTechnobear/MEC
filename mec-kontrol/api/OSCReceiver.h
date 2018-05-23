@@ -67,6 +67,9 @@ public:
                         const std::string &resType,
                         const std::string &resValue) const;
 
+    void deleteRack(ChangeSource src,
+                    const EntityId &rackId);
+
     void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepalive);
 
     void assignMidiCC(ChangeSource src,

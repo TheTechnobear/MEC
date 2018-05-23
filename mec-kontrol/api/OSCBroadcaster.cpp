@@ -46,6 +46,7 @@ bool OSCBroadcaster::connect(const std::string &host, unsigned port) {
 }
 
 void OSCBroadcaster::stop() {
+    flush();
     running_ = false;
     if (socket_) {
         writer_thread_.join();
@@ -59,12 +60,17 @@ void OSCBroadcaster::stop() {
 void OSCBroadcaster::writePoll() {
     std::unique_lock<std::mutex> lock(write_lock_);
     while (running_) {
-        while (PaUtil_GetRingBufferReadAvailable(&messageQueue_)) {
-            OscMsg msg;
-            PaUtil_ReadRingBuffer(&messageQueue_, &msg, 1);
-            socket_->Send(msg.buffer_, msg.size_);
-        }
+        flush();
         write_cond_.wait_for(lock, std::chrono::milliseconds(POLL_TIMEOUT_MS));
+    }
+}
+
+void OSCBroadcaster::flush()
+{
+    while (PaUtil_GetRingBufferReadAvailable(&messageQueue_)) {
+        OscMsg msg;
+        PaUtil_ReadRingBuffer(&messageQueue_, &msg, 1);
+        socket_->Send(msg.buffer_, msg.size_);
     }
 }
 
@@ -414,6 +420,23 @@ void OSCBroadcaster::resource(ChangeSource src, const Rack &rack, const std::str
         << osc::EndBundle;
 
     send(ops.Data(), ops.Size());
+}
+
+void OSCBroadcaster::deleteRack(ChangeSource src, const Rack &rack)
+{
+	if (!broadcastChange(src)) return;
+	if (!isActive()) return;
+
+	osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+	ops << osc::BeginBundleImmediate
+		<< osc::BeginMessage("/Kontrol/deleteRack")
+		<< rack.id().c_str();
+
+	ops << osc::EndMessage
+		<< osc::EndBundle;
+
+	send(ops.Data(), ops.Size());
 }
 
 

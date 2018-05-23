@@ -223,6 +223,21 @@ std::shared_ptr<Parameter> KontrolModel::createParam(
 }
 
 
+void KontrolModel::deleteRack(ChangeSource src, const EntityId &rackId)
+{
+    if (localRack_ && localRack_->id() == rackId)
+        localRack_ = nullptr;
+    auto rack = getRack(rackId);
+    if (rack)
+    {
+        for (auto i : listeners_) {
+            (i.second)->deleteRack(src, *rack);
+        }
+    }
+    racks_.erase(rackId);
+}
+
+
 void KontrolModel::activeModule(ChangeSource src, const EntityId &rackId ,const EntityId &moduleId) {
     auto rack = getRack(rackId);
     auto module = getModule(rack, moduleId);

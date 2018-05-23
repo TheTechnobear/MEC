@@ -64,6 +64,7 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string&, const std::string &) override { ; };
 
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
 };
 
 class P2_PadMode : Kontrol::KontrolCallback {
@@ -91,6 +92,8 @@ public:
 
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string&, const std::string &) override { ; };
+
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
 };
 
 enum PushDisplayModes {
@@ -130,6 +133,8 @@ public:
 
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string&, const std::string &) override ;
+
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
 
     void addDisplayMode(PushDisplayModes mode, std::shared_ptr<P2_DisplayMode>);
     void changeDisplayMode(PushDisplayModes);

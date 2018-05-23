@@ -42,6 +42,7 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string &, const std::string &) override { ; }
 
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &,
                     const Kontrol::EntityId &, const std::string &) override;
@@ -123,6 +124,7 @@ void KontrolRack_tick(t_KontrolRack *x) {
 
 void KontrolRack_free(t_KontrolRack *x) {
     clock_free(x->x_clock);
+    x->model_->deleteRack(Kontrol::CS_LOCAL, x->model_->localRackId());
     x->model_->clearCallbacks();
     if (x->osc_receiver_) x->osc_receiver_->stop();
     x->osc_receiver_.reset();
@@ -237,6 +239,21 @@ EXTERN void KontrolRack_setup(void) {
 
 }
 
+// Called from OS specific library unload methods.
+void KontrolRack_cleanup(void)
+{
+    auto model = Kontrol::KontrolModel::model();
+    if (model)
+    {
+        // Delete the local rack on exiting, if there is one.
+        auto localRackId = model->localRackId();
+        if (!localRackId.empty())
+        {
+            model->deleteRack(Kontrol::CS_LOCAL, localRackId);
+            model->clearCallbacks(); // Triggers stop() and in turn flushes the deleteRack message.
+        }
+    }
+}
 
 void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     if (modId == nullptr && modId->s_name == nullptr && strlen(modId->s_name) == 0) {
