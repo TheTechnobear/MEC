@@ -10,6 +10,7 @@ set(KONTROL_HOST_SRC
         devices/KontrolDevice.cpp
         devices/Organelle.cpp
         devices/Bela.cpp
+        devices/SimpleOsc.cpp
         )
 
 

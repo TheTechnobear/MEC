@@ -32,18 +32,20 @@ void *KontrolModule_new(t_symbol *name, t_symbol *type) {
     t_KontrolModule *x = (t_KontrolModule *) pd_new(KontrolModule_class);
     if (name && name->s_name && type && type->s_name) {
         auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+        Kontrol::EntityId moduleId = name->s_name;
+        std::string moduleType = type->s_name;
+        x->moduleId = gensym(moduleId.c_str());
+        x->moduleType = gensym(moduleType.c_str());
+
         if (rack) {
             auto rackId = rack->id();
-            Kontrol::EntityId moduleId = name->s_name;
-            std::string moduleType = type->s_name;
             Kontrol::KontrolModel::model()->createModule(Kontrol::CS_LOCAL, rackId,
                                                          moduleId, moduleType,
                                                          moduleType);
             rack->dumpParameters();
             x->rackId = gensym(rackId.c_str());
-            x->moduleId = gensym(moduleId.c_str());
-            x->moduleType = gensym(moduleType.c_str());
         } else {
+            x->rackId = nullptr;
             post("cannot create %s : No local rack found, KontrolModule needs a KontrolRack instance", name->s_name);
         }
     }
@@ -64,9 +66,14 @@ void KontrolModule_setup(void) {
 
 
 void KontrolModule_loaddefinitions(t_KontrolModule *x, t_symbol *defs) {
-    if (defs != nullptr && defs->s_name != nullptr && strlen(defs->s_name) > 0) {
-        std::string file = std::string(defs->s_name);
-        Kontrol::KontrolModel::model()->loadModuleDefinitions(x->rackId->s_name, x->moduleId->s_name, file);
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (rack && x->rackId) {
+        if (defs != nullptr && defs->s_name != nullptr && strlen(defs->s_name) > 0) {
+            std::string file = std::string(defs->s_name);
+            Kontrol::KontrolModel::model()->loadModuleDefinitions(x->rackId->s_name, x->moduleId->s_name, file);
+        }
+    } else {
+        post("cannot load definition %s : No local rack found, KontrolModule needs a KontrolRack instance", x->moduleId->s_name);
     }
 }
 

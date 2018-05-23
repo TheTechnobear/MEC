@@ -12,20 +12,22 @@
 #include <mutex>
 #include <condition_variable>
 
-class Organelle : public KontrolDevice {
+class OscParamMode;
+
+class SimpleOsc : public KontrolDevice {
 public:
-    Organelle();
-    virtual ~Organelle();
+    SimpleOsc();
+    virtual ~SimpleOsc();
 
     //KontrolDevice
     virtual bool init() override;
 
     void displayPopup(const std::string &text,bool dblLine);
-    void displayParamLine(unsigned line, const Kontrol::Parameter &p);
+    void displayParamNum(unsigned num, const Kontrol::Parameter &p);
+    void clearParamNum(unsigned num);
     void displayLine(unsigned line, const char *);
     void invertLine(unsigned line);
     void clearDisplay();
-    void flipDisplay();
 
     void writePoll();
 
@@ -40,16 +42,15 @@ private:
         char buffer_[MAX_OSC_MESSAGE_SIZE];
     };
 
-    static const unsigned OUTPUT_BUFFER_SIZE = 1024;
+    static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
     static char screenBuf_[OUTPUT_BUFFER_SIZE];
-
 
     bool connect();
 
-    std::string asDisplayString(const Kontrol::Parameter &p, unsigned width) const;
     std::shared_ptr<UdpTransmitSocket> socket_;
 
     moodycamel::BlockingReaderWriterQueue<OscMsg> messageQueue_;
     bool running_;
     std::thread writer_thread_;
+    std::shared_ptr<OscParamMode> paramDisplay_;
 };

@@ -7,21 +7,26 @@
 #include "../../m_pd.h"
 
 
-const unsigned int SCREEN_WIDTH = 21;
+static const unsigned SCREEN_WIDTH = 21;
 
-static const int PAGE_SWITCH_TIMEOUT = 50;
-static const int MODULE_SWITCH_TIMEOUT = 50;
+static const unsigned PAGE_SWITCH_TIMEOUT = 50;
+static const unsigned MODULE_SWITCH_TIMEOUT = 50;
 //static const int PAGE_EXIT_TIMEOUT = 5;
-static const auto MENU_TIMEOUT = 350;
+static const unsigned MENU_TIMEOUT = 350;
 
 
 const int8_t PATCH_SCREEN = 3;
 
-
-static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
-static char screenosc[OUTPUT_BUFFER_SIZE];
-
 static const float MAX_POT_VALUE = 1023.0F;
+
+char Organelle::screenBuf_[Organelle::OUTPUT_BUFFER_SIZE];
+
+static const char* OSC_MOTHER_HOST="127.0.0.1";
+static const unsigned OSC_MOTHER_PORT=4001;
+static const unsigned MOTHER_WRITE_POLL_WAIT_TIMEOUT=1000;
+
+static const unsigned ORGANELLE_NUM_TEXTLINES = 4;
+static const unsigned ORGANELLE_NUM_PARAMS = 8;
 
 enum OrganelleModes {
     OM_PARAMETER,
@@ -211,7 +216,7 @@ void OBaseMode::poll() {
 bool OParamMode::init() {
     OBaseMode::init();
     pots_ = std::make_shared<Pots>();
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < ORGANELLE_NUM_PARAMS; i++) {
         pots_->rawValue[i] = std::numeric_limits<float>::max();
         pots_->locked_[i] = Pots::K_LOCKED;
     }
@@ -234,7 +239,7 @@ void OParamMode::display() {
             parent_.displayParamLine(j + 1, *param);
         }
         j++;
-        if (j == 8) break;
+        if (j == ORGANELLE_NUM_PARAMS) break;
     }
 
     parent_.flipDisplay();
@@ -305,7 +310,7 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
                     pots_->locked_[pot] = Pots::K_UNLOCKED;
                     //std::cerr << "set unlock condition == " << pot << std::endl;
                 } else if (rawvalue == std::numeric_limits<float>::max()) {
-                    // stay locked , we need a real value ;) 
+                    // stay locked , we need a real value ;)
                     // init state
                     //std::cerr << "cannot set unlock condition " << pot << std::endl;
                 } else if (calc > param->current()) {
@@ -361,7 +366,7 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
             parent_.flipDisplay();
         }
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < ORGANELLE_NUM_PARAMS; i++) {
             pots_->locked_[i] = Pots::K_LOCKED;
             changePot(i, pots_->rawValue[i]);
         }
@@ -463,7 +468,7 @@ void OParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, c
 
 
     unsigned sz = params.size();
-    sz = sz < 4 ? sz : 4;
+    sz = sz < ORGANELLE_NUM_PARAMS ? sz : ORGANELLE_NUM_PARAMS;
     for (unsigned int i = 0; i < sz; i++) {
         try {
             auto &p = params.at(i);
@@ -526,7 +531,7 @@ void OMenuMode::poll() {
 
 void OMenuMode::display() {
     parent_.clearDisplay();
-    for (unsigned i = top_; i < top_ + 4; i++) {
+    for (unsigned i = top_; i < top_ + ORGANELLE_NUM_TEXTLINES; i++) {
         displayItem(i);
     }
 }
@@ -560,16 +565,16 @@ void OMenuMode::changeEncoder(unsigned, float value) {
             top_ = cur;
             cur_ = cur;
             display();
-        } else if (cur >= top_ + 4) {
-            top_ = cur - 3;
+        } else if (cur >= top_ + ORGANELLE_NUM_TEXTLINES) {
+            top_ = cur - (ORGANELLE_NUM_TEXTLINES - 1);
             cur_ = cur;
             display();
         } else {
             line = cur_ - top_ + 1;
-            if (line <= 4) parent_.invertLine(line);
+            if (line <= ORGANELLE_NUM_TEXTLINES) parent_.invertLine(line);
             cur_ = cur;
             line = cur_ - top_ + 1;
-            if (line <= 4) parent_.invertLine(line);
+            if (line <= ORGANELLE_NUM_TEXTLINES) parent_.invertLine(line);
             parent_.flipDisplay();
         }
     }
@@ -776,7 +781,7 @@ void OModuleMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
     auto module = model()->getModule(rack, parent_.currentModule());
     if (module == nullptr) return;
-    int idx = 0;
+    unsigned idx = 0;
     auto res = rack->getResources("module");
     items_.clear();
     for (auto modtype : res) {
@@ -812,7 +817,7 @@ void OModuleSelectMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
     auto cmodule = model()->getModule(rack, parent_.currentModule());
     if (cmodule == nullptr) return;
-    int idx = 0;
+    unsigned idx = 0;
     items_.clear();
     for (auto module : rack->getModules()) {
         std::string desc = module->id() + ":" + module->displayName();
@@ -895,7 +900,7 @@ void *organelle_write_thread_func(void *aObj) {
 
 bool Organelle::connect() {
     try {
-        socket_ = std::shared_ptr<UdpTransmitSocket>(new UdpTransmitSocket(IpEndpointName("127.0.0.1", 4001)));
+        socket_ = std::shared_ptr<UdpTransmitSocket>(new UdpTransmitSocket(IpEndpointName(OSC_MOTHER_HOST, OSC_MOTHER_PORT)));
     } catch (const std::runtime_error &e) {
         post("could not connect to mother host for screen updates");
         socket_.reset();
@@ -917,7 +922,7 @@ bool Organelle::connect() {
 void Organelle::writePoll() {
     while (running_) {
         OscMsg msg;
-        if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(1000))) {
+        if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(MOTHER_WRITE_POLL_WAIT_TIMEOUT))) {
             socket_->Send(msg.buffer_, (size_t) msg.size_);
         }
     }
@@ -935,7 +940,7 @@ void Organelle::send(const char *data, unsigned size) {
 void Organelle::displayPopup(const std::string &text, bool dblline) {
     if (dblline) {
         {
-            osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+            osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
             ops << osc::BeginMessage("/oled/gFillArea")
                 << PATCH_SCREEN
                 << 2 << 12
@@ -946,7 +951,7 @@ void Organelle::displayPopup(const std::string &text, bool dblline) {
         }
 
         {
-            osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+            osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
             ops << osc::BeginMessage("/oled/gBox")
                 << PATCH_SCREEN
                 << 2 << 12
@@ -958,7 +963,7 @@ void Organelle::displayPopup(const std::string &text, bool dblline) {
 
     } else {
         {
-            osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+            osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
             ops << osc::BeginMessage("/oled/gFillArea")
                 << PATCH_SCREEN
                 << 4 << 14
@@ -970,7 +975,7 @@ void Organelle::displayPopup(const std::string &text, bool dblline) {
     }
 
     {
-        osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gBox")
             << PATCH_SCREEN
             << 4 << 14
@@ -983,7 +988,7 @@ void Organelle::displayPopup(const std::string &text, bool dblline) {
     {
         int txtsize = 16;
         if (text.length() > 12) txtsize = 8;
-        osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gPrintln")
             << PATCH_SCREEN
             << 10 << 24
@@ -1009,7 +1014,7 @@ std::string Organelle::asDisplayString(const Kontrol::Parameter &param, unsigned
 }
 
 void Organelle::clearDisplay() {
-    osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+    osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
     //ops << osc::BeginMessage( "/oled/gClear" )
     //    << 1
     //    << osc::EndMessage;
@@ -1032,7 +1037,7 @@ void Organelle::displayLine(unsigned line, const char *disp) {
 
     int x = ((line - 1) * 11) + ((line > 0) * 9);
     {
-        osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gFillArea")
             << PATCH_SCREEN
             << 0 << x
@@ -1042,7 +1047,7 @@ void Organelle::displayLine(unsigned line, const char *disp) {
         send(ops.Data(), ops.Size());
     }
     {
-        osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/oled/gPrintln")
             << PATCH_SCREEN
             << 2 << x
@@ -1056,7 +1061,7 @@ void Organelle::displayLine(unsigned line, const char *disp) {
 }
 
 void Organelle::invertLine(unsigned line) {
-    osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+    osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
 
     int x = ((line - 1) * 11) + ((line > 0) * 9);
     ops << osc::BeginMessage("/oled/gInvertArea")
@@ -1070,7 +1075,7 @@ void Organelle::invertLine(unsigned line) {
 }
 
 void Organelle::flipDisplay() {
-    osc::OutboundPacketStream ops(screenosc, OUTPUT_BUFFER_SIZE);
+    osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
     ops << osc::BeginMessage("/oled/gFlip")
         << PATCH_SCREEN
         << osc::EndMessage;

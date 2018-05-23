@@ -40,6 +40,8 @@ public:
     virtual ParamValue calcFloat(float f);
     virtual ParamValue calcMidi(int midi);
 
+    virtual float asFloat (const ParamValue& v) const;
+
     virtual bool valid() { return Entity::valid() && type_ != PT_Invalid; }
 
     void dump() const;
@@ -63,6 +65,9 @@ public:
     ParamValue calcRelative(float f) override;
     ParamValue calcMidi(int midi) override;
     ParamValue calcFloat(float f) override;
+
+    float asFloat(const ParamValue& v) const override;
+
 protected:
     void init(const std::vector<ParamValue> &args, unsigned &pos) override;
 
@@ -88,6 +93,9 @@ public:
     ParamValue calcRelative(float f) override;
     ParamValue calcMidi(int midi) override;
     ParamValue calcFloat(float f) override;
+
+    float asFloat(const ParamValue& v) const override;
+
 protected:
     void init(const std::vector<ParamValue> &args, unsigned &pos) override;
 
@@ -112,6 +120,9 @@ public:
     ParamValue calcRelative(float f) override;
     ParamValue calcMidi(int midi) override;
     ParamValue calcFloat(float f) override;
+
+    float asFloat(const ParamValue& v) const override;
+
 protected:
     void init(const std::vector<ParamValue> &args, unsigned &pos) override;
 

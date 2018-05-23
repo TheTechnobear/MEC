@@ -140,6 +140,12 @@ ParamValue Parameter::calcMidi(int midi) {
     return calcFloat(f);
 }
 
+float Parameter::asFloat(const ParamValue& pv) const {
+    float v = pv.floatValue();
+    v = std::max(v, -1.0f);
+    v = std::min(v, 1.0f);
+    return v;
+}
 
 bool Parameter::change(const ParamValue &c, bool force) {
     if (force || current_ != c) {
@@ -217,6 +223,14 @@ ParamValue Parameter_Float::calcFloat(float f) {
     return ParamValue(v);
 }
 
+
+float Parameter_Float::asFloat(const ParamValue& v) const {
+    float val = v.floatValue();
+    float ret = (val - min()) / (max() - min());
+    return ret;
+}
+
+
 bool Parameter_Float::change(const ParamValue &c, bool force) {
     switch (current_.type()) {
         case ParamValue::T_Float  : {
@@ -287,6 +301,10 @@ ParamValue Parameter_Boolean::calcFloat(float f) {
 
 ParamValue Parameter_Boolean::calcMidi(int midi) {
     return ParamValue(midi > 63 ? 1.0f : 0.0f);
+}
+
+float Parameter_Boolean::asFloat(const ParamValue& v) const {
+    return (current().floatValue() > 0.5 ? 1.0 : 0.0);
 }
 
 
@@ -375,6 +393,14 @@ ParamValue Parameter_Int::calcFloat(float f) {
     v = std::min(v, max());
     return ParamValue((float) v);
 }
+
+
+float Parameter_Int::asFloat(const ParamValue& v) const {
+    float val = v.floatValue();
+    float ret = (val - min()) / (float(max()) - min());
+    return ret;
+}
+
 
 const std::string &Parameter_Pitch::displayUnit() const {
     static std::string sUnit = "st";
