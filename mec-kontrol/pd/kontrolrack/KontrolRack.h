@@ -24,6 +24,7 @@ typedef struct _KontrolRack {
     std::shared_ptr<Kontrol::OSCReceiver> osc_receiver_;
     std::shared_ptr<Kontrol::OSCBroadcaster> osc_broadcaster_;
     t_symbol* active_module_;
+    bool single_module_mode_;
 } t_KontrolRack;
 
 
@@ -56,6 +57,7 @@ void KontrolRack_savesettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset);
 void KontrolRack_updatepreset(t_KontrolRack *x, t_symbol *preset);
 void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol* mod);
+void KontrolRack_singlemodulemode(t_KontrolRack *x, t_floatarg f);
 
 
 
