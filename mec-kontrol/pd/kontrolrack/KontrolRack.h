@@ -12,6 +12,7 @@
 #include <memory>
 #include <unordered_map>
 
+struct t_KontrolMonitor;
 
 typedef struct _KontrolRack {
     t_object x_obj;
@@ -25,6 +26,8 @@ typedef struct _KontrolRack {
     std::shared_ptr<Kontrol::OSCBroadcaster> osc_broadcaster_;
     t_symbol* active_module_;
     bool single_module_mode_;
+
+    std::unordered_map<t_symbol *, t_KontrolMonitor*> *param_monitors_;
 } t_KontrolRack;
 
 

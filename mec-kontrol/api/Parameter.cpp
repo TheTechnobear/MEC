@@ -135,6 +135,14 @@ ParamValue Parameter::calcFloat(float f) {
     return current_;
 }
 
+ParamValue Parameter::calcMinimum() const {
+    return ParamValue();
+}
+
+ParamValue Parameter::calcMaximum() const {
+    return ParamValue();
+}
+
 ParamValue Parameter::calcMidi(int midi) {
     float f = (float) midi / 127.0f;
     return calcFloat(f);
@@ -223,6 +231,13 @@ ParamValue Parameter_Float::calcFloat(float f) {
     return ParamValue(v);
 }
 
+ParamValue Parameter_Float::calcMinimum() const {
+    return ParamValue(min());
+}
+
+ParamValue Parameter_Float::calcMaximum() const {
+    return ParamValue(max());
+}
 
 float Parameter_Float::asFloat(const ParamValue& v) const {
     float val = v.floatValue();
@@ -297,6 +312,14 @@ ParamValue Parameter_Boolean::calcRelative(float f) {
 
 ParamValue Parameter_Boolean::calcFloat(float f) {
     return ParamValue(f > 0.5f ? 1.0f : 0.0f);
+}
+
+ParamValue Parameter_Boolean::calcMinimum() const {
+    return ParamValue(0.0f);
+}
+
+ParamValue Parameter_Boolean::calcMaximum() const {
+    return ParamValue(1.0f);
 }
 
 ParamValue Parameter_Boolean::calcMidi(int midi) {
@@ -394,6 +417,13 @@ ParamValue Parameter_Int::calcFloat(float f) {
     return ParamValue((float) v);
 }
 
+ParamValue Parameter_Int::calcMinimum() const {
+    return ParamValue(min());
+}
+
+ParamValue Parameter_Int::calcMaximum() const {
+    return ParamValue(max());
+}
 
 float Parameter_Int::asFloat(const ParamValue& v) const {
     float val = v.floatValue();

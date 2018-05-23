@@ -18,6 +18,7 @@
 #include "devices/Bela.h"
 #include "devices/SimpleOsc.h"
 
+#include "KontrolMonitor.h"
 
 /*****
 represents the device interface, of which there is always one
@@ -136,10 +137,15 @@ void KontrolRack_free(t_KontrolRack *x) {
     x->osc_receiver_.reset();
     x->device_.reset();
     // Kontrol::ParameterModel::free();
+    for (auto p : *x->param_monitors_) {
+        KontrolMonitor_free(p.second);
+    }
+    delete x->param_monitors_;
 }
 
 void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     t_KontrolRack *x = (t_KontrolRack *) pd_new(KontrolRack_class);
+    x->param_monitors_ = new std::unordered_map<t_symbol *, t_KontrolMonitor*>();
 
     int clientport = 0;
     int serverport = 0;
@@ -302,6 +308,8 @@ EXTERN void KontrolRack_setup(void) {
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_singlemodulemode, gensym("singlemodulemode"),
                     A_DEFFLOAT, A_NULL);
+
+    KontrolMonitor_setup();
 }
 
 // Called from OS specific library unload methods.
@@ -679,8 +687,15 @@ void PdCallback::param(Kontrol::ChangeSource src,
                        const Kontrol::Module &module,
                        const Kontrol::Parameter &param) {
     PdCallback::changed(src, rack, module, param);
-}
 
+    t_symbol *symbol = gensym(getParamSymbol(x_->single_module_mode_, module, param).c_str());
+
+    if (x_->param_monitors_->find(symbol) == x_->param_monitors_->end()) {
+        t_KontrolMonitor *x = (t_KontrolMonitor*)KontrolMonitor_new(symbol, rack, module, param);
+
+        (*x_->param_monitors_)[symbol] = x;
+    }
+}
 
 void PdCallback::loadModule(Kontrol::ChangeSource, const Kontrol::Rack &r,
                             const Kontrol::EntityId &mId, const std::string &mType) {

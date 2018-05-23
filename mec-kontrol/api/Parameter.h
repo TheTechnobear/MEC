@@ -40,6 +40,9 @@ public:
     virtual ParamValue calcFloat(float f);
     virtual ParamValue calcMidi(int midi);
 
+    virtual ParamValue calcMinimum() const;
+    virtual ParamValue calcMaximum() const;
+
     virtual float asFloat (const ParamValue& v) const;
 
     virtual bool valid() { return Entity::valid() && type_ != PT_Invalid; }
@@ -65,6 +68,9 @@ public:
     ParamValue calcRelative(float f) override;
     ParamValue calcMidi(int midi) override;
     ParamValue calcFloat(float f) override;
+
+    ParamValue calcMinimum() const override;
+    ParamValue calcMaximum() const override;
 
     float asFloat(const ParamValue& v) const override;
 
@@ -94,6 +100,9 @@ public:
     ParamValue calcMidi(int midi) override;
     ParamValue calcFloat(float f) override;
 
+    ParamValue calcMinimum() const override;
+    ParamValue calcMaximum() const override;
+
     float asFloat(const ParamValue& v) const override;
 
 protected:
@@ -120,6 +129,9 @@ public:
     ParamValue calcRelative(float f) override;
     ParamValue calcMidi(int midi) override;
     ParamValue calcFloat(float f) override;
+
+    ParamValue calcMinimum() const override;
+    ParamValue calcMaximum() const override;
 
     float asFloat(const ParamValue& v) const override;
 

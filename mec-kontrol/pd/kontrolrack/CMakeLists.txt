@@ -5,12 +5,19 @@ project(KontrolRack)
 
 set(KONTROL_HOST_SRC
         KontrolRack.cpp
+        KontrolRack.h
+        KontrolMonitor.cpp
+        KontrolMonitor.h
         dirent_win.cpp
         dirent_win.h
         devices/KontrolDevice.cpp
+        devices/KontrolDevice.h
         devices/Organelle.cpp
+        devices/Organelle.h
         devices/Bela.cpp
+        devices/Bela.h
         devices/SimpleOsc.cpp
+        devices/SimpleOsc.h
         )
 
 if (${WIN32})
