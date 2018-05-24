@@ -182,6 +182,7 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     x->active_module_ = nullptr;
     x->osc_receiver_ = nullptr;
     x->single_module_mode_ = false;
+    x->monitor_enable_ = false;
 
     x->pollCount_ = 0;
     x->model_ = Kontrol::KontrolModel::model();
@@ -307,6 +308,10 @@ EXTERN void KontrolRack_setup(void) {
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_singlemodulemode, gensym("singlemodulemode"),
+                    A_DEFFLOAT, A_NULL);
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_monitorenable, gensym("monitorenable"),
                     A_DEFFLOAT, A_NULL);
 
     KontrolMonitor_setup();
@@ -477,7 +482,13 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
 void KontrolRack_singlemodulemode(t_KontrolRack *x, t_floatarg f) {
     bool enable = f >= 0.5f;
     post("KontrolRack: single module mode -> %d", enable);
-    x->single_module_mode_ = f >= 0.5f;
+    x->single_module_mode_ = enable;
+}
+
+void KontrolRack_monitorenable(t_KontrolRack *x, t_floatarg f) {
+    bool enable = f >= 0.5f;
+    post("KontrolRack: Enable control monitoring: %d", enable);
+    x->monitor_enable_ = enable;
 }
 
 void KontrolRack_connect(t_KontrolRack *x, t_floatarg f) {
@@ -690,7 +701,7 @@ void PdCallback::param(Kontrol::ChangeSource src,
 
     t_symbol *symbol = gensym(getParamSymbol(x_->single_module_mode_, module, param).c_str());
 
-    if (x_->param_monitors_->find(symbol) == x_->param_monitors_->end()) {
+    if (x_->monitor_enable_ && x_->param_monitors_->find(symbol) == x_->param_monitors_->end()) {
         t_KontrolMonitor *x = (t_KontrolMonitor*)KontrolMonitor_new(symbol, rack, module, param);
 
         (*x_->param_monitors_)[symbol] = x;
