@@ -12,6 +12,7 @@
 #include <memory>
 #include <unordered_map>
 
+struct t_KontrolMonitor;
 
 typedef struct _KontrolRack {
     t_object x_obj;
@@ -25,6 +26,9 @@ typedef struct _KontrolRack {
     std::shared_ptr<Kontrol::OSCBroadcaster> osc_broadcaster_;
     t_symbol* active_module_;
     bool single_module_mode_;
+    bool monitor_enable_; // Enable monitoring control changes within PD, and forwarding to KontrolModel.
+
+    std::unordered_map<t_symbol *, t_KontrolMonitor*> *param_monitors_;
 } t_KontrolRack;
 
 
@@ -58,7 +62,7 @@ void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset);
 void KontrolRack_updatepreset(t_KontrolRack *x, t_symbol *preset);
 void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol* mod);
 void KontrolRack_singlemodulemode(t_KontrolRack *x, t_floatarg f);
-
+void KontrolRack_monitorenable(t_KontrolRack *x, t_floatarg f);
 
 
 void KontrolRack_loadresources(t_KontrolRack *x);
