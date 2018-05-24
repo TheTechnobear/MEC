@@ -175,6 +175,7 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
 
     x->active_module_ = nullptr;
     x->osc_receiver_ = nullptr;
+    x->single_module_mode_ = false;
 
     x->pollCount_ = 0;
     x->model_ = Kontrol::KontrolModel::model();
@@ -190,6 +191,8 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     } else if (device == "simpleosc") {
         post("KontrolRack: device = %s", device.c_str());
         x->device_ = std::make_shared<SimpleOsc>();
+    } else if (device == "none") {
+        post("KontrolRack: not using a device");
     } else {
         post("KontrolRack: unknown device = %s", device.c_str());
     }
@@ -197,10 +200,10 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     if(x->device_) {
         x->device_->init();
         x->device_->currentRack(x->model_->localRackId());
+        x->model_->addCallback("pd.dev", x->device_);
     }
 
     x->model_->addCallback("pd.send", std::make_shared<PdCallback>(x));
-    x->model_->addCallback("pd.dev", x->device_);
 
     KontrolRack_listen(x, clientport);
     KontrolRack_connect(x, serverport);
@@ -295,6 +298,10 @@ EXTERN void KontrolRack_setup(void) {
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_loadmodule, gensym("loadmodule"),
                     A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_singlemodulemode, gensym("singlemodulemode"),
+                    A_DEFFLOAT, A_NULL);
 }
 
 // Called from OS specific library unload methods.
@@ -459,6 +466,12 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     }
 }
 
+void KontrolRack_singlemodulemode(t_KontrolRack *x, t_floatarg f) {
+    bool enable = f >= 0.5f;
+    post("KontrolRack: single module mode -> %d", enable);
+    x->single_module_mode_ = f >= 0.5f;
+}
+
 void KontrolRack_connect(t_KontrolRack *x, t_floatarg f) {
     if (f > 0) {
         std::string host = "127.0.0.1";
@@ -619,6 +632,13 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
     }
 }
 
+static std::string getParamSymbol(bool singleModuleMode, const Kontrol::Module &module, const Kontrol::Parameter &param) {
+    if (!singleModuleMode) {
+        return param.id() + "-" + module.id();
+    } else {
+        return param.id();
+    }
+}
 
 //-----------------------
 void PdCallback::changed(Kontrol::ChangeSource,
@@ -629,7 +649,8 @@ void PdCallback::changed(Kontrol::ChangeSource,
     auto prack = Kontrol::KontrolModel::model()->getLocalRack();
     if (prack == nullptr || prack->id() != rack.id()) return;
 
-    std::string sendsym = param.id() + "-" + module.id();
+    std::string sendsym = getParamSymbol(x_->single_module_mode_, module, param);
+
     t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
 
 
