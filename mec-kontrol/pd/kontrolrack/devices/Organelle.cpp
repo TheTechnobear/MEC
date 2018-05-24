@@ -26,7 +26,7 @@ static const unsigned OSC_MOTHER_PORT=4001;
 static const unsigned MOTHER_WRITE_POLL_WAIT_TIMEOUT=1000;
 
 static const unsigned ORGANELLE_NUM_TEXTLINES = 4;
-static const unsigned ORGANELLE_NUM_PARAMS = 8;
+static const unsigned ORGANELLE_NUM_PARAMS = 4;
 
 enum OrganelleModes {
     OM_PARAMETER,
@@ -86,8 +86,8 @@ struct Pots {
         K_GT,
         K_LT,
         K_LOCKED
-    } locked_[4];
-    float rawValue[4];
+    } locked_[ORGANELLE_NUM_PARAMS];
+    float rawValue[ORGANELLE_NUM_PARAMS];
 };
 
 
