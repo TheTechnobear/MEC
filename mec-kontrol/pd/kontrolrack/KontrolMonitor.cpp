@@ -4,6 +4,7 @@
 #include "../m_pd.h"
 
 #include <string>
+#include <cstring>
 
 static t_class *KontrolMonitor_class;
 
