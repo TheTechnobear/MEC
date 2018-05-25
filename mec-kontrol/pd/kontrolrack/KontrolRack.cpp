@@ -198,6 +198,9 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     } else if (device == "midi") {
         post("KontrolRack: device = %s", device.c_str());
         x->device_ = std::make_shared<MidiControl>();
+    } else if (device == "kontrol") {
+        post("KontrolRack: device = %s", device.c_str());
+        x->device_ = std::make_shared<KontrolDevice>();
     } else if (device == "none") {
         post("KontrolRack: not using a device");
     } else {
