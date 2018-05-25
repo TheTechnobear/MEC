@@ -29,6 +29,7 @@ public:
     virtual void deleteRack(ChangeSource, const Rack &) = 0;
 
     virtual void activeModule(ChangeSource, const Rack &, const Module &) { ; }
+    virtual void loadModule(ChangeSource, const Rack &, const EntityId &, const std::string &) { ; }
 
     virtual void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) { ; }
 
@@ -44,7 +45,9 @@ public:
 
     virtual void saveSettings(ChangeSource, const Rack &) { ; }
 
-    virtual void loadModule(ChangeSource, const Rack &, const EntityId &, const std::string &) { ; }
+
+    virtual void midiLearn(ChangeSource src, bool b) { ; }
+    virtual void modulationLearn(ChangeSource src, bool b) { ; }
 
     virtual void stop() { ; }
 };
@@ -162,6 +165,9 @@ public:
                     const EntityId &rackId,
                     const EntityId &moduleId,
                     const std::string &moduleType);
+
+    void midiLearn(ChangeSource src, bool b);
+    void modulationLearn(ChangeSource src, bool b);
 
     std::shared_ptr<Rack> createLocalRack(unsigned port);
 

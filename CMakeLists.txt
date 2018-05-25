@@ -80,7 +80,7 @@ add_subdirectory(external/moodycamel)
 
 
 add_subdirectory(mec-utils)
-add_subdirectory(mec-api)
 add_subdirectory(mec-kontrol)
+add_subdirectory(mec-api)
 add_subdirectory(mec-app)
 

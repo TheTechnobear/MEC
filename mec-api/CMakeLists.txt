@@ -53,6 +53,20 @@ else()
     add_definitions(-DDISABLE_PUSH2=1)
 endif()
 
+if (NOT DISABLE_OSCDISPLAY)
+    set(OSCDISPLAY_SRC
+            devices/mec_oscdisplay.cpp
+            devices/mec_oscdisplay.h
+            )
+
+#    add_subdirectory(devices/oscdisplay)
+#    set(OSCDISPLAY_LIB mec-oscdisplay)
+#    include_directories("devices/oscdisplay")
+else()
+    add_definitions(-DDISABLE_OSCDISPLAY=1)
+endif()
+
+
 set(MECAPI_SRC
         mec_api.cpp
         mec_api.h
@@ -80,6 +94,7 @@ set(MECAPI_SRC
         ${SOUNDPLANELITE_SRC}
         ${EIGENHARP_SRC}
         ${PUSH2_SRC}
+        ${OSCDISPLAY_SRC}
         )
 
 include_directories(

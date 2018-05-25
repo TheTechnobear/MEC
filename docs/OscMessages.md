@@ -14,6 +14,13 @@
     /Kontrol/param sssssfff "127.0.0.1:9000" "braids" "int" "r_amt" "Amount" 0.000000 47.000000 0.000000
     /Kontrol/page ssssssss "127.0.0.1:9000" "braids" "pg_rvb" "Reverb" "r_amt" "r_time" "r_diff" "r_cutoff"
     /Kontrol/changed sssf "127.0.0.1:9000" "braids" "r_amt" 20
+    
+    /Kontrol/deleteRack s "127.0.0.1:9000" 
+    
+
+## loadmodule 
+    /Kontrol/loadModule s "127.0.0.1:9000" "m0" "brds"
+
 
 ## save and recall settings
     /Kontrol/applyPreset ss "127.0.0.1:9000" "Default"
@@ -23,8 +30,22 @@
 ## assigning midi to parameters
     /Kontrol/assignMidiCC sssi "127.0.0.1:9000" "braids" "r_amt" 1
     /Kontrol/unassignMidiCC sssi "127.0.0.1:9000" "braids" "r_amt" 1
+    
+## assigning parameter to modulation bus
+    /Kontrol/assignModulation sssi "127.0.0.1:9000" "braids" "r_amt" 1
+    /Kontrol/unassignModulation sssi "127.0.0.1:9000" "braids" "r_amt" 1
+    
+## moduation/ midi learn activate/deactivate
+    /Kontrol/midiLearn 1
+    /Kontrol/modulationLearn 1
 
-# 'dumb' client example
+note: assignments/learn are help in the current preset, and persisted with save settings
+
+## resources
+    /Kontrol/resource sss "127.0.0.1:9000" "m0" "module" "brds"
+
+
+## 'dumb' client example
 
 assuming kontrol patch and MEC running 
 
@@ -80,26 +101,25 @@ parameters ids, should not be hard coded , since its possible these can change
 
 
 
-you could now change a value e.g. 
+### change a value 
 
     oscsend localhost 8000 /Kontrol/changed sssf "127.0.0.1:9000" "braids" "o_shape" 20.0
 
 
-apply and update presets
+### apply and update presets
 
     oscsend localhost 8000 /Kontrol/applyPreset ss "127.0.0.1:9000" "Default"
     oscsend localhost 8000 /Kontrol/updatePreset ss "127.0.0.1:9000" "Default"
 
 (currently "Default" is always loaded at patch startup)
 
-save settings (for when patch is restarted)
+### save settings (for when patch is restarted)
 
     oscsend localhost 8000 /Kontrol/saveSettings s "127.0.0.1:9000"
 
-assign midi cc for midi devices connected to patch
+### assign midi cc for midi devices connected to patch
 
     oscsend localhost 8000 /Kontrol/assignMidiCC sssi "127.0.0.1:9000" "braids" "r_amt" 1
     oscsend localhost 8000 /Kontrol/unassignMidiCC sssi "127.0.0.1:9000" "braids" "r_amt" 1
 
-midi assignments are also persistent with saveSettings
 

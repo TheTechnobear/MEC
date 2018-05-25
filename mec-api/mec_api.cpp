@@ -14,7 +14,9 @@
 #if !DISABLE_PUSH2
 #   include "devices/mec_push2.h"
 #endif
-
+#if !DISABLE_SIMPLEOSC
+#   include "devices/mec_oscdisplay.h"
+#endif
 
 #include "devices/mec_mididevice.h"
 #include "devices/mec_osct3d.h"
@@ -333,6 +335,29 @@ void MecApi_Impl::initDevices() {
         }
     }
 #endif
+
+
+#if !DISABLE_OSCDISPLAY_SRC
+    if (prefs_->exists("oscdisplay")) {
+        LOG_1("oscdisplay initialise ");
+        std::shared_ptr<OscDisplay> device = std::make_shared<OscDisplay>();
+//        std::shared_ptr<OscDisplay> device = std::make_shared<OscDisplay>(*this);
+        Kontrol::KontrolModel::model()->addCallback("oscdisplay", device);
+        if (device->init(prefs_->getSubTree("oscdisplay"))) {
+            if (device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("oscdisplay init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("oscdisplay init failed ");
+            device->deinit();
+        }
+    }
+#endif
+
+
 
     if (prefs_->exists("midi")) {
         LOG_1("midi initialise ");

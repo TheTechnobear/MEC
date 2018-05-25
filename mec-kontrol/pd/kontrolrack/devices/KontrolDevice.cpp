@@ -25,8 +25,8 @@ void KontrolDevice::addMode(unsigned mode, std::shared_ptr<DeviceMode> handler) 
 bool KontrolDevice::init() {
     //FIXME: cannot create shared_ptr like this
     //model_->addCallback("pd.kdevice", std::shared_ptr<KontrolDevice>(this));
-    midiLearn(false);
-    modulationLearn(false);
+    midiLearn(Kontrol::ChangeSource::LOCAL, false);
+    modulationLearn(Kontrol::ChangeSource::LOCAL, false);
     lastParamId_ = "";
     for (auto m : modes_) {
         if (m.second != nullptr) m.second->init();
@@ -104,8 +104,7 @@ void KontrolDevice::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rac
     if (m != nullptr) m->resource(src, rack, resType, resValue);
 }
 
-void KontrolDevice::deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &)
-{
+void KontrolDevice::deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) {
 }
 
 void KontrolDevice::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
@@ -170,19 +169,25 @@ void KontrolDevice::analog(unsigned bus, float value) {
 }
 
 
-void KontrolDevice::midiLearn(bool b) {
+void KontrolDevice::midiLearn(Kontrol::ChangeSource src, bool b) {
     lastParamId_ = "";
     modulationLearnActive_ = false;
     midiLearnActive_ = b;
 }
 
-void KontrolDevice::modulationLearn(bool b) {
+void KontrolDevice::modulationLearn(Kontrol::ChangeSource src, bool b) {
     lastParamId_ = "";
     midiLearnActive_ = false;
     modulationLearnActive_ = b;
 }
 
+void KontrolDevice::midiLearn(bool b) {
+    model()->midiLearn(Kontrol::ChangeSource::LOCAL, b);
+}
 
+void KontrolDevice::modulationLearn(bool b) {
+    model()->modulationLearn(Kontrol::ChangeSource::LOCAL, b);
+}
 
 void KontrolDevice::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     auto m = modes_[currentMode_];

@@ -57,6 +57,13 @@ public:
                     const std::string &) override;
 
 
+
+    void midiLearn(Kontrol::ChangeSource,bool b) override;
+    void modulationLearn(Kontrol::ChangeSource, bool b) override;
+
+    void midiLearn(bool b);
+    void modulationLearn(bool b);
+
     virtual void midiCC(unsigned num, unsigned value);
     virtual void digital(unsigned bus, bool value);
     virtual void analog(unsigned bus, float value);
@@ -67,12 +74,8 @@ public:
     std::shared_ptr<Kontrol::KontrolModel> model() { return model_; }
 
 
-    void midiLearn(bool b);
 
     bool midiLearn() { return midiLearnActive_; }
-
-    void modulationLearn(bool b);
-
     bool modulationLearn() { return modulationLearnActive_; }
 
     Kontrol::EntityId currentRack() { return currentRackId_; }

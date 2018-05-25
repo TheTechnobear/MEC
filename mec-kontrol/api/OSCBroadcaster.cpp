@@ -46,7 +46,7 @@ bool OSCBroadcaster::connect(const std::string &host, unsigned port) {
     pthread_create(&ph, 0,osc_broadcaster_write_thread_func,this);
 #else
     writer_thread_ = std::thread(osc_broadcaster_write_thread_func, this);
-#endif 
+#endif
     return true;
 }
 
@@ -64,7 +64,7 @@ void OSCBroadcaster::stop() {
 void OSCBroadcaster::writePoll() {
     while (running_) {
         OscMsg msg;
-        if(messageQueue_.wait_dequeue_timed(msg,std::chrono::milliseconds(POLL_TIMEOUT_MS))) {
+        if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(POLL_TIMEOUT_MS))) {
             socket_->Send(msg.buffer_, (size_t) msg.size_);
         }
     }
@@ -72,7 +72,7 @@ void OSCBroadcaster::writePoll() {
 
 void OSCBroadcaster::flush() {
     OscMsg msg;
-    while(messageQueue_.try_dequeue(msg)) {
+    while (messageQueue_.try_dequeue(msg)) {
         socket_->Send(msg.buffer_, (size_t) msg.size_);
     }
 }
@@ -85,12 +85,12 @@ bool OSCBroadcaster::isActive() {
     clock_gettime(CLOCK_REALTIME, &now);
     int timeOut = keepAliveTime_ * 2 ;
     int dur = lastPing_.tv_sec - now.tv_sec;
-#else 
+#else
     static std::chrono::seconds timeOut(keepAliveTime_ * 2); // twice normal ping time
     auto now = std::chrono::steady_clock::now();
     auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
 //    if(!(dur <= timeOut)) { std::cerr << "not active : " << dur.count() << std::endl; 
-#endif 
+#endif
     return dur <= timeOut;
 }
 
@@ -222,7 +222,8 @@ void OSCBroadcaster::unassignMidiCC(ChangeSource src, const Rack &rack, const Mo
 }
 
 
-void OSCBroadcaster::assignModulation(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p, unsigned bus) {
+void OSCBroadcaster::assignModulation(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p,
+                                      unsigned bus) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
@@ -239,7 +240,8 @@ void OSCBroadcaster::assignModulation(ChangeSource src, const Rack &rack, const 
         << osc::EndBundle;
 }
 
-void OSCBroadcaster::unassignModulation(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p, unsigned bus) {
+void OSCBroadcaster::unassignModulation(ChangeSource src, const Rack &rack, const Module &module, const Parameter &p,
+                                        unsigned bus) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
@@ -468,21 +470,55 @@ void OSCBroadcaster::resource(ChangeSource src, const Rack &rack, const std::str
     send(ops.Data(), ops.Size());
 }
 
-void OSCBroadcaster::deleteRack(ChangeSource src, const Rack &rack)
-{
-	if (!broadcastChange(src)) return;
-	if (!isActive()) return;
+void OSCBroadcaster::deleteRack(ChangeSource src, const Rack &rack) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
 
-	osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
-	ops << osc::BeginBundleImmediate
-		<< osc::BeginMessage("/Kontrol/deleteRack")
-		<< rack.id().c_str();
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/deleteRack")
+        << rack.id().c_str();
 
-	ops << osc::EndMessage
-		<< osc::EndBundle;
+    ops << osc::EndMessage
+        << osc::EndBundle;
 
-	send(ops.Data(), ops.Size());
+    send(ops.Data(), ops.Size());
+}
+
+
+void OSCBroadcaster::midiLearn(ChangeSource src, bool b) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/midiLearn")
+        << b;
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+
+}
+
+void OSCBroadcaster::modulationLearn(ChangeSource src, bool b) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/modulationLearn")
+        << b;
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+
 }
 
 

@@ -45,6 +45,8 @@ public:
     void assignModulation(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned bus) override;
     void unassignModulation(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned bus) override;
 
+    void midiLearn(ChangeSource src, bool b) override;
+    void modulationLearn(ChangeSource src, bool b) override;
 
     bool isThisHost(const std::string &host, unsigned port) { return host == host_ && port == port_; }
 

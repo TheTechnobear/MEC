@@ -15,8 +15,8 @@
 
 
 #include "devices/Organelle.h"
+#include "devices/MidiControl.h"
 #include "devices/Bela.h"
-#include "devices/SimpleOsc.h"
 
 #include "KontrolMonitor.h"
 
@@ -195,9 +195,9 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     } else if (device == "bela") {
         post("KontrolRack: device = %s", device.c_str());
         x->device_ = std::make_shared<Bela>();
-    } else if (device == "simpleosc") {
+    } else if (device == "midi") {
         post("KontrolRack: device = %s", device.c_str());
-        x->device_ = std::make_shared<SimpleOsc>();
+        x->device_ = std::make_shared<MidiControl>();
     } else if (device == "none") {
         post("KontrolRack: not using a device");
     } else {

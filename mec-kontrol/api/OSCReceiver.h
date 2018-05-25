@@ -85,15 +85,15 @@ public:
 
 
     void assignModulation(ChangeSource src,
-                      const EntityId &rackId,
-                      const EntityId &moduleId,
-                      const EntityId &paramId,
-                      unsigned bus);
+                          const EntityId &rackId,
+                          const EntityId &moduleId,
+                          const EntityId &paramId,
+                          unsigned bus);
     void unassignModulation(ChangeSource src,
-                        const EntityId &rackId,
-                        const EntityId &moduleId,
-                        const EntityId &paramId,
-                        unsigned bus);
+                            const EntityId &rackId,
+                            const EntityId &moduleId,
+                            const EntityId &paramId,
+                            unsigned bus);
 
 
     void updatePreset(ChangeSource src,
@@ -108,6 +108,9 @@ public:
                     const EntityId &rackId,
                     const EntityId &moduleId,
                     const std::string &moduleType);
+
+    void midiLearn(ChangeSource src, bool b);
+    void modulationLearn(ChangeSource src, bool b);
 
     unsigned int port() { return port_; }
 

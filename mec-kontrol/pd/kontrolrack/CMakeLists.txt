@@ -14,10 +14,10 @@ set(KONTROL_HOST_SRC
         devices/KontrolDevice.h
         devices/Organelle.cpp
         devices/Organelle.h
+        devices/MidiControl.cpp
+        devices/MidiControl.h
         devices/Bela.cpp
         devices/Bela.h
-        devices/SimpleOsc.cpp
-        devices/SimpleOsc.h
         )
 
 if (${WIN32})

@@ -21,9 +21,9 @@ static const float MAX_POT_VALUE = 1023.0F;
 
 char Organelle::screenBuf_[Organelle::OUTPUT_BUFFER_SIZE];
 
-static const char* OSC_MOTHER_HOST="127.0.0.1";
-static const unsigned OSC_MOTHER_PORT=4001;
-static const unsigned MOTHER_WRITE_POLL_WAIT_TIMEOUT=1000;
+static const char *OSC_MOTHER_HOST = "127.0.0.1";
+static const unsigned OSC_MOTHER_PORT = 4001;
+static const unsigned MOTHER_WRITE_POLL_WAIT_TIMEOUT = 1000;
 
 static const unsigned ORGANELLE_NUM_TEXTLINES = 4;
 static const unsigned ORGANELLE_NUM_PARAMS = 4;
@@ -902,7 +902,8 @@ void *organelle_write_thread_func(void *aObj) {
 
 bool Organelle::connect() {
     try {
-        socket_ = std::shared_ptr<UdpTransmitSocket>(new UdpTransmitSocket(IpEndpointName(OSC_MOTHER_HOST, OSC_MOTHER_PORT)));
+        socket_ = std::shared_ptr<UdpTransmitSocket>(
+                new UdpTransmitSocket(IpEndpointName(OSC_MOTHER_HOST, OSC_MOTHER_PORT)));
     } catch (const std::runtime_error &e) {
         post("could not connect to mother host for screen updates");
         socket_.reset();

@@ -183,6 +183,14 @@ public:
                 const char *modId = (arg++)->AsString();
                 const char *modType = (arg++)->AsString();
                 receiver_.loadModule(changedSrc, rackId, modId, modType);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/midiLearn") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                bool b = (arg++)->AsBool();
+                receiver_.midiLearn(changedSrc, b);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/modulationLearn") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                bool b = (arg++)->AsBool();
+                receiver_.modulationLearn(changedSrc, b);
             }
         } catch (osc::Exception &e) {
             // std::err << "error while parsing message: "
@@ -350,6 +358,14 @@ void OSCReceiver::loadModule(ChangeSource src,
                              const EntityId &moduleId,
                              const std::string &moduleType) {
     model_->loadModule(src, rackId, moduleId, moduleType);
+}
+
+void OSCReceiver::midiLearn(ChangeSource src,bool b) {
+    model_->midiLearn(src,b);
+}
+
+void OSCReceiver::modulationLearn(ChangeSource src,bool b) {
+    model_->modulationLearn(src,b);
 }
 
 

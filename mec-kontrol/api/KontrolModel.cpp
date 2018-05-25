@@ -413,6 +413,17 @@ void KontrolModel::loadModule(ChangeSource src,
         (i.second)->loadModule(src, *rack, moduleId, moduleType);
     }
 }
+void KontrolModel::midiLearn(ChangeSource src, bool b) {
+    for (auto i : listeners_) {
+        (i.second)->midiLearn(src, b);
+    }
+}
+
+void KontrolModel::modulationLearn(ChangeSource src, bool b) {
+    for (auto i : listeners_) {
+        (i.second)->modulationLearn(src, b);
+    }
+}
 
 
 void KontrolModel::publishRack(ChangeSource src, const Rack &rack) const {

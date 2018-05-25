@@ -1,4 +1,4 @@
-#include "SimpleOsc.h"
+#include "mec_oscdisplay.h"
 
 #include <algorithm>
 
@@ -6,51 +6,67 @@
 #include <osc/OscReceivedElements.h>
 #include <osc/OscPacketListener.h>
 
-#include "../../m_pd.h"
+#include <mec_log.h>
 
+namespace mec {
 
-const unsigned int SCREEN_WIDTH = 21;
-
-static const int PAGE_SWITCH_TIMEOUT = 50;
-static const int MODULE_SWITCH_TIMEOUT = 50;
-//static const int PAGE_EXIT_TIMEOUT = 5;
 static const auto MENU_TIMEOUT = 350;
-
 static const float MAX_POT_VALUE = 1.0F;
 
-static const char *OSC_CLIENT_HOST = "127.0.0.1";
-static const unsigned OSC_CLIENT_PORT = 8000;
-static const unsigned OSC_HOST_PORT = 8001;
 static const unsigned OSC_WRITE_POLL_WAIT_TIMEOUT = 1000;
 
-enum SimpleOscModes {
-    OSM_MAINMENU,
-    OSM_PRESETMENU,
-    OSM_MODULEMENU,
-    OSM_MODULESELECTMENU
-};
 
-char SimpleOsc::screenBuf_[SimpleOsc::OUTPUT_BUFFER_SIZE];
+char OscDisplay::screenBuf_[OscDisplay::OUTPUT_BUFFER_SIZE];
 
 static const unsigned OSC_NUM_TEXTLINES = 5;
 static const unsigned OSC_NUM_PARAMS = 8;
 
 
-class OscBaseMode : public DeviceMode {
+
+
+class OscDisplayParamMode : public Kontrol::KontrolCallback {
 public:
-    OscBaseMode(SimpleOsc &p) : parent_(p), popupTime_(-1) { ; }
+    OscDisplayParamMode(OscDisplay &p) : parent_(p), pageIdx_(-1) { ; }
 
-    bool init() override { return true; }
+    bool init() { return true; };
+    void activate();
+    void changePot(unsigned pot, float value);
 
-    void poll() override;
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+    void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                 const Kontrol::Parameter &) override;
+    void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+              const Kontrol::Page &page) override;
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override { ; }
+    void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &)override { ; }
+    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
-    void changePot(unsigned, float) override { ; }
+    void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
+                    const std::string &) override;
+    void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 
-    void changeEncoder(unsigned, float) override { ; }
+    void nextPage();
+    void prevPage();
 
-    void encoderButton(unsigned, bool) override { ; }
+private:
+    void setCurrentPage(unsigned pageIdx, bool UI);
+    void display();
 
-    void keyPress(unsigned, unsigned) override { ; }
+    std::string moduleType_;
+    int pageIdx_ = -1;
+    Kontrol::EntityId pageId_;
+
+    OscDisplay &parent_;
+
+    std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
+};
+
+
+class OscDisplayBaseMode : public OscDisplayMode {
+public:
+    OscDisplayBaseMode(OscDisplay &p) : parent_(p), popupTime_(-1) { ; }
+
 
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
@@ -68,12 +84,14 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &,
                   const std::string &) override { ; };
 
-    void displayPopup(const std::string &text, unsigned time, bool dblline);
-
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
+
+    virtual bool init() { return true; } // override
+    virtual void poll() override;
+    virtual void activate() override { ; }
 protected:
-    SimpleOsc &parent_;
+    OscDisplay &parent_;
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
 
@@ -81,109 +99,9 @@ protected:
 };
 
 
-class OscParamMode : public DeviceMode {
+class OscDisplayMenuMode : public OscDisplayBaseMode {
 public:
-    OscParamMode(SimpleOsc &p) : parent_(p), pageIdx_(-1) { ; }
-
-    bool init() override { return true; }
-
-    void poll() override { ; }
-
-    void activate() override;
-    void changePot(unsigned pot, float value) override;
-    void changeEncoder(unsigned encoder, float value) override;
-//    void encoderButton(unsigned encoder, bool value) override;
-//    void keyPress(unsigned, unsigned) override;
-    void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
-    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-                 const Kontrol::Parameter &) override;
-    void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
-              const Kontrol::Page &page) override;
-
-    void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
-                    const std::string &) override;
-    void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
-
-
-    void encoderButton(unsigned, bool) override { ; }
-
-    void keyPress(unsigned, unsigned) override { ; }
-
-    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
-
-    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
-               const Kontrol::Parameter &) override { ; }
-
-    void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &,
-                  const std::string &) override { ; };
-
-    void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
-
-
-    void nextPage();
-    void prevPage();
-
-private:
-    void setCurrentPage(unsigned pageIdx, bool UI);
-    void display();
-
-    std::string moduleType_;
-    int pageIdx_ = -1;
-    Kontrol::EntityId pageId_;
-
-    SimpleOsc &parent_;
-
-    std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
-};
-
-class OscCompoundMode : public OscBaseMode {
-public:
-    OscCompoundMode(SimpleOsc &p, OscParamMode &param) : OscBaseMode(p), params_(param) {
-    }
-
-    void changePot(unsigned pot, float value) override {
-        OscBaseMode::changePot(pot, value);
-        params_.changePot(pot, value);
-    }
-
-    void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override {
-        OscBaseMode::module(source, rack, module);
-        params_.module(source, rack, module);
-    }
-
-    void changed(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
-                 const Kontrol::Parameter &param) override {
-        OscBaseMode::changed(source, rack, module, param);
-        params_.changed(source, rack, module, param);
-
-    }
-
-    void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
-              const Kontrol::Page &page) override {
-        OscBaseMode::page(source, rack, module, page);
-        params_.page(source, rack, module, page);
-    }
-
-    void loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::EntityId &moduleId,
-                    const std::string &modType) override {
-        OscBaseMode::loadModule(source, rack, moduleId, modType);
-        params_.loadModule(source, rack, moduleId, modType);
-    }
-
-    void activeModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override {
-        OscBaseMode::activeModule(source, rack, module);
-        params_.activeModule(source, rack, module);
-    }
-
-
-private:
-    OscParamMode &params_;
-};
-
-
-class OscMenuMode : public OscCompoundMode {
-public:
-    OscMenuMode(SimpleOsc &p, OscParamMode &pa) : OscCompoundMode(p, pa), cur_(0), top_(0) { ; }
+    OscDisplayMenuMode(OscDisplay &p) : OscDisplayBaseMode(p), cur_(0), top_(0) { ; }
 
     virtual unsigned getSize() = 0;
     virtual std::string getItemText(unsigned idx) = 0;
@@ -193,8 +111,9 @@ public:
 
     void poll() override;
     void activate() override;
-    void changeEncoder(unsigned encoder, float value) override;
-    void encoderButton(unsigned encoder, bool value) override;
+    void navPrev() override;
+    void navNext() override;
+    void navActivate() override;
 
 protected:
     void display();
@@ -205,9 +124,9 @@ protected:
 };
 
 
-class OscFixedMenuMode : public OscMenuMode {
+class OscDisplayFixedMenuMode : public OscDisplayMenuMode {
 public:
-    OscFixedMenuMode(SimpleOsc &p, OscParamMode &pa) : OscMenuMode(p, pa) { ; }
+    OscDisplayFixedMenuMode(OscDisplay &p) : OscDisplayMenuMode(p) { ; }
 
     unsigned getSize() override { return items_.size(); };
 
@@ -217,9 +136,9 @@ protected:
     std::vector<std::string> items_;
 };
 
-class OscMainMenu : public OscMenuMode {
+class OscDisplayMainMenu : public OscDisplayMenuMode {
 public:
-    OscMainMenu(SimpleOsc &p, OscParamMode &pa) : OscMenuMode(p, pa) { ; }
+    OscDisplayMainMenu(OscDisplay &p) : OscDisplayMenuMode(p) { ; }
 
     bool init() override;
     unsigned getSize() override;
@@ -228,9 +147,9 @@ public:
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 };
 
-class OscPresetMenu : public OscMenuMode {
+class OscDisplayPresetMenu : public OscDisplayMenuMode {
 public:
-    OscPresetMenu(SimpleOsc &p, OscParamMode &pa) : OscMenuMode(p, pa) { ; }
+    OscDisplayPresetMenu(OscDisplay &p) : OscDisplayMenuMode(p) { ; }
 
     bool init() override;
     void activate() override;
@@ -242,37 +161,32 @@ private:
 };
 
 
-class OscModuleMenu : public OscFixedMenuMode {
+class OscDisplayModuleMenu : public OscDisplayFixedMenuMode {
 public:
-    OscModuleMenu(SimpleOsc &p, OscParamMode &pa) : OscFixedMenuMode(p, pa) { ; }
+    OscDisplayModuleMenu(OscDisplay &p) : OscDisplayFixedMenuMode(p) { ; }
 
     void activate() override;
     void clicked(unsigned idx) override;
 };
 
-class OscModuleSelectMenu : public OscFixedMenuMode {
+class OscDisplayModuleSelectMenu : public OscDisplayFixedMenuMode {
 public:
-    OscModuleSelectMenu(SimpleOsc &p, OscParamMode &pa) : OscFixedMenuMode(p, pa) { ; }
+    OscDisplayModuleSelectMenu(OscDisplay &p) : OscDisplayFixedMenuMode(p) { ; }
 
     void activate() override;
     void clicked(unsigned idx) override;
 };
 
-//------ OscBaseMode
+//------ OscDisplayBaseMode
 
-void OscBaseMode::displayPopup(const std::string &text, unsigned time, bool dblline) {
-    popupTime_ = time;
-    parent_.displayPopup(text, dblline);
-}
-
-void OscBaseMode::poll() {
+void OscDisplayBaseMode::poll() {
     if (popupTime_ < 0) return;
     popupTime_--;
 }
 
-//------ OscParamMode
+//------ OscDisplayParamMode
 
-void OscParamMode::display() {
+void OscDisplayParamMode::display() {
     auto rack = parent_.model()->getRack(parent_.currentRack());
     auto module = parent_.model()->getModule(rack, parent_.currentModule());
     auto page = parent_.model()->getPage(module, pageId_);
@@ -294,11 +208,11 @@ void OscParamMode::display() {
 }
 
 
-void OscParamMode::activate() {
+void OscDisplayParamMode::activate() {
     display();
 }
 
-void OscParamMode::changePot(unsigned pot, float rawvalue) {
+void OscDisplayParamMode::changePot(unsigned pot, float rawvalue) {
     try {
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto module = parent_.model()->getModule(rack, parent_.currentModule());
@@ -327,7 +241,7 @@ void OscParamMode::changePot(unsigned pot, float rawvalue) {
 
 }
 
-void OscParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
+void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
     auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
     if (module == nullptr) return;
 
@@ -360,45 +274,12 @@ void OscParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
                 parent_.clearDisplay();
             }
         }
-
-//        if (UI) {
-//            displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT, false);
-//        }
-
     } catch (std::out_of_range) { ;
     }
 }
 
-void OscParamMode::changeEncoder(unsigned enc, float value) {
-    if (pageIdx_ < 0) {
-        setCurrentPage(0, false);
-        return;
-    }
 
-    unsigned pagenum = (unsigned) pageIdx_;
-
-    if (value > 0) {
-        auto rack = parent_.model()->getRack(parent_.currentRack());
-        auto module = parent_.model()->getModule(rack, parent_.currentModule());
-//        auto page = parent_.model()->getPage(module,pageId_);
-        auto pages = parent_.model()->getPages(module);
-//        auto params = parent_.model()->getParams(module,page);
-
-        // clockwise
-        pagenum++;
-        pagenum = std::min(pagenum, (unsigned) pages.size() - 1);
-    } else {
-        // anti clockwise
-        if (pagenum > 0) pagenum--;
-    }
-
-    if (pagenum != pageIdx_) {
-        setCurrentPage(pagenum, true);
-    }
-}
-
-
-void OscParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &) {
+void OscDisplayParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &) {
     if (rack.id() == parent_.currentRack()) {
         pageIdx_ = -1;
         setCurrentPage(0, false);
@@ -406,7 +287,7 @@ void OscParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &rack
 }
 
 
-void OscParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void OscDisplayParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                            const Kontrol::Parameter &param) {
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
 
@@ -436,20 +317,20 @@ void OscParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
     } // for
 }
 
-void OscParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+void OscDisplayParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     if (moduleType_ != module.type()) {
         pageIdx_ = -1;
     }
     moduleType_ = module.type();
 }
 
-void OscParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void OscDisplayParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                         const Kontrol::Page &page) {
     if (pageIdx_ < 0) setCurrentPage(0, false);
 }
 
 
-void OscParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
+void OscDisplayParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
                               const Kontrol::EntityId &moduleId, const std::string &modType) {
     if (parent_.currentModule() == moduleId) {
         if (moduleType_ != modType) {
@@ -459,7 +340,7 @@ void OscParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack 
     }
 }
 
-void OscParamMode::nextPage() {
+void OscDisplayParamMode::nextPage() {
     if (pageIdx_ < 0) {
         setCurrentPage(0, false);
         return;
@@ -480,7 +361,7 @@ void OscParamMode::nextPage() {
     }
 }
 
-void OscParamMode::prevPage() {
+void OscDisplayParamMode::prevPage() {
     if (pageIdx_ < 0) {
         setCurrentPage(0, false);
         return;
@@ -493,29 +374,29 @@ void OscParamMode::prevPage() {
     }
 }
 
-//---- OscMenuMode
-void OscMenuMode::activate() {
+//---- OscDisplayMenuMode
+void OscDisplayMenuMode::activate() {
     display();
     popupTime_ = MENU_TIMEOUT;
     clickedDown_ = false;
 }
 
-void OscMenuMode::poll() {
-    OscBaseMode::poll();
+void OscDisplayMenuMode::poll() {
+    OscDisplayBaseMode::poll();
     if (popupTime_ == 0) {
         parent_.changeMode(OSM_MAINMENU);
         popupTime_ = -1;
     }
 }
 
-void OscMenuMode::display() {
+void OscDisplayMenuMode::display() {
     parent_.clearDisplay();
     for (unsigned i = top_; i < top_ + OSC_NUM_TEXTLINES; i++) {
         displayItem(i);
     }
 }
 
-void OscMenuMode::displayItem(unsigned i) {
+void OscDisplayMenuMode::displayItem(unsigned i) {
     if (i < getSize()) {
         std::string item = getItemText(i);
         unsigned line = i - top_ + 1;
@@ -527,16 +408,36 @@ void OscMenuMode::displayItem(unsigned i) {
 }
 
 
-void OscMenuMode::changeEncoder(unsigned, float value) {
+void OscDisplayMenuMode::navPrev() {
     unsigned cur = cur_;
-    if (value > 0) {
-        // clockwise
-        cur++;
-        cur = std::min(cur, getSize() - 1);
-    } else {
-        // anti clockwise
-        if (cur > 0) cur--;
+    if (cur_ > 0) {
+        cur--;
+        unsigned int line = 0;
+        if (cur < top_) {
+            top_ = cur;
+            cur_ = cur;
+            display();
+        } else if (cur >= top_ + OSC_NUM_TEXTLINES) {
+            top_ = cur - (OSC_NUM_TEXTLINES - 1);
+            cur_ = cur;
+            display();
+        } else {
+            line = cur_ - top_ + 1;
+            if (line <= OSC_NUM_TEXTLINES) parent_.invertLine(line);
+            cur_ = cur;
+            line = cur_ - top_ + 1;
+            if (line <= OSC_NUM_TEXTLINES) parent_.invertLine(line);
+        }
     }
+    popupTime_ = MENU_TIMEOUT;
+}
+
+
+
+void OscDisplayMenuMode::navNext() {
+    unsigned cur = cur_;
+    cur++;
+    cur = std::min(cur, getSize() - 1);
     if (cur != cur_) {
         unsigned int line = 0;
         if (cur < top_) {
@@ -559,11 +460,8 @@ void OscMenuMode::changeEncoder(unsigned, float value) {
 }
 
 
-void OscMenuMode::encoderButton(unsigned, bool value) {
-    if (clickedDown_ && value < 1.0) {
-        clicked(cur_);
-    }
-    clickedDown_ = value;
+void OscDisplayMenuMode::navActivate(){
+    clicked(cur_);
 }
 
 
@@ -577,16 +475,16 @@ enum OscMainMenuItms {
     OSC_MMI_SIZE
 };
 
-bool OscMainMenu::init() {
+bool OscDisplayMainMenu::init() {
     return true;
 }
 
 
-unsigned OscMainMenu::getSize() {
+unsigned OscDisplayMainMenu::getSize() {
     return (unsigned) OSC_MMI_SIZE;
 }
 
-std::string OscMainMenu::getItemText(unsigned idx) {
+std::string OscDisplayMainMenu::getItemText(unsigned idx) {
     switch (idx) {
         case OSC_MMI_MODULE: {
             auto rack = model()->getRack(parent_.currentRack());
@@ -624,7 +522,7 @@ std::string OscMainMenu::getItemText(unsigned idx) {
 }
 
 
-void OscMainMenu::clicked(unsigned idx) {
+void OscDisplayMainMenu::clicked(unsigned idx) {
     switch (idx) {
         case OSC_MMI_MODULE: {
             parent_.changeMode(OSM_MODULEMENU);
@@ -660,7 +558,7 @@ void OscMainMenu::clicked(unsigned idx) {
             break;
     }
 }
-void OscMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) {
+void OscDisplayMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) {
     display();
 }
 
@@ -673,7 +571,7 @@ enum OscPresetMenuItms {
 };
 
 
-bool OscPresetMenu::init() {
+bool OscDisplayPresetMenu::init() {
     auto rack = model()->getRack(parent_.currentRack());
     if (rack != nullptr) {
         presets_ = rack->getPresetList();
@@ -683,22 +581,22 @@ bool OscPresetMenu::init() {
     return true;
 }
 
-void OscPresetMenu::activate() {
+void OscDisplayPresetMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
     if (rack != nullptr) {
         presets_ = rack->getPresetList();
     } else {
         presets_.clear();
     }
-    OscMenuMode::activate();
+    OscDisplayMenuMode::activate();
 }
 
 
-unsigned OscPresetMenu::getSize() {
+unsigned OscDisplayPresetMenu::getSize() {
     return (unsigned) OSC_PMI_LAST + presets_.size();
 }
 
-std::string OscPresetMenu::getItemText(unsigned idx) {
+std::string OscDisplayPresetMenu::getItemText(unsigned idx) {
     switch (idx) {
         case OSC_PMI_UPDATE:
             return "Update Preset";
@@ -712,7 +610,7 @@ std::string OscPresetMenu::getItemText(unsigned idx) {
 }
 
 
-void OscPresetMenu::clicked(unsigned idx) {
+void OscDisplayPresetMenu::clicked(unsigned idx) {
     switch (idx) {
         case OSC_PMI_UPDATE: {
             auto rack = model()->getRack(parent_.currentRack());
@@ -747,7 +645,7 @@ void OscPresetMenu::clicked(unsigned idx) {
 }
 
 
-void OscModuleMenu::activate() {
+void OscDisplayModuleMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
     auto module = model()->getModule(rack, parent_.currentModule());
     if (module == nullptr) return;
@@ -762,11 +660,11 @@ void OscModuleMenu::activate() {
         }
         idx++;
     }
-    OscFixedMenuMode::activate();
+    OscDisplayFixedMenuMode::activate();
 }
 
 
-void OscModuleMenu::clicked(unsigned idx) {
+void OscDisplayModuleMenu::clicked(unsigned idx) {
     if (idx < getSize()) {
         auto rack = model()->getRack(parent_.currentRack());
         auto module = model()->getModule(rack, parent_.currentModule());
@@ -783,7 +681,7 @@ void OscModuleMenu::clicked(unsigned idx) {
 }
 
 
-void OscModuleSelectMenu::activate() {
+void OscDisplayModuleSelectMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
     auto cmodule = model()->getModule(rack, parent_.currentModule());
     if (cmodule == nullptr) return;
@@ -798,11 +696,11 @@ void OscModuleSelectMenu::activate() {
         }
         idx++;
     }
-    OscFixedMenuMode::activate();
+    OscDisplayFixedMenuMode::activate();
 }
 
 
-void OscModuleSelectMenu::clicked(unsigned idx) {
+void OscDisplayModuleSelectMenu::clicked(unsigned idx) {
     parent_.changeMode(OSM_MAINMENU);
     if (idx < getSize()) {
         unsigned moduleIdx = idx;
@@ -819,21 +717,18 @@ void OscModuleSelectMenu::clicked(unsigned idx) {
 }
 
 
-
-// SimpleOsc implmentation
-
-
-class SimpleOscPacketListener : public PacketListener {
+// OscDisplay implmentation
+class OscDisplayPacketListener : public PacketListener {
 public:
-    SimpleOscPacketListener(moodycamel::ReaderWriterQueue<SimpleOsc::OscMsg> &queue) : queue_(queue) {
+    OscDisplayPacketListener(moodycamel::ReaderWriterQueue<OscDisplay::OscMsg> &queue) : queue_(queue) {
     }
 
     virtual void ProcessPacket(const char *data, int size,
                                const IpEndpointName &remoteEndpoint) {
 
-        SimpleOsc::OscMsg msg;
+        OscDisplay::OscMsg msg;
 //        msg.origin_ = remoteEndpoint;
-        msg.size_ = (size > SimpleOsc::OscMsg::MAX_OSC_MESSAGE_SIZE ? SimpleOsc::OscMsg::MAX_OSC_MESSAGE_SIZE
+        msg.size_ = (size > OscDisplay::OscMsg::MAX_OSC_MESSAGE_SIZE ? OscDisplay::OscMsg::MAX_OSC_MESSAGE_SIZE
                                                                     : size);
         memcpy(msg.buffer_, data, (size_t) msg.size_);
         msg.origin_ = remoteEndpoint;
@@ -841,13 +736,13 @@ public:
     }
 
 private:
-    moodycamel::ReaderWriterQueue<SimpleOsc::OscMsg> &queue_;
+    moodycamel::ReaderWriterQueue<OscDisplay::OscMsg> &queue_;
 };
 
 
-class SimpleOSCListener : public osc::OscPacketListener {
+class OscDisplayListener : public osc::OscPacketListener {
 public:
-    SimpleOSCListener(SimpleOsc &recv) : receiver_(recv) { ; }
+    OscDisplayListener(OscDisplay &recv) : receiver_(recv) { ; }
 
 
     virtual void ProcessMessage(const osc::ReceivedMessage &m,
@@ -856,13 +751,12 @@ public:
             char host[IpEndpointName::ADDRESS_STRING_LENGTH];
             remoteEndpoint.AddressAsString(host);
 //            post("received simpe osc message: %s", m.AddressPattern());
-            if (std::strcmp(m.AddressPattern(), "/NavDown") == 0) {
-                receiver_.changeEncoder(0, 1);
-            } else if (std::strcmp(m.AddressPattern(), "/NavUp") == 0) {
-                receiver_.changeEncoder(0, 0);
+            if (std::strcmp(m.AddressPattern(), "/NavPrev") == 0) {
+                receiver_.navPrev();
+            } else if (std::strcmp(m.AddressPattern(), "/NavNext") == 0) {
+                receiver_.navNext();
             } else if (std::strcmp(m.AddressPattern(), "/NavActivate") == 0) {
-                receiver_.encoderButton(0, 1);
-                receiver_.encoderButton(0, 0);
+                receiver_.navActivate();
             } else if (std::strcmp(m.AddressPattern(), "/PageNext") == 0) {
                 receiver_.nextPage();
             } else if (std::strcmp(m.AddressPattern(), "/PagePrev") == 0) {
@@ -871,7 +765,6 @@ public:
                 receiver_.nextModule();
             } else if (std::strcmp(m.AddressPattern(), "/ModulePrev") == 0) {
                 receiver_.prevModule();
-                post("prev module");
             } else if (std::strcmp(m.AddressPattern(), "/P1Ctrl") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 float val = 0;
@@ -898,25 +791,67 @@ public:
                 receiver_.changePot(3, val);
             }
         } catch (osc::Exception &e) {
-            post("simple osc message exception: %s %s", m.AddressPattern(), e.what());
+            LOG_0("simple osc message exception " <<  m.AddressPattern() << " : " << e.what());
         }
     }
 
 private:
-    SimpleOsc &receiver_;
+    OscDisplay &receiver_;
 };
 
 
-SimpleOsc::SimpleOsc() : writeMessageQueue_(OscMsg::MAX_N_OSC_MSGS), readMessageQueue_(OscMsg::MAX_N_OSC_MSGS) {
-    packetListener_ = std::make_shared<SimpleOscPacketListener>(readMessageQueue_);
-    oscListener_ = std::make_shared<SimpleOSCListener>(*this);
+OscDisplay::OscDisplay() :
+        writeMessageQueue_(OscMsg::MAX_N_OSC_MSGS),
+        readMessageQueue_(OscMsg::MAX_N_OSC_MSGS),
+        active_(false),
+        running_(false){
+    packetListener_ = std::make_shared<OscDisplayPacketListener>(readMessageQueue_);
+    oscListener_ = std::make_shared<OscDisplayListener>(*this);
 }
 
-SimpleOsc::~SimpleOsc() {
-    stop();
+OscDisplay::~OscDisplay() {
+    deinit();
 }
 
-void SimpleOsc::stop() {
+
+//mec::Device
+
+bool OscDisplay::init(void* arg) {
+    Preferences prefs(arg);
+
+    if (active_) {
+        LOG_2("OscDisplay::init - already active deinit");
+        deinit();
+    }
+    active_ = false;
+
+    //TODO - temp this will be dynamic
+    std::string clientname = prefs.getString("client name", "localhost");
+    unsigned clientport = prefs.getInt("client port", 8001);
+    unsigned listenPort = prefs.getInt("listen port", 8000);
+
+    active_ = true;
+    if(active_) {
+        paramDisplay_ = std::make_shared<OscDisplayParamMode>(*this);
+
+        // add modes before KD init
+        addMode(OSM_MAINMENU, std::make_shared<OscDisplayMainMenu>(*this));
+        addMode(OSM_PRESETMENU, std::make_shared<OscDisplayPresetMenu>(*this));
+        addMode(OSM_MODULEMENU, std::make_shared<OscDisplayModuleMenu>(*this));
+        addMode(OSM_MODULESELECTMENU, std::make_shared<OscDisplayModuleSelectMenu>(*this));
+
+        paramDisplay_->init();
+        paramDisplay_->activate();
+        changeMode(OSM_MAINMENU);
+
+
+        listen(listenPort);
+        connect(clientname, clientport);
+    }
+    return active_;
+}
+
+void OscDisplay::deinit()  {
     running_ = false;
 
     if (writeSocket_) {
@@ -934,39 +869,39 @@ void SimpleOsc::stop() {
     }
     listenPort_ = 0;
     readSocket_.reset();
+    active_ = false;
+    return;
 }
 
+bool OscDisplay::isActive() {
+    return active_;
+}
 
-bool SimpleOsc::init() {
-
-    paramDisplay_ = std::make_shared<OscParamMode>(*this);
-
-    // add modes before KD init
-    addMode(OSM_MAINMENU, std::make_shared<OscMainMenu>(*this, *paramDisplay_));
-    addMode(OSM_PRESETMENU, std::make_shared<OscPresetMenu>(*this, *paramDisplay_));
-    addMode(OSM_MODULEMENU, std::make_shared<OscModuleMenu>(*this, *paramDisplay_));
-    addMode(OSM_MODULESELECTMENU, std::make_shared<OscModuleSelectMenu>(*this, *paramDisplay_));
-
-    if (KontrolDevice::init()) {
-        connect();
-        listen(OSC_HOST_PORT);
-        paramDisplay_->init();
-        paramDisplay_->activate();
-        changeMode(OSM_MAINMENU);
-        return true;
+// Kontrol::KontrolCallback
+bool OscDisplay::process() {
+    OscMsg msg;
+    while (readMessageQueue_.try_dequeue(msg)) {
+        oscListener_->ProcessPacket(msg.buffer_, msg.size_, msg.origin_);
     }
-    return false;
+    modes_[currentMode_]->poll();
+    return true;
 }
 
-void *simpleosc_write_thread_func(void *aObj) {
-    post("start simple osc write thead");
-    SimpleOsc *pThis = static_cast<SimpleOsc *>(aObj);
+void OscDisplay::stop() {
+    deinit();
+}
+
+
+void *displayosc_write_thread_func(void *aObj) {
+    LOG_2("start display osc write thead");
+    OscDisplay *pThis = static_cast<OscDisplay *>(aObj);
     pThis->writePoll();
-    post("simple osc write thread ended");
+    LOG_2("display osc write thread ended");
     return nullptr;
 }
 
-bool SimpleOsc::connect() {
+bool OscDisplay::connect(const std::string& hostname, unsigned port)
+{
     if (writeSocket_) {
         writer_thread_.join();
         OscMsg msg;
@@ -975,10 +910,11 @@ bool SimpleOsc::connect() {
     writeSocket_.reset();
 
     try {
+        LOG_0("connecting to client on " << hostname << " : " << port);
         writeSocket_ = std::shared_ptr<UdpTransmitSocket>(
-                new UdpTransmitSocket(IpEndpointName(OSC_CLIENT_HOST, OSC_CLIENT_PORT)));
+                new UdpTransmitSocket(IpEndpointName(hostname.c_str(), port)));
     } catch (const std::runtime_error &e) {
-        post("could not connect to simple osc host for screen updates");
+        LOG_2("could not connect to display osc client for screen updates");
         writeSocket_.reset();
         return false;
     }
@@ -988,14 +924,14 @@ bool SimpleOsc::connect() {
     pthread_t ph = writer_thread_.native_handle();
     pthread_create(&ph, 0,simpleosc_write_thread_func,this);
 #else
-    writer_thread_ = std::thread(simpleosc_write_thread_func, this);
+    writer_thread_ = std::thread(displayosc_write_thread_func, this);
 #endif
 
     return true;
 }
 
 
-void SimpleOsc::writePoll() {
+void OscDisplay::writePoll() {
     while (running_) {
         OscMsg msg;
         if (writeMessageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(OSC_WRITE_POLL_WAIT_TIMEOUT))) {
@@ -1005,7 +941,7 @@ void SimpleOsc::writePoll() {
 }
 
 
-void SimpleOsc::send(const char *data, unsigned size) {
+void OscDisplay::send(const char *data, unsigned size) {
     OscMsg msg;
     msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
     memcpy(msg.buffer_, data, (size_t) msg.size_);
@@ -1013,13 +949,13 @@ void SimpleOsc::send(const char *data, unsigned size) {
 }
 
 
-void *simpleosc_read_thread_func(void *pReceiver) {
-    SimpleOsc *pThis = static_cast<SimpleOsc *>(pReceiver);
+void *displayosc_read_thread_func(void *pReceiver) {
+    OscDisplay *pThis = static_cast<OscDisplay *>(pReceiver);
     pThis->readSocket()->Run();
     return nullptr;
 }
 
-bool SimpleOsc::listen(unsigned port) {
+bool OscDisplay::listen(unsigned port) {
 
     if (readSocket_) {
         readSocket_->AsynchronousBreak();
@@ -1033,6 +969,7 @@ bool SimpleOsc::listen(unsigned port) {
 
     listenPort_ = port;
     try {
+        LOG_0("listening for clients on " << port);
         readSocket_ = std::make_shared<UdpListeningReceiveSocket>(
                 IpEndpointName(IpEndpointName::ANY_ADDRESS, listenPort_),
                 packetListener_.get());
@@ -1042,7 +979,7 @@ bool SimpleOsc::listen(unsigned port) {
     pthread_t ph = receive_thread_.native_handle();
     pthread_create(&ph, 0,simpleosc_read_thread_func,this);
 #else
-        receive_thread_ = std::thread(simpleosc_read_thread_func, this);
+        receive_thread_ = std::thread(displayosc_read_thread_func, this);
 #endif
     } catch (const std::runtime_error &e) {
         listenPort_ = 0;
@@ -1051,36 +988,171 @@ bool SimpleOsc::listen(unsigned port) {
     return true;
 }
 
+//--modes and forwarding
 
-void SimpleOsc::poll() {
-    OscMsg msg;
-    while (readMessageQueue_.try_dequeue(msg)) {
-        oscListener_->ProcessPacket(msg.buffer_, msg.size_, msg.origin_);
+void OscDisplay::addMode(OscDisplayModes mode, std::shared_ptr<OscDisplayMode> m) {
+    modes_[mode] = m;
+}
+
+void OscDisplay::changeMode(OscDisplayModes mode) {
+    currentMode_ = mode;
+    auto m = modes_[mode];
+    m->activate();
+}
+
+void OscDisplay::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
+    modes_[currentMode_]->rack(src,rack);
+    paramDisplay_->rack(src,rack);
+}
+
+void OscDisplay::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module & module) {
+    if (currentModuleId_.empty()) {
+        currentRackId_ = rack.id();
+        currentModule(module.id());
     }
-    KontrolDevice::poll();
+
+    modes_[currentMode_]->module(src,rack,module);
+    paramDisplay_->module(src,rack,module);
+}
+
+void OscDisplay::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                      const Kontrol::Module & module, const Kontrol::Page & page) {
+    modes_[currentMode_]->page(src,rack,module,page);
+    paramDisplay_->page(src,rack,module,page);
+}
+
+void OscDisplay::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                       const Kontrol::Module & module, const Kontrol::Parameter & param) {
+    modes_[currentMode_]->param(src,rack,module,param);
+    paramDisplay_->param(src,rack,module,param);
+}
+
+void OscDisplay::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                         const Kontrol::Module & module,const Kontrol::Parameter & param) {
+    modes_[currentMode_]->changed(src,rack,module,param);
+    paramDisplay_->changed(src,rack,module,param);
+}
+
+void OscDisplay::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                          const std::string & res, const std::string & value) {
+    modes_[currentMode_]->resource(src,rack,res,value);
+    paramDisplay_->resource(src,rack,res,value);
+}
+
+void OscDisplay::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack)  {
+    modes_[currentMode_]->deleteRack(src,rack);
+    paramDisplay_->deleteRack(src,rack);
+}
+
+void OscDisplay::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack & rack,
+                              const Kontrol::Module & module) {
+    modes_[currentMode_]->activeModule(src,rack,module);
+    paramDisplay_->activeModule(src,rack,module);
+}
+
+void OscDisplay::loadModule(Kontrol::ChangeSource src , const Kontrol::Rack & rack,
+                            const Kontrol::EntityId & modId, const std::string & modType) {
+    modes_[currentMode_]->loadModule(src,rack,modId,modType);
+    paramDisplay_->loadModule(src,rack,modId,modType);
 }
 
 
-void SimpleOsc::displayPopup(const std::string &text, bool) {
+void OscDisplay::navPrev() {
+    modes_[currentMode_]->navPrev();
+}
 
-    {
-        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
-        ops << osc::BeginMessage("/text")
-            << (int8_t) 3
-            << osc::EndMessage;
-        send(ops.Data(), ops.Size());
-    }
+void OscDisplay::navNext() {
+    modes_[currentMode_]->navNext();
+}
+
+void OscDisplay::navActivate() {
+    modes_[currentMode_]->navActivate();
 }
 
 
-void SimpleOsc::clearDisplay() {
+void OscDisplay::nextPage() {
+    paramDisplay_->nextPage();
+}
+
+void OscDisplay::prevPage() {
+    paramDisplay_->prevPage();
+}
+
+void OscDisplay::nextModule() {
+    auto rack = model()->getRack(currentRack());
+    auto modules = model()->getModules(rack);
+    bool found = false;
+    for (auto module:modules) {
+        if (found) {
+            currentModule(module->id());
+            return;
+        }
+        if (module->id() == currentModule()) {
+            found = true;
+        }
+    }
+}
+
+void OscDisplay::prevModule() {
+    auto rack = model()->getRack(currentRack());
+    auto modules = model()->getModules(rack);
+    Kontrol::EntityId prevId;
+    for (auto module:modules) {
+        if (module->id() == currentModule()) {
+            if (!prevId.empty()) {
+                currentModule(prevId);
+                return;
+            }
+        }
+        prevId = module->id();
+    }
+}
+
+void OscDisplay::changePot(unsigned pot, float value) {
+    paramDisplay_->changePot(pot,value);
+}
+
+void OscDisplay::midiLearn(Kontrol::ChangeSource src, bool b) {
+    modulationLearnActive_ = false;
+    midiLearnActive_ = b;
+}
+
+void OscDisplay::modulationLearn(Kontrol::ChangeSource src, bool b) {
+    midiLearnActive_ = false;
+    modulationLearnActive_ = b;
+}
+
+void OscDisplay::midiLearn(bool b) {
+    model()->midiLearn(Kontrol::ChangeSource::LOCAL,b);
+}
+
+void OscDisplay::modulationLearn(bool b) {
+    model()->modulationLearn(Kontrol::ChangeSource::LOCAL,b);
+}
+
+
+//--- display functions
+
+//void OscDisplay::displayPopup(const std::string &text, bool) {
+//
+//    {
+//        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+//        ops << osc::BeginMessage("/text")
+//            << (int8_t) 3
+//            << osc::EndMessage;
+//        send(ops.Data(), ops.Size());
+//    }
+//}
+
+
+void OscDisplay::clearDisplay() {
     osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
     ops << osc::BeginMessage("/clearText")
         << osc::EndMessage;
     send(ops.Data(), ops.Size());
 }
 
-void SimpleOsc::clearParamNum(unsigned num) {
+void OscDisplay::clearParamNum(unsigned num) {
     std::string p = "P" + std::to_string(num);
     {
         osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
@@ -1115,7 +1187,7 @@ void SimpleOsc::clearParamNum(unsigned num) {
 
 }
 
-void SimpleOsc::displayParamNum(unsigned num, const Kontrol::Parameter &param) {
+void OscDisplay::displayParamNum(unsigned num, const Kontrol::Parameter &param) {
     std::string p = "P" + std::to_string(num);
     {
         osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
@@ -1150,7 +1222,7 @@ void SimpleOsc::displayParamNum(unsigned num, const Kontrol::Parameter &param) {
     }
 }
 
-void SimpleOsc::displayLine(unsigned line, const char *disp) {
+void OscDisplay::displayLine(unsigned line, const char *disp) {
     if (writeSocket_ == nullptr) return;
 
     {
@@ -1165,7 +1237,7 @@ void SimpleOsc::displayLine(unsigned line, const char *disp) {
 
 }
 
-void SimpleOsc::invertLine(unsigned line) {
+void OscDisplay::invertLine(unsigned line) {
     osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
 
     ops << osc::BeginMessage("/selectText")
@@ -1177,7 +1249,7 @@ void SimpleOsc::invertLine(unsigned line) {
 }
 
 
-void SimpleOsc::displayTitle(const std::string &module, const std::string &page) {
+void OscDisplay::displayTitle(const std::string &module, const std::string &page) {
     {
         osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/module")
@@ -1196,40 +1268,11 @@ void SimpleOsc::displayTitle(const std::string &module, const std::string &page)
 }
 
 
-void SimpleOsc::nextPage() {
-    paramDisplay_->nextPage();
+void OscDisplay::currentModule(const Kontrol::EntityId &modId) {
+    currentModuleId_ = modId;
+    model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
 }
 
-void SimpleOsc::prevPage() {
-    paramDisplay_->prevPage();
-}
 
-void SimpleOsc::nextModule() {
-    auto rack = model()->getRack(currentRack());
-    auto modules = model()->getModules(rack);
-    bool found = false;
-    for (auto module:modules) {
-        if (found) {
-            currentModule(module->id());
-            return;
-        }
-        if (module->id() == currentModule()) {
-            found = true;
-        }
-    }
-}
 
-void SimpleOsc::prevModule() {
-    auto rack = model()->getRack(currentRack());
-    auto modules = model()->getModules(rack);
-    Kontrol::EntityId prevId;
-    for (auto module:modules) {
-        if (module->id() == currentModule()) {
-            if (!prevId.empty()) {
-                currentModule(prevId);
-                return;
-            }
-        }
-        prevId = module->id();
-    }
 }
