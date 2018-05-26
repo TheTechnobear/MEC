@@ -87,6 +87,7 @@ bool Rack::loadSettings(const mec::Preferences &prefs) {
                     }
                 }
                 presets_[presetId] = rackPreset;
+                addResource("preset",presetId);
             }
         }
     }
@@ -150,10 +151,12 @@ bool Rack::updatePreset(std::string presetId) {
         }
     }
     presets_[presetId] = rackPreset;
+    addResource("preset",presetId);
+
     currentPreset_ = presetId;
+    model()->updatePreset(CS_LOCAL,id(),currentPreset());
 
-    dumpSettings();
-
+    //    dumpSettings();
     return ret;
 }
 
@@ -178,6 +181,10 @@ bool Rack::applyPreset(std::string presetId) {
         }
     }
     currentPreset_ = presetId;
+
+    model()->publishMetaData();
+    model()->applyPreset(CS_LOCAL,id(),currentPreset());
+
     return ret;
 }
 
@@ -296,6 +303,7 @@ std::set<std::string> Rack::getResourceTypes() {
 
 void Rack::addResource(const std::string &type, const std::string &resource) {
     resources_[type].insert(resource);
+//    model()->publishResource(CS_LOCAL,*this,type,resource);
 }
 
 

@@ -19,6 +19,7 @@ public:
 
     ChangeSource(SrcType t,const SrcId& id=nullId);
     friend bool operator==(const ChangeSource& a,const ChangeSource& b);
+    SrcType type() { return type_;}
 
     static ChangeSource createRemoteSource(const std::string& host, int port);
 

@@ -85,6 +85,8 @@ private:
 
 class KontrolModel;
 
+
+
 class Rack : public Entity {
 public:
     Rack(const std::string &host,
@@ -111,12 +113,15 @@ public:
     bool saveSettings();
     bool saveSettings(const std::string &filename);
 
+    // local racks
     bool applyPreset(std::string presetId);
     bool updatePreset(std::string presetId);
-
-    const std::string &currentPreset() const { return currentPreset_; }
-
     std::vector<std::string> getPresetList();
+
+    // used on non-local rack
+    const std::string &currentPreset() const { return currentPreset_; }
+    void currentPreset(const std::string& preset) { currentPreset_ = preset;}
+
 
     bool changeMidiCC(unsigned midiCC, unsigned midiValue);
     void addMidiCCMapping(unsigned ccnum, const EntityId &moduleId, const EntityId &paramId);

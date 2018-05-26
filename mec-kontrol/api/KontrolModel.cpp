@@ -38,6 +38,7 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack) const {
 
 void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std::shared_ptr<Module> &module) const {
     publishModule(CS_LOCAL, *rack, *module);
+    publishPreset(rack);
     for (const auto param: module->getParams()) {
         publishParam(CS_LOCAL, *rack, *module, *param);
     }
@@ -48,6 +49,12 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std:
         publishChanged(CS_LOCAL, *rack, *module, *param);
     }
     publishMidiMapping(CS_LOCAL, *rack, *module, module->getMidiMapping());
+}
+
+void KontrolModel::publishPreset(const std::shared_ptr<Rack> &rack) const {
+    for (auto i : listeners_) {
+        (i.second)->applyPreset(CS_LOCAL, *rack, rack->currentPreset());
+    }
 }
 
 
@@ -281,36 +288,33 @@ std::shared_ptr<Parameter> KontrolModel::changeParam(
 
 void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
                                 const EntityId &paramId, unsigned midiCC) {
-    if (localRack() && rackId == localRack()->id()) {
+    if (src.type()==ChangeSource::REMOTE  && localRack() && rackId == localRack()->id()) {
         localRack()->addMidiCCMapping(midiCC, moduleId, paramId);
-    } else {
-        auto rack = getRack(rackId);
-        auto module = getModule(rack, moduleId);
-        auto param = getParam(module, paramId);
-        if (param == nullptr) return;
+    }
 
-        rack->addMidiCCMapping(midiCC, moduleId, paramId);
+    auto rack = getRack(rackId);
+    auto module = getModule(rack, moduleId);
+    auto param = getParam(module, paramId);
+    if (param == nullptr) return;
 
-        for (auto i : listeners_) {
-            (i.second)->assignMidiCC(src, *rack, *module, *param, midiCC);
-        }
+    for (auto i : listeners_) {
+        (i.second)->assignMidiCC(src, *rack, *module, *param, midiCC);
     }
 }
 
 
 void KontrolModel::unassignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
                                   const EntityId &paramId, unsigned midiCC) {
-    if (localRack() && rackId == localRack()->id()) {
+    if (src.type()==ChangeSource::REMOTE  && localRack() && rackId == localRack()->id()) {
         localRack()->removeMidiCCMapping(midiCC, moduleId, paramId);
-    } else {
-        auto rack = getRack(rackId);
-        auto module = getModule(rack, moduleId);
-        auto param = getParam(module, paramId);
-        if (param == nullptr) return;
+    }
+    auto rack = getRack(rackId);
+    auto module = getModule(rack, moduleId);
+    auto param = getParam(module, paramId);
+    if (param == nullptr) return;
 
-        for (auto i : listeners_) {
-            (i.second)->unassignMidiCC(src, *rack, *module, *param, midiCC);
-        }
+    for (auto i : listeners_) {
+        (i.second)->unassignMidiCC(src, *rack, *module, *param, midiCC);
     }
 }
 
@@ -320,17 +324,17 @@ void KontrolModel::assignModulation(ChangeSource src,
                       const EntityId &moduleId,
                       const EntityId &paramId,
                       unsigned bus) {
-    if (localRack() && rackId == localRack()->id()) {
+    if (src.type()==ChangeSource::REMOTE  && localRack() && rackId == localRack()->id()) {
         localRack()->addModulationMapping(bus, moduleId, paramId);
-    } else {
-        auto rack = getRack(rackId);
-        auto module = getModule(rack, moduleId);
-        auto param = getParam(module, paramId);
-        if (param == nullptr) return;
+    }
 
-        for (auto i : listeners_) {
-            (i.second)->assignModulation(src, *rack, *module, *param, bus);
-        }
+    auto rack = getRack(rackId);
+    auto module = getModule(rack, moduleId);
+    auto param = getParam(module, paramId);
+    if (param == nullptr) return;
+
+    for (auto i : listeners_) {
+        (i.second)->assignModulation(src, *rack, *module, *param, bus);
     }
 }
 
@@ -339,56 +343,60 @@ void KontrolModel::unassignModulation(ChangeSource src,
                         const EntityId &moduleId,
                         const EntityId &paramId,
                         unsigned bus) {
-    if (localRack() && rackId == localRack()->id()) {
+    if (src.type()==ChangeSource::REMOTE && localRack() && rackId == localRack()->id()) {
         localRack()->removeModulationMapping(bus, moduleId, paramId);
-    } else {
-        auto rack = getRack(rackId);
-        auto module = getModule(rack, moduleId);
-        auto param = getParam(module, paramId);
-        if (param == nullptr) return;
-
-        for (auto i : listeners_) {
-            (i.second)->unassignModulation(src, *rack, *module, *param, bus);
-        }
     }
 
+    auto rack = getRack(rackId);
+    auto module = getModule(rack, moduleId);
+    auto param = getParam(module, paramId);
+    if (param == nullptr) return;
+
+    for (auto i : listeners_) {
+        (i.second)->unassignModulation(src, *rack, *module, *param, bus);
+    }
 }
 
 
 
 void KontrolModel::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
-    if (localRack() && rackId == localRack()->id()) {
+    auto rack = getRack(rackId);
+    if (rack == nullptr) return;
+
+    if (src.type()==ChangeSource::REMOTE && localRack() && rackId == localRack()->id()) {
         localRack()->updatePreset(preset);
     } else {
-        auto rack = getRack(rackId);
-        if (rack == nullptr) return;
-        for (auto i : listeners_) {
-            (i.second)->updatePreset(src, *rack, preset);
-        }
+        rack->currentPreset(preset);
+    }
+
+    for (auto i : listeners_) {
+        (i.second)->updatePreset(src, *rack, preset);
     }
 }
 
 void KontrolModel::applyPreset(ChangeSource src, const EntityId &rackId, std::string preset) {
-    if (localRack() && rackId == localRack()->id()) {
+    auto rack = getRack(rackId);
+    if (rack == nullptr) return;
+    if (src.type()==ChangeSource::REMOTE  && localRack() && rackId == localRack()->id()) {
         localRack()->applyPreset(preset);
     } else {
-        auto rack = getRack(rackId);
-        if (rack == nullptr) return;
-        for (auto i : listeners_) {
-            (i.second)->applyPreset(src, *rack, preset);
-        }
+        rack->currentPreset(preset);
+    }
+
+    for (auto i : listeners_) {
+        (i.second)->applyPreset(src, *rack, preset);
     }
 }
 
 void KontrolModel::saveSettings(ChangeSource src, const EntityId &rackId) {
-    if (localRack() && rackId == localRack()->id()) {
+    if (src.type()==ChangeSource::REMOTE  && localRack() && rackId == localRack()->id()) {
         localRack()->saveSettings();
-    } else {
-        auto rack = getRack(rackId);
-        if (rack == nullptr) return;
-        for (auto i : listeners_) {
-            (i.second)->saveSettings(src, *rack);
-        }
+    }
+
+    auto rack = getRack(rackId);
+    if (rack == nullptr) return;
+    for (auto i : listeners_) {
+        (i.second)->saveSettings(src, *rack);
     }
 }
 
@@ -409,6 +417,7 @@ void KontrolModel::loadModule(ChangeSource src,
                               const std::string &moduleType) {
     auto rack = getRack(rackId);
     if (rack == nullptr) return;
+
     for (auto i : listeners_) {
         (i.second)->loadModule(src, *rack, moduleId, moduleType);
     }

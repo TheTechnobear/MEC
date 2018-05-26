@@ -190,6 +190,7 @@ public:
 private:
     void publishMetaData(const std::shared_ptr<Rack> &rack) const;
     void publishMetaData(const std::shared_ptr<Rack> &rack, const std::shared_ptr<Module> &module) const;
+    void publishPreset(const std::shared_ptr<Rack> &rack) const;
 
     KontrolModel();
     std::shared_ptr<Rack> localRack_;

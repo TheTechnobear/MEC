@@ -22,8 +22,6 @@ static const unsigned OSC_NUM_TEXTLINES = 5;
 static const unsigned OSC_NUM_PARAMS = 8;
 
 
-
-
 class OscDisplayParamMode : public Kontrol::KontrolCallback {
 public:
     OscDisplayParamMode(OscDisplay &p) : parent_(p), pageIdx_(-1) { ; }
@@ -33,13 +31,18 @@ public:
     void changePot(unsigned pot, float value);
 
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+
     void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
     void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                  const Kontrol::Parameter &) override;
     void page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
               const Kontrol::Page &page) override;
-    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override { ; }
-    void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &)override { ; }
+
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+               const Kontrol::Parameter &) override { ; }
+
+    void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &) override { ; }
+
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
@@ -89,7 +92,9 @@ public:
 
     virtual bool init() { return true; } // override
     virtual void poll() override;
+
     virtual void activate() override { ; }
+
 protected:
     OscDisplay &parent_;
 
@@ -115,12 +120,15 @@ public:
     void navNext() override;
     void navActivate() override;
 
+    void updatePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+    void midiLearn(Kontrol::ChangeSource src, bool b) override;
+    void modulationLearn(Kontrol::ChangeSource src, bool b) override;
 protected:
     void display();
     void displayItem(unsigned idx);
     unsigned cur_;
     unsigned top_;
-    bool clickedDown_;
 };
 
 
@@ -252,13 +260,6 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
         auto pages = parent_.model()->getPages(module);
 //        auto params = parent_.model()->getParams(module,page);
 
-        std::string md = "";
-        std::string pd = "";
-        if (module) md = module->displayName();
-        if (page) pd = page->displayName();
-        parent_.displayTitle(md, pd);
-
-
         if (pageIdx_ != pageIdx) {
             if (pageIdx < pages.size()) {
                 pageIdx_ = pageIdx;
@@ -269,11 +270,14 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
                     display();
                 } catch (std::out_of_range) { ;
                 }
-            } else {
-                // if no pages, or page selected is out of range, display blank
-                parent_.clearDisplay();
             }
         }
+
+        std::string md = "";
+        std::string pd = "";
+        if (module) md = module->displayName();
+        if (page) pd = page->displayName();
+        parent_.displayTitle(md, pd);
     } catch (std::out_of_range) { ;
     }
 }
@@ -288,7 +292,7 @@ void OscDisplayParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rac
 
 
 void OscDisplayParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
-                           const Kontrol::Parameter &param) {
+                                  const Kontrol::Parameter &param) {
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
 
     auto prack = parent_.model()->getRack(parent_.currentRack());
@@ -306,9 +310,6 @@ void OscDisplayParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack
             if (p->id() == param.id()) {
                 p->change(param.current(), src == Kontrol::CS_PRESET);
                 parent_.displayParamNum(i + 1, param);
-                if (src != Kontrol::CS_LOCAL) {
-                    changePot(i, param.current().floatValue());
-                }
                 return;
             }
         } catch (std::out_of_range) {
@@ -317,7 +318,8 @@ void OscDisplayParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack
     } // for
 }
 
-void OscDisplayParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+void OscDisplayParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
+                                 const Kontrol::Module &module) {
     if (moduleType_ != module.type()) {
         pageIdx_ = -1;
     }
@@ -325,13 +327,13 @@ void OscDisplayParamMode::module(Kontrol::ChangeSource source, const Kontrol::Ra
 }
 
 void OscDisplayParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
-                        const Kontrol::Page &page) {
+                               const Kontrol::Page &page) {
     if (pageIdx_ < 0) setCurrentPage(0, false);
 }
 
 
 void OscDisplayParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
-                              const Kontrol::EntityId &moduleId, const std::string &modType) {
+                                     const Kontrol::EntityId &moduleId, const std::string &modType) {
     if (parent_.currentModule() == moduleId) {
         if (moduleType_ != modType) {
             pageIdx_ = -1;
@@ -378,7 +380,6 @@ void OscDisplayParamMode::prevPage() {
 void OscDisplayMenuMode::activate() {
     display();
     popupTime_ = MENU_TIMEOUT;
-    clickedDown_ = false;
 }
 
 void OscDisplayMenuMode::poll() {
@@ -433,7 +434,6 @@ void OscDisplayMenuMode::navPrev() {
 }
 
 
-
 void OscDisplayMenuMode::navNext() {
     unsigned cur = cur_;
     cur++;
@@ -460,8 +460,28 @@ void OscDisplayMenuMode::navNext() {
 }
 
 
-void OscDisplayMenuMode::navActivate(){
+void OscDisplayMenuMode::navActivate() {
     clicked(cur_);
+}
+
+void OscDisplayMenuMode::updatePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    display();
+    KontrolCallback::updatePreset(source, rack, preset);
+}
+
+void OscDisplayMenuMode::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    display();
+    KontrolCallback::applyPreset(source, rack, preset);
+}
+
+void OscDisplayMenuMode::midiLearn(Kontrol::ChangeSource src, bool b) {
+    display();
+    KontrolCallback::midiLearn(src, b);
+}
+
+void OscDisplayMenuMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
+    display();
+    KontrolCallback::modulationLearn(src, b);
 }
 
 
@@ -549,7 +569,7 @@ void OscDisplayMainMenu::clicked(unsigned idx) {
         case OSC_MMI_SAVE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
-                rack->saveSettings();
+                model()->saveSettings(Kontrol::CS_LOCAL, rack->id());
             }
             parent_.changeMode(OSM_MAINMENU);
             break;
@@ -558,6 +578,7 @@ void OscDisplayMainMenu::clicked(unsigned idx) {
             break;
     }
 }
+
 void OscDisplayMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) {
     display();
 }
@@ -572,21 +593,22 @@ enum OscPresetMenuItms {
 
 
 bool OscDisplayPresetMenu::init() {
-    auto rack = model()->getRack(parent_.currentRack());
-    if (rack != nullptr) {
-        presets_ = rack->getPresetList();
-    } else {
-        presets_.clear();
-    }
     return true;
 }
 
 void OscDisplayPresetMenu::activate() {
+    presets_.clear();
     auto rack = model()->getRack(parent_.currentRack());
-    if (rack != nullptr) {
-        presets_ = rack->getPresetList();
-    } else {
-        presets_.clear();
+    if (rack == nullptr) return;
+    unsigned idx = 0;
+    auto res = rack->getResources("preset");
+    for (auto preset : res) {
+        presets_.push_back(preset);
+        if (preset == rack->currentPreset()) {
+            cur_ = idx + 3;
+            top_ = idx + 3;
+        }
+        idx++;
     }
     OscDisplayMenuMode::activate();
 }
@@ -624,7 +646,7 @@ void OscDisplayPresetMenu::clicked(unsigned idx) {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 std::string newPreset = "New " + std::to_string(presets_.size());
-                rack->updatePreset(newPreset);
+                model()->updatePreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
             parent_.changeMode(OSM_MAINMENU);
             break;
@@ -637,7 +659,7 @@ void OscDisplayPresetMenu::clicked(unsigned idx) {
             if (rack != nullptr) {
                 std::string newPreset = presets_[idx - OSC_PMI_LAST];
                 parent_.changeMode(OSM_MAINMENU);
-                rack->applyPreset(newPreset);
+                model()->applyPreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
             break;
         }
@@ -729,7 +751,7 @@ public:
         OscDisplay::OscMsg msg;
 //        msg.origin_ = remoteEndpoint;
         msg.size_ = (size > OscDisplay::OscMsg::MAX_OSC_MESSAGE_SIZE ? OscDisplay::OscMsg::MAX_OSC_MESSAGE_SIZE
-                                                                    : size);
+                                                                     : size);
         memcpy(msg.buffer_, data, (size_t) msg.size_);
         msg.origin_ = remoteEndpoint;
         queue_.enqueue(msg);
@@ -791,7 +813,7 @@ public:
                 receiver_.changePot(3, val);
             }
         } catch (osc::Exception &e) {
-            LOG_0("simple osc message exception " <<  m.AddressPattern() << " : " << e.what());
+            LOG_0("simple osc message exception " << m.AddressPattern() << " : " << e.what());
         }
     }
 
@@ -804,7 +826,9 @@ OscDisplay::OscDisplay() :
         writeMessageQueue_(OscMsg::MAX_N_OSC_MSGS),
         readMessageQueue_(OscMsg::MAX_N_OSC_MSGS),
         active_(false),
-        running_(false){
+        running_(false),
+        modulationLearnActive_(false),
+        midiLearnActive_(false) {
     packetListener_ = std::make_shared<OscDisplayPacketListener>(readMessageQueue_);
     oscListener_ = std::make_shared<OscDisplayListener>(*this);
 }
@@ -816,7 +840,7 @@ OscDisplay::~OscDisplay() {
 
 //mec::Device
 
-bool OscDisplay::init(void* arg) {
+bool OscDisplay::init(void *arg) {
     Preferences prefs(arg);
 
     if (active_) {
@@ -831,7 +855,7 @@ bool OscDisplay::init(void* arg) {
     unsigned listenPort = prefs.getInt("listen port", 8000);
 
     active_ = true;
-    if(active_) {
+    if (active_) {
         paramDisplay_ = std::make_shared<OscDisplayParamMode>(*this);
 
         // add modes before KD init
@@ -851,7 +875,7 @@ bool OscDisplay::init(void* arg) {
     return active_;
 }
 
-void OscDisplay::deinit()  {
+void OscDisplay::deinit() {
     running_ = false;
 
     if (writeSocket_) {
@@ -900,8 +924,7 @@ void *displayosc_write_thread_func(void *aObj) {
     return nullptr;
 }
 
-bool OscDisplay::connect(const std::string& hostname, unsigned port)
-{
+bool OscDisplay::connect(const std::string &hostname, unsigned port) {
     if (writeSocket_) {
         writer_thread_.join();
         OscMsg msg;
@@ -1001,59 +1024,59 @@ void OscDisplay::changeMode(OscDisplayModes mode) {
 }
 
 void OscDisplay::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
-    modes_[currentMode_]->rack(src,rack);
-    paramDisplay_->rack(src,rack);
+    modes_[currentMode_]->rack(src, rack);
+    paramDisplay_->rack(src, rack);
 }
 
-void OscDisplay::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module & module) {
+void OscDisplay::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     if (currentModuleId_.empty()) {
         currentRackId_ = rack.id();
         currentModule(module.id());
     }
 
-    modes_[currentMode_]->module(src,rack,module);
-    paramDisplay_->module(src,rack,module);
+    modes_[currentMode_]->module(src, rack, module);
+    paramDisplay_->module(src, rack, module);
 }
 
 void OscDisplay::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                      const Kontrol::Module & module, const Kontrol::Page & page) {
-    modes_[currentMode_]->page(src,rack,module,page);
-    paramDisplay_->page(src,rack,module,page);
+                      const Kontrol::Module &module, const Kontrol::Page &page) {
+    modes_[currentMode_]->page(src, rack, module, page);
+    paramDisplay_->page(src, rack, module, page);
 }
 
 void OscDisplay::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                       const Kontrol::Module & module, const Kontrol::Parameter & param) {
-    modes_[currentMode_]->param(src,rack,module,param);
-    paramDisplay_->param(src,rack,module,param);
+                       const Kontrol::Module &module, const Kontrol::Parameter &param) {
+    modes_[currentMode_]->param(src, rack, module, param);
+    paramDisplay_->param(src, rack, module, param);
 }
 
 void OscDisplay::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                         const Kontrol::Module & module,const Kontrol::Parameter & param) {
-    modes_[currentMode_]->changed(src,rack,module,param);
-    paramDisplay_->changed(src,rack,module,param);
+                         const Kontrol::Module &module, const Kontrol::Parameter &param) {
+    modes_[currentMode_]->changed(src, rack, module, param);
+    paramDisplay_->changed(src, rack, module, param);
 }
 
 void OscDisplay::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                          const std::string & res, const std::string & value) {
-    modes_[currentMode_]->resource(src,rack,res,value);
-    paramDisplay_->resource(src,rack,res,value);
+                          const std::string &res, const std::string &value) {
+    modes_[currentMode_]->resource(src, rack, res, value);
+    paramDisplay_->resource(src, rack, res, value);
 }
 
-void OscDisplay::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack)  {
-    modes_[currentMode_]->deleteRack(src,rack);
-    paramDisplay_->deleteRack(src,rack);
+void OscDisplay::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
+    modes_[currentMode_]->deleteRack(src, rack);
+    paramDisplay_->deleteRack(src, rack);
 }
 
-void OscDisplay::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack & rack,
-                              const Kontrol::Module & module) {
-    modes_[currentMode_]->activeModule(src,rack,module);
-    paramDisplay_->activeModule(src,rack,module);
+void OscDisplay::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                              const Kontrol::Module &module) {
+    modes_[currentMode_]->activeModule(src, rack, module);
+    paramDisplay_->activeModule(src, rack, module);
 }
 
-void OscDisplay::loadModule(Kontrol::ChangeSource src , const Kontrol::Rack & rack,
-                            const Kontrol::EntityId & modId, const std::string & modType) {
-    modes_[currentMode_]->loadModule(src,rack,modId,modType);
-    paramDisplay_->loadModule(src,rack,modId,modType);
+void OscDisplay::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                            const Kontrol::EntityId &modId, const std::string &modType) {
+    modes_[currentMode_]->loadModule(src, rack, modId, modType);
+    paramDisplay_->loadModule(src, rack, modId, modType);
 }
 
 
@@ -1109,25 +1132,37 @@ void OscDisplay::prevModule() {
 }
 
 void OscDisplay::changePot(unsigned pot, float value) {
-    paramDisplay_->changePot(pot,value);
+    paramDisplay_->changePot(pot, value);
 }
 
 void OscDisplay::midiLearn(Kontrol::ChangeSource src, bool b) {
     modulationLearnActive_ = false;
     midiLearnActive_ = b;
+    modes_[currentMode_]->midiLearn(src, b);
+
 }
 
 void OscDisplay::modulationLearn(Kontrol::ChangeSource src, bool b) {
     midiLearnActive_ = false;
     modulationLearnActive_ = b;
+    modes_[currentMode_]->modulationLearn(src, b);
 }
 
+void OscDisplay::updatePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    modes_[currentMode_]->updatePreset(source, rack, preset);
+}
+
+void OscDisplay::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    modes_[currentMode_]->applyPreset(source, rack, preset);
+}
+
+
 void OscDisplay::midiLearn(bool b) {
-    model()->midiLearn(Kontrol::ChangeSource::LOCAL,b);
+    model()->midiLearn(Kontrol::CS_LOCAL, b);
 }
 
 void OscDisplay::modulationLearn(bool b) {
-    model()->modulationLearn(Kontrol::ChangeSource::LOCAL,b);
+    model()->modulationLearn(Kontrol::CS_LOCAL, b);
 }
 
 
@@ -1272,7 +1307,6 @@ void OscDisplay::currentModule(const Kontrol::EntityId &modId) {
     currentModuleId_ = modId;
     model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
 }
-
 
 
 }
