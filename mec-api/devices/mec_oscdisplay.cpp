@@ -780,18 +780,32 @@ public:
                     receiver_.connect(host, port);
                 }
             } else if (std::strcmp(m.AddressPattern(), "/NavPrev") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                if(! (arg->AsFloat()< 0.5)) return;
                 receiver_.navPrev();
             } else if (std::strcmp(m.AddressPattern(), "/NavNext") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                if(! (arg->AsFloat()< 0.5)) return;
                 receiver_.navNext();
             } else if (std::strcmp(m.AddressPattern(), "/NavActivate") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                if(! (arg->AsFloat()< 0.5)) return;
                 receiver_.navActivate();
             } else if (std::strcmp(m.AddressPattern(), "/PageNext") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                if(! (arg->AsFloat()< 0.5)) return;
                 receiver_.nextPage();
             } else if (std::strcmp(m.AddressPattern(), "/PagePrev") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                if(! (arg->AsFloat()< 0.5)) return;
                 receiver_.prevPage();
             } else if (std::strcmp(m.AddressPattern(), "/ModuleNext") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                if(! (arg->AsFloat()< 0.5)) return;
                 receiver_.nextModule();
             } else if (std::strcmp(m.AddressPattern(), "/ModulePrev") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                if(! (arg->AsFloat()< 0.5)) return;
                 receiver_.prevModule();
             } else if (std::strcmp(m.AddressPattern(), "/P1Ctrl") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
@@ -817,6 +831,30 @@ public:
                 if (arg->IsFloat()) val = arg->AsFloat();
                 else if (arg->IsInt32()) val = arg->AsInt32();
                 receiver_.changePot(3, val);
+            } else if (std::strcmp(m.AddressPattern(), "/P5Ctrl") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                float val = 0;
+                if (arg->IsFloat()) val = arg->AsFloat();
+                else if (arg->IsInt32()) val = arg->AsInt32();
+                receiver_.changePot(4, val);
+            } else if (std::strcmp(m.AddressPattern(), "/P6Ctrl") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                float val = 0;
+                if (arg->IsFloat()) val = arg->AsFloat();
+                else if (arg->IsInt32()) val = arg->AsInt32();
+                receiver_.changePot(5, val);
+            } else if (std::strcmp(m.AddressPattern(), "/P7Ctrl") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                float val = 0;
+                if (arg->IsFloat()) val = arg->AsFloat();
+                else if (arg->IsInt32()) val = arg->AsInt32();
+                receiver_.changePot(6, val);
+            } else if (std::strcmp(m.AddressPattern(), "/P8Ctrl") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                float val = 0;
+                if (arg->IsFloat()) val = arg->AsFloat();
+                else if (arg->IsInt32()) val = arg->AsInt32();
+                receiver_.changePot(7, val);
             }
         } catch (osc::Exception &e) {
             LOG_0("simple osc message exception " << m.AddressPattern() << " : " << e.what());
