@@ -1,9 +1,7 @@
 {
     "mec"  :  {
         "oscdisplay"  :  {
-            "client name" : "localhost",
-            "client port" : 7000,
-            "listen port" : 7001
+            "listen port" : 7000
         },
 
         "kontrol"  :  {

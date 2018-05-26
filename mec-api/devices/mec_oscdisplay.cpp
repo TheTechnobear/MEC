@@ -773,7 +773,13 @@ public:
             char host[IpEndpointName::ADDRESS_STRING_LENGTH];
             remoteEndpoint.AddressAsString(host);
 //            post("received simpe osc message: %s", m.AddressPattern());
-            if (std::strcmp(m.AddressPattern(), "/NavPrev") == 0) {
+            if (std::strcmp(m.AddressPattern(), "/Connect") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                int port = arg->AsInt32();
+                if (port > 0) {
+                    receiver_.connect(host, port);
+                }
+            } else if (std::strcmp(m.AddressPattern(), "/NavPrev") == 0) {
                 receiver_.navPrev();
             } else if (std::strcmp(m.AddressPattern(), "/NavNext") == 0) {
                 receiver_.navNext();
@@ -826,7 +832,8 @@ OscDisplay::OscDisplay() :
         writeMessageQueue_(OscMsg::MAX_N_OSC_MSGS),
         readMessageQueue_(OscMsg::MAX_N_OSC_MSGS),
         active_(false),
-        running_(false),
+        writeRunning_(false),
+        listenRunning_(false),
         modulationLearnActive_(false),
         midiLearnActive_(false) {
     packetListener_ = std::make_shared<OscDisplayPacketListener>(readMessageQueue_);
@@ -848,10 +855,9 @@ bool OscDisplay::init(void *arg) {
         deinit();
     }
     active_ = false;
+    writeRunning_ = false;
+    listenRunning_ = false;
 
-    //TODO - temp this will be dynamic
-    std::string clientname = prefs.getString("client name", "localhost");
-    unsigned clientport = prefs.getInt("client port", 8001);
     unsigned listenPort = prefs.getInt("listen port", 8000);
 
     active_ = true;
@@ -870,13 +876,13 @@ bool OscDisplay::init(void *arg) {
 
 
         listen(listenPort);
-        connect(clientname, clientport);
     }
     return active_;
 }
 
 void OscDisplay::deinit() {
-    running_ = false;
+    writeRunning_ = false;
+    listenRunning_ = false;
 
     if (writeSocket_) {
         writer_thread_.join();
@@ -926,6 +932,7 @@ void *displayosc_write_thread_func(void *aObj) {
 
 bool OscDisplay::connect(const std::string &hostname, unsigned port) {
     if (writeSocket_) {
+        writeRunning_ = false;
         writer_thread_.join();
         OscMsg msg;
         while (writeMessageQueue_.try_dequeue(msg));
@@ -941,7 +948,8 @@ bool OscDisplay::connect(const std::string &hostname, unsigned port) {
         writeSocket_.reset();
         return false;
     }
-    running_ = true;
+
+    writeRunning_ = true;
 #ifdef __COBALT__
     post("simpleosc use pthread for COBALT");
     pthread_t ph = writer_thread_.native_handle();
@@ -950,12 +958,16 @@ bool OscDisplay::connect(const std::string &hostname, unsigned port) {
     writer_thread_ = std::thread(displayosc_write_thread_func, this);
 #endif
 
+    clearDisplay();
+    changeMode(OscDisplayModes::OSM_MAINMENU);
+    modes_[currentMode_]->activate();
+    paramDisplay_->activate();
     return true;
 }
 
 
 void OscDisplay::writePoll() {
-    while (running_) {
+    while (writeRunning_) {
         OscMsg msg;
         if (writeMessageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(OSC_WRITE_POLL_WAIT_TIMEOUT))) {
             writeSocket_->Send(msg.buffer_, (size_t) msg.size_);
@@ -981,6 +993,7 @@ void *displayosc_read_thread_func(void *pReceiver) {
 bool OscDisplay::listen(unsigned port) {
 
     if (readSocket_) {
+        listenRunning_ = false;
         readSocket_->AsynchronousBreak();
         receive_thread_.join();
         OscMsg msg;
@@ -997,6 +1010,7 @@ bool OscDisplay::listen(unsigned port) {
                 IpEndpointName(IpEndpointName::ANY_ADDRESS, listenPort_),
                 packetListener_.get());
 
+        listenRunning_ = true;
 #ifdef __COBALT__
         post("simpleosc use pthread for COBALT");
     pthread_t ph = receive_thread_.native_handle();

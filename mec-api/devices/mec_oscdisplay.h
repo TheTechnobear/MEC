@@ -130,7 +130,8 @@ private:
     static char screenBuf_[OUTPUT_BUFFER_SIZE];
 
 
-    bool running_;
+    bool writeRunning_;
+    bool listenRunning_;
     bool active_;
 
     std::shared_ptr<UdpTransmitSocket> writeSocket_;
