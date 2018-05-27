@@ -71,7 +71,7 @@ public:
     void changePot(unsigned pot, float value);
 
 
-    void displayParamNum(unsigned num, const Kontrol::Parameter &p);
+    void displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local);
     void clearParamNum(unsigned num);
     void displayLine(unsigned line, const char *);
     void invertLine(unsigned line);

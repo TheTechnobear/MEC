@@ -205,7 +205,7 @@ void OscDisplayParamMode::display() {
     unsigned int j = 0;
     for (auto param : params) {
         if (param != nullptr) {
-            parent_.displayParamNum(j + 1, *param);
+            parent_.displayParamNum(j + 1, *param, true);
         }
         j++;
         if (j == OSC_NUM_PARAMS) break;
@@ -263,12 +263,15 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
         if (pageIdx_ != pageIdx) {
             if (pageIdx < pages.size()) {
                 pageIdx_ = pageIdx;
-
                 try {
                     page = pages[pageIdx_];
                     pageId_ = page->id();
                     display();
                 } catch (std::out_of_range) { ;
+                }
+            } else {
+                for (int j=0; j < OSC_NUM_PARAMS; j++) {
+                    parent_.clearParamNum(j + 1);
                 }
             }
         }
@@ -309,7 +312,7 @@ void OscDisplayParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack
             auto &p = params.at(i);
             if (p->id() == param.id()) {
                 p->change(param.current(), src == Kontrol::CS_PRESET);
-                parent_.displayParamNum(i + 1, param);
+                parent_.displayParamNum(i + 1, param, src != Kontrol::CS_LOCAL);
                 return;
             }
         } catch (std::out_of_range) {
@@ -781,31 +784,31 @@ public:
                 }
             } else if (std::strcmp(m.AddressPattern(), "/NavPrev") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if(! (arg->AsFloat()< 0.5)) return;
+                if (!(arg->AsFloat() < 0.5)) return;
                 receiver_.navPrev();
             } else if (std::strcmp(m.AddressPattern(), "/NavNext") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if(! (arg->AsFloat()< 0.5)) return;
+                if (!(arg->AsFloat() < 0.5)) return;
                 receiver_.navNext();
             } else if (std::strcmp(m.AddressPattern(), "/NavActivate") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if(! (arg->AsFloat()< 0.5)) return;
+                if (!(arg->AsFloat() < 0.5)) return;
                 receiver_.navActivate();
             } else if (std::strcmp(m.AddressPattern(), "/PageNext") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if(! (arg->AsFloat()< 0.5)) return;
+                if (!(arg->AsFloat() < 0.5)) return;
                 receiver_.nextPage();
             } else if (std::strcmp(m.AddressPattern(), "/PagePrev") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if(! (arg->AsFloat()< 0.5)) return;
+                if (!(arg->AsFloat() < 0.5)) return;
                 receiver_.prevPage();
             } else if (std::strcmp(m.AddressPattern(), "/ModuleNext") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if(! (arg->AsFloat()< 0.5)) return;
+                if (!(arg->AsFloat() < 0.5)) return;
                 receiver_.nextModule();
             } else if (std::strcmp(m.AddressPattern(), "/ModulePrev") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if(! (arg->AsFloat()< 0.5)) return;
+                if (!(arg->AsFloat() < 0.5)) return;
                 receiver_.prevModule();
             } else if (std::strcmp(m.AddressPattern(), "/P1Ctrl") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
@@ -1274,7 +1277,7 @@ void OscDisplay::clearParamNum(unsigned num) {
 
 }
 
-void OscDisplay::displayParamNum(unsigned num, const Kontrol::Parameter &param) {
+void OscDisplay::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl) {
     std::string p = "P" + std::to_string(num);
     {
         osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
@@ -1285,18 +1288,17 @@ void OscDisplay::displayParamNum(unsigned num, const Kontrol::Parameter &param) 
             << osc::EndMessage;
         send(ops.Data(), ops.Size());
     }
-// TODO? this is not correct, since the control has more accuracy than our representation
-// possibly do just when page loads?
-//    {
-//        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
-//        std::string field = "/" + p + "Ctrl";
-//        const char *addr = field.c_str();
-//        float v = param.asFloat(param.current());
-//        ops << osc::BeginMessage(addr)
-//            << v
-//            << osc::EndMessage;
-//        send(ops.Data(), ops.Size());
-//    }
+
+    if (dispCtrl) {
+        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+        std::string field = "/" + p + "Ctrl";
+        const char *addr = field.c_str();
+        float v = param.asFloat(param.current());
+        ops << osc::BeginMessage(addr)
+            << v
+            << osc::EndMessage;
+        send(ops.Data(), ops.Size());
+    }
 
     {
         osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
