@@ -775,7 +775,6 @@ public:
         try {
             char host[IpEndpointName::ADDRESS_STRING_LENGTH];
             remoteEndpoint.AddressAsString(host);
-//            post("received simpe osc message: %s", m.AddressPattern());
             if (std::strcmp(m.AddressPattern(), "/Connect") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 int port = arg->AsInt32();
@@ -860,7 +859,7 @@ public:
                 receiver_.changePot(7, val);
             }
         } catch (osc::Exception &e) {
-            LOG_0("simple osc message exception " << m.AddressPattern() << " : " << e.what());
+            LOG_0("display osc message exception " << m.AddressPattern() << " : " << e.what());
         }
     }
 
@@ -906,7 +905,7 @@ bool OscDisplay::init(void *arg) {
     writeRunning_ = false;
     listenRunning_ = false;
 
-    unsigned listenPort = prefs.getInt("listen port", 8000);
+    unsigned listenPort = prefs.getInt("listen port", 6100);
 
     active_ = true;
     if (active_) {
@@ -999,9 +998,8 @@ bool OscDisplay::connect(const std::string &hostname, unsigned port) {
 
     writeRunning_ = true;
 #ifdef __COBALT__
-    post("simpleosc use pthread for COBALT");
     pthread_t ph = writer_thread_.native_handle();
-    pthread_create(&ph, 0,simpleosc_write_thread_func,this);
+    pthread_create(&ph, 0,displayosc_write_thread_func,this);
 #else
     writer_thread_ = std::thread(displayosc_write_thread_func, this);
 #endif
@@ -1060,9 +1058,8 @@ bool OscDisplay::listen(unsigned port) {
 
         listenRunning_ = true;
 #ifdef __COBALT__
-        post("simpleosc use pthread for COBALT");
     pthread_t ph = receive_thread_.native_handle();
-    pthread_create(&ph, 0,simpleosc_read_thread_func,this);
+    pthread_create(&ph, 0,displayosc_read_thread_func,this);
 #else
         receive_thread_ = std::thread(displayosc_read_thread_func, this);
 #endif

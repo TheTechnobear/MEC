@@ -70,7 +70,7 @@
         "_kontrol"  :  {
             "_parameter definitions" : "./kontrol-param.json",
             "_patch settings" : "./kontrol-patch.json",
-            "listen port" : 8000
+            "listen port" : 6000
         }
     },
 

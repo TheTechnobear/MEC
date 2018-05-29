@@ -68,7 +68,7 @@ bool KontrolDevice::init(void *arg) {
 
     model_->addCallback("clienthandler", std::make_shared<KontrolDeviceClientHandler>(*this));
 
-    listenPort_ = static_cast<unsigned>(prefs.getInt("listen port", 4000));
+    listenPort_ = static_cast<unsigned>(prefs.getInt("listen port", 6000));
 
     if (listenPort_ > 0) {
         auto p = std::make_shared<Kontrol::OSCReceiver>(model_);
