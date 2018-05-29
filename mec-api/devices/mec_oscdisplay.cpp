@@ -784,31 +784,31 @@ public:
                 }
             } else if (std::strcmp(m.AddressPattern(), "/NavPrev") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if (!(arg->AsFloat() < 0.5)) return;
+                if (isArgFalse(arg)) return;
                 receiver_.navPrev();
             } else if (std::strcmp(m.AddressPattern(), "/NavNext") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if (!(arg->AsFloat() < 0.5)) return;
+                if (isArgFalse(arg)) return;
                 receiver_.navNext();
             } else if (std::strcmp(m.AddressPattern(), "/NavActivate") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if (!(arg->AsFloat() < 0.5)) return;
+                if (isArgFalse(arg)) return;
                 receiver_.navActivate();
             } else if (std::strcmp(m.AddressPattern(), "/PageNext") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if (!(arg->AsFloat() < 0.5)) return;
+                if (isArgFalse(arg)) return;
                 receiver_.nextPage();
             } else if (std::strcmp(m.AddressPattern(), "/PagePrev") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if (!(arg->AsFloat() < 0.5)) return;
+                if (isArgFalse(arg)) return;
                 receiver_.prevPage();
             } else if (std::strcmp(m.AddressPattern(), "/ModuleNext") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if (!(arg->AsFloat() < 0.5)) return;
+                if (isArgFalse(arg)) return;
                 receiver_.nextModule();
             } else if (std::strcmp(m.AddressPattern(), "/ModulePrev") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                if (!(arg->AsFloat() < 0.5)) return;
+                if (isArgFalse(arg)) return;
                 receiver_.prevModule();
             } else if (std::strcmp(m.AddressPattern(), "/P1Ctrl") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
@@ -865,6 +865,13 @@ public:
     }
 
 private:
+    bool isArgFalse(osc::ReceivedMessage::const_iterator arg) {
+        if(
+                (arg->IsFloat() && (arg->AsFloat() >= 0.5))
+                || (arg->IsInt32() && (arg->IsInt32() > 0  ))
+                ) return true;
+        return false;
+    }
     OscDisplay &receiver_;
 };
 
