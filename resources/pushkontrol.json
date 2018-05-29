@@ -7,7 +7,7 @@
         },
 
         "kontrol"  :  {
-            "listen port" : 8000
+            "listen port" : 6000
         }
     },
 

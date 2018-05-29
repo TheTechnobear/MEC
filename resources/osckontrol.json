@@ -1,11 +1,11 @@
 {
     "mec"  :  {
         "oscdisplay"  :  {
-            "listen port" : 7000
+            "listen port" : 6100
         },
 
         "kontrol"  :  {
-            "listen port" : 8000
+            "listen port" : 6000
         }
     },
 
