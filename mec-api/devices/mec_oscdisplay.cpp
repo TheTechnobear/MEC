@@ -868,8 +868,8 @@ private:
         if(
                 (arg->IsFloat() && (arg->AsFloat() >= 0.5))
                 || (arg->IsInt32() && (arg->IsInt32() > 0  ))
-                ) return true;
-        return false;
+                ) return false;
+        return true;
     }
     OscDisplay &receiver_;
 };
