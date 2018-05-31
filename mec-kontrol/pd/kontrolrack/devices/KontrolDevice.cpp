@@ -190,6 +190,7 @@ void KontrolDevice::modulationLearn(bool b) {
 }
 
 void KontrolDevice::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+    currentModuleId_ = module.id();
     auto m = modes_[currentMode_];
     if (m != nullptr) m->activeModule(src, rack, module);
 }
@@ -212,6 +213,5 @@ void KontrolDevice::sendPdMessage(const char *obj, float f) {
 }
 
 void KontrolDevice::currentModule(const Kontrol::EntityId &moduleId) {
-    currentModuleId_ = moduleId;
-    model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
+    model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, moduleId);
 }
