@@ -84,7 +84,9 @@ bool OSCBroadcaster::isActive() {
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
     int timeOut = keepAliveTime_ * 2 ;
-    int dur = lastPing_.tv_sec - now.tv_sec;
+    int dur = now.tv_sec - lastPing_.tv_sec;
+    //std::cerr << "isActive " << dur << " <= " << timeOut  << " e= " << bool(dur <= timeOut) << std::endl;
+    //std::cerr << "isActive time " << now.tv_sec <<  " > " << lastPing_.tv_sec  << std::endl;
 #else
     static std::chrono::seconds timeOut(keepAliveTime_ * 2); // twice normal ping time
     auto now = std::chrono::steady_clock::now();
@@ -142,6 +144,7 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
 #endif
         if (!master_) {
             if (!wasActive) {
+		// std::cerr << " !master : publishing meta data, from " << host  << ":" << port << std::endl;
                 KontrolModel::model()->publishMetaData();
             }
         } else {
