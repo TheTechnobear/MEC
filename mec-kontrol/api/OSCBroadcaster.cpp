@@ -521,5 +521,24 @@ void OSCBroadcaster::modulationLearn(ChangeSource src, bool b) {
 
 }
 
+void OSCBroadcaster::activeModule(ChangeSource source, const Rack &rack, const Module &module) {
+    if (!broadcastChange(source)) return;
+    if (!isActive()) return;
+
+//    LOG_0("OSCBroadcaster::module " << m.id());
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/activeModule")
+        << rack.id().c_str()
+        << module.id().c_str();
+
+    ops << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+}
+
 
 } // namespace

@@ -70,6 +70,10 @@ public:
     void deleteRack(ChangeSource src,
                     const EntityId &rackId);
 
+    void activeModule(ChangeSource src,
+                        const EntityId &rackId,
+                        const EntityId &moduleId);
+
     void ping(ChangeSource src, const std::string &host, unsigned port, unsigned keepalive);
 
     void assignMidiCC(ChangeSource src,

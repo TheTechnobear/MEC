@@ -121,6 +121,12 @@ public:
                     keepAlive = (unsigned) (arg++)->AsInt32();
                 }
                 receiver_.ping(changedSrc, std::string(host), port, keepAlive);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/activeModule") == 0) {
+                    osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                    const char *rackId = (arg++)->AsString();
+                    const char *moduleId = (arg++)->AsString();
+
+                    receiver_.activeModule(changedSrc, rackId, moduleId);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/resource") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
 //                 std::cout << "received resource p1"<< std::endl;
@@ -316,6 +322,12 @@ void OSCReceiver::ping(ChangeSource src,
                        unsigned port,
                        unsigned keepalive) {
     model_->ping(src, host, port, keepalive);
+}
+
+void OSCReceiver::activeModule(ChangeSource src,
+                    const EntityId &rackId,
+                    const EntityId &moduleId) {
+    model_->activeModule(src,rackId,moduleId);
 }
 
 void OSCReceiver::assignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
