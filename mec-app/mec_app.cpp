@@ -132,7 +132,12 @@ int main(int ac, char **av) {
     std::thread mec_thread;
     if (prefs.exists("mec") && prefs.exists("mec-app")) {
         LOG_1("mec api initialise ");
+#ifdef __COBALT__
+        pthread_t ph = mec_thread.native_handle();
+        pthread_create(&ph, 0,mecapi_proc,prefs.getTree());
+#else
         mec_thread = std::thread(mecapi_proc, prefs.getTree());
+#endif
         usleep(1000);
     }
 
