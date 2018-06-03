@@ -6,3 +6,4 @@ add_library(cjson SHARED
         )
 target_include_directories(cjson PUBLIC .)
 set_target_properties(cjson PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
+

@@ -11,12 +11,25 @@ namespace Push2API {
 #define HEIGHT  160
 #define WIDTH   960
 
-#define MONO_CLR RGB565(255,60,0)
-
-#define RGB565(r, g, b)   (uint16_t) ((((((uint16_t) b & 0x0078)>> 3)   << 5) | (((uint16_t) g & 0x00FC) >> 2 ) << 6 ) | (((uint16_t) r & 0x00f8) >> 3))   //use top bits of colour input
 
 class Push2 {
 public:
+    struct Colour {
+        float red_;
+        float green_;
+        float blue_;
+
+        Colour(unsigned r, unsigned g, unsigned b) {
+            red_ = r / 256.0f;
+            green_ = g / 256.0f;
+            blue_ = b / 256.0f;
+        }
+        Colour(const Colour& c) : red_(c.red_), green_(c.green_), blue_(c.blue_){
+            ;
+        }
+    };
+
+
     Push2();
     virtual ~Push2();
     int init();
@@ -25,26 +38,14 @@ public:
 
 
     void clearDisplay();
-    void clearRow(unsigned row, unsigned vscale);
+    void drawCell8(unsigned row, unsigned cell, const char *str, const Colour& clr);
+    void drawInvertedCell8(unsigned row, unsigned cell, const char *str, const Colour& clr);
 
-    static const unsigned P1_VSCALE = 5;
-    static const unsigned P1_HSCALE = 2;
-    void drawText(unsigned row, unsigned col,
-                  const char *str, unsigned ln,
-                  unsigned vscale, unsigned hscale,
-                  uint16_t clr, bool invert);
-    void drawText(unsigned row, unsigned col, const char *str, unsigned vscale, unsigned hscale, uint16_t clr,bool invert);
-
-    void drawCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr);
-    void drawInvertedCell8(unsigned row, unsigned cell, const char *str, unsigned vscale, unsigned hscale, uint16_t clr);
-
-    void p1_drawCell8(unsigned row, unsigned cell, const char *str);
-    void p1_drawCell4(unsigned row, unsigned cell, const char *str);
 
 
 private:
     uint8_t *headerPkt_;
-    uint16_t dataPkt_[DATA_PKT_SZ / 2];
+    unsigned char dataPkt_[DATA_PKT_SZ];
 
     libusb_device_handle *handle_;
     int iface_ = 0;

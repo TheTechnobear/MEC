@@ -83,11 +83,11 @@ void P2_DeviceMode::processCC(unsigned cc, unsigned v) {
 
 
 void P2_DeviceMode::displayPage() {
-    int16_t clr = RGB565(0xFF, 0xFF, 0xFF);
+    Push2API::Push2::Colour clr(0xFF,0xFF, 0xFF);
 
     push2Api_->clearDisplay();
 
-    push2Api_->drawCell8(5, 7, "    Select", VSCALE, HSCALE, clr);
+    push2Api_->drawCell8(5, 7, "    Select", clr);
 
     // we need a current rack and also current module
     auto racks = model_->getRacks();
@@ -99,9 +99,9 @@ void P2_DeviceMode::displayPage() {
     int idx = 0;
     for (auto modtype : rack->getResources("module")) {
         if (idx == selectedIdx_) {
-            push2Api_->drawInvertedCell8(x, y, modtype.c_str(), VSCALE, HSCALE, clr);
+            push2Api_->drawInvertedCell8(x, y, modtype.c_str(), clr);
         } else {
-            push2Api_->drawCell8(x, y, modtype.c_str(), VSCALE, HSCALE, clr);
+            push2Api_->drawCell8(x, y, modtype.c_str(), clr);
         }
         x++;
         if (x > 5) {

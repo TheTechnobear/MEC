@@ -4,26 +4,28 @@
 
 namespace mec {
 std::string centreText(const std::string t) {
+    const unsigned max_len = 16;
     unsigned len = t.length();
-    if (len > 24) return t;
+    if (len > max_len) return t;
     const std::string pad = "                         ";
-    unsigned padlen = (24 - len) / 2;
+    unsigned padlen = (max_len - len) / 2;
     std::string ret = pad.substr(0, padlen) + t + pad.substr(0, padlen);
     // LOG_0("pad " << t << " l " << len << " pl " << padlen << "[" << ret << "]");
     return ret;
 }
 
-static const unsigned VSCALE = 3;
-static const unsigned HSCALE = 1;
 
-uint16_t page_clrs[8] = {
-        RGB565(0xFF, 0xFF, 0xFF),
-        RGB565(0xFF, 0, 0xFF),
-        RGB565(0xFF, 0, 0),
-        RGB565(0, 0xFF, 0xFF),
-        RGB565(0, 0xFF, 0),
-        RGB565(0x7F, 0x7F, 0xFF),
-        RGB565(0xFF, 0x7F, 0xFF)
+
+
+Push2API::Push2::Colour page_clrs[8] = {
+        Push2API::Push2::Colour(0xFF, 0xFF, 0xFF),
+        Push2API::Push2::Colour(0xFF, 0, 0xFF),
+        Push2API::Push2::Colour(0xFF, 0, 0),
+        Push2API::Push2::Colour(0, 0xFF, 0xFF),
+        Push2API::Push2::Colour(0, 0xFF, 0),
+        Push2API::Push2::Colour(0x7F, 0x7F, 0xFF),
+        Push2API::Push2::Colour(0xFF, 0x7F, 0xFF),
+        Push2API::Push2::Colour(0, 0, 0)
 };
 
 P2_ParamMode::P2_ParamMode(mec::Push2 &parent, const std::shared_ptr<Push2API::Push2> &api)
@@ -84,12 +86,11 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
 }
 
 void P2_ParamMode::drawParam(unsigned pos, const Kontrol::Parameter &param) {
-    // #define MONO_CLR RGB565(255,60,0)
-    uint16_t clr = page_clrs[pageIdx_];
+    Push2API::Push2::Colour clr = page_clrs[pageIdx_];
 
-    push2Api_->drawCell8(1, pos, centreText(param.displayName()).c_str(), VSCALE, HSCALE, clr);
-    push2Api_->drawCell8(2, pos, centreText(param.displayValue()).c_str(), VSCALE, HSCALE, clr);
-    push2Api_->drawCell8(3, pos, centreText(param.displayUnit()).c_str(), VSCALE, HSCALE, clr);
+    push2Api_->drawCell8(1, pos, centreText(param.displayName()).c_str(), clr);
+    push2Api_->drawCell8(2, pos, centreText(param.displayValue()).c_str(),clr);
+    push2Api_->drawCell8(3, pos, centreText(param.displayUnit()).c_str(), clr);
 }
 
 void P2_ParamMode::displayPage() {
@@ -108,7 +109,7 @@ void P2_ParamMode::displayPage() {
     // draw pages
     unsigned int i = 0;
     for (auto cpage : pPages) {
-        push2Api_->drawCell8(0, i, centreText(cpage->displayName()).c_str(), VSCALE, HSCALE, page_clrs[i]);
+        push2Api_->drawCell8(0, i, centreText(cpage->displayName()).c_str(), page_clrs[i]);
         parent_.sendCC(0, P2_DEV_SELECT_CC_START + i, i == pageIdx_ ? 122 : 124);
 
         if (i == pageIdx_) {
@@ -128,7 +129,7 @@ void P2_ParamMode::displayPage() {
     // draw modules
     i = 0;
     for (auto mod : pModules) {
-        push2Api_->drawCell8(5, i, centreText(mod->displayName()).c_str(), VSCALE, HSCALE, page_clrs[i]);
+        push2Api_->drawCell8(5, i, centreText(mod->displayName()).c_str(), page_clrs[i]);
         parent_.sendCC(0, P2_TRACK_SELECT_CC_START + i, i == moduleIdx_ ? 122 : 124);
         i++;
         if (i == 8) break;
