@@ -660,10 +660,13 @@ static std::string getParamSymbol(bool singleModuleMode, const Kontrol::Module &
 }
 
 //-----------------------
-void PdCallback::changed(Kontrol::ChangeSource,
+void PdCallback::changed(Kontrol::ChangeSource src,
                          const Kontrol::Rack &rack,
                          const Kontrol::Module &module,
                          const Kontrol::Parameter &param) {
+
+    if (src == Kontrol::CS_LOCAL)
+        return;
 
     auto prack = Kontrol::KontrolModel::model()->getLocalRack();
     if (prack == nullptr || prack->id() != rack.id()) return;
