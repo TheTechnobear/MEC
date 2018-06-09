@@ -48,6 +48,9 @@ public:
     void midiLearn(ChangeSource src, bool b) override;
     void modulationLearn(ChangeSource src, bool b) override;
 
+    void publishStart(ChangeSource, unsigned numRacks) override;
+    void publishRackFinished(ChangeSource, const Rack &) override;
+
     bool isThisHost(const std::string &host, unsigned port) { return host == host_ && port == port_; }
 
     bool isActive();

@@ -39,6 +39,12 @@ public:
     virtual void assignModulation(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned bus) { ; }
     virtual void unassignModulation(ChangeSource, const Rack &, const Module &, const Parameter &, unsigned bus) { ; }
 
+    // Sent just before publishing all the information to other clients.
+    virtual void publishStart(ChangeSource, unsigned numRacks) { ; }
+
+    // Sent after completing each rack. The client should expect to receive the number of racks provided via the publishStart message.
+    virtual void publishRackFinished(ChangeSource, const Rack &) { ; }
+
     virtual void updatePreset(ChangeSource, const Rack &, std::string preset) { ; }
 
     virtual void applyPreset(ChangeSource, const Rack &, std::string preset) { ; }
@@ -151,6 +157,8 @@ public:
                         const EntityId &paramId,
                         unsigned bus);
 
+    void publishStart(ChangeSource src, unsigned numRacks);
+    void publishRackFinished(ChangeSource src, const EntityId &rackId);
 
     void updatePreset(ChangeSource src,
                       const EntityId &rackId,

@@ -151,6 +151,7 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
             if (keepAliveTime_ == 0 || !wasActive) {
 
                 EntityId rackId = Rack::createId(host_, port_);
+                publishStart(CS_LOCAL, KontrolModel::model()->getRacks().size());
                 for (auto r:KontrolModel::model()->getRacks()) {
                     if (rackId != r->id()) {
                         std::cerr << " publishing meta data to " << rackId << " for " << r->id() << std::endl;
@@ -177,6 +178,7 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
                                 }
                             }
                         }
+                        publishRackFinished(CS_LOCAL, *r);
                     }
                 }
             }
@@ -262,6 +264,43 @@ void OSCBroadcaster::unassignModulation(ChangeSource src, const Rack &rack, cons
 
 }
 
+void OSCBroadcaster::publishStart(ChangeSource src, unsigned numRacks)
+{
+    if (numRacks == 0)
+        return;
+    if (!broadcastChange(src))
+        return;
+    if (!isActive())
+        return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/publishStart")
+        << (int32_t)numRacks
+        << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+}
+
+void OSCBroadcaster::publishRackFinished(ChangeSource src, const Rack &rack)
+{
+    if (!broadcastChange(src))
+        return;
+    if (!isActive())
+        return;
+
+    osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
+
+    ops << osc::BeginBundleImmediate
+        << osc::BeginMessage("/Kontrol/publishRackFinished")
+        << rack.id().c_str()
+        << osc::EndMessage
+        << osc::EndBundle;
+
+    send(ops.Data(), ops.Size());
+}
 
 void OSCBroadcaster::updatePreset(ChangeSource src, const Rack &rack, std::string preset) {
     if (!broadcastChange(src)) return;
