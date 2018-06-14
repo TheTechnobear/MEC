@@ -52,17 +52,17 @@ elseif (UNIX)
     endif ()
 endif (APPLE)
 
-
-## setup rpath for linux and macos
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-if (NOT APPLE)
+if (NOT DISABLE_RPATH_OVERRIDE)
+  ## setup rpath for linux and macos
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+  if (NOT APPLE)
     set(CMAKE_INSTALL_RPATH "$ORIGIN/:$ORIGIN/../lib")
-else()
-  set(CMAKE_INSTALL_NAME_DIR "@rpath")
-  set(CMAKE_INSTALL_RPATH "@executable_path/../lib;@loader_path")
-  set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR TRUE)
+  else()
+    set(CMAKE_INSTALL_NAME_DIR "@rpath")
+    set(CMAKE_INSTALL_RPATH "@executable_path/../lib;@loader_path")
+    set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR TRUE)
+  endif()
 endif()
-
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release/bin)
