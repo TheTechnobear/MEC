@@ -3,7 +3,8 @@
 #include "mec_log.h"
 #include "../mec_voice.h"
 #include "push2/mec_push2_param.h"
-#include "push2/mec_push2_device.h"
+#include "push2/mec_push2_module.h"
+#include "push2/mec_push2_preset.h"
 #include "push2/mec_push2_play.h"
 
 
@@ -77,7 +78,8 @@ bool Push2::init(void *arg) {
 
         // setup initial modes
         addDisplayMode(P2D_Param, std::make_shared<P2_ParamMode>(*this, push2Api_));
-        addDisplayMode(P2D_Device, std::make_shared<P2_DeviceMode>(*this, push2Api_));
+        addDisplayMode(P2D_Module, std::make_shared<P2_ModuleMode>(*this, push2Api_));
+        addDisplayMode(P2D_Preset, std::make_shared<P2_PresetMode>(*this, push2Api_));
         changeDisplayMode(P2D_Param);
 
 
@@ -88,7 +90,8 @@ bool Push2::init(void *arg) {
         processor_ = std::thread(push2_processor_func, this);
         LOG_0("Push2::init - complete");
 
-        sendCC(0,P2_DEVICE_CC,127);
+        sendCC(0,P2_DEVICE_CC,0x7f);
+        sendCC(0,P2_BROWSE_CC,0x7f);
         return active_;
     }
     return false;
@@ -220,8 +223,18 @@ void Push2::processCC(unsigned cc, unsigned v) {
     switch(cc) {
         case P2_DEVICE_CC: {
             if(v>0) {
-                if(currentDisplayMode_!=P2D_Device) {
-                    changeDisplayMode(P2D_Device);
+                if(currentDisplayMode_!=P2D_Module) {
+                    changeDisplayMode(P2D_Module);
+                } else {
+                    changeDisplayMode(P2D_Param);
+                }
+            }
+            break;
+        }
+        case P2_BROWSE_CC : {
+            if(v>0) {
+                if(currentDisplayMode_!=P2D_Preset) {
+                    changeDisplayMode(P2D_Preset);
                 } else {
                     changeDisplayMode(P2D_Param);
                 }
@@ -269,6 +282,12 @@ void Push2::resource(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
                      const std::string& resType, const std::string &resValue) {
     if (currentDisplayMode()) currentDisplayMode()->resource(source, rack, resType, resValue);
     if (currentPadMode()) currentPadMode()->resource(source, rack, resType, resValue);
+}
+
+
+void Push2::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    if (currentDisplayMode()) currentDisplayMode()->applyPreset(source, rack, preset);
+    if (currentPadMode()) currentPadMode()->applyPreset(source, rack, preset);
 }
 
 

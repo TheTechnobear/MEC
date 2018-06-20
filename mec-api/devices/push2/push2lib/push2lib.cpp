@@ -10,8 +10,8 @@ static uint16_t VID = 0x2982, PID = 0x1967;
 
 
 #define HDR_PKT_SZ 0x10
-static uint8_t headerPkt[HDR_PKT_SZ] = { 0xFF, 0xCC, 0xAA, 0x88, 0x00, 0x00, 0x00, 0x00,
-                                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t headerPkt[HDR_PKT_SZ] = {0xFF, 0xCC, 0xAA, 0x88, 0x00, 0x00, 0x00, 0x00,
+                                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 
 // Future versions of libusb will use usb_interface instead of interface
@@ -34,6 +34,7 @@ static int perr(char const *format, ...) {
 #define CALL_CHECK(fcall) do { r=fcall; if (r < 0) ERR_EXIT(r); } while (0);
 
 #include <cairo.h>
+
 cairo_surface_t *surface;
 cairo_t *cr;
 unsigned char imgBuf_[DATA_PKT_SZ];
@@ -41,30 +42,29 @@ unsigned char imgBuf_[DATA_PKT_SZ];
 
 Push2::Push2() : headerPkt_(headerPkt), handle_(NULL) {
     surface = cairo_image_surface_create_for_data(
-            (unsigned char*) imgBuf_,
+            (unsigned char *) imgBuf_,
 //            (unsigned char*) dataPkt_,
             CAIRO_FORMAT_RGB16_565,
             WIDTH,
             HEIGHT,
             LINE
     );
-    cr = cairo_create (surface);
+    cr = cairo_create(surface);
     memset(dataPkt_, 0, DATA_PKT_SZ);
-    cairo_select_font_face (cr, "serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-    cairo_set_font_size (cr, 16.0);
-    cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
+    cairo_select_font_face(cr, "serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, 16.0);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
 }
 
 Push2::~Push2() {
-    cairo_destroy (cr);
-    cairo_surface_destroy (surface);
-    ;
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);;
 }
 
 void Push2::clearDisplay() {
     memset(imgBuf_, 0, DATA_PKT_SZ);
-    cairo_set_source_rgb (cr, 0, 0, 0);
-    cairo_paint (cr);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_paint(cr);
 //    drawCell8(0,5,"Hello",Push2::Colour(0,0,0xFF));
 //    drawCell8(1,5,"Hello",Push2::Colour(0,0,0xFF));
 //    drawInvertedCell8(2,5,"Hello",Push2::Colour(0,0,0xFF));
@@ -75,29 +75,28 @@ void Push2::clearDisplay() {
 }
 
 
-
-void Push2::drawInvertedCell8(unsigned row, unsigned cell, const char *str, const Push2::Colour& clr) {
-    cairo_set_source_rgb (cr, clr.blue_, clr.green_, clr.red_); //!!
+void Push2::drawInvertedCell8(unsigned row, unsigned cell, const char *str, const Push2::Colour &clr) {
+    cairo_set_source_rgb(cr, clr.blue_, clr.green_, clr.red_); //!!
     cairo_rectangle(cr,
-                    ( cell * (WIDTH/8)+9), (row * 24) + 9,
-                    (WIDTH/8), 24);
+                    (cell * (WIDTH / 8) + 9), (row * 24) + 9,
+                    (WIDTH / 8), 24);
     cairo_fill(cr);
 
-    cairo_set_source_rgb (cr, 1.0 , 1.0, 1.0); //!!
-    cairo_move_to (cr, (cell * (WIDTH/8)+16), row * 24 + 24);
-    cairo_show_text (cr, str);
+    cairo_set_source_rgb(cr, 0, 0, 0); //!!
+    cairo_move_to(cr, (cell * (WIDTH / 8) + 16), row * 24 + 24);
+    cairo_show_text(cr, str);
 }
 
-void Push2::drawCell8(unsigned row, unsigned cell, const char *str, const Push2::Colour& clr) {
-    cairo_set_source_rgb (cr, 0, 0, 0); //!!
+void Push2::drawCell8(unsigned row, unsigned cell, const char *str, const Push2::Colour &clr) {
+    cairo_set_source_rgb(cr, 0, 0, 0); //!!
     cairo_rectangle(cr,
-                    ( cell * (WIDTH/8)+9), (row * 24) + 9,
-                    (WIDTH/8), 24);
+                    (cell * (WIDTH / 8) + 9), (row * 24) + 9,
+                    (WIDTH / 8), 24);
     cairo_fill(cr);
 
-    cairo_set_source_rgb (cr, clr.blue_, clr.green_, clr.red_); //!!
-    cairo_move_to (cr, (cell * (WIDTH/8)+16), row * 24 + 24);
-    cairo_show_text (cr, str);
+    cairo_set_source_rgb(cr, clr.blue_, clr.green_, clr.red_); //!!
+    cairo_move_to(cr, (cell * (WIDTH / 8) + 16), row * 24 + 24);
+    cairo_show_text(cr, str);
 }
 
 
@@ -107,14 +106,14 @@ int Push2::render() {
     int r = 0;
 
     for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < LINE; x+= 4) {
+        for (int x = 0; x < LINE; x += 4) {
             int pixelOffset = (y * LINE) + x;
             int destinationOffset = (y * LINE) + x;
             // mask 0xFFE7F3E7
             dataPkt_[destinationOffset] = imgBuf_[pixelOffset] ^ 0xE7;
-            dataPkt_[destinationOffset+1] = imgBuf_[pixelOffset+1] ^ 0xF3;
-            dataPkt_[destinationOffset+2] = imgBuf_[pixelOffset+2] ^ 0xE7;
-            dataPkt_[destinationOffset+3] = imgBuf_[pixelOffset+3] ^ 0xFF;
+            dataPkt_[destinationOffset + 1] = imgBuf_[pixelOffset + 1] ^ 0xF3;
+            dataPkt_[destinationOffset + 2] = imgBuf_[pixelOffset + 2] ^ 0xE7;
+            dataPkt_[destinationOffset + 3] = imgBuf_[pixelOffset + 3] ^ 0xFF;
         }
     }
 

@@ -38,10 +38,12 @@ if (NOT DISABLE_PUSH2)
             devices/mec_push2.h
             devices/push2/mec_push2_param.cpp
             devices/push2/mec_push2_param.h
-            devices/push2/mec_push2_device.cpp
-            devices/push2/mec_push2_device.h
+            devices/push2/mec_push2_module.cpp
+            devices/push2/mec_push2_module.h
             devices/push2/mec_push2_play.h
             devices/push2/mec_push2_play.cpp
+            devices/push2/mec_push2_preset.cpp
+            devices/push2/mec_push2_preset.h
             )
 
     add_subdirectory(devices/push2)

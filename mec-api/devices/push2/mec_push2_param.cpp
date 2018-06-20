@@ -46,6 +46,8 @@ void P2_ParamMode::processNoteOff(unsigned, unsigned) {
 
 
 void P2_ParamMode::processCC(unsigned cc, unsigned v) {
+    if(!v) return;
+
     if (cc >= P2_ENCODER_CC_START && cc <= P2_ENCODER_CC_END) {
         unsigned idx = cc - P2_ENCODER_CC_START;
         try {
@@ -294,5 +296,13 @@ void P2_ParamMode::activate() {
     }
 
 }
+
+
+void P2_ParamMode::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    P2_DisplayMode::applyPreset(source,rack,preset);
+    setCurrentPage(0);
+    displayPage();
+}
+
 
 } //namespace

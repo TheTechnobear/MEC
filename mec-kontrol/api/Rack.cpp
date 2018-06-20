@@ -152,6 +152,7 @@ bool Rack::updatePreset(std::string presetId) {
     }
     presets_[presetId] = rackPreset;
     addResource("preset",presetId);
+    model()->publishResource(CS_LOCAL,*this,"preset",presetId);
 
     currentPreset_ = presetId;
     model()->updatePreset(CS_LOCAL,id(),currentPreset());

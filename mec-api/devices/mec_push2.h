@@ -38,6 +38,13 @@ static const unsigned P2_DEVICE_CC = 110;
 static const unsigned P2_BROWSE_CC = 111;
 
 
+static const unsigned P2_CURSOR_LEFT_CC = 44;
+static const unsigned P2_CURSOR_RIGHT_CC = 45;
+static const unsigned P2_CURSOR_UP = 46;
+static const unsigned P2_CURSOR_DOWN = 47;
+
+
+
 class P2_DisplayMode : Kontrol::KontrolCallback {
 public:
     virtual void activate() { ; }
@@ -63,6 +70,8 @@ public:
 
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string&, const std::string &) override { ; };
+
+    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override { ; }
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
 };
@@ -93,12 +102,16 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string&, const std::string &) override { ; };
 
+    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override { ; }
+
+
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
 };
 
 enum PushDisplayModes {
     P2D_Param,
-    P2D_Device
+    P2D_Module,
+    P2D_Preset
 };
 
 enum PushPadModes {
@@ -131,10 +144,14 @@ public:
     void changed(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                  const Kontrol::Parameter &parameter) override;
 
+    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string&, const std::string &) override ;
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
+
+
 
     void addDisplayMode(PushDisplayModes mode, std::shared_ptr<P2_DisplayMode>);
     void changeDisplayMode(PushDisplayModes);

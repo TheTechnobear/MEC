@@ -24,6 +24,8 @@ public:
 
     void changed(Kontrol::ChangeSource src, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
 
+    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+
     void setCurrentPage(int page);
     void setCurrentModule(int mod);
     void activate() override;
