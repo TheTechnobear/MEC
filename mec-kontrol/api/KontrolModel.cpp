@@ -20,6 +20,9 @@ KontrolModel::KontrolModel() {
 }
 
 void KontrolModel::publishMetaData() const {
+    for (auto i : listeners_) {
+        (i.second)->publishStart(CS_LOCAL, 1);
+    }
     publishMetaData(localRack_);
 }
 
@@ -33,6 +36,9 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack) const {
     }
     for (const auto &p : modules) {
         if (p != nullptr) publishMetaData(rack, p);
+    }
+    for (auto i : listeners_) {
+        (i.second)->publishRackFinished(CS_LOCAL, *rack);
     }
 }
 
@@ -302,6 +308,20 @@ void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const 
     }
 }
 
+void KontrolModel::publishStart(ChangeSource src, unsigned numRacks) {
+    for (auto i : listeners_) {
+        (i.second)->publishStart(src, numRacks);
+    }
+}
+
+void KontrolModel::publishRackFinished(ChangeSource src, const EntityId &rackId) {
+    for (auto i : listeners_) {
+        auto rack = getRack(rackId);
+        if (rack == nullptr)
+            return;
+        (i.second)->publishRackFinished(src, *rack);
+    }
+}
 
 void KontrolModel::unassignMidiCC(ChangeSource src, const EntityId &rackId, const EntityId &moduleId,
                                   const EntityId &paramId, unsigned midiCC) {

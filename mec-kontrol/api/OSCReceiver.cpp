@@ -169,6 +169,14 @@ public:
                 const char *paramId = (arg++)->AsString();
                 unsigned bus = (unsigned) (arg++)->AsInt32();
                 receiver_.unassignModulation(changedSrc, rackId, moduleId, paramId, bus);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/publishStart") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                unsigned numRacks = (unsigned)arg->AsInt32();
+                receiver_.publishStart(changedSrc, numRacks);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/publishRackFinished") == 0) {
+                osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
+                const char *rackId = arg->AsString();
+                receiver_.publishRackFinished(changedSrc, rackId);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/updatePreset") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
@@ -351,6 +359,13 @@ void OSCReceiver::unassignModulation(ChangeSource src, const EntityId &rackId, c
     model_->unassignModulation(src, rackId, moduleId, paramId, bus);
 }
 
+void OSCReceiver::publishStart(ChangeSource src, unsigned numRacks) {
+    model_->publishStart(src, numRacks);
+}
+
+void OSCReceiver::publishRackFinished(ChangeSource src, const EntityId & rackId) {
+    model_->publishRackFinished(src, rackId);
+}
 
 void OSCReceiver::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
     model_->updatePreset(src, rackId, preset);
