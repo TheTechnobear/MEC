@@ -9,7 +9,8 @@ libusb
 
     // libaries used
     sudo apt-get install libusb-1.0-0-dev
-    sudo apt-get install libasound2-dev (linux only)
+    sudo apt-get install libasound2-dev (linux)
+    sudo apt-get install libcairo2-dev (linux) 
     mkdir build
     cd build
     cmake .. 
@@ -21,6 +22,7 @@ libusb
     brew install cmake
  
     brew install libusb --universal
+    brew install cairo
 
     mkdir build
     cd build
@@ -51,6 +53,7 @@ the bela web ui does not support a subdirectories, so the way install is
     cd ~/projects 
     // git clone MEC.git here
     apt-get install libusb-1.0-0-dev
+    apt-get install libcairo2-dev
     mkdir build
     cd build
     cmake .. 
@@ -93,6 +96,9 @@ similary a full native build would probably require a MSVC build, though its unc
 
 a final alternative is to build using the "Windows Subsystem for Linux"
 
+# Push 2
+now requires cairo graphics library, see here
+https://cairographics.org/download/
 
 
 # Eigenharp PICO
@@ -117,6 +123,13 @@ there is also a Ctrl-C handler which will shutdown nicely, but dont keep hammeri
 
 
 
+#Disable device support
+you can disable the mec devices using the following defines to CMAKE
+
+DISABLE_SOUNDPLANELITE
+DISABLE_EIGENHARP
+DISABLE_PUSH2
+DISABLE_OSCDISPLAY
 
 
 
