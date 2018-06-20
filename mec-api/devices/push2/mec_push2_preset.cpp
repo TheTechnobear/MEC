@@ -212,6 +212,9 @@ void P2_PresetMode::activate() {
     for (int i = P2_TRACK_SELECT_CC_START; i <= P2_TRACK_SELECT_CC_END; i++) {
         parent_.sendCC(0, i, 0);
     }
+    parent_.sendCC(0, P2_TRACK_SELECT_CC_START, 0x7f);
+    parent_.sendCC(0, P2_TRACK_SELECT_CC_END-2, 0x7f);
+    parent_.sendCC(0, P2_TRACK_SELECT_CC_END-1, 0x7f);
     parent_.sendCC(0, P2_TRACK_SELECT_CC_END, 0x7f);
     parent_.sendCC(0, P2_CURSOR_LEFT_CC, 0x7f);
     parent_.sendCC(0, P2_CURSOR_RIGHT_CC, 0x7f);
