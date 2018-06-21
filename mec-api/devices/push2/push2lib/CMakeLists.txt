@@ -7,7 +7,7 @@ set(PUSH_DRIVER_SOURCES
 add_library(mec-push2 SHARED ${PUSH_DRIVER_SOURCES})
 
 find_library(LIBUSB_LIB NAME libusb)
-find_path(LIBCAIRO_INC NAME cairo.h PATHS /usr/local/include  /usr/include /usr/local/include/cairo)
+find_path(LIBCAIRO_INC NAME cairo.h PATHS /usr/include/cairo /usr/local/include/cairo)
 find_library(LIBCAIRO NAME cairo PATHS /usr/local/lib /usr/lib)
 
 include_directories(mec-push2 ${LIBCAIRO_INC})
