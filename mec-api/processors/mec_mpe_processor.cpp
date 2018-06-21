@@ -7,7 +7,7 @@ namespace mec {
 
 #define TIMBRE_CC 74
 
-MPE_Processor::MPE_Processor(float pbr) : Midi_Processor(pbr) {
+MPE_Processor::MPE_Processor(float pbr) : Midi_Processor(1, pbr) {
     ;
 }
 
@@ -21,7 +21,7 @@ void MPE_Processor::touchOn(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
 
-    unsigned ch = id + 1; // MPE starts on 2
+    unsigned ch = id + baseChannel_; // MPE starts on 2
     voice.startNote_ = (note + 0.4999999) ; //int
 
     float semis = note - float(voice.startNote_);
@@ -53,7 +53,7 @@ void MPE_Processor::touchOn(int id, float note, float x, float y, float z) {
 void MPE_Processor::touchContinue(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
-    unsigned ch = id + 1; // MPE starts on 2
+    unsigned ch = id + baseChannel_; // MPE starts on 2
     // unsigned mx = bipolar14bit(x);
     int my = bipolar7bit(y);
     unsigned mz = unipolar7bit(z);
@@ -88,7 +88,7 @@ void MPE_Processor::touchOff(int id, float note, float x, float y, float z) {
 
     VoiceData& voice = voices_[id];
 
-    unsigned ch = id + 1; // MPE starts on 2
+    unsigned ch = id + baseChannel_; // MPE starts on 2
     unsigned vel = 0.0f; // last vel = release velocity
     pressure(ch, 0.0f);
     noteOff(ch, voice.startNote_ , vel);

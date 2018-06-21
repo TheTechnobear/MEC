@@ -218,6 +218,7 @@ void P2_PresetMode::activate() {
     parent_.sendCC(0, P2_TRACK_SELECT_CC_END, 0x7f);
     parent_.sendCC(0, P2_CURSOR_LEFT_CC, 0x7f);
     parent_.sendCC(0, P2_CURSOR_RIGHT_CC, 0x7f);
+    parent_.sendCC(0, P2_SETUP_CC,0x00);
     displayPage();
 }
 

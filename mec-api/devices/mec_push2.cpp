@@ -17,7 +17,9 @@ static const unsigned OSC_POLL_MS = 50;
 
 
 Push2::Push2(ICallback &cb) :
-        MidiDevice(cb) {
+        MidiDevice(cb),
+        modulationLearnActive_(false),
+        midiLearnActive_(false) {
     PaUtil_InitializeRingBuffer(&midiQueue_, sizeof(MidiMsg), MAX_N_MIDI_MSGS, msgData_);
 }
 
@@ -288,6 +290,33 @@ void Push2::resource(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
 void Push2::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
     if (currentDisplayMode()) currentDisplayMode()->applyPreset(source, rack, preset);
     if (currentPadMode()) currentPadMode()->applyPreset(source, rack, preset);
+}
+
+void Push2::midiLearn(Kontrol::ChangeSource src, bool b) {
+    if(b) modulationLearnActive_ = false;
+    midiLearnActive_ = b;
+    if (currentDisplayMode()) currentDisplayMode()->midiLearn(src, b);
+    if (currentPadMode()) currentPadMode()->midiLearn(src, b);
+}
+
+void Push2::modulationLearn(Kontrol::ChangeSource src, bool b) {
+    if(b) midiLearnActive_ = false;
+    modulationLearnActive_ = b;
+    if (currentDisplayMode()) currentDisplayMode()->modulationLearn(src, b);
+    if (currentPadMode()) currentPadMode()->modulationLearn(src, b);
+}
+
+void Push2::midiLearn(bool b) {
+    model_->midiLearn(Kontrol::CS_LOCAL, b);
+}
+
+void Push2::modulationLearn(bool b) {
+    model_->modulationLearn(Kontrol::CS_LOCAL, b);
+}
+
+void Push2::currentModule(const Kontrol::EntityId id) {
+    moduleId_ = id;
+    model_->activeModule(Kontrol::CS_LOCAL, rackId_, moduleId_);
 }
 
 

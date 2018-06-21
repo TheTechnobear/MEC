@@ -12,7 +12,7 @@ namespace mec {
 
 class Midi_Processor : public ICallback {
 public:
-    Midi_Processor(float pbr = 48.0);
+    Midi_Processor(unsigned baseCh=0, float pbr = 48.0);
     virtual ~Midi_Processor();
 
     struct MidiMsg {
@@ -51,6 +51,7 @@ protected:
 
     float global_[127];
     float pitchbendRange_;
+    unsigned baseChannel_;
 };
 
 }

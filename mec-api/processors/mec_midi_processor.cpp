@@ -5,7 +5,7 @@
 
 namespace mec {
 
-Midi_Processor::Midi_Processor(float pbr) : pitchbendRange_ (pbr) {
+Midi_Processor::Midi_Processor(unsigned baseCh, float pbr) : baseChannel_(baseCh), pitchbendRange_ (pbr) {
     ;
 }
 
@@ -20,7 +20,7 @@ void Midi_Processor::setPitchbendRange(float v) {
 /////////////////////////
 // ICallback interface
 void Midi_Processor::touchOn(int id, float note, float , float , float z) {
-    unsigned ch = static_cast<unsigned int>(id);
+    unsigned ch = baseChannel_;
     unsigned mz = unipolar7bit(z);
     noteOn(ch, (unsigned) note, mz);
 }
@@ -31,7 +31,7 @@ void Midi_Processor::touchContinue(int, float, float , float , float ) {
 }
 
 void Midi_Processor::touchOff(int id, float note, float , float , float z) {
-    unsigned ch = static_cast<unsigned int>(id);
+    unsigned ch = baseChannel_;
     unsigned mz = unipolar7bit(z);
     noteOff(ch, (unsigned) note, mz);
 }
@@ -40,7 +40,7 @@ void Midi_Processor::control(int attr, float v) {
 
     if (global_[attr] != v ) {
         global_[attr] = v;
-        cc(0, static_cast<unsigned int>(attr), unipolar7bit(v));
+        cc(baseChannel_, static_cast<unsigned int>(attr), unipolar7bit(v));
         // cc(ch, attr, isBipolar ? bipolar7bit(v) : unipolar7bit(v));
     }
 }

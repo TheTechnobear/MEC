@@ -26,6 +26,9 @@ public:
 
     void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
 
+    void midiLearn(Kontrol::ChangeSource src, bool b) override;
+    void modulationLearn(Kontrol::ChangeSource src, bool b) override;
+
     void setCurrentPage(int page);
     void setCurrentModule(int mod);
     void activate() override;

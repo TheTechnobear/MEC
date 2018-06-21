@@ -79,6 +79,9 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
     } else if (cc >= P2_TRACK_SELECT_CC_START && cc <= P2_TRACK_SELECT_CC_END) {
         unsigned idx = cc - P2_TRACK_SELECT_CC_START;
         setCurrentModule(idx);
+    } else if (cc == P2_SETUP_CC) {
+        parent_.midiLearn(!parent_.midiLearn());
+        parent_.sendCC(0, P2_SETUP_CC, ( parent_.midiLearn() ? 0x7f:  0x10));
     } else if (cc == P2_USER_CC) {
         //DEBUG
         auto pRack = model_->getRack(parent_.currentRack());
@@ -294,7 +297,9 @@ void P2_ParamMode::activate() {
     for (int i = P2_TRACK_SELECT_CC_START; i <= P2_TRACK_SELECT_CC_END; i++) {
         parent_.sendCC(0, i, 0);
     }
-
+    parent_.sendCC(0, P2_CURSOR_LEFT_CC, 0x00);
+    parent_.sendCC(0, P2_CURSOR_RIGHT_CC, 0x00);
+    parent_.sendCC(0, P2_SETUP_CC, ( parent_.midiLearn() ? 0x7f:  0x10));
 }
 
 
@@ -303,6 +308,16 @@ void P2_ParamMode::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack
     setCurrentPage(0);
     displayPage();
 }
+
+
+void P2_ParamMode::midiLearn(Kontrol::ChangeSource src, bool b) {
+    parent_.sendCC(0, P2_SETUP_CC, ( parent_.midiLearn() ? 0x7f:  0x10));
+}
+
+void P2_ParamMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
+    parent_.sendCC(0, P2_SETUP_CC, ( parent_.midiLearn() ? 0x7f:  0x10));
+}
+
 
 
 } //namespace

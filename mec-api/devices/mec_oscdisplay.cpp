@@ -1195,14 +1195,14 @@ void OscDisplay::changePot(unsigned pot, float value) {
 }
 
 void OscDisplay::midiLearn(Kontrol::ChangeSource src, bool b) {
-    modulationLearnActive_ = false;
+    if(b) modulationLearnActive_ = false;
     midiLearnActive_ = b;
     modes_[currentMode_]->midiLearn(src, b);
 
 }
 
 void OscDisplay::modulationLearn(Kontrol::ChangeSource src, bool b) {
-    midiLearnActive_ = false;
+    if(b) midiLearnActive_ = false;
     modulationLearnActive_ = b;
     modes_[currentMode_]->modulationLearn(src, b);
 }
