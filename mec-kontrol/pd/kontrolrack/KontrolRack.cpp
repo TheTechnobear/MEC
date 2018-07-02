@@ -668,9 +668,6 @@ void PdCallback::changed(Kontrol::ChangeSource src,
                          const Kontrol::Module &module,
                          const Kontrol::Parameter &param) {
 
-    if (src == Kontrol::CS_LOCAL)
-        return;
-
     auto prack = Kontrol::KontrolModel::model()->getLocalRack();
     if (prack == nullptr || prack->id() != rack.id()) return;
 
@@ -683,11 +680,11 @@ void PdCallback::changed(Kontrol::ChangeSource src,
         post("send to %s failed", param.id().c_str());
         return;
     }
-//    post("changed : %s %f", sendsym.c_str(),param.current().floatValue());
 
     t_atom a;
     switch (param.current().type()) {
         case Kontrol::ParamValue::T_Float : {
+//            post("changed : %s %f", sendsym.c_str(),param.current().floatValue());
             SETFLOAT(&a, param.current().floatValue());
             break;
         }
