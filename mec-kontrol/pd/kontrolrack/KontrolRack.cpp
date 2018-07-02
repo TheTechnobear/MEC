@@ -683,6 +683,7 @@ void PdCallback::changed(Kontrol::ChangeSource src,
         post("send to %s failed", param.id().c_str());
         return;
     }
+//    post("changed : %s %f", sendsym.c_str(),param.current().floatValue());
 
     t_atom a;
     switch (param.current().type()) {

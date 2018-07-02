@@ -15,8 +15,6 @@ std::string centreText(const std::string t) {
 }
 
 
-
-
 Push2API::Push2::Colour page_clrs[8] = {
         Push2API::Push2::Colour(0xFF, 0xFF, 0xFF),
         Push2API::Push2::Colour(0xFF, 0, 0xFF),
@@ -25,7 +23,7 @@ Push2API::Push2::Colour page_clrs[8] = {
         Push2API::Push2::Colour(0, 0xFF, 0),
         Push2API::Push2::Colour(0x7F, 0x7F, 0xFF),
         Push2API::Push2::Colour(0xFF, 0x7F, 0xFF),
-        Push2API::Push2::Colour(0, 0, 0)
+        Push2API::Push2::Colour(0xFF, 0xFF, 0x7F)
 };
 
 P2_ParamMode::P2_ParamMode(mec::Push2 &parent, const std::shared_ptr<Push2API::Push2> &api)
@@ -46,7 +44,7 @@ void P2_ParamMode::processNoteOff(unsigned, unsigned) {
 
 
 void P2_ParamMode::processCC(unsigned cc, unsigned v) {
-    if(!v) return;
+    if (!v) return;
 
     if (cc >= P2_ENCODER_CC_START && cc <= P2_ENCODER_CC_END) {
         unsigned idx = cc - P2_ENCODER_CC_START;
@@ -73,15 +71,49 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
         }
 
     } else if (cc >= P2_DEV_SELECT_CC_START && cc <= P2_DEV_SELECT_CC_END) {
-        unsigned idx = cc - P2_DEV_SELECT_CC_START;
-        setCurrentPage(idx);
+        if (cc == P2_DEV_SELECT_CC_START && pageIdxOffset_ > 0) {
+            pageIdxOffset_--;
+            displayPage();
+        } else if (cc == P2_DEV_SELECT_CC_END) {
+            auto pRack = model_->getRack(parent_.currentRack());
+            auto pModule = model_->getModule(pRack, parent_.currentModule());
+            auto pPages = model_->getPages(pModule);
+            if (pageIdxOffset_ + (8 - (pageIdxOffset_ > 0))
+                < pPages.size()
+                    ) {
+                pageIdxOffset_++;
+                displayPage();
+            } else {
+                unsigned idx = cc - P2_DEV_SELECT_CC_START + pageIdxOffset_ - (pageIdxOffset_ > 0);
+                setCurrentPage(idx);
+            }
+        } else {
+            unsigned idx = cc - P2_DEV_SELECT_CC_START + pageIdxOffset_ - (pageIdxOffset_ > 0);
+            setCurrentPage(idx);
+        }
 
     } else if (cc >= P2_TRACK_SELECT_CC_START && cc <= P2_TRACK_SELECT_CC_END) {
-        unsigned idx = cc - P2_TRACK_SELECT_CC_START;
+        unsigned idx = cc - P2_TRACK_SELECT_CC_START + moduleIdxOffset_;
+        pageIdxOffset_ = 0;
         setCurrentModule(idx);
     } else if (cc == P2_SETUP_CC) {
         parent_.midiLearn(!parent_.midiLearn());
-        parent_.sendCC(0, P2_SETUP_CC, ( parent_.midiLearn() ? 0x7f:  0x10));
+        parent_.sendCC(0, P2_SETUP_CC, (parent_.midiLearn() ? 0x7f : 0x10));
+    } else if (cc == P2_CURSOR_LEFT_CC) {
+        if (moduleIdxOffset_ > 0) {
+            auto pRack = model_->getRack(parent_.currentRack());
+            auto pModules = model_->getModules(pRack);
+            moduleIdxOffset_--;
+            displayPage();
+        }
+    } else if (cc == P2_CURSOR_RIGHT_CC) {
+        auto pRack = model_->getRack(parent_.currentRack());
+        auto pModules = model_->getModules(pRack);
+
+        if (pModules.size() > (moduleIdxOffset_ + 8)) {
+            moduleIdxOffset_++;
+            displayPage();
+        }
     } else if (cc == P2_USER_CC) {
         //DEBUG
         auto pRack = model_->getRack(parent_.currentRack());
@@ -91,10 +123,10 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
 }
 
 void P2_ParamMode::drawParam(unsigned pos, const Kontrol::Parameter &param) {
-    Push2API::Push2::Colour clr = page_clrs[pageIdx_];
+    Push2API::Push2::Colour clr = page_clrs[pageIdx_ % 8];
 
     push2Api_->drawCell8(1, pos, centreText(param.displayName()).c_str(), clr);
-    push2Api_->drawCell8(2, pos, centreText(param.displayValue()).c_str(),clr);
+    push2Api_->drawCell8(2, pos, centreText(param.displayValue()).c_str(), clr);
     push2Api_->drawCell8(3, pos, centreText(param.displayUnit()).c_str(), clr);
 }
 
@@ -113,32 +145,57 @@ void P2_ParamMode::displayPage() {
 
     // draw pages
     unsigned int i = 0;
-    for (auto cpage : pPages) {
-        push2Api_->drawCell8(0, i, centreText(cpage->displayName()).c_str(), page_clrs[i]);
-        parent_.sendCC(0, P2_DEV_SELECT_CC_START + i, i == pageIdx_ ? 122 : 124);
+    if (pageIdxOffset_ > 0) {
+        push2Api_->drawCell8(0, i, centreText("<").c_str(), page_clrs[i]);
+        i++;
+    }
 
-        if (i == pageIdx_) {
-            unsigned int j = 0;
-            for (auto param : pParams) {
-                if (param != nullptr) {
-                    drawParam(j, *param);
+    auto piter = pPages.cbegin();
+    for (i = 0; i < pageIdxOffset_ && piter != pPages.cend(); i++) {
+        piter++;
+    }
+
+
+    for (i = (pageIdxOffset_ > 0); i < 8 && piter != pPages.cend(); i++, piter++) {
+        int pidx = i - (pageIdxOffset_ > 0) + pageIdxOffset_;
+        push2Api_->drawCell8(0, i, centreText((*piter)->displayName()).c_str(), page_clrs[pidx % 8]);
+        parent_.sendCC(0, P2_DEV_SELECT_CC_START + i, pidx == pageIdx_ ? 122 : 124);
+//        parent_.sendCC(0, P2_DEV_SELECT_CC_START + i, i + pageIdxOffset_ - ( pageIdxOffset_ > 0)   == pageIdx_ ? 122 : 124);
+
+        auto pnext = piter;
+        pnext++;
+        if (i == 7 && pnext != pPages.cend()) {
+            push2Api_->drawCell8(0, i, centreText(">").c_str(), page_clrs[i]);
+        } else {
+            if (pidx == pageIdx_) {
+                unsigned int j = 0;
+                for (auto param : pParams) {
+                    if (param != nullptr) {
+                        drawParam(j, *param);
+                    }
+                    j++;
+                    if (j == 8) break;
                 }
-                j++;
-                if (j == 8) break;
             }
         }
-        i++;
-        if (i == 8) break;
     }
 
+
+
     // draw modules
+    parent_.sendCC(0, P2_CURSOR_LEFT_CC, moduleIdxOffset_ > 0 ? 0x75 : 0x00);
     i = 0;
-    for (auto mod : pModules) {
-        push2Api_->drawCell8(5, i, centreText(mod->displayName()).c_str(), page_clrs[i]);
-        parent_.sendCC(0, P2_TRACK_SELECT_CC_START + i, i == moduleIdx_ ? 122 : 124);
-        i++;
-        if (i == 8) break;
+    auto miter = pModules.cbegin();
+    for (; i < moduleIdxOffset_ && miter != pModules.cend(); i++) {
+        miter++;
     }
+
+    for (i = 0; i < 8 && miter != pModules.cend(); miter++, i++) {
+        push2Api_->drawCell8(5, i, centreText((*miter)->displayName()).c_str(), page_clrs[(i + moduleIdxOffset_) % 8]);
+        parent_.sendCC(0, P2_TRACK_SELECT_CC_START + i, (i + moduleIdxOffset_) == moduleIdx_ ? 122 : 124);
+    }
+
+    parent_.sendCC(0, P2_CURSOR_RIGHT_CC, miter == pModules.cend() ? 0x00 : 0x7f);
 }
 
 
@@ -172,7 +229,7 @@ void P2_ParamMode::setCurrentPage(int pageIdx) {
     auto pPages = model_->getPages(pModule);
 //    auto pParams = model_->getParams(pModule, pPage);
 
-    if(pPages.size()==0) {
+    if (pPages.size() == 0) {
         parent_.currentPage("");
         displayPage();
     } else if (pageIdx != pageIdx_ && pageIdx < pPages.size()) {
@@ -299,25 +356,24 @@ void P2_ParamMode::activate() {
     }
     parent_.sendCC(0, P2_CURSOR_LEFT_CC, 0x00);
     parent_.sendCC(0, P2_CURSOR_RIGHT_CC, 0x00);
-    parent_.sendCC(0, P2_SETUP_CC, ( parent_.midiLearn() ? 0x7f:  0x10));
+    parent_.sendCC(0, P2_SETUP_CC, (parent_.midiLearn() ? 0x7f : 0x10));
 }
 
 
 void P2_ParamMode::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
-    P2_DisplayMode::applyPreset(source,rack,preset);
+    P2_DisplayMode::applyPreset(source, rack, preset);
     setCurrentPage(0);
     displayPage();
 }
 
 
 void P2_ParamMode::midiLearn(Kontrol::ChangeSource src, bool b) {
-    parent_.sendCC(0, P2_SETUP_CC, ( parent_.midiLearn() ? 0x7f:  0x10));
+    parent_.sendCC(0, P2_SETUP_CC, (parent_.midiLearn() ? 0x7f : 0x10));
 }
 
 void P2_ParamMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
-    parent_.sendCC(0, P2_SETUP_CC, ( parent_.midiLearn() ? 0x7f:  0x10));
+    parent_.sendCC(0, P2_SETUP_CC, (parent_.midiLearn() ? 0x7f : 0x10));
 }
-
 
 
 } //namespace

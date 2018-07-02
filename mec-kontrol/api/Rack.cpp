@@ -475,6 +475,12 @@ bool Rack::applyModulePreset(std::shared_ptr<Module> module, const ModulePreset 
         } //iffloat
         //TODO: preset, support non numeric types
     }
+    for(auto param: module->getParams()) {
+        if (param->current().type() ==  ParamValue::T_Float) {
+            model()->changeParam(CS_PRESET, model()->localRack()->id(), module->id(), param->id(),
+                                 param->current().floatValue());
+        }
+    }
 
     module->setMidiMapping(modulePreset.midiMap());
     module->setModulationMapping(modulePreset.modulationMap());

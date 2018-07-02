@@ -43,7 +43,9 @@ private:
 
     int moduleIdx_ = -1;
     std::string moduleType_;
+    int moduleIdxOffset_ = 0;
     int pageIdx_ = -1;
+    int pageIdxOffset_ = 0;
 };
 
 }
