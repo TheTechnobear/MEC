@@ -28,7 +28,7 @@ bool KontrolDevice::init() {
     midiLearn(Kontrol::CS_LOCAL, false);
     modulationLearn(Kontrol::CS_LOCAL, false);
     lastParamId_ = "";
-    for (auto m : modes_) {
+    for (const auto &m : modes_) {
         if (m.second != nullptr) m.second->init();
     }
     return true;

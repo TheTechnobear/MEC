@@ -18,7 +18,7 @@ struct t_KontrolMonitor {
 };
 
 t_KontrolMonitor * KontrolMonitor_new(t_symbol *symbol, const Kontrol::Rack &rack, const Kontrol::Module &module, const Kontrol::Parameter &param) {
-    t_KontrolMonitor *x = (t_KontrolMonitor*)pd_new(KontrolMonitor_class);
+    auto *x = (t_KontrolMonitor*)pd_new(KontrolMonitor_class);
 
     x->symbol = symbol;
     x->rack = strdup(rack.id().c_str());

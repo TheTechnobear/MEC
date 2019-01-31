@@ -20,7 +20,7 @@ KontrolModel::KontrolModel() {
 }
 
 void KontrolModel::publishMetaData() const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->publishStart(CS_LOCAL, 1);
     }
     publishMetaData(localRack_);
@@ -29,15 +29,15 @@ void KontrolModel::publishMetaData() const {
 void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack) const {
     std::vector<std::shared_ptr<Module>> modules = getModules(rack);
     publishRack(CS_LOCAL, *rack);
-    for (auto resType:rack->getResourceTypes()) {
-        for (auto res : rack->getResources(resType)) {
+    for (const auto &resType:rack->getResourceTypes()) {
+        for (const auto &res : rack->getResources(resType)) {
             publishResource(CS_LOCAL, *rack, resType, res);
         }
     }
     for (const auto &p : modules) {
         if (p != nullptr) publishMetaData(rack, p);
     }
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->publishRackFinished(CS_LOCAL, *rack);
     }
 }
@@ -45,20 +45,20 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack) const {
 void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std::shared_ptr<Module> &module) const {
     publishModule(CS_LOCAL, *rack, *module);
     publishPreset(rack);
-    for (const auto param: module->getParams()) {
+    for (const auto &param: module->getParams()) {
         publishParam(CS_LOCAL, *rack, *module, *param);
     }
-    for (const auto page: module->getPages()) {
+    for (const auto &page: module->getPages()) {
         publishPage(CS_LOCAL, *rack, *module, *page);
     }
-    for (const auto param: module->getParams()) {
+    for (const auto &param: module->getParams()) {
         publishChanged(CS_LOCAL, *rack, *module, *param);
     }
     publishMidiMapping(CS_LOCAL, *rack, *module, module->getMidiMapping());
 }
 
 void KontrolModel::publishPreset(const std::shared_ptr<Rack> &rack) const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->applyPreset(CS_LOCAL, *rack, rack->currentPreset());
     }
 }
@@ -102,7 +102,7 @@ std::shared_ptr<Parameter> KontrolModel::getParam(const std::shared_ptr<Module> 
 
 std::vector<std::shared_ptr<Rack>> KontrolModel::getRacks() const {
     std::vector<std::shared_ptr<Rack>> ret;
-    for (auto p : racks_) {
+    for (const auto &p : racks_) {
         if (p.second != nullptr) ret.push_back(p.second);
     }
     return ret;
@@ -136,7 +136,7 @@ std::vector<std::shared_ptr<Parameter>> KontrolModel::getParams(const std::share
 
 // listener model
 void KontrolModel::clearCallbacks() {
-    for (auto p : listeners_) {
+    for (const auto &p : listeners_) {
         (p.second)->stop();
     }
 
@@ -243,7 +243,7 @@ void KontrolModel::deleteRack(ChangeSource src, const EntityId &rackId)
     auto rack = getRack(rackId);
     if (rack)
     {
-        for (auto i : listeners_) {
+        for (const auto &i : listeners_) {
             (i.second)->deleteRack(src, *rack);
         }
     }
@@ -255,7 +255,7 @@ void KontrolModel::activeModule(ChangeSource src, const EntityId &rackId ,const 
     auto rack = getRack(rackId);
     auto module = getModule(rack, moduleId);
     if (module != nullptr) {
-        for (auto i : listeners_) {
+        for (const auto &i : listeners_) {
             (i.second)->activeModule(src, *rack, *module);
         }
     }
@@ -269,7 +269,7 @@ void KontrolModel::createResource(ChangeSource src,
     auto rack = getRack(rackId);
     if (rack == nullptr) return;
     rack->addResource(resType, resValue);
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->resource(src, *rack, resType, resValue);
     }
 }
@@ -303,19 +303,19 @@ void KontrolModel::assignMidiCC(ChangeSource src, const EntityId &rackId, const 
     auto param = getParam(module, paramId);
     if (param == nullptr) return;
 
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->assignMidiCC(src, *rack, *module, *param, midiCC);
     }
 }
 
 void KontrolModel::publishStart(ChangeSource src, unsigned numRacks) {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->publishStart(src, numRacks);
     }
 }
 
 void KontrolModel::publishRackFinished(ChangeSource src, const EntityId &rackId) {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         auto rack = getRack(rackId);
         if (rack == nullptr)
             return;
@@ -333,7 +333,7 @@ void KontrolModel::unassignMidiCC(ChangeSource src, const EntityId &rackId, cons
     auto param = getParam(module, paramId);
     if (param == nullptr) return;
 
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->unassignMidiCC(src, *rack, *module, *param, midiCC);
     }
 }
@@ -353,7 +353,7 @@ void KontrolModel::assignModulation(ChangeSource src,
     auto param = getParam(module, paramId);
     if (param == nullptr) return;
 
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->assignModulation(src, *rack, *module, *param, bus);
     }
 }
@@ -372,7 +372,7 @@ void KontrolModel::unassignModulation(ChangeSource src,
     auto param = getParam(module, paramId);
     if (param == nullptr) return;
 
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->unassignModulation(src, *rack, *module, *param, bus);
     }
 }
@@ -389,7 +389,7 @@ void KontrolModel::updatePreset(ChangeSource src, const EntityId &rackId, std::s
         rack->currentPreset(preset);
     }
 
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->updatePreset(src, *rack, preset);
     }
 }
@@ -403,7 +403,7 @@ void KontrolModel::applyPreset(ChangeSource src, const EntityId &rackId, std::st
         rack->currentPreset(preset);
     }
 
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->applyPreset(src, *rack, preset);
     }
 }
@@ -415,7 +415,7 @@ void KontrolModel::saveSettings(ChangeSource src, const EntityId &rackId) {
 
     auto rack = getRack(rackId);
     if (rack == nullptr) return;
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->saveSettings(src, *rack);
     }
 }
@@ -425,7 +425,7 @@ void KontrolModel::ping(
         const std::string &host,
         unsigned port,
         unsigned keepAlive) const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->ping(src, host, port, keepAlive);
     }
 }
@@ -438,37 +438,37 @@ void KontrolModel::loadModule(ChangeSource src,
     auto rack = getRack(rackId);
     if (rack == nullptr) return;
 
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->loadModule(src, *rack, moduleId, moduleType);
     }
 }
 void KontrolModel::midiLearn(ChangeSource src, bool b) {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->midiLearn(src, b);
     }
 }
 
 void KontrolModel::modulationLearn(ChangeSource src, bool b) {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->modulationLearn(src, b);
     }
 }
 
 
 void KontrolModel::publishRack(ChangeSource src, const Rack &rack) const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->rack(src, rack);
     }
 }
 
 void KontrolModel::publishModule(ChangeSource src, const Rack &rack, const Module &module) const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->module(src, rack, module);
     }
 }
 
 void KontrolModel::publishPage(ChangeSource src, const Rack &rack, const Module &module, const Page &page) const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->page(src, rack, module, page);
     }
 
@@ -476,7 +476,7 @@ void KontrolModel::publishPage(ChangeSource src, const Rack &rack, const Module 
 
 void KontrolModel::publishParam(ChangeSource src, const Rack &rack, const Module &module,
                                 const Parameter &param) const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->param(src, rack, module, param);
     }
 
@@ -484,7 +484,7 @@ void KontrolModel::publishParam(ChangeSource src, const Rack &rack, const Module
 
 void KontrolModel::publishChanged(ChangeSource src, const Rack &rack, const Module &module,
                                   const Parameter &param) const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->changed(src, rack, module, param);
     }
 }
@@ -492,18 +492,18 @@ void KontrolModel::publishChanged(ChangeSource src, const Rack &rack, const Modu
 
 void KontrolModel::publishResource(ChangeSource src, const Rack &rack,
                                    const std::string &type, const std::string &res) const {
-    for (auto i : listeners_) {
+    for (const auto &i : listeners_) {
         (i.second)->resource(src, rack, type, res);
     }
 }
 
 void KontrolModel::publishMidiMapping(ChangeSource src, const Rack &rack, const Module &module,
                                       const MidiMap &midiMap) const {
-    for (auto k : midiMap) {
-        for (auto j : k.second) {
+    for (const auto &k : midiMap) {
+        for (const auto &j : k.second) {
             auto parameter = module.getParam(j);
             if (parameter) {
-                for (auto i : listeners_) {
+                for (const auto &i : listeners_) {
                     (i.second)->assignMidiCC(src, rack, module, *parameter, k.first);
                 }
             }

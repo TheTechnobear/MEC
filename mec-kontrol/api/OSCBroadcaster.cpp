@@ -152,25 +152,25 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
 
                 EntityId rackId = Rack::createId(host_, port_);
                 publishStart(CS_LOCAL, KontrolModel::model()->getRacks().size());
-                for (auto r:KontrolModel::model()->getRacks()) {
+                for (const auto &r:KontrolModel::model()->getRacks()) {
                     if (rackId != r->id()) {
                         std::cerr << " publishing meta data to " << rackId << " for " << r->id() << std::endl;
                         rack(CS_LOCAL, *r);
-                        for (auto m : r->getModules()) {
+                        for (const auto &m : r->getModules()) {
                             module(CS_LOCAL, *r, *m);
-                            for (auto p :  m->getParams()) {
+                            for (const auto &p :  m->getParams()) {
                                 param(CS_LOCAL, *r, *m, *p);
                             }
-                            for (auto p : m->getPages()) {
+                            for (const auto &p : m->getPages()) {
                                 if (p != nullptr) {
                                     page(CS_LOCAL, *r, *m, *p);
                                 }
                             }
-                            for (auto p :  m->getParams()) {
+                            for (const auto &p :  m->getParams()) {
                                 changed(CS_LOCAL, *r, *m, *p);
                             }
-                            for (auto midiMap : m->getMidiMapping()) {
-                                for (auto j : midiMap.second) {
+                            for (const auto &midiMap : m->getMidiMapping()) {
+                                for (const auto &j : midiMap.second) {
                                     auto parameter = m->getParam(j);
                                     if (parameter) {
                                         assignMidiCC(CS_LOCAL, *r, *m, *parameter, midiMap.first);
@@ -447,7 +447,7 @@ void OSCBroadcaster::param(ChangeSource src, const Rack &rack, const Module &mod
 
     std::vector<ParamValue> values;
     p.createArgs(values);
-    for (ParamValue v : values) {
+    for (const ParamValue &v : values) {
         switch (v.type()) {
             case ParamValue::T_Float: {
                 ops << v.floatValue();

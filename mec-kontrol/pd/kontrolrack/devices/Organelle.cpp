@@ -156,7 +156,7 @@ class OFixedMenuMode : public OMenuMode {
 public:
     OFixedMenuMode(Organelle &p) : OMenuMode(p) { ; }
 
-    unsigned getSize() override { return items_.size(); };
+    unsigned getSize() override { return static_cast<unsigned int>(items_.size()); };
 
     std::string getItemText(unsigned i) override { return items_[i]; }
 
@@ -236,7 +236,7 @@ void OParamMode::display() {
 
 
     unsigned int j = 0;
-    for (auto param : params) {
+    for (const auto &param : params) {
         if (param != nullptr) {
             parent_.displayParamLine(j + 1, *param);
         }
@@ -273,7 +273,7 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
 //        auto pages = parent_.model()->getPages(module);
         auto params = parent_.model()->getParams(module, page);
 
-        if (!(pot < params.size())) return;
+        if (pot >= params.size()) return;
 
         auto &param = params[pot];
         auto paramId = param->id();
@@ -341,8 +341,8 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
     if (module == nullptr) return;
 
     try {
-        auto rack = parent_.model()->getRack(parent_.currentRack());
-        auto module = parent_.model()->getModule(rack, parent_.currentModule());
+//        auto rack = parent_.model()->getRack(parent_.currentRack());
+//        auto module = parent_.model()->getModule(rack, parent_.currentModule());
         auto page = parent_.model()->getPage(module, pageId_);
         auto pages = parent_.model()->getPages(module);
 //        auto params = parent_.model()->getParams(module,page);
@@ -368,7 +368,7 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
             parent_.flipDisplay();
         }
 
-        for (int i = 0; i < ORGANELLE_NUM_PARAMS; i++) {
+        for (unsigned int i = 0; i < ORGANELLE_NUM_PARAMS; i++) {
             pots_->locked_[i] = Pots::K_LOCKED;
             changePot(i, pots_->rawValue[i]);
         }
@@ -383,7 +383,7 @@ void OParamMode::changeEncoder(unsigned enc, float value) {
         return;
     }
 
-    unsigned pagenum = (unsigned) pageIdx_;
+    auto pagenum = (unsigned) pageIdx_;
 
     if (value > 0) {
         auto rack = parent_.model()->getRack(parent_.currentRack());
@@ -407,7 +407,7 @@ void OParamMode::changeEncoder(unsigned enc, float value) {
 
 void OParamMode::encoderButton(unsigned enc, bool value) {
     OBaseMode::encoderButton(enc, value);
-    if (encoderAction_ && value == false) {
+    if (encoderAction_ && !value) {
         parent_.changeMode(OM_MAINMENU);
     }
     encoderDown_ = value;
@@ -469,7 +469,7 @@ void OParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, c
     auto params = parent_.model()->getParams(pmodule, page);
 
 
-    unsigned sz = params.size();
+    auto sz = static_cast<unsigned int>(params.size());
     sz = sz < ORGANELLE_NUM_PARAMS ? sz : ORGANELLE_NUM_PARAMS;
     for (unsigned int i = 0; i < sz; i++) {
         try {
@@ -727,7 +727,7 @@ void OPresetMenu::activate() {
 
 
 unsigned OPresetMenu::getSize() {
-    return (unsigned) PMI_LAST + presets_.size();
+    return static_cast<unsigned int>((unsigned) PMI_LAST + presets_.size());
 }
 
 std::string OPresetMenu::getItemText(unsigned idx) {
@@ -786,7 +786,7 @@ void OModuleMenu::activate() {
     unsigned idx = 0;
     auto res = rack->getResources("module");
     items_.clear();
-    for (auto modtype : res) {
+    for (const auto &modtype : res) {
         items_.push_back(modtype);
         if (modtype == module->type()) {
             cur_ = idx;
@@ -821,7 +821,7 @@ void OModuleSelectMenu::activate() {
     if (cmodule == nullptr) return;
     unsigned idx = 0;
     items_.clear();
-    for (auto module : rack->getModules()) {
+    for (const auto &module : rack->getModules()) {
         std::string desc = module->id() + ":" + module->displayName();
         items_.push_back(desc);
         if (module->id() == cmodule->id()) {
@@ -894,7 +894,7 @@ bool Organelle::init() {
 
 void *organelle_write_thread_func(void *aObj) {
     post("start organelle write thead");
-    Organelle *pThis = static_cast<Organelle *>(aObj);
+    auto *pThis = static_cast<Organelle *>(aObj);
     pThis->writePoll();
     post("organelle write thread ended");
     return nullptr;
@@ -1004,12 +1004,12 @@ void Organelle::displayPopup(const std::string &text, bool dblline) {
 
 
 std::string Organelle::asDisplayString(const Kontrol::Parameter &param, unsigned width) const {
-    std::string pad = "";
+    std::string pad;
     std::string ret;
     std::string value = param.displayValue();
     std::string unit = std::string(param.displayUnit() + "  ").substr(0, 2);
     const std::string &dName = param.displayName();
-    int fillc = width - (dName.length() + value.length() + 1 + unit.length());
+    unsigned long fillc = width - (dName.length() + value.length() + 1 + unit.length());
     for (; fillc > 0; fillc--) pad += " ";
     ret = dName + pad + value + " " + unit;
     if (ret.length() > width) ret = ret.substr(width - ret.length(), width);

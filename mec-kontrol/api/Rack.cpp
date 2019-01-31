@@ -31,7 +31,7 @@ void Rack::addModule(const std::shared_ptr<Module> &module) {
 
 std::vector<std::shared_ptr<Module>> Rack::getModules() {
     std::vector<std::shared_ptr<Module>> ret;
-    for (auto p : modules_) {
+    for (const auto &p : modules_) {
         if (p.second != nullptr) ret.push_back(p.second);
     }
     return ret;
@@ -76,11 +76,11 @@ bool Rack::loadSettings(const mec::Preferences &prefs) {
     presets_.clear();
     mec::Preferences presetspref(prefs.getSubTree("presets"));
     if (presetspref.valid()) {
-        for (std::string presetId :presetspref.getKeys()) {
+        for (const std::string &presetId :presetspref.getKeys()) {
             mec::Preferences rackpresetspref(presetspref.getSubTree(presetId));
             if (rackpresetspref.valid()) {
                 RackPreset rackPreset;
-                for (std::string moduleId :rackpresetspref.getKeys()) {
+                for (const std::string &moduleId :rackpresetspref.getKeys()) {
                     mec::Preferences modulepresetspref(rackpresetspref.getSubTree(moduleId));
                     if (modulepresetspref.valid()) {
                         ret |= loadModulePreset(rackPreset, moduleId, modulepresetspref);
@@ -103,13 +103,13 @@ bool Rack::saveSettings(const std::string &filename) {
     cJSON *presets = cJSON_CreateObject();
     cJSON_AddItemToObject(root, "presets", presets);
 
-    for (auto rackPreset : presets_) {
+    for (const auto &rackPreset : presets_) {
 
         cJSON *preset = cJSON_CreateObject();
         cJSON_AddItemToObject(presets, rackPreset.first.c_str(), preset);
 
 
-        for (auto mp : rackPreset.second) {
+        for (const auto &mp : rackPreset.second) {
 
             auto moduleId = mp.first;
             auto modulePreset = mp.second;
@@ -130,7 +130,7 @@ bool Rack::saveSettings(const std::string &filename) {
 
 std::vector<std::string> Rack::getPresetList() {
     std::vector<std::string> presets;
-    for (auto p : presets_) {
+    for (const auto &p : presets_) {
         presets.push_back(p.first);
     }
     return presets;
@@ -141,7 +141,7 @@ bool Rack::updatePreset(std::string presetId) {
     bool ret = false;
     RackPreset rackPreset = presets_[presetId];
 
-    for (auto m : modules_) {
+    for (const auto &m : modules_) {
         auto module = m.second;
         if (module != nullptr) {
             auto moduleId = module->id();
@@ -166,7 +166,7 @@ bool Rack::applyPreset(std::string presetId) {
     if (presets_.count(presetId) == 0) return false;
     RackPreset rackPreset = presets_[presetId];
 
-    for (auto m : modules_) {
+    for (const auto &m : modules_) {
         auto module = m.second;
         if (module != nullptr) {
             auto moduleId = module->id();
@@ -191,11 +191,11 @@ bool Rack::applyPreset(std::string presetId) {
 
 bool Rack::changeMidiCC(unsigned midiCC, unsigned midiValue) {
     bool ret = false;
-    for (auto m : modules_) {
+    for (const auto &m : modules_) {
         auto module = m.second;
         if (module != nullptr) {
             std::vector<EntityId> mmvec = module->getParamsForCC(midiCC);
-            for (auto paramId : mmvec) {
+            for (const auto &paramId : mmvec) {
                 auto param = module->getParam(paramId);
                 if (param != nullptr) {
                     ParamValue pv = param->calcMidi(midiValue);
@@ -223,11 +223,11 @@ void Rack::removeMidiCCMapping(unsigned ccnum, const EntityId &moduleId, const E
 
 bool Rack::changeModulation(unsigned bus, float value) {
     bool ret = false;
-    for (auto m : modules_) {
+    for (const auto &m : modules_) {
         auto module = m.second;
         if (module != nullptr) {
             std::vector<EntityId> mmvec = module->getParamsForModulation(bus);
-            for (auto paramId : mmvec) {
+            for (const auto &paramId : mmvec) {
                 auto param = module->getParam(paramId);
                 if (param != nullptr) {
                     ParamValue pv = param->calcFloat(value);
@@ -258,7 +258,7 @@ void Rack::publishCurrentValues(const std::shared_ptr<Module> &module) const {
     if (module != nullptr) {
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();
         std::vector<std::shared_ptr<Page>> pages = module->getPages();
-        for (auto p : params) {
+        for (const auto &p : params) {
             model()->publishChanged(CS_LOCAL, *this, *module, *p);
         }
     }
@@ -266,7 +266,7 @@ void Rack::publishCurrentValues(const std::shared_ptr<Module> &module) const {
 
 
 void Rack::publishCurrentValues() const {
-    for (auto p : modules_) {
+    for (const auto &p : modules_) {
         if (p.second != nullptr) publishCurrentValues(p.second);
     }
 }
@@ -277,17 +277,17 @@ void Rack::publishMetaData(const std::shared_ptr<Module> &module) const {
         model()->publishModule(CS_LOCAL, *this, *module);
         std::vector<std::shared_ptr<Parameter>> params = module->getParams();
         std::vector<std::shared_ptr<Page>> pages = module->getPages();
-        for (auto p : params) {
+        for (const auto &p : params) {
             model()->publishParam(CS_LOCAL, *this, *module, *p);
         }
-        for (auto p : pages) {
+        for (const auto &p : pages) {
             if (p != nullptr) {
                 model()->publishPage(CS_LOCAL, *this, *module, *p);
             }
         }
     }
-    for (auto rt : resources_) {
-        for (auto res : rt.second) {
+    for (const auto &rt : resources_) {
+        for (const auto &res : rt.second) {
             model()->publishResource(CS_LOCAL, *this, rt.first, res);
         }
     }
@@ -295,7 +295,7 @@ void Rack::publishMetaData(const std::shared_ptr<Module> &module) const {
 
 std::set<std::string> Rack::getResourceTypes() {
     std::set<std::string> resTypes;
-    for (auto r : resources_) {
+    for (const auto &r : resources_) {
         resTypes.insert(r.first);
     }
     return resTypes;
@@ -314,7 +314,7 @@ const std::set<std::string> &Rack::getResources(const std::string &type) {
 
 
 void Rack::publishMetaData() const {
-    for (auto p : modules_) {
+    for (const auto &p : modules_) {
         if (p.second != nullptr) publishMetaData(p.second);
     }
 }
@@ -326,7 +326,7 @@ bool Rack::loadModulePreset(RackPreset &rackPreset, const EntityId &moduleId, co
     mec::Preferences params(prefs.getSubTree("params"));
     std::vector<ModulePresetValue> presetValues;
     if (params.valid()) { // just ignore if not present
-        for (EntityId paramId : params.getKeys()) {
+        for (const EntityId &paramId : params.getKeys()) {
             mec::Preferences::Type t = params.getType(paramId);
             switch (t) {
                 case mec::Preferences::P_BOOL:
@@ -355,11 +355,11 @@ bool Rack::loadModulePreset(RackPreset &rackPreset, const EntityId &moduleId, co
         mec::Preferences cc(midimapping.getSubTree("cc"));
         // only currently handling CC midi learn
         if (cc.valid()) {
-            for (std::string ccstr : cc.getKeys()) {
-                unsigned ccnum = std::stoi(ccstr);
+            for (const std::string &ccstr : cc.getKeys()) {
+                int ccnum = std::stoi(ccstr);
                 mec::Preferences::Array array = cc.getArray(ccstr);
                 if (array.valid()) {
-                    for (int i = 0; i < array.getSize(); i++) {
+                    for (unsigned int i = 0; i < array.getSize(); i++) {
                         EntityId paramId = array.getString(i);
                         midimap[ccnum].push_back(paramId);
                     }
@@ -373,11 +373,11 @@ bool Rack::loadModulePreset(RackPreset &rackPreset, const EntityId &moduleId, co
     if (modmapping.valid()) { // just ignore if not present
         mec::Preferences bus(modmapping.getSubTree("bus"));
         if (bus.valid()) {
-            for (std::string busstr : bus.getKeys()) {
-                unsigned busnum = std::stoi(busstr);
+            for (const std::string &busstr : bus.getKeys()) {
+                int busnum = std::stoi(busstr);
                 mec::Preferences::Array array = bus.getArray(busstr);
                 if (array.valid()) {
-                    for (int i = 0; i < array.getSize(); i++) {
+                    for (unsigned int i = 0; i < array.getSize(); i++) {
                         EntityId paramId = array.getString(i);
                         modmap[busnum].push_back(paramId);
                     }
@@ -417,12 +417,12 @@ bool Rack::saveModulePreset(ModulePreset &modulepreset, cJSON *root) {
     cJSON_AddItemToObject(root, "midi-mapping", midi);
     cJSON *ccs = cJSON_CreateObject();
     cJSON_AddItemToObject(midi, "cc", ccs);
-    for (auto mm : modulepreset.midiMap()) {
-        if (mm.second.size() > 0) {
+    for (const auto &mm : modulepreset.midiMap()) {
+        if (!mm.second.empty()) {
             std::string ccnum = std::to_string(mm.first);
             cJSON *array = cJSON_CreateArray();
             cJSON_AddItemToObject(ccs, ccnum.c_str(), array);
-            for (auto paramId : mm.second) {
+            for (const auto &paramId : mm.second) {
                 cJSON *itm = cJSON_CreateString(paramId.c_str());
                 cJSON_AddItemToArray(array, itm);
             }
@@ -435,12 +435,12 @@ bool Rack::saveModulePreset(ModulePreset &modulepreset, cJSON *root) {
     cJSON_AddItemToObject(root, "mod-mapping", modulation);
     cJSON *buss = cJSON_CreateObject();
     cJSON_AddItemToObject(modulation, "bus", buss);
-    for (auto mm : modulepreset.modulationMap()) {
-        if (mm.second.size() > 0) {
+    for (const auto &mm : modulepreset.modulationMap()) {
+        if (!mm.second.empty()) {
             std::string busnum = std::to_string(mm.first);
             cJSON *array = cJSON_CreateArray();
             cJSON_AddItemToObject(buss, busnum.c_str(), array);
-            for (auto paramId : mm.second) {
+            for (const auto &paramId : mm.second) {
                 cJSON *itm = cJSON_CreateString(paramId.c_str());
                 cJSON_AddItemToArray(array, itm);
             }
@@ -455,7 +455,7 @@ bool Rack::updateModulePreset(std::shared_ptr<Module> module, ModulePreset &modu
     module->dumpCurrentValues();
     std::vector<std::shared_ptr<Parameter>> params = module->getParams();
     std::vector<ModulePresetValue> presetValues;
-    for (auto p : params) {
+    for (const auto &p : params) {
         presetValues.push_back(ModulePresetValue(p->id(), p->current()));
     }
 
@@ -475,7 +475,7 @@ bool Rack::applyModulePreset(std::shared_ptr<Module> module, const ModulePreset 
         } //iffloat
         //TODO: preset, support non numeric types
     }
-    for(auto param: module->getParams()) {
+    for(const auto &param: module->getParams()) {
         if (param->current().type() ==  ParamValue::T_Float) {
             model()->changeParam(CS_PRESET, model()->localRack()->id(), module->id(), param->id(),
                                  param->current().floatValue());
@@ -492,9 +492,9 @@ bool Rack::applyModulePreset(std::shared_ptr<Module> module, const ModulePreset 
 void Rack::dumpSettings() const {
     LOG_1("Rack Settings :" << id());
     LOG_1("------------------------");
-    for (auto preset : presets_) {
+    for (const auto &preset : presets_) {
         LOG_1("Preset : " << preset.first);
-        for (auto rpreset: preset.second) {
+        for (const auto &rpreset: preset.second) {
             LOG_1("   Module : " << rpreset.first);
             for (auto param : rpreset.second.values()) {
                 LOG_1("       " << param.paramId() << " : " << param.value().floatValue());
@@ -506,7 +506,7 @@ void Rack::dumpSettings() const {
 void Rack::dumpParameters() {
     LOG_1("Rack Parameters :" << id());
     LOG_1("------------------------");
-    for (auto m : modules_) {
+    for (const auto &m : modules_) {
         if (m.second != nullptr) m.second->dumpParameters();
     }
 }
@@ -514,7 +514,7 @@ void Rack::dumpParameters() {
 void Rack::dumpCurrentValues() {
     LOG_1("Rack Values : " << id());
     LOG_1("-----------------------");
-    for (auto m : modules_) {
+    for (const auto &m : modules_) {
         if (m.second != nullptr) m.second->dumpCurrentValues();
     }
 }

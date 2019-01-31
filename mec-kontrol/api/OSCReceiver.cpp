@@ -171,7 +171,7 @@ public:
                 receiver_.unassignModulation(changedSrc, rackId, moduleId, paramId, bus);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/publishStart") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
-                unsigned numRacks = (unsigned)arg->AsInt32();
+                auto numRacks = (unsigned)arg->AsInt32();
                 receiver_.publishStart(changedSrc, numRacks);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/publishRackFinished") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
@@ -227,7 +227,7 @@ OSCReceiver::~OSCReceiver() {
 }
 
 void *osc_receiver_read_thread_func(void *pReceiver) {
-    OSCReceiver *pThis = static_cast<OSCReceiver *>(pReceiver);
+    auto *pThis = static_cast<OSCReceiver *>(pReceiver);
     pThis->socket()->Run();
     return nullptr;
 }

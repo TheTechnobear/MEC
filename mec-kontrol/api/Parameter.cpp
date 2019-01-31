@@ -8,7 +8,7 @@
 namespace Kontrol {
 
 
-static void throwError(const std::string id, const char *what) {
+static void throwError(const std::string &id, const char *what) {
     std::string w = id + std::string(what);
     std::runtime_error(w.c_str());
 }
@@ -102,12 +102,12 @@ std::shared_ptr<Parameter> Parameter::create(const std::vector<ParamValue> &args
 
 
 std::string Parameter::displayValue() const {
-    static std::string sNullString = "";
+    static std::string sNullString;
     return sNullString;
 }
 
 const std::string &Parameter::displayUnit() const {
-    static std::string sNullString = "";
+    static std::string sNullString;
     return sNullString;
 }
 
@@ -327,7 +327,7 @@ ParamValue Parameter_Boolean::calcMidi(int midi) {
 }
 
 float Parameter_Boolean::asFloat(const ParamValue& v) const {
-    return (current().floatValue() > 0.5 ? 1.0 : 0.0);
+    return (current().floatValue() > 0.5f ? 1.0f : 0.0f);
 }
 
 
@@ -392,10 +392,10 @@ bool Parameter_Int::change(const ParamValue &c, bool force) {
 ParamValue Parameter_Int::calcRelative(float f) {
     float chg = f;
     float rng = (max() - min());
-    float step = 1.0 / rng;
+    float step = 1.0f / rng;
     if (chg > 0.001 && chg < step) chg = step;
     else if (chg < 0.001 && chg > -step) chg = -step;
-    int ichg = std::round(chg * rng);
+    int ichg = static_cast<int>(std::round(chg * rng));
     int v = static_cast<int>(current().floatValue()) + ichg;
     v = std::max(v, min());
     v = std::min(v, max());

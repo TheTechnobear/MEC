@@ -20,14 +20,14 @@ bool Scales::load(const Preferences &prefs) {
     if (!prefs.valid()) return false;
 
     std::vector<std::string> keys = prefs.getKeys();
-    for (std::string k : keys) {
+    for (const std::string &k : keys) {
         ScaleArray scale;
         Preferences::Array array(prefs.getArray(k));
         for (unsigned i = 0; i < array.getSize(); i++) {
-            float n = (float) array.getDouble(i);
+            auto n = (float) array.getDouble(i);
             scale.push_back(n);
         }
-        if (scale.size() > 0) {
+        if (!scale.empty()) {
             scales_[k] = scale;
         }
     }
