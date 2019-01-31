@@ -82,7 +82,7 @@ std::shared_ptr<Parameter> Module::getParam(const EntityId & paramId) const
 
 std::vector<std::shared_ptr<Page>> Module::getPages() {
     std::vector<std::shared_ptr<Page>> ret;
-    for (auto p : pageIds_) {
+    for (const auto &p : pageIds_) {
         auto page = pages_[p];
         if (page != nullptr) ret.push_back(page);
     }
@@ -91,7 +91,7 @@ std::vector<std::shared_ptr<Page>> Module::getPages() {
 
 std::vector<std::shared_ptr<Parameter>> Module::getParams() {
     std::vector<std::shared_ptr<Parameter>> ret;
-    for (auto p : parameters_) {
+    for (const auto &p : parameters_) {
         if (p.second != nullptr) ret.push_back(p.second);
     }
     return ret;
@@ -100,7 +100,7 @@ std::vector<std::shared_ptr<Parameter>> Module::getParams() {
 std::vector<std::shared_ptr<Parameter>> Module::getParams(const std::shared_ptr<Page> &page) {
     std::vector<std::shared_ptr<Parameter>> ret;
     if (page != nullptr) {
-        for (auto pid : page->paramIds()) {
+        for (const auto &pid : page->paramIds()) {
             auto param = parameters_[pid];
             if (param != nullptr) ret.push_back(param);
         }
@@ -122,13 +122,13 @@ bool Module::loadModuleDefinitions(const mec::Preferences &module) {
         // load parameters
         mec::Preferences::Array params(module.getArray("parameters"));
         if (!params.valid()) return false;
-        for (int i = 0; i < params.getSize(); i++) {
+        for (unsigned int i = 0; i < params.getSize(); i++) {
             mec::Preferences::Array pargs(params.getArray(i));
             if (!pargs.valid()) return false;
 
             std::vector<ParamValue> args;
 
-            for (int j = 0; j < pargs.getSize(); j++) {
+            for (unsigned int j = 0; j < pargs.getSize(); j++) {
                 mec::Preferences::Type t = pargs.getType(j);
                 switch (t) {
                     case mec::Preferences::P_BOOL:
@@ -157,7 +157,7 @@ bool Module::loadModuleDefinitions(const mec::Preferences &module) {
         mec::Preferences::Array pages(module.getArray("pages"));
 
         if (!pages.valid()) return false;
-        for (int i = 0; i < pages.getSize(); i++) {
+        for (unsigned int i = 0; i < pages.getSize(); i++) {
             mec::Preferences::Array page(pages.getArray(i));
             if (!page.valid()) return false;
 
@@ -166,7 +166,7 @@ bool Module::loadModuleDefinitions(const mec::Preferences &module) {
             std::string displayname = page.getString(1);
             std::vector<std::string> paramIds;
             mec::Preferences::Array paramArray(page.getArray(2));
-            for (int j = 0; j < paramArray.getSize(); j++) {
+            for (unsigned int j = 0; j < paramArray.getSize(); j++) {
                 paramIds.push_back(paramArray.getString(j));
             }
             createPage(id, displayname, paramIds);
@@ -182,7 +182,7 @@ void Module::dumpParameters() {
     // print by page , this will miss anything not on a page, but gives a clear way of setting things
     LOG_1("Parameter Dump : " << displayName_ << " : " << type_);
     LOG_1("----------------------");
-    for (std::string pageId : pageIds_) {
+    for (const std::string &pageId : pageIds_) {
         auto page = pages_[pageId];
         if (page == nullptr) {
             LOG_1("Page not found: " << pageId);
@@ -190,7 +190,7 @@ void Module::dumpParameters() {
         }
         LOG_1(page->id());
         LOG_1(page->displayName());
-        for (std::string paramId : page->paramIds()) {
+        for (const std::string &paramId : page->paramIds()) {
             auto param = parameters_[paramId];
             if (param == nullptr) {
                 LOG_1("Parameter not found:" << paramId);
@@ -199,7 +199,7 @@ void Module::dumpParameters() {
             std::vector<ParamValue> args;
             param->createArgs(args);
             std::string d = IND;
-            for (auto pv : args) {
+            for (const auto &pv : args) {
                 switch (pv.type()) {
                     case ParamValue::T_Float :
                         d += "  " + std::to_string(pv.floatValue()) + " [F],";
@@ -221,7 +221,7 @@ void Module::dumpCurrentValues() {
     // print by page , this will miss anything not on a page, but gives a clear way of setting things
     LOG_1("Current Values Dump");
     LOG_1("-------------------");
-    for (std::string pageId : pageIds_) {
+    for (const std::string &pageId : pageIds_) {
         auto page = pages_[pageId];
         if (page == nullptr) {
             LOG_1("Page not found: " << pageId);
@@ -229,7 +229,7 @@ void Module::dumpCurrentValues() {
         }
         LOG_1(page->id());
         LOG_1(page->displayName());
-        for (auto paramId : page->paramIds()) {
+        for (const auto &paramId : page->paramIds()) {
             auto param = parameters_[paramId];
             if (param == nullptr) {
                 LOG_1("Parameter not found:" << paramId);
@@ -259,8 +259,8 @@ std::vector<EntityId> Module::getParamsForCC(unsigned cc) {
 
 void Module::addMidiCCMapping(unsigned ccnum, const EntityId &paramId) {
     auto v = midi_mapping_[ccnum];
-    for (auto it = v.begin(); it != v.end(); it++) {
-        if (*it == paramId) {
+    for (auto &it : v) {
+        if (it == paramId) {
             return; // already preset
         }
     }
@@ -285,8 +285,8 @@ std::vector<EntityId> Module::getParamsForModulation(unsigned bus) {
 
 void Module::addModulationMapping(unsigned bus, const EntityId &paramId) {
     auto v = modulation_mapping_[bus];
-    for (auto it = v.begin(); it != v.end(); it++) {
-        if (*it == paramId) {
+    for (auto &it : v) {
+        if (it == paramId) {
             return; // already preset
         }
     }
