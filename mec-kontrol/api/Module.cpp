@@ -112,7 +112,6 @@ std::vector<std::shared_ptr<Parameter>> Module::getParams(const std::shared_ptr<
 bool Module::loadModuleDefinitions(const mec::Preferences &module) {
     if (!module.valid()) return false;
 
-    type_ = module.getString("name");
     displayName_ = module.getString("display");
     parameters_.clear();
     pages_.clear();

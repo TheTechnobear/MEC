@@ -317,7 +317,21 @@ EXTERN void KontrolRack_setup(void) {
                     (t_method) KontrolRack_monitorenable, gensym("monitorenable"),
                     A_DEFFLOAT, A_NULL);
 
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_getparam, gensym("getparam"),
+                    A_DEFSYMBOL, A_DEFSYMBOL, A_DEFFLOAT, A_DEFSYMBOL, A_NULL);
+
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_test, gensym("test"),
+                    A_DEFFLOAT, A_NULL);
+
     KontrolMonitor_setup();
+}
+
+
+void KontrolRack_test(t_KontrolRack *x, t_floatarg f) {
+    post("test");
 }
 
 // Called from OS specific library unload methods.
@@ -623,6 +637,42 @@ void KontrolRack_digital(t_KontrolRack *x, t_floatarg bus, t_floatarg value) {
     if (x->device_) x->device_->digital((unsigned) bus, (bool) value > 0.5);
 }
 
+void KontrolRack_getparam(t_KontrolRack* x,
+        t_symbol* modId, t_symbol* paramId,
+        t_floatarg defvalue,
+        t_symbol* sendsym) {
+    if(sendsym != nullptr && sendsym->s_name != nullptr) {
+        float value = defvalue;
+        if (modId != nullptr && modId->s_name != nullptr
+            && paramId != nullptr && paramId->s_name != nullptr
+                ) {
+            auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+            if (rack) {
+                auto module = rack->getModule(modId->s_name);
+                if (module) {
+                    auto param = module->getParam(paramId->s_name);
+                    if (param) {
+                        value = param->asFloat(param->current());
+                    }
+                }
+            }
+        }
+
+        std::string pdObject=sendsym->s_name;
+        t_pd *sendObj = gensym(pdObject.c_str())->s_thing;
+//        t_pd* sendObj = gensym(sendsym->s_name)->s_thing;
+        if (sendObj != nullptr) {
+            t_atom args[1];
+            SETFLOAT(&args[0], value);
+            pd_forwardmess(sendObj, 1, args);
+        } else {
+            post("getparam sendsym not found %s", sendsym->s_name);
+        }
+    }
+}
+
+
+
 
 void KontrolRack_loadresources(t_KontrolRack *x) {
     post("KontrolRack::loading resources");
@@ -630,11 +680,18 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack == nullptr) return;
 
+    //load available modules
     struct dirent **namelist;
     struct stat st;
+
     static const std::string MODULE_DIR = "modules";
+    const char* user_module_dir = getenv("USER_MODULE_DIR");
+
     std::setlocale(LC_ALL, "en_US.UTF-8");
-    int n = scandir(MODULE_DIR.c_str(), &namelist, NULL, alphasort);
+
+    int n = 0;
+    // factory modules
+    n = scandir(MODULE_DIR.c_str(), &namelist, NULL, alphasort);
     if (n > 0) {
         for (int i = 0; i < n; i++) {
             if (namelist[i]->d_type == DT_DIR &&
@@ -651,6 +708,28 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
             free(namelist[i]);
         }
         free(namelist);
+    }
+
+    // user modules
+    if(user_module_dir) {
+        n = scandir(user_module_dir, &namelist, NULL, alphasort);
+        if (n > 0) {
+            for (int i = 0; i < n; i++) {
+                if (namelist[i]->d_type == DT_DIR &&
+                    strcmp(namelist[i]->d_name, "..") != 0
+                    && strcmp(namelist[i]->d_name, ".") != 0) {
+
+                    std::string module = std::string(user_module_dir) + "/" + std::string(namelist[i]->d_name) + "/module.pd";
+                    int fs = stat(module.c_str(), &st);
+                    if (fs == 0) {
+                        rack->addResource("module", namelist[i]->d_name);
+                        post("KontrolRack::user module found: %s", namelist[i]->d_name);
+                    }
+                }
+                free(namelist[i]);
+            }
+            free(namelist);
+        }
     }
 }
 
@@ -717,7 +796,20 @@ void PdCallback::loadModule(Kontrol::ChangeSource, const Kontrol::Rack &r,
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack && rack->id() == r.id()) {
         // load the module
-        std::string mod = std::string("modules/") + mType;
+        std::string module_dir = "modules";
+
+        const char* user_module_dir = getenv("USER_MODULE_DIR");
+        struct stat st;
+        if(user_module_dir) {
+            std::string module = std::string(user_module_dir) + "/" + mType + "/module.pd";
+            int fs = stat(module.c_str(), &st);
+            if(fs == 0) {
+                module_dir = user_module_dir;
+                post ("loading user module %s", mType.c_str());
+            }
+        }
+
+        std::string mod = module_dir + "/" + mType;
         t_symbol *modId = gensym(mId.c_str());
         t_symbol *modType = gensym(mod.c_str());
         KontrolRack_loadmodule(x_, modId, modType);
