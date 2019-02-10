@@ -8,11 +8,11 @@ if (NOT DISABLE_SOUNDPLANELITE)
             devices/mec_soundplane.h
             )
 
-    add_subdirectory(devices/soundplanelite)
+    add_subdirectory(devices/soundplanelite2)
 
     set(SOUNDPLANELITE_LIB mec-soundplane)
 
-    include_directories("devices/soundplanelite")
+    include_directories("devices/soundplanelite2")
 else()
     add_definitions(-DDISABLE_SOUNDPLANELITE=1)
 endif()
@@ -102,7 +102,7 @@ set(MECAPI_SRC
 include_directories(
         "devices/push2"
         "devices/eigenharp"
-        "devices/soundplanelite"
+        "devices/soundplanelite2"
         "${PROJECT_SOURCE_DIR}/../mec-utils"
         "${PROJECT_SOURCE_DIR}/../mec-kontrol/api"
 )

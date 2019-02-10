@@ -1,3 +1,9 @@
 [submodule "mec-max/source/max-api"]
 	path = mec-max/source/max-api
 	url = https://github.com/Cycling74/max-api.git
+[submodule "mec-api/devices/soundplanelite2/madronalib"]
+	path = mec-api/devices/soundplanelite2/madronalib
+	url = https://github.com/madronalabs/madronalib
+[submodule "mec-api/devices/soundplanelite2/soundplane"]
+	path = mec-api/devices/soundplanelite2/soundplane
+	url = https://github.com/madronalabs/soundplane
