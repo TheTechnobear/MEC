@@ -1,21 +1,32 @@
 #include "mec_soundplane.h"
 
-#include <SoundplaneModel.h>
-#include <MLAppState.h>
-
 
 #include "mec_log.h"
 #include "../mec_voice.h"
-
+#include <set>
 
 namespace mec {
+
+class SPLiteCallback {
+public:
+    virtual ~SPLiteCallback() = default;
+    virtual void onInit()   {;}
+    virtual void onFrame()  {;}
+    virtual void onDeinit() {;}
+    virtual void onError(unsigned err, const char *errStr) {;}
+
+    virtual void touchOn(unsigned voice, float x,float y, float z) = 0;
+    virtual void touchContinue(unsigned voice, float x,float y, float z) = 0;
+    virtual void touchOff(unsigned voice, float x,float y, float z) = 0;
+};
+
 
 
 ////////////////////////////////////////////////
 // TODO
 // 1. voices not needed? as soundplane already does touch alloction, just need to detemine on and off
 ////////////////////////////////////////////////
-class SoundplaneHandler : public SoundplaneMECCallback {
+class SoundplaneHandler : public ::SPLiteCallback {
 public:
     SoundplaneHandler(Preferences &p, MsgQueue &q)
             : prefs_(p),
@@ -28,14 +39,43 @@ public:
         }
     }
 
-    bool isValid() { return valid_; }
 
-    virtual void device(const char *dev, int rows, int cols) {
-        LOG_1("SoundplaneHandler  device d: " << dev);
-        LOG_1(" r: " << rows << " c: " << cols);
+    void onInit() override  {;}
+    void onFrame() override {;}
+    void onDeinit()override {;}
+    void onError(unsigned err, const char *errStr) override {;}
+
+    void touchOn(unsigned voice, float x, float y, float z) override {
+        unsigned ix = unsigned(x);
+        unsigned iy = unsigned(y);
+        unsigned fn = (ix + y * 4) + (x -ix);
+
+        touch(true, voice, fn, x-ix, y-iy, z );
+    }
+    void touchContinue(unsigned voice, float x,float y, float z) override {
+        unsigned ix = unsigned(x);
+        unsigned iy = unsigned(y);
+        unsigned fn = (ix + y * 4) + (x -ix);
+
+        touch(true, voice, fn, x-ix, y-iy, z );
+
     }
 
-    virtual void touch(const char *dev, unsigned long long t, bool a, int itouch, float n, float x, float y, float z) {
+    void touchOff(unsigned voice, float x,float y, float z) override {
+        unsigned ix = unsigned(x);
+        unsigned iy = unsigned(y);
+        unsigned fn = (ix + y * 4) + (x -ix);
+
+        touch(false, voice, fn, x-ix, y-iy, z );
+    }
+
+    bool isValid() { return valid_; }
+//    virtual void device(const char *dev, int rows, int cols) {
+//        LOG_1("SoundplaneHandler  device d: " << dev);
+//        LOG_1(" r: " << rows << " c: " << cols);
+//    }
+
+    void touch(bool a, int itouch, float n, float x, float y, float z) {
         static const unsigned int NOTE_CH_OFFSET = 1;
 
         unsigned touch = (unsigned) itouch;
@@ -45,6 +85,7 @@ public:
         float mx = clamp(x, -1.0f, 1.0f);
         float my = clamp((y - 0.5f) * 2.0f, -1.0f, 1.0f);
         float mz = clamp(z, 0.0f, 1.0f);
+        unsigned long long t = 0;
 
         MecMsg msg;
         msg.type_ = MecMsg::TOUCH_OFF;
@@ -120,13 +161,13 @@ public:
         }
     }
 
-    virtual void control(const char *dev, unsigned long long t, int id, float val) {
-        MecMsg msg;
-        msg.type_ = MecMsg::CONTROL;
-        msg.data_.control_.controlId_ = id;
-        msg.data_.control_.value_ = clamp(val, -1.0f, 1.0f);
-        queue_.addToQueue(msg);
-    }
+//    virtual void control(const char *dev, unsigned long long t, int id, float val) {
+//        MecMsg msg;
+//        msg.type_ = MecMsg::CONTROL;
+//        msg.data_.control_.controlId_ = id;
+//        msg.data_.control_.value_ = clamp(val, -1.0f, 1.0f);
+//        queue_.addToQueue(msg);
+//    }
 
 private:
     inline float clamp(float v, float mn, float mx) { return (std::max(std::min(v, mx), mn)); }
@@ -158,30 +199,17 @@ bool Soundplane::init(void *arg) {
         deinit();
     }
     active_ = false;
-    model_.reset(new SoundplaneModel());
-    std::string appDir = prefs.getString("app state dir", ".");
 
-    // generate a persistent state for the Model
-    std::unique_ptr<MLAppState> pModelState = std::unique_ptr<MLAppState>(
-            new MLAppState(model_.get(), "", "MadronaLabs", "Soundplane", 1, appDir));
-    pModelState->loadStateFromAppStateFile();
-    model_->updateAllProperties();  //??
-    model_->setPropertyImmediate("midi_active", 0.0f);
-    model_->setPropertyImmediate("osc_active", 0.0f);
-    model_->setPropertyImmediate("mec_active", 1.0f);
-    model_->setPropertyImmediate("data_freq_mec", 500.0f);
+    device_ = std::unique_ptr<SPLiteDevice>(new SPLiteDevice());
+    device_->maxTouches(4);
 
-    SoundplaneHandler *pCb = new SoundplaneHandler(prefs, queue_);
-    if (pCb->isValid()) {
-        model_->mecOutput().connect(pCb);
-        LOG_0("Soundplane::init - model init");
-        model_->initialize();
-        active_ = true;
-        LOG_0("Soundplane::init - complete");
-    } else {
-        LOG_0("Soundplane::init - delete callback");
-        delete pCb;
-    }
+
+    std::shared_ptr<::SPLiteCallback> callback
+        = std::shared_ptr<::SPLiteCallback>(new SoundplaneHandler(prefs, queue_));
+    device_->addCallback(callback);
+
+    device_->start();
+    active_ = true;
 
     return active_;
 }
@@ -192,9 +220,10 @@ bool Soundplane::process() {
 
 void Soundplane::deinit() {
     LOG_0("Soundplane::deinit");
-    if (!model_) return;
+    if (!device_) return;
     LOG_0("Soundplane::reset model");
-    model_.reset();
+    device_->stop();
+    device_.reset();
     active_ = false;
 }
 

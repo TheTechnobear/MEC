@@ -5,9 +5,8 @@
 #include "../mec_device.h"
 #include "../mec_msg_queue.h"
 
-class SoundplaneModel;
+#include <SPLiteDevice.h>
 
-class MLAppState;
 
 #include <memory>
 
@@ -26,8 +25,7 @@ public:
 
 private:
     ICallback &callback_;
-    std::unique_ptr<SoundplaneModel> model_;
-    std::unique_ptr<MLAppState> modelState_;
+    std::unique_ptr<SPLiteDevice> device_;
     bool active_;
     MsgQueue queue_;
 };

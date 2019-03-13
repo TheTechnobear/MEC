@@ -9,7 +9,7 @@ if (NOT DISABLE_SOUNDPLANELITE)
             )
 
 
-    set(SOUNDPLANELITE_LIB mec-soundplane)
+    set(SOUNDPLANELITE_LIB splite)
 
 else()
     add_definitions(-DDISABLE_SOUNDPLANELITE=1)
@@ -109,7 +109,7 @@ add_library(mec-api SHARED ${MECAPI_SRC})
 
 set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB})
 
-target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api cjson oscpack rtmidi)
+target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api splite cjson oscpack rtmidi portaudio)
 set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
 add_subdirectory(tests)
 
