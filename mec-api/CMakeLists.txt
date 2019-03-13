@@ -8,11 +8,9 @@ if (NOT DISABLE_SOUNDPLANELITE)
             devices/mec_soundplane.h
             )
 
-    add_subdirectory(devices/soundplanelite2)
 
     set(SOUNDPLANELITE_LIB mec-soundplane)
 
-    include_directories("devices/soundplanelite2")
 else()
     add_definitions(-DDISABLE_SOUNDPLANELITE=1)
 endif()

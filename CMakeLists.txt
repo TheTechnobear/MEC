@@ -82,6 +82,7 @@ add_subdirectory(external/portaudio portaudio)
 add_subdirectory(external/cJSON cjson)
 add_subdirectory(external/rtmidi rtmidi)
 add_subdirectory(external/moodycamel)
+add_subdirectory(external/SoundplaneLite/splite)
 
 
 add_subdirectory(mec-utils)
