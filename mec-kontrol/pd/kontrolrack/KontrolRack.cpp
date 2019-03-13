@@ -672,6 +672,40 @@ void KontrolRack_getparam(t_KontrolRack* x,
 }
 
 
+void loadModuleDir(const std::string& baseDir, const std::string& subDir) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+
+    struct stat st;
+    struct dirent **namelist;
+    // factory modules
+    std::string dir = baseDir;
+    if(subDir.length()>0) dir = baseDir + "/" + subDir;
+
+    int n = scandir(dir.c_str(), &namelist, NULL, alphasort);
+    if (n > 0) {
+        for (int i = 0; i < n; i++) {
+            if (namelist[i]->d_type == DT_DIR &&
+                strcmp(namelist[i]->d_name, "..") != 0
+                && strcmp(namelist[i]->d_name, ".") != 0) {
+
+                std::string mname = std::string(namelist[i]->d_name);
+                if(subDir.length()>0) mname = subDir + "/" + mname;
+
+                std::string module = baseDir + "/" + mname + "/module.pd";
+                int fs = stat(module.c_str(), &st);
+                if (fs == 0) {
+                    rack->addResource("module", mname);
+                    post("KontrolRack::module found: %s", mname.c_str());
+                } else {
+                    loadModuleDir(baseDir, mname);
+                }
+            }
+            free(namelist[i]);
+        }
+        free(namelist);
+    }
+
+}
 
 
 void KontrolRack_loadresources(t_KontrolRack *x) {
@@ -685,53 +719,16 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
     struct stat st;
 
     static const std::string MODULE_DIR = "modules";
-    const char* user_module_dir = getenv("USER_MODULE_DIR");
+    const char *user_module_dir = getenv("USER_MODULE_DIR");
 
     std::setlocale(LC_ALL, "en_US.UTF-8");
 
-    int n = 0;
-    // factory modules
-    n = scandir(MODULE_DIR.c_str(), &namelist, NULL, alphasort);
-    if (n > 0) {
-        for (int i = 0; i < n; i++) {
-            if (namelist[i]->d_type == DT_DIR &&
-                strcmp(namelist[i]->d_name, "..") != 0
-                && strcmp(namelist[i]->d_name, ".") != 0) {
-
-                std::string module = MODULE_DIR + "/" + std::string(namelist[i]->d_name) + "/module.pd";
-                int fs = stat(module.c_str(), &st);
-                if (fs == 0) {
-                    rack->addResource("module", namelist[i]->d_name);
-                    post("KontrolRack::module found: %s", namelist[i]->d_name);
-                }
-            }
-            free(namelist[i]);
-        }
-        free(namelist);
-    }
-
-    // user modules
-    if(user_module_dir) {
-        n = scandir(user_module_dir, &namelist, NULL, alphasort);
-        if (n > 0) {
-            for (int i = 0; i < n; i++) {
-                if (namelist[i]->d_type == DT_DIR &&
-                    strcmp(namelist[i]->d_name, "..") != 0
-                    && strcmp(namelist[i]->d_name, ".") != 0) {
-
-                    std::string module = std::string(user_module_dir) + "/" + std::string(namelist[i]->d_name) + "/module.pd";
-                    int fs = stat(module.c_str(), &st);
-                    if (fs == 0) {
-                        rack->addResource("module", namelist[i]->d_name);
-                        post("KontrolRack::user module found: %s", namelist[i]->d_name);
-                    }
-                }
-                free(namelist[i]);
-            }
-            free(namelist);
-        }
+    loadModuleDir(MODULE_DIR,"");
+    if (user_module_dir) {
+        loadModuleDir(user_module_dir,"");
     }
 }
+
 
 static std::string getParamSymbol(bool singleModuleMode, const Kontrol::Module &module, const Kontrol::Parameter &param) {
     if (!singleModuleMode) {
