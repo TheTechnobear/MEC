@@ -33,7 +33,7 @@ public:
     }
 
     //Kontrol::KontrolCallback
-    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+    void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
 
     void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 
@@ -55,6 +55,12 @@ public:
                     const Kontrol::EntityId &, const std::string &) override;
 
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
+
+
+    void savePreset(Kontrol::ChangeSource, const Kontrol::Rack &, std::string preset) override;
+    void loadPreset(Kontrol::ChangeSource, const Kontrol::Rack &, std::string preset) override;
+    void saveSettings(Kontrol::ChangeSource, const Kontrol::Rack &) override;
+
 private:
     t_KontrolRack *x_;
 };
@@ -719,6 +725,8 @@ void KontrolRack_getsetting(t_KontrolRack* x,
                     value = gensym(rack->mediaDir().c_str());
                 } else if (setting == "dataDir") {
                     value = gensym(rack->dataDir().c_str());
+                } else if (setting == "currentPreset") {
+                    value = gensym(rack->currentPreset().c_str());
                 } // else ignore, value is already set to defvalue
             }
         }
@@ -804,6 +812,15 @@ static std::string getParamSymbol(bool singleModuleMode, const Kontrol::Module &
 }
 
 //-----------------------
+void PdCallback::rack(Kontrol::ChangeSource src, const Kontrol::Rack & rack)  {
+    auto prack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (prack == nullptr || prack->id() != rack.id()) return;
+
+    KontrolRack_sendMsg(gensym("rackCurrentPreset")->s_thing, gensym(prack->currentPreset().c_str()));
+    KontrolRack_sendMsg(gensym("rackDataDir")->s_thing, gensym(prack->dataDir().c_str()));
+    KontrolRack_sendMsg(gensym("rackMediaDir")->s_thing, gensym(prack->mediaDir().c_str()));
+}
+
 void PdCallback::changed(Kontrol::ChangeSource src,
                          const Kontrol::Rack &rack,
                          const Kontrol::Module &module,
@@ -871,7 +888,7 @@ void PdCallback::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &r, con
         t_pd *sendobj;
         sendobj = gensym("screenLine5")->s_thing;
         if (sendobj != nullptr) {
-            KontrolRack_sendMsg(sendobj,"   ");
+            KontrolRack_sendMsg(sendobj, "   ");
         }
 
         sendobj = gensym("led")->s_thing;
@@ -890,5 +907,22 @@ void PdCallback::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &r, con
     }
 }
 
+void PdCallback::savePreset(Kontrol::ChangeSource, const Kontrol::Rack &r , std::string preset) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (rack && rack->id() != r.id())return;
+    KontrolRack_sendMsg(gensym("rackSavePreset")->s_thing, gensym(preset.c_str()));
+}
+
+void PdCallback::loadPreset(Kontrol::ChangeSource, const Kontrol::Rack & r, std::string preset) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (rack && rack->id() != r.id())return;
+    KontrolRack_sendMsg(gensym("rackLoadPreset")->s_thing, gensym(preset.c_str()));
+}
+
+void PdCallback::saveSettings(Kontrol::ChangeSource, const Kontrol::Rack & r ) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (rack && rack->id() != r.id())return;
+    KontrolRack_sendMsg(gensym("rackSaveSettings")->s_thing, gensym(r.id().c_str()));
+}
 
 // puredata methods implementation - end
