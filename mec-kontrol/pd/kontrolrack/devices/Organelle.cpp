@@ -698,7 +698,7 @@ void OMainMenu::clicked(unsigned idx) {
 
 // preset menu
 enum PresetMenuItms {
-    PMI_UPDATE,
+    PMI_SAVE,
     PMI_NEW,
     PMI_SEP,
     PMI_LAST
@@ -732,8 +732,8 @@ unsigned OPresetMenu::getSize() {
 
 std::string OPresetMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case PMI_UPDATE:
-            return "Update Preset";
+        case PMI_SAVE:
+            return "Save Preset";
         case PMI_NEW:
             return "New Preset";
         case PMI_SEP:
@@ -746,10 +746,10 @@ std::string OPresetMenu::getItemText(unsigned idx) {
 
 void OPresetMenu::clicked(unsigned idx) {
     switch (idx) {
-        case PMI_UPDATE: {
+        case PMI_SAVE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
-                rack->updatePreset(rack->currentPreset());
+                rack->savePreset(rack->currentPreset());
             }
             parent_.changeMode(OM_PARAMETER);
             break;
@@ -757,8 +757,8 @@ void OPresetMenu::clicked(unsigned idx) {
         case PMI_NEW: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
-                std::string newPreset = "New " + std::to_string(presets_.size());
-                rack->updatePreset(newPreset);
+                std::string newPreset = "new-" + std::to_string(presets_.size());
+                rack->savePreset(newPreset);
             }
             parent_.changeMode(OM_MAINMENU);
             break;
@@ -771,7 +771,7 @@ void OPresetMenu::clicked(unsigned idx) {
             if (rack != nullptr) {
                 std::string newPreset = presets_[idx - PMI_LAST];
                 parent_.changeMode(OM_PARAMETER);
-                rack->applyPreset(newPreset);
+                rack->loadPreset(newPreset);
             }
             break;
         }

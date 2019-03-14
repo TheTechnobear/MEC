@@ -120,8 +120,8 @@ public:
     void navNext() override;
     void navActivate() override;
 
-    void updatePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
-    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+    void savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+    void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
     void midiLearn(Kontrol::ChangeSource src, bool b) override;
     void modulationLearn(Kontrol::ChangeSource src, bool b) override;
 protected:
@@ -467,14 +467,14 @@ void OscDisplayMenuMode::navActivate() {
     clicked(cur_);
 }
 
-void OscDisplayMenuMode::updatePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void OscDisplayMenuMode::savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
     display();
-    KontrolCallback::updatePreset(source, rack, preset);
+    KontrolCallback::savePreset(source, rack, preset);
 }
 
-void OscDisplayMenuMode::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void OscDisplayMenuMode::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
     display();
-    KontrolCallback::applyPreset(source, rack, preset);
+    KontrolCallback::loadPreset(source, rack, preset);
 }
 
 void OscDisplayMenuMode::midiLearn(Kontrol::ChangeSource src, bool b) {
@@ -588,7 +588,7 @@ void OscDisplayMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack
 
 // preset menu
 enum OscPresetMenuItms {
-    OSC_PMI_UPDATE,
+    OSC_PMI_SAVE,
     OSC_PMI_NEW,
     OSC_PMI_SEP,
     OSC_PMI_LAST
@@ -623,8 +623,8 @@ unsigned OscDisplayPresetMenu::getSize() {
 
 std::string OscDisplayPresetMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case OSC_PMI_UPDATE:
-            return "Update Preset";
+        case OSC_PMI_SAVE:
+            return "Save Preset";
         case OSC_PMI_NEW:
             return "New Preset";
         case OSC_PMI_SEP:
@@ -637,10 +637,10 @@ std::string OscDisplayPresetMenu::getItemText(unsigned idx) {
 
 void OscDisplayPresetMenu::clicked(unsigned idx) {
     switch (idx) {
-        case OSC_PMI_UPDATE: {
+        case OSC_PMI_SAVE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
-                rack->updatePreset(rack->currentPreset());
+                rack->savePreset(rack->currentPreset());
             }
             parent_.changeMode(OSM_MAINMENU);
             break;
@@ -648,8 +648,8 @@ void OscDisplayPresetMenu::clicked(unsigned idx) {
         case OSC_PMI_NEW: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
-                std::string newPreset = "New " + std::to_string(presets_.size());
-                model()->updatePreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
+                std::string newPreset = "new-" + std::to_string(presets_.size());
+                model()->savePreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
             parent_.changeMode(OSM_MAINMENU);
             break;
@@ -662,7 +662,7 @@ void OscDisplayPresetMenu::clicked(unsigned idx) {
             if (rack != nullptr) {
                 std::string newPreset = presets_[idx - OSC_PMI_LAST];
                 parent_.changeMode(OSM_MAINMENU);
-                model()->applyPreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
+                model()->loadPreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
             break;
         }
@@ -1207,12 +1207,12 @@ void OscDisplay::modulationLearn(Kontrol::ChangeSource src, bool b) {
     modes_[currentMode_]->modulationLearn(src, b);
 }
 
-void OscDisplay::updatePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
-    modes_[currentMode_]->updatePreset(source, rack, preset);
+void OscDisplay::savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    modes_[currentMode_]->savePreset(source, rack, preset);
 }
 
-void OscDisplay::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
-    modes_[currentMode_]->applyPreset(source, rack, preset);
+void OscDisplay::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    modes_[currentMode_]->loadPreset(source, rack, preset);
 }
 
 

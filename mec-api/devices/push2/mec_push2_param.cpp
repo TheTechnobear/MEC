@@ -360,8 +360,8 @@ void P2_ParamMode::activate() {
 }
 
 
-void P2_ParamMode::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
-    P2_DisplayMode::applyPreset(source, rack, preset);
+void P2_ParamMode::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    P2_DisplayMode::loadPreset(source, rack, preset);
     setCurrentPage(0);
     displayPage();
 }

@@ -45,9 +45,9 @@ public:
     // Sent after completing each rack. The client should expect to receive the number of racks provided via the publishStart message.
     virtual void publishRackFinished(ChangeSource, const Rack &) { ; }
 
-    virtual void updatePreset(ChangeSource, const Rack &, std::string preset) { ; }
+    virtual void savePreset(ChangeSource, const Rack &, std::string preset) { ; }
 
-    virtual void applyPreset(ChangeSource, const Rack &, std::string preset) { ; }
+    virtual void loadPreset(ChangeSource, const Rack &, std::string preset) { ; }
 
     virtual void saveSettings(ChangeSource, const Rack &) { ; }
 
@@ -160,12 +160,12 @@ public:
     void publishStart(ChangeSource src, unsigned numRacks);
     void publishRackFinished(ChangeSource src, const EntityId &rackId);
 
-    void updatePreset(ChangeSource src,
-                      const EntityId &rackId,
-                      std::string preset);
-    void applyPreset(ChangeSource src,
-                     const EntityId &rackId,
-                     std::string preset);
+    void savePreset(ChangeSource src,
+                    const EntityId &rackId,
+                    std::string preset);
+    void loadPreset(ChangeSource src,
+                    const EntityId &rackId,
+                    std::string preset);
     void saveSettings(ChangeSource src,
                       const EntityId &rackId);
 

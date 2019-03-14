@@ -302,14 +302,14 @@ void OSCBroadcaster::publishRackFinished(ChangeSource src, const Rack &rack)
     send(ops.Data(), ops.Size());
 }
 
-void OSCBroadcaster::updatePreset(ChangeSource src, const Rack &rack, std::string preset) {
+void OSCBroadcaster::savePreset(ChangeSource src, const Rack &rack, std::string preset) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage("/Kontrol/updatePreset")
+        << osc::BeginMessage("/Kontrol/savePreset")
         << rack.id().c_str()
         << preset.c_str();
 
@@ -319,13 +319,13 @@ void OSCBroadcaster::updatePreset(ChangeSource src, const Rack &rack, std::strin
     send(ops.Data(), ops.Size());
 }
 
-void OSCBroadcaster::applyPreset(ChangeSource src, const Rack &rack, std::string preset) {
+void OSCBroadcaster::loadPreset(ChangeSource src, const Rack &rack, std::string preset) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
     ops << osc::BeginBundleImmediate
-        << osc::BeginMessage("/Kontrol/applyPreset")
+        << osc::BeginMessage("/Kontrol/loadPreset")
         << rack.id().c_str()
         << preset.c_str();
 

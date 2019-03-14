@@ -288,9 +288,9 @@ void Push2::resource(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
 }
 
 
-void Push2::applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
-    if (currentDisplayMode()) currentDisplayMode()->applyPreset(source, rack, preset);
-    if (currentPadMode()) currentPadMode()->applyPreset(source, rack, preset);
+void Push2::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+    if (currentDisplayMode()) currentDisplayMode()->loadPreset(source, rack, preset);
+    if (currentPadMode()) currentPadMode()->loadPreset(source, rack, preset);
 }
 
 void Push2::midiLearn(Kontrol::ChangeSource src, bool b) {

@@ -73,7 +73,7 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string&, const std::string &) override { ; };
 
-    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override { ; }
+    void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override { ; }
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
 
@@ -107,7 +107,7 @@ public:
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &,
                   const std::string&, const std::string &) override { ; };
 
-    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override { ; }
+    void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override { ; }
 
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
@@ -154,7 +154,7 @@ public:
     void changed(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                  const Kontrol::Parameter &parameter) override;
 
-    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+    void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
 
     void midiLearn(Kontrol::ChangeSource src, bool b) override;
     void modulationLearn(Kontrol::ChangeSource src, bool b) override;

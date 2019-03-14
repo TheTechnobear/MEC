@@ -12,6 +12,17 @@
 
 
 // for saving presets only , later moved to Preferences
+#ifndef _WIN32
+
+#   include <dirent.h>
+
+#else
+#   include "dirent_win.h"
+#endif
+
+#include <sys/stat.h>
+
+#include <clocale>
 #include <cJSON.h>
 #include <mec_log.h>
 #include <mec_prefs.h>
@@ -73,21 +84,33 @@ bool Rack::saveSettings() {
 
 bool Rack::loadSettings(const mec::Preferences &prefs) {
     bool ret = false;
+    // TODO - load rack settings
+    // rack preferences
+    // - final saved preset and load it
+    // - any othe preferences?
+
     presets_.clear();
-    mec::Preferences presetspref(prefs.getSubTree("presets"));
-    if (presetspref.valid()) {
-        for (const std::string &presetId :presetspref.getKeys()) {
-            mec::Preferences rackpresetspref(presetspref.getSubTree(presetId));
-            if (rackpresetspref.valid()) {
-                RackPreset rackPreset;
-                for (const std::string &moduleId :rackpresetspref.getKeys()) {
-                    mec::Preferences modulepresetspref(rackpresetspref.getSubTree(moduleId));
-                    if (modulepresetspref.valid()) {
-                        ret |= loadModulePreset(rackPreset, moduleId, modulepresetspref);
-                    }
+
+    std::string dir = "./presets";
+    const char* preset_dir = getenv("PRESET_DIR");
+    if(preset_dir) dir = preset_dir;
+
+    std::setlocale(LC_ALL, "en_US.UTF-8");
+
+    struct stat st;
+    struct dirent **namelist;
+
+    int n = scandir(dir.c_str(), &namelist, NULL, alphasort);
+    if (n > 0) {
+        for (int i = 0; i < n; i++) {
+            if (namelist[i]->d_type == DT_REG) {
+                std::string fname = std::string(namelist[i]->d_name);
+                std::size_t found = fname.rfind(".json");
+                if (found!=std::string::npos) {
+                    std::string presetId = fname.substr(0, fname.length() - 5);
+                    presets_.push_back(presetId);
+                    addResource("preset",presetId);
                 }
-                presets_[presetId] = rackPreset;
-                addResource("preset",presetId);
             }
         }
     }
@@ -100,78 +123,82 @@ bool Rack::saveSettings(const std::string &filename) {
     // do in cJSON for now
     std::ofstream outfile(filename);
     cJSON *root = cJSON_CreateObject();
-    cJSON *presets = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "presets", presets);
 
-    for (const auto &rackPreset : presets_) {
-
-        cJSON *preset = cJSON_CreateObject();
-        cJSON_AddItemToObject(presets, rackPreset.first.c_str(), preset);
-
-
-        for (const auto &mp : rackPreset.second) {
-
-            auto moduleId = mp.first;
-            auto modulePreset = mp.second;
-            cJSON *mjson = cJSON_CreateObject();
-            cJSON_AddItemToObject(preset, moduleId.c_str(), mjson);
-            saveModulePreset(modulePreset, mjson);
-        }
-    }
-
-    // const char* text = cJSON_PrintUnformatted(root);
-    const char *text = cJSON_Print(root);
-    outfile << text << std::endl;
-    outfile.close();
-    cJSON_Delete(root);
-
+    // TODO - save rack settings
+    // rack preferences
+    // - current rack?
     return true;
 }
 
 std::vector<std::string> Rack::getPresetList() {
     std::vector<std::string> presets;
     for (const auto &p : presets_) {
-        presets.push_back(p.first);
+        presets.push_back(p);
     }
     return presets;
 }
 
 
-bool Rack::updatePreset(std::string presetId) {
+bool Rack::savePreset(std::string presetId) {
     bool ret = false;
-    RackPreset rackPreset = presets_[presetId];
 
+    // store preset in rackPreset_
     for (const auto &m : modules_) {
         auto module = m.second;
         if (module != nullptr) {
             auto moduleId = module->id();
-            ModulePreset modulePreset = rackPreset[moduleId];
+            ModulePreset modulePreset = rackPreset_[moduleId];
             ret |= updateModulePreset(module, modulePreset);
-            rackPreset[moduleId] = modulePreset;
+            rackPreset_[moduleId] = modulePreset;
         }
     }
-    presets_[presetId] = rackPreset;
+
     addResource("preset",presetId);
     model()->publishResource(CS_LOCAL,*this,"preset",presetId);
 
+    //save rackPreset_ to file
+    saveFilePreset(presetId);
+
     currentPreset_ = presetId;
-    model()->updatePreset(CS_LOCAL,id(),currentPreset());
+    model()->savePreset(CS_LOCAL, id(), currentPreset());
 
     //    dumpSettings();
     return ret;
 }
 
-bool Rack::applyPreset(std::string presetId) {
-    bool ret = false;
-    if (presets_.count(presetId) == 0) return false;
-    RackPreset rackPreset = presets_[presetId];
+bool Rack::loadPreset(std::string presetId) {
+    bool ret = loadFilePreset(presetId);
+    return ret;
+}
 
+bool Rack::loadFilePreset(const std::string& presetId) {
+    bool ret = false;
+
+    std::string dir = "./presets";
+    const char* preset_dir = getenv("PRESET_DIR");
+    if(preset_dir) dir = preset_dir;
+    std::string filename = dir + "/" + presetId + ".json";
+
+
+    rackPreset_.clear();
+    mec::Preferences preset(filename);
+    if(!preset.valid()) return false;
+
+    // load preset from file
+    for (const std::string &moduleId :preset.getKeys()) {
+        mec::Preferences modulepresetspref(preset.getSubTree(moduleId));
+        if (modulepresetspref.valid()) {
+            ret |= loadModulePreset(rackPreset_, moduleId, modulepresetspref);
+        }
+    }
+
+    // publish it
     for (const auto &m : modules_) {
         auto module = m.second;
         if (module != nullptr) {
             auto moduleId = module->id();
-            if (rackPreset.count(moduleId) > 0) {
-                ModulePreset modulePreset = rackPreset[moduleId];
+            if (rackPreset_.count(moduleId) > 0) {
+                ModulePreset modulePreset = rackPreset_[moduleId];
                 if (module->type() != modulePreset.moduleType()) {
                     model()->loadModule(CS_PRESET, id(), module->id(), modulePreset.moduleType());
                     module = getModule(moduleId);
@@ -182,12 +209,39 @@ bool Rack::applyPreset(std::string presetId) {
         }
     }
     currentPreset_ = presetId;
-
     model()->publishMetaData();
-    model()->applyPreset(CS_LOCAL,id(),currentPreset());
-
+    model()->loadPreset(CS_LOCAL, id(), currentPreset());
     return ret;
 }
+
+bool Rack::saveFilePreset(const std::string& presetId) {
+    bool ret = true;
+
+    std::string dir = "./presets";
+    const char* preset_dir = getenv("PRESET_DIR");
+    if(preset_dir) dir = preset_dir;
+    std::string filename = dir + "/" + presetId + ".json";
+
+    std::ofstream outfile(filename.c_str());
+    cJSON *root = cJSON_CreateObject();
+
+    for (const auto &mp : rackPreset_) {
+
+        auto moduleId = mp.first;
+        auto modulePreset = mp.second;
+        cJSON *mjson = cJSON_CreateObject();
+        cJSON_AddItemToObject(root, moduleId.c_str(), mjson);
+        saveModulePreset(modulePreset, mjson);
+    }
+
+    // const char* text = cJSON_PrintUnformatted(root);
+    const char *text = cJSON_Print(root);
+    outfile << text << std::endl;
+    outfile.close();
+    cJSON_Delete(root);
+    return ret;
+}
+
 
 bool Rack::changeMidiCC(unsigned midiCC, unsigned midiValue) {
     bool ret = false;
@@ -493,13 +547,7 @@ void Rack::dumpSettings() const {
     LOG_1("Rack Settings :" << id());
     LOG_1("------------------------");
     for (const auto &preset : presets_) {
-        LOG_1("Preset : " << preset.first);
-        for (const auto &rpreset: preset.second) {
-            LOG_1("   Module : " << rpreset.first);
-            for (auto param : rpreset.second.values()) {
-                LOG_1("       " << param.paramId() << " : " << param.value().floatValue());
-            }
-        }
+        LOG_1("Preset : " << preset);
     }
 }
 

@@ -75,11 +75,11 @@ int main(int argc, char **argv) {
         // rack->dumpCurrentValues();
 
         LOG_1("preset 0: transpose 12, rmix 10");
-        rack->applyPreset("0");
+        rack->loadPreset("0");
         // rack->dumpCurrentValues();
 
         LOG_1("preset 1: transpose 24");
-        rack->applyPreset("1");
+        rack->loadPreset("1");
         // rack->dumpCurrentValues();
 
         LOG_1("cc 62, 80 : rmix 50");

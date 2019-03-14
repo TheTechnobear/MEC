@@ -59,7 +59,7 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std:
 
 void KontrolModel::publishPreset(const std::shared_ptr<Rack> &rack) const {
     for (const auto &i : listeners_) {
-        (i.second)->applyPreset(CS_LOCAL, *rack, rack->currentPreset());
+        (i.second)->loadPreset(CS_LOCAL, *rack, rack->currentPreset());
     }
 }
 
@@ -379,32 +379,32 @@ void KontrolModel::unassignModulation(ChangeSource src,
 
 
 
-void KontrolModel::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
+void KontrolModel::savePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
     auto rack = getRack(rackId);
     if (rack == nullptr) return;
 
     if (src.type()==ChangeSource::REMOTE && localRack() && rackId == localRack()->id()) {
-        localRack()->updatePreset(preset);
+        localRack()->savePreset(preset);
     } else {
         rack->currentPreset(preset);
     }
 
     for (const auto &i : listeners_) {
-        (i.second)->updatePreset(src, *rack, preset);
+        (i.second)->savePreset(src, *rack, preset);
     }
 }
 
-void KontrolModel::applyPreset(ChangeSource src, const EntityId &rackId, std::string preset) {
+void KontrolModel::loadPreset(ChangeSource src, const EntityId &rackId, std::string preset) {
     auto rack = getRack(rackId);
     if (rack == nullptr) return;
     if (src.type()==ChangeSource::REMOTE  && localRack() && rackId == localRack()->id()) {
-        localRack()->applyPreset(preset);
+        localRack()->loadPreset(preset);
     } else {
         rack->currentPreset(preset);
     }
 
     for (const auto &i : listeners_) {
-        (i.second)->applyPreset(src, *rack, preset);
+        (i.second)->loadPreset(src, *rack, preset);
     }
 }
 

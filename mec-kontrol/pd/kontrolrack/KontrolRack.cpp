@@ -302,7 +302,7 @@ EXTERN void KontrolRack_setup(void) {
                     (t_method) KontrolRack_loadpreset, gensym("loadpreset"),
                     A_DEFSYMBOL, A_NULL);
     class_addmethod(KontrolRack_class,
-                    (t_method) KontrolRack_updatepreset, gensym("updatepreset"),
+                    (t_method) KontrolRack_savepreset, gensym("savepreset"),
                     A_DEFSYMBOL, A_NULL);
 
     class_addmethod(KontrolRack_class,
@@ -350,18 +350,39 @@ void KontrolRack_cleanup(void)
     }
 }
 
-void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
+void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *modType) {
     if (modId == nullptr && modId->s_name == nullptr && strlen(modId->s_name) == 0) {
         post("loadmodule failed , invalid moduleId");
         return;
     }
-    if (mod == nullptr && mod->s_name == nullptr && strlen(mod->s_name) == 0) {
+    if (modType == nullptr && modType->s_name == nullptr && strlen(modType->s_name) == 0) {
         post("loadmodule failed , invalid module for moduleId %s", modId->s_name);
         return;
     }
 
+    std::string mType = modType->s_name;
+
+    // load the module
+    std::string module_dir = "modules";
+
+    const char* user_module_dir = getenv("USER_MODULE_DIR");
+    struct stat st;
+    if(user_module_dir) {
+        std::string module = std::string(user_module_dir) + "/" + mType + "/module.pd";
+        int fs = stat(module.c_str(), &st);
+        if(fs == 0) {
+            module_dir = user_module_dir;
+            post ("loading user module %s", mType.c_str());
+        }
+    }
+
+    std::string moddir = module_dir + "/" + mType;
+    t_symbol* modDirSym=gensym(moddir.c_str());
+
+
+
     std::string pdObject = std::string("pd-") + std::string(modId->s_name);
-    std::string pdModule = std::string(mod->s_name) + "/module";
+    std::string pdModule = moddir + "/module";
 
     t_pd *sendObj = gensym(pdObject.c_str())->s_thing;
     if (!sendObj) {
@@ -369,7 +390,7 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
         return;
     }
 
-    post("loadmodule: loading %s into %s", mod->s_name, modId->s_name);
+    post("loadmodule: loading %s into %s", modType->s_name, modId->s_name);
 
     KontrolRack_sendMsg(sendObj, "clear");
 
@@ -387,19 +408,10 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     auto module = Kontrol::KontrolModel::model()->getModule(rack, modId->s_name);
     if (module == nullptr) {
-        post("unable to initialise module %s %s", modId->s_name, mod->s_name);
+        post("unable to initialise module %s %s", modId->s_name, modType->s_name);
         return;
     }
 
-    {
-        //load defintions
-        std::string sendsym = std::string("loaddefs-") + modId->s_name;
-        t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
-        if (sendobj != nullptr) {
-            std::string file = std::string(mod->s_name) + "/module.json";
-            KontrolRack_sendMsg(sendobj, file.c_str());
-        }
-    }
 
     KontrolRack_obj(sendObj, 400, 1, "r", "rackloaded"); //obj5
 
@@ -418,20 +430,28 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
 
 
     {
-        std::string file = std::string(mod->s_name) + "/module.json";
+        // loaddefinitions message
+        std::string file = moddir + "/module.json";
         t_symbol *fileSym = gensym(file.c_str());
-        t_atom args[4];
+        t_atom args[5];
         SETSYMBOL(&args[0], gensym("msg"));
         SETFLOAT(&args[1], 400);
         SETFLOAT(&args[2], 60);
-        SETSYMBOL(&args[3], fileSym);
-        pd_forwardmess(sendObj, 4, args); //obj7
+        SETSYMBOL(&args[3], gensym("loaddefinitions"));
+        SETSYMBOL(&args[4], fileSym);
+        pd_forwardmess(sendObj, 5, args); //obj7
     }
     KontrolRack_connectObjs(sendObj, 6, 1, 7, 0);
 
     {
-        std::string sym = std::string("loaddefs-") + modId->s_name;
-        KontrolRack_obj(sendObj, 400, 110, "send", sym.c_str()); //obj8
+        t_atom args[6];
+        SETSYMBOL(&args[0], gensym("obj"));
+        SETFLOAT(&args[1], 400);
+        SETFLOAT(&args[2], 110);
+        SETSYMBOL(&args[3], gensym("KontrolModule"));
+        SETSYMBOL(&args[4], gensym(modId->s_name));
+        SETSYMBOL(&args[5], gensym(modType->s_name));
+        pd_forwardmess(sendObj, 6, args);
     }
 
     KontrolRack_connectObjs(sendObj, 7, 0, 8, 0);
@@ -443,6 +463,12 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *mod) {
     KontrolRack_connectObjs(sendObj, 6, 0, 9, 0);
 
     // now initialise the module
+    {
+        // load definition
+        std::string file = moddir + "/module.json";
+        Kontrol::KontrolModel::model()->loadModuleDefinitions(rack->id(), module->id(),file);
+    }
+
     {
         // clear aux label and led
         t_pd *sendobj;
@@ -608,7 +634,7 @@ void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset) {
         if (rack) {
             std::string presetId = preset->s_name;
             post("loading preset : %s", preset->s_name);
-            rack->applyPreset(presetId);
+            rack->loadPreset(presetId);
             rack->dumpCurrentValues();
         }
     } else {
@@ -616,13 +642,13 @@ void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset) {
     }
 }
 
-void KontrolRack_updatepreset(t_KontrolRack *x, t_symbol *preset) {
+void KontrolRack_savepreset(t_KontrolRack *x, t_symbol *preset) {
     if (preset != nullptr && preset->s_name != nullptr && strlen(preset->s_name) > 0) {
         auto rack = Kontrol::KontrolModel::model()->getLocalRack();
         if (rack) {
             std::string presetId = preset->s_name;
-            post("update preset : %s", preset->s_name);
-            rack->updatePreset(presetId);
+            post("save preset : %s", preset->s_name);
+            rack->savePreset(presetId);
         }
     } else {
         post("No local rack found");
@@ -792,23 +818,8 @@ void PdCallback::loadModule(Kontrol::ChangeSource, const Kontrol::Rack &r,
                             const Kontrol::EntityId &mId, const std::string &mType) {
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack && rack->id() == r.id()) {
-        // load the module
-        std::string module_dir = "modules";
-
-        const char* user_module_dir = getenv("USER_MODULE_DIR");
-        struct stat st;
-        if(user_module_dir) {
-            std::string module = std::string(user_module_dir) + "/" + mType + "/module.pd";
-            int fs = stat(module.c_str(), &st);
-            if(fs == 0) {
-                module_dir = user_module_dir;
-                post ("loading user module %s", mType.c_str());
-            }
-        }
-
-        std::string mod = module_dir + "/" + mType;
         t_symbol *modId = gensym(mId.c_str());
-        t_symbol *modType = gensym(mod.c_str());
+        t_symbol *modType = gensym(mType.c_str());
         KontrolRack_loadmodule(x_, modId, modType);
     } else {
         post("No local rack found");

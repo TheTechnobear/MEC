@@ -177,16 +177,16 @@ public:
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = arg->AsString();
                 receiver_.publishRackFinished(changedSrc, rackId);
-            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/updatePreset") == 0) {
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/savePreset") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
                 const char *preset = (arg++)->AsString();
-                receiver_.updatePreset(changedSrc, rackId, preset);
-            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/applyPreset") == 0) {
+                receiver_.savePreset(changedSrc, rackId, preset);
+            } else if (std::strcmp(m.AddressPattern(), "/Kontrol/loadPreset") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
                 const char *preset = (arg++)->AsString();
-                receiver_.applyPreset(changedSrc, rackId, preset);
+                receiver_.loadPreset(changedSrc, rackId, preset);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/saveSettings") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 const char *rackId = (arg++)->AsString();
@@ -367,12 +367,12 @@ void OSCReceiver::publishRackFinished(ChangeSource src, const EntityId & rackId)
     model_->publishRackFinished(src, rackId);
 }
 
-void OSCReceiver::updatePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
-    model_->updatePreset(src, rackId, preset);
+void OSCReceiver::savePreset(ChangeSource src, const EntityId &rackId, std::string preset) {
+    model_->savePreset(src, rackId, preset);
 }
 
-void OSCReceiver::applyPreset(ChangeSource src, const EntityId &rackId, std::string preset) {
-    model_->applyPreset(src, rackId, preset);
+void OSCReceiver::loadPreset(ChangeSource src, const EntityId &rackId, std::string preset) {
+    model_->loadPreset(src, rackId, preset);
 }
 
 void OSCReceiver::saveSettings(ChangeSource src, const EntityId &rackId) {

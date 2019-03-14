@@ -114,8 +114,8 @@ public:
     bool saveSettings(const std::string &filename);
 
     // local racks
-    bool applyPreset(std::string presetId);
-    bool updatePreset(std::string presetId);
+    bool loadPreset(std::string presetId);
+    bool savePreset(std::string presetId);
     std::vector<std::string> getPresetList();
 
     // used on non-local rack
@@ -156,10 +156,15 @@ public:
 
 private:
     typedef std::unordered_map<EntityId, ModulePreset> RackPreset;
+    bool loadFilePreset(const std::string& presetId);
+    bool saveFilePreset(const std::string& presetId);
+
     bool loadModulePreset(RackPreset &rackPreset, const EntityId &moduleId, const mec::Preferences &prefs);
     bool saveModulePreset(ModulePreset &, cJSON *root);
     bool updateModulePreset(std::shared_ptr<Module> module, ModulePreset &modulePreset);
     bool applyModulePreset(std::shared_ptr<Module> module, const ModulePreset &modulePreset);
+
+
 
     std::string host_;
     unsigned port_;
@@ -170,8 +175,9 @@ private:
     std::shared_ptr<mec::Preferences> settings_;
 
     std::string currentPreset_;
+    RackPreset rackPreset_;
     // presets = key = presetid, value = map<moduleId, preset>
-    std::unordered_map<std::string, RackPreset> presets_;
+    std::vector<std::string> presets_;
 };
 
 }

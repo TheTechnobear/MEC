@@ -58,7 +58,7 @@ void P2_PresetMode::processCC(unsigned cc, unsigned v) {
             if (v > 0) {
                 auto pRack = model_->getRack(parent_.currentRack());
                 if (pRack == nullptr) return;
-                model_->updatePreset(Kontrol::CS_LOCAL, pRack->id(), pRack->currentPreset());
+                model_->savePreset(Kontrol::CS_LOCAL, pRack->id(), pRack->currentPreset());
                 parent_.changeDisplayMode(P2D_Param);
                 return;
             }
@@ -70,9 +70,9 @@ void P2_PresetMode::processCC(unsigned cc, unsigned v) {
                 if (pRack == nullptr) return;
                 auto presets = pRack->getResources("preset");
                 int sz = presets.size();
-                std::string newPreset = "New " + std::to_string(sz);
+                std::string newPreset = "new-" + std::to_string(sz);
                 LOG_0("create new preset " << newPreset);
-                model_->updatePreset(Kontrol::CS_LOCAL, pRack->id(), newPreset);
+                model_->savePreset(Kontrol::CS_LOCAL, pRack->id(), newPreset);
                 parent_.changeDisplayMode(P2D_Param);
                 return;
             }
@@ -87,7 +87,7 @@ void P2_PresetMode::processCC(unsigned cc, unsigned v) {
                     if (idx == selectedIdx_) {
                         LOG_0("selected preset " << preset);
                         parent_.changeDisplayMode(P2D_Param);
-                        model_->applyPreset(Kontrol::CS_LOCAL, pRack->id(), preset);
+                        model_->loadPreset(Kontrol::CS_LOCAL, pRack->id(), preset);
                         return;
                     }
                     idx++;
@@ -149,10 +149,10 @@ void P2_PresetMode::displayPage() {
 
     push2Api_->clearDisplay();
 
-    push2Api_->drawCell8(MAX_ROW, MAX_COL, "    Apply", clr);
-    push2Api_->drawCell8(MAX_ROW, MAX_COL-1, "    Update", clr);
+    push2Api_->drawCell8(MAX_ROW, MAX_COL, "    Load", clr);
+    push2Api_->drawCell8(MAX_ROW, MAX_COL-1, "    Save", clr);
     push2Api_->drawCell8(MAX_ROW, MAX_COL-2, "    New", clr);
-    push2Api_->drawCell8(MAX_ROW, 0, "    Save", clr);
+    push2Api_->drawCell8(MAX_ROW, 0, "    Save Settings", clr);
 
     // we need a current rack and also current module
     auto racks = model_->getRacks();

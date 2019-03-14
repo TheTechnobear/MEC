@@ -61,8 +61,8 @@ public:
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &, const std::string &) override;
-    void updatePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
-    void applyPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+    void savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
+    void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
     void addMode(OscDisplayModes mode, std::shared_ptr<OscDisplayMode>);
     void changeMode(OscDisplayModes);
     void midiLearn(Kontrol::ChangeSource src, bool b) override;

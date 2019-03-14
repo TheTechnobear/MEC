@@ -102,10 +102,10 @@ public:
     void publishStart(ChangeSource src, unsigned numRacks);
     void publishRackFinished(ChangeSource src, const EntityId &rackId);
 
-    void updatePreset(ChangeSource src,
+    void savePreset(ChangeSource src,
                       const EntityId &rackId,
                       std::string preset);
-    void applyPreset(ChangeSource src,
+    void loadPreset(ChangeSource src,
                      const EntityId &rackId,
                      std::string preset);
     void saveSettings(ChangeSource src,
