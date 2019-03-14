@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 
     Kontrol::EntityId rackId = Kontrol::Rack::createId(host, port);
     Kontrol::EntityId moduleId = "module1";
-    model->createRack(Kontrol::CS_LOCAL, rackId, host, port);
+    model->createRack(Kontrol::CS_LOCAL, rackId, host, port,"data", "media");
     model->createModule(Kontrol::CS_LOCAL, rackId, moduleId, "Poly Synth", "polysynth");
     model->loadModuleDefinitions(rackId, moduleId, file + "-module.json");
     model->loadSettings(rackId, file + "-rack.json");

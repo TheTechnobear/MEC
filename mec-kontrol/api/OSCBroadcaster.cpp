@@ -380,7 +380,9 @@ void OSCBroadcaster::rack(ChangeSource src, const Rack &p) {
         << osc::BeginMessage("/Kontrol/rack")
         << p.id().c_str()
         << p.host().c_str()
-        << (int32_t) p.port();
+        << (int32_t) p.port()
+        << p.dataDir().c_str()
+        << p.mediaDir().c_str();
 
     ops << osc::EndMessage
         << osc::EndBundle;

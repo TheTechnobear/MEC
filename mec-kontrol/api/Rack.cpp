@@ -84,49 +84,56 @@ bool Rack::saveSettings() {
 
 bool Rack::loadSettings(const mec::Preferences &prefs) {
     bool ret = false;
-    // TODO - load rack settings
-    // rack preferences
-    // - final saved preset and load it
-    // - any othe preferences?
 
     presets_.clear();
 
-    std::string dir = "./presets";
-    const char* preset_dir = getenv("PRESET_DIR");
-    if(preset_dir) dir = preset_dir;
+    std::string presetsdir = dataDir_ + "/presets";
 
     std::setlocale(LC_ALL, "en_US.UTF-8");
 
     struct stat st;
     struct dirent **namelist;
 
-    int n = scandir(dir.c_str(), &namelist, NULL, alphasort);
+    int n = scandir(presetsdir.c_str(), &namelist, NULL, alphasort);
     if (n > 0) {
         for (int i = 0; i < n; i++) {
-            if (namelist[i]->d_type == DT_REG) {
-                std::string fname = std::string(namelist[i]->d_name);
-                std::size_t found = fname.rfind(".json");
-                if (found!=std::string::npos) {
-                    std::string presetId = fname.substr(0, fname.length() - 5);
+            if (namelist[i]->d_type == DT_DIR &&
+                strcmp(namelist[i]->d_name, "..") != 0
+                && strcmp(namelist[i]->d_name, ".") != 0) {
+                std::string presetId = namelist[i]->d_name;
+                std::string paramfile = presetsdir + "/" + presetId+ "/params.json";
+                int fs = stat(paramfile.c_str(), &st);
+                if(fs == 0) {
                     presets_.push_back(presetId);
                     addResource("preset",presetId);
                 }
             }
         }
     }
+    dataDir_ = prefs.getString("dataDir", dataDir_);
+    mediaDir_ = prefs.getString("mediaDir", mediaDir_);
+    currentPreset_ = prefs.getString("currentPreset", currentPreset_);
 
+    loadFilePreset(currentPreset_);
     return ret;
 }
 
 
 bool Rack::saveSettings(const std::string &filename) {
-    // do in cJSON for now
-    std::ofstream outfile(filename);
+    std::ofstream outfile(filename.c_str());
     cJSON *root = cJSON_CreateObject();
 
-    // TODO - save rack settings
-    // rack preferences
-    // - current rack?
+
+    cJSON_AddStringToObject(root, "dataDir", dataDir_.c_str());
+    cJSON_AddStringToObject(root, "mediaDir", mediaDir_.c_str());
+    cJSON_AddStringToObject(root, "currentPreset", currentPreset_.c_str());
+
+    // const char* text = cJSON_PrintUnformatted(root);
+    const char *text = cJSON_Print(root);
+    outfile << text << std::endl;
+    outfile.close();
+    cJSON_Delete(root);
+
     return true;
 }
 
@@ -174,11 +181,8 @@ bool Rack::loadPreset(std::string presetId) {
 bool Rack::loadFilePreset(const std::string& presetId) {
     bool ret = false;
 
-    std::string dir = "./presets";
-    const char* preset_dir = getenv("PRESET_DIR");
-    if(preset_dir) dir = preset_dir;
-    std::string filename = dir + "/" + presetId + ".json";
-
+    std::string dir = dataDir_ + "/presets/"+presetId;
+    std::string filename = dir+"/params.json";
 
     rackPreset_.clear();
     mec::Preferences preset(filename);
@@ -217,10 +221,9 @@ bool Rack::loadFilePreset(const std::string& presetId) {
 bool Rack::saveFilePreset(const std::string& presetId) {
     bool ret = true;
 
-    std::string dir = "./presets";
-    const char* preset_dir = getenv("PRESET_DIR");
-    if(preset_dir) dir = preset_dir;
-    std::string filename = dir + "/" + presetId + ".json";
+    std::string dir = dataDir_ + "/presets/"+presetId;
+    std::string filename = dir+"/params.json";
+    mkdir(dir.c_str(),S_IRWXU|S_IRWXG|S_IRWXO);
 
     std::ofstream outfile(filename.c_str());
     cJSON *root = cJSON_CreateObject();

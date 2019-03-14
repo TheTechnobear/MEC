@@ -69,6 +69,7 @@ public:
     const std::string &moduleType() const { return moduleType_; }
 
     const MidiMap &midiMap() const { return midi_map_; }
+
     const ModulationMap &modulationMap() const { return mod_map_; }
 
     const std::vector<ModulePresetValue> &values() const { return values_; }
@@ -81,18 +82,19 @@ private:
 };
 
 
-
-
 class KontrolModel;
-
 
 
 class Rack : public Entity {
 public:
     Rack(const std::string &host,
          unsigned port,
-         const std::string &displayName)
-            : Entity(createId(host, port), displayName), host_(host), port_(port) {
+         const std::string &displayName,
+         const std::string &dataDir,
+         const std::string &mediaDir
+         ) :    Entity(createId(host, port), displayName),
+                host_(host), port_(port),
+                dataDir_(dataDir), mediaDir_(mediaDir) {
         ;
     }
 
@@ -118,9 +120,18 @@ public:
     bool savePreset(std::string presetId);
     std::vector<std::string> getPresetList();
 
+    const std::string &dataDir() const { return dataDir_; }
+
+    const std::string &mediaDir() const { return mediaDir_; }
+
+    void dataDir(const std::string &d) { dataDir_ = d; }
+
+    void mediaDir(const std::string &d) { mediaDir_ = d; }
+
     // used on non-local rack
     const std::string &currentPreset() const { return currentPreset_; }
-    void currentPreset(const std::string& preset) { currentPreset_ = preset;}
+
+    void currentPreset(const std::string &preset) { currentPreset_ = preset; }
 
 
     bool changeMidiCC(unsigned midiCC, unsigned midiValue);
@@ -156,8 +167,8 @@ public:
 
 private:
     typedef std::unordered_map<EntityId, ModulePreset> RackPreset;
-    bool loadFilePreset(const std::string& presetId);
-    bool saveFilePreset(const std::string& presetId);
+    bool loadFilePreset(const std::string &presetId);
+    bool saveFilePreset(const std::string &presetId);
 
     bool loadModulePreset(RackPreset &rackPreset, const EntityId &moduleId, const mec::Preferences &prefs);
     bool saveModulePreset(ModulePreset &, cJSON *root);
@@ -165,19 +176,19 @@ private:
     bool applyModulePreset(std::shared_ptr<Module> module, const ModulePreset &modulePreset);
 
 
-
     std::string host_;
     unsigned port_;
-    std::map<EntityId, std::shared_ptr<Module>> modules_;
-    std::unordered_map<std::string, std::set<std::string>> resources_;
+    std::string mediaDir_;
+    std::string dataDir_;
+    std::string currentPreset_;
 
     std::string settingsFile_;
     std::shared_ptr<mec::Preferences> settings_;
 
-    std::string currentPreset_;
-    RackPreset rackPreset_;
-    // presets = key = presetid, value = map<moduleId, preset>
+    std::map<EntityId, std::shared_ptr<Module>> modules_;
+    std::unordered_map<std::string, std::set<std::string>> resources_;
     std::vector<std::string> presets_;
+    RackPreset rackPreset_;
 };
 
 }

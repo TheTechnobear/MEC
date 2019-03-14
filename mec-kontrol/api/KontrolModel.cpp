@@ -67,7 +67,12 @@ void KontrolModel::publishPreset(const std::shared_ptr<Rack> &rack) const {
 std::shared_ptr<Rack> KontrolModel::createLocalRack(unsigned port) {
     std::string host = "127.0.0.1";
     auto rackId = Rack::createId(host, port);
-    localRack_ = createRack(CS_LOCAL, rackId, host, port);
+    const char* datadir = getenv("DATA_DIR");
+    const char* mediadir = getenv("MEDIA_DIR");
+    std::string dataDir = datadir ? datadir : "./data/orac";
+    std::string mediaDir = datadir ? datadir : "./media";
+
+    localRack_ = createRack(CS_LOCAL, rackId, host, port,dataDir, mediaDir);
     return localRack_;
 }
 
@@ -170,10 +175,12 @@ std::shared_ptr<Rack> KontrolModel::createRack(
         ChangeSource src,
         const EntityId &rackId,
         const std::string &host,
-        unsigned port
+        unsigned port,
+        const std::string &dataDir,
+        const std::string &mediaDir
 ) {
     std::string desc = host;
-    auto rack = std::make_shared<Rack>(host, port, desc);
+    auto rack = std::make_shared<Rack>(host, port, desc, dataDir, mediaDir);
     racks_[rack->id()] = rack;
 
     publishRack(src, *rack);

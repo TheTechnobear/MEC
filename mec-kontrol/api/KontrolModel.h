@@ -90,7 +90,10 @@ public:
             ChangeSource src,
             const EntityId &rackId,
             const std::string &host,
-            unsigned port);
+            unsigned port,
+            const std::string &dataDir,
+            const std::string &mediaDir
+            );
 
     std::shared_ptr<Module> createModule(
             ChangeSource src,

@@ -110,9 +110,11 @@ public:
                 const char *rackId = (arg++)->AsString();
                 const char *host = (arg++)->AsString();
                 unsigned port = (unsigned) (arg++)->AsInt32();
+                const char *dataDir = (arg++)->AsString();
+                const char *mediaDir = (arg++)->AsString();
 
                 // std::cout << "received rack " << rackId << std::endl;
-                receiver_.createRack(changedSrc, rackId, host, port);
+                receiver_.createRack(changedSrc, rackId, host, port,dataDir, mediaDir);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/ping") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
                 unsigned port = (unsigned) (arg++)->AsInt32();
@@ -269,8 +271,11 @@ void OSCReceiver::createRack(
         ChangeSource src,
         const EntityId &rackId,
         const std::string &host,
-        unsigned port) const {
-    model_->createRack(src, rackId, host, port);
+        unsigned port,
+        const std::string &dataDir,
+        const std::string &mediaDir
+        ) const {
+    model_->createRack(src, rackId, host, port,dataDir,mediaDir);
 }
 
 void OSCReceiver::createModule(
