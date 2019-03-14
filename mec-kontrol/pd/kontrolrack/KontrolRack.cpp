@@ -321,6 +321,11 @@ EXTERN void KontrolRack_setup(void) {
                     (t_method) KontrolRack_getparam, gensym("getparam"),
                     A_DEFSYMBOL, A_DEFSYMBOL, A_DEFFLOAT, A_DEFSYMBOL, A_NULL);
 
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_getsetting, gensym("getsetting"),
+                    A_DEFSYMBOL, A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
+
+
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_test, gensym("test"),
@@ -693,6 +698,40 @@ void KontrolRack_getparam(t_KontrolRack* x,
             pd_forwardmess(sendObj, 1, args);
         } else {
             post("getparam sendsym not found %s", sendsym->s_name);
+        }
+    }
+}
+
+
+void KontrolRack_getsetting(t_KontrolRack* x,
+                          t_symbol* settingName,
+                          t_symbol* defvalue,
+                          t_symbol* sendsym) {
+    if(sendsym != nullptr && sendsym->s_name != nullptr) {
+        t_symbol* value = defvalue;
+
+        if (settingName != nullptr && settingName->s_name != nullptr
+                ) {
+            auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+            if (rack) {
+                std::string setting = settingName->s_name;
+                if(setting == "mediaDir") {
+                    value = gensym(rack->mediaDir().c_str());
+                } else if (setting == "dataDir") {
+                    value = gensym(rack->dataDir().c_str());
+                } // else ignore, value is already set to defvalue
+            }
+        }
+
+        std::string pdObject=sendsym->s_name;
+        t_pd *sendObj = gensym(pdObject.c_str())->s_thing;
+//        t_pd* sendObj = gensym(sendsym->s_name)->s_thing;
+        if (sendObj != nullptr) {
+            t_atom args[1];
+            SETSYMBOL(&args[0], value);
+            pd_forwardmess(sendObj, 1, args);
+        } else {
+            post("getsetting sendsym not found %s", sendsym->s_name);
         }
     }
 }

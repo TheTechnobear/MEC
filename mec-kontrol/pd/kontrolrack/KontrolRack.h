@@ -66,6 +66,7 @@ void KontrolRack_monitorenable(t_KontrolRack *x, t_floatarg f);
 
 void KontrolRack_test(t_KontrolRack *x, t_floatarg f);
 void KontrolRack_getparam(t_KontrolRack* x, t_symbol* modId, t_symbol* paramId, t_floatarg defvalue, t_symbol* sendsym);
+void KontrolRack_getsetting(t_KontrolRack* x, t_symbol* setting, t_symbol* defvalue, t_symbol* sendsym);
 
 
 void KontrolRack_loadresources(t_KontrolRack *x);
