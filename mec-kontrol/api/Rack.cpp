@@ -87,6 +87,9 @@ bool Rack::loadSettings(const mec::Preferences &prefs) {
 
     presets_.clear();
 
+    dataDir_ = prefs.getString("dataDir", dataDir_);
+    mediaDir_ = prefs.getString("mediaDir", mediaDir_);
+    currentPreset_ = prefs.getString("currentPreset", currentPreset_);
     std::string presetsdir = dataDir_ + "/presets";
 
     std::setlocale(LC_ALL, "en_US.UTF-8");
@@ -110,9 +113,6 @@ bool Rack::loadSettings(const mec::Preferences &prefs) {
             }
         }
     }
-    dataDir_ = prefs.getString("dataDir", dataDir_);
-    mediaDir_ = prefs.getString("mediaDir", mediaDir_);
-    currentPreset_ = prefs.getString("currentPreset", currentPreset_);
 
     loadFilePreset(currentPreset_);
     return ret;

@@ -1,3 +1,6 @@
+# git 
+git submodule update --init --recursive
+
 # Dependancies
 CMake
 libusb
