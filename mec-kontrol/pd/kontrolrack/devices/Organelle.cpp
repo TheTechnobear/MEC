@@ -270,6 +270,17 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto module = parent_.model()->getModule(rack, parent_.currentModule());
         auto page = parent_.model()->getPage(module, pageId_);
+
+        if (page->isCustomPage()) {
+            // a page with no parameters is a custom page
+            // and recieves pot events
+            char msg[7];
+            sprintf(msg, "knob%d",pot);
+            parent_.sendPdModuleMessage(msg, module->id(), page->id(), rawvalue);
+            return;
+        }
+
+
 //        auto pages = parent_.model()->getPages(module);
         auto params = parent_.model()->getParams(module, page);
 
@@ -366,6 +377,7 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
         if (UI) {
             displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT, false);
             parent_.flipDisplay();
+            parent_.sendPdModuleMessage("activePage", module->id(), page->id());
         }
 
         for (unsigned int i = 0; i < ORGANELLE_NUM_PARAMS; i++) {
@@ -378,20 +390,27 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 
 void OParamMode::changeEncoder(unsigned enc, float value) {
     OBaseMode::changeEncoder(enc, value);
+
     if (pageIdx_ < 0) {
         setCurrentPage(0, false);
+        return;
+    }
+
+    auto rack = parent_.model()->getRack(parent_.currentRack());
+    auto module = parent_.model()->getModule(rack, parent_.currentModule());
+//        auto page = parent_.model()->getPage(module,pageId_);
+    auto pages = parent_.model()->getPages(module);
+//        auto params = parent_.model()->getParams(module,page);
+
+    if (pages.size()<2) {
+        // if single page send encoder messages to modules
+        parent_.sendPdModuleMessage("enc", module->id(), value);
         return;
     }
 
     auto pagenum = (unsigned) pageIdx_;
 
     if (value > 0) {
-        auto rack = parent_.model()->getRack(parent_.currentRack());
-        auto module = parent_.model()->getModule(rack, parent_.currentModule());
-//        auto page = parent_.model()->getPage(module,pageId_);
-        auto pages = parent_.model()->getPages(module);
-//        auto params = parent_.model()->getParams(module,page);
-
         // clockwise
         pagenum++;
         pagenum = std::min(pagenum, (unsigned) pages.size() - 1);

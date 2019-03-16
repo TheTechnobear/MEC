@@ -59,6 +59,7 @@ public:
     ;
 }
     const std::vector<std::string>& paramIds() const { return paramIds_;}
+    bool isCustomPage() const { return paramIds_.size()==0; }
 
 private:
     std::vector<std::string> paramIds_;

@@ -70,10 +70,11 @@ public:
 
 
     void sendPdMessage(const char *obj, float f);
+    void sendPdModuleMessage(const std::string& msg, const std::string& module, float value);
+    void sendPdModuleMessage(const std::string& msg, const std::string& module, const std::string& v1);
+    void sendPdModuleMessage(const std::string& msg, const std::string& module, const std::string& v1, float v2);
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return model_; }
-
-
 
     bool midiLearn() { return midiLearnActive_; }
     bool modulationLearn() { return modulationLearnActive_; }

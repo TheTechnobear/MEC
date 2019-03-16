@@ -212,6 +212,55 @@ void KontrolDevice::sendPdMessage(const char *obj, float f) {
     pd_forwardmess(sendobj, 1, &a);
 }
 
+void KontrolDevice::sendPdModuleMessage(const std::string& msg, const std::string& module,
+        float v1) {
+    std::string m = msg + "-" + module;
+    t_pd *sendobj = get_object(m.c_str());
+    if (!sendobj) {
+//        post("KontrolDevice::sendPdModuleMessage to %s failed", m.c_str());
+        return;
+    }
+
+    t_atom a[1];
+    SETFLOAT(&a[0], v1);
+    pd_forwardmess(sendobj, 1, a);
+}
+
+void KontrolDevice::sendPdModuleMessage(const std::string& msg, const std::string& module,
+        const std::string& v1) {
+
+    std::string m = msg + "-" + module;
+    t_pd *sendobj = get_object(m.c_str());
+    if (!sendobj) {
+//        post("KontrolDevice::sendPdModuleMessage to %s failed", m.c_str());
+        return;
+    }
+
+    t_atom a[1];
+    SETSYMBOL(&a[0], gensym(v1.c_str()));
+    pd_forwardmess(sendobj, 1, a);
+}
+
+
+
+void KontrolDevice::sendPdModuleMessage(const std::string& msg, const std::string& module,
+        const std::string& v1, float v2) {
+
+    std::string m = msg + "-" + module;
+    t_pd *sendobj = get_object(m.c_str());
+    if (!sendobj) {
+//        post("KontrolDevice::sendPdModuleMessage to %s failed", m.c_str());
+        return;
+    }
+
+    t_atom a[2];
+    SETSYMBOL(&a[0], gensym(v1.c_str()));
+    SETFLOAT(&a[1], v2);
+    pd_forwardmess(sendobj, 2, a);
+}
+
+
+
 void KontrolDevice::currentModule(const Kontrol::EntityId &moduleId) {
     model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, moduleId);
 }
