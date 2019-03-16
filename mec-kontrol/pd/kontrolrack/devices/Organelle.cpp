@@ -460,12 +460,23 @@ void OParamMode::keyPress(unsigned key, unsigned value) {
 
 void OParamMode::activateShortcut(unsigned key) {
     if (key == 0) {
-        parent_.enableMenu(true);
-        encoderDown_ = false;
-        encoderAction_ = false;
-        // re-enable main menu
-        parent_.changeMode(OM_MODULESELECTMENU);
-        return;
+        if(parent_.enableMenu()) {
+            // normal op = select menu
+            encoderDown_ = false;
+            encoderAction_ = false;
+            parent_.changeMode(OM_MODULESELECTMENU);
+            return;
+        } else {
+            //TODO backcompat mode
+            //this is not good, as it will obliterate screen
+            //and also will mean encoder cannot be used again
+            //but it necessary otherwise you cannot change module
+            //(also changing module means we need to have the menu enabled again)
+
+            // re-enable main menu
+            parent_.enableMenu(true);
+            parent_.changeMode(OM_MAINMENU);
+        }
     }
 
     if (key > 0) {
