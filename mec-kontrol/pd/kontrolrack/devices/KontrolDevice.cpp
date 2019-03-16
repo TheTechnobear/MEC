@@ -27,6 +27,7 @@ bool KontrolDevice::init() {
     //model_->addCallback("pd.kdevice", std::shared_ptr<KontrolDevice>(this));
     midiLearn(Kontrol::CS_LOCAL, false);
     modulationLearn(Kontrol::CS_LOCAL, false);
+    enableMenu(true);
     lastParamId_ = "";
     for (const auto &m : modes_) {
         if (m.second != nullptr) m.second->init();

@@ -87,6 +87,9 @@ public:
 
     void currentModule(const Kontrol::EntityId &modId);
 
+    virtual bool enableMenu() { return  enableMenu_; }
+    virtual void enableMenu(bool b) { enableMenu_=b; }
+
 
 private:
     std::shared_ptr<Kontrol::KontrolModel> model_;
@@ -97,5 +100,6 @@ private:
     Kontrol::EntityId lastParamId_; // for midi learn
     bool midiLearnActive_;
     bool modulationLearnActive_;
+    bool enableMenu_;
 
 };

@@ -331,6 +331,9 @@ EXTERN void KontrolRack_setup(void) {
                     (t_method) KontrolRack_getsetting, gensym("getsetting"),
                     A_DEFSYMBOL, A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
 
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_enablemenu, gensym("enablemenu"),
+                    A_DEFFLOAT, A_NULL);
 
 
     class_addmethod(KontrolRack_class,
@@ -796,6 +799,13 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
         loadModuleDir(rack->userModuleDir(),"");
     }
 }
+
+void KontrolRack_enablemenu(t_KontrolRack *x, t_floatarg f) {
+    bool enable = f >= 0.5f;
+    post("KontrolRack: enablemenu -> %d", enable);
+    if (x->device_) x->device_->enableMenu(enable);
+}
+
 
 
 static std::string getParamSymbol(bool singleModuleMode, const Kontrol::Module &module, const Kontrol::Parameter &param) {

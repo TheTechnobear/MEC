@@ -270,13 +270,19 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto module = parent_.model()->getModule(rack, parent_.currentModule());
         auto page = parent_.model()->getPage(module, pageId_);
+        auto pages = parent_.model()->getPages(module);
 
-        if (page->isCustomPage()) {
+        if (pages.size() == 0 || (page && page->isCustomPage())) {
             // a page with no parameters is a custom page
             // and recieves pot events
             char msg[7];
-            sprintf(msg, "knob%d",pot);
-            parent_.sendPdModuleMessage(msg, module->id(), page->id(), rawvalue);
+            sprintf(msg, "knob%d",pot+1);
+            pots_->locked_[pot] = Pots::K_UNLOCKED;
+            if(pots_->rawValue[pot]!=rawvalue) {
+                float value = rawvalue / MAX_POT_VALUE;
+                parent_.sendPdModuleMessage(msg, module->id(), ( page == nullptr ? "none" : page->id() ) , value);
+            }
+            pots_->rawValue[pot] = rawvalue;
             return;
         }
 
@@ -377,8 +383,9 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
         if (UI) {
             displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT, false);
             parent_.flipDisplay();
-            parent_.sendPdModuleMessage("activePage", module->id(), page->id());
         }
+
+        parent_.sendPdModuleMessage("activePage", module->id(), (page == nullptr ? "none" : page->id()));
 
         for (unsigned int i = 0; i < ORGANELLE_NUM_PARAMS; i++) {
             pots_->locked_[i] = Pots::K_LOCKED;
@@ -391,10 +398,6 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 void OParamMode::changeEncoder(unsigned enc, float value) {
     OBaseMode::changeEncoder(enc, value);
 
-    if (pageIdx_ < 0) {
-        setCurrentPage(0, false);
-        return;
-    }
 
     auto rack = parent_.model()->getRack(parent_.currentRack());
     auto module = parent_.model()->getModule(rack, parent_.currentModule());
@@ -407,6 +410,12 @@ void OParamMode::changeEncoder(unsigned enc, float value) {
         parent_.sendPdModuleMessage("enc", module->id(), value);
         return;
     }
+
+    if (pageIdx_ < 0) {
+        setCurrentPage(0, false);
+        return;
+    }
+
 
     auto pagenum = (unsigned) pageIdx_;
 
@@ -426,9 +435,17 @@ void OParamMode::changeEncoder(unsigned enc, float value) {
 
 void OParamMode::encoderButton(unsigned enc, bool value) {
     OBaseMode::encoderButton(enc, value);
-    if (encoderAction_ && !value) {
-        parent_.changeMode(OM_MAINMENU);
+
+    if(parent_.enableMenu()) {
+        if (encoderAction_ && !value) {
+            parent_.changeMode(OM_MAINMENU);
+        }
+    } else {
+        auto rack = parent_.model()->getRack(parent_.currentRack());
+        auto module = parent_.model()->getModule(rack, parent_.currentModule());
+        parent_.sendPdModuleMessage("encbut", module->id(), value);
     }
+
     encoderDown_ = value;
     encoderAction_ = value;
 }
@@ -443,8 +460,10 @@ void OParamMode::keyPress(unsigned key, unsigned value) {
 
 void OParamMode::activateShortcut(unsigned key) {
     if (key == 0) {
+        parent_.enableMenu(true);
         encoderDown_ = false;
         encoderAction_ = false;
+        // re-enable main menu
         parent_.changeMode(OM_MODULESELECTMENU);
         return;
     }
@@ -457,6 +476,9 @@ void OParamMode::activateShortcut(unsigned key) {
             auto module = modules[moduleIdx];
             auto moduleId = module->id();
             if (parent_.currentModule() != moduleId) {
+                // re-enable main menu
+                parent_.enableMenu(true);
+
                 parent_.currentModule(moduleId);
                 displayPopup(module->id() + ":" + module->displayName(), MODULE_SWITCH_TIMEOUT, true);
                 parent_.flipDisplay();
