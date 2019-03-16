@@ -89,14 +89,17 @@ class Rack : public Entity {
 public:
     Rack(const std::string &host,
          unsigned port,
-         const std::string &displayName,
-         const std::string &dataDir,
-         const std::string &mediaDir
+         const std::string &displayName
          ) :    Entity(createId(host, port), displayName),
                 host_(host), port_(port),
-                dataDir_(dataDir), mediaDir_(mediaDir) {
-        ;
+                dataDir_("./data/orac"),
+                mediaDir_("./media"),
+                userModuleDir_("./usermodules"),
+                moduleDir_("./modules") {
+        init();
     }
+
+    void init();
 
     static EntityId createId(const std::string &host, unsigned port) {
         return (host + ":" + std::to_string(port));
@@ -121,12 +124,13 @@ public:
     std::vector<std::string> getPresetList();
 
     const std::string &dataDir() const { return dataDir_; }
-
     const std::string &mediaDir() const { return mediaDir_; }
-
+    const std::string &moduleDir() const { return moduleDir_; }
+    const std::string &userModuleDir() const { return userModuleDir_; }
     void dataDir(const std::string &d) { dataDir_ = d; }
-
     void mediaDir(const std::string &d) { mediaDir_ = d; }
+    void moduleDir(const std::string &d) { moduleDir_ = d; }
+    void userModuleDir(const std::string &d) { userModuleDir_ = d; }
 
     // used on non-local rack
     const std::string &currentPreset() const { return currentPreset_; }
@@ -175,11 +179,15 @@ private:
     bool updateModulePreset(std::shared_ptr<Module> module, ModulePreset &modulePreset);
     bool applyModulePreset(std::shared_ptr<Module> module, const ModulePreset &modulePreset);
 
-
+    // platform prefs
     std::string host_;
     unsigned port_;
     std::string mediaDir_;
     std::string dataDir_;
+    std::string moduleDir_;
+    std::string userModuleDir_;
+
+    // user prefs for rack
     std::string currentPreset_;
 
     std::string settingsFile_;

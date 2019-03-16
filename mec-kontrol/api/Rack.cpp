@@ -2,7 +2,6 @@
 #include "Module.h"
 #include "KontrolModel.h"
 
-
 #include <algorithm>
 #include <limits>
 #include <string.h>
@@ -28,6 +27,18 @@
 #include <mec_prefs.h>
 
 namespace Kontrol {
+
+
+void  Rack::init() {
+    mec::Preferences prefs("orac.json");
+    if(prefs.valid()) {
+        dataDir_ = prefs.getString("dataDir", dataDir_);
+        mediaDir_ = prefs.getString("mediaDir", mediaDir_);
+        moduleDir_ = prefs.getString("moduleDir", moduleDir_);
+        userModuleDir_ = prefs.getString("userModuleDir", userModuleDir_);
+    }
+}
+
 
 
 inline std::shared_ptr<KontrolModel> Rack::model() {
@@ -66,11 +77,6 @@ bool Rack::loadModuleDefinitions(const EntityId &moduleId, const mec::Preference
 }
 
 
-bool Rack::loadSettings(const std::string &filename) {
-    settings_ = std::make_shared<mec::Preferences>(filename);
-    settingsFile_ = filename;
-    return loadSettings(*settings_);
-}
 
 
 bool Rack::saveSettings() {
@@ -82,16 +88,20 @@ bool Rack::saveSettings() {
     return false;
 }
 
-bool Rack::loadSettings(const mec::Preferences &prefs) {
+bool Rack::loadSettings(const std::string &filename) {
     bool ret = false;
+    settingsFile_ = filename;
 
+    // load rack preferences
+    std::string rackPrefFile = dataDir_+ "/" + filename;
+    mec::Preferences rackPrefs(rackPrefFile);
+    if(rackPrefs.valid()) {
+        currentPreset_ = rackPrefs.getString("currentPreset", currentPreset_);
+    }
+
+    // load presets
     presets_.clear();
-
-    dataDir_ = prefs.getString("dataDir", dataDir_);
-    mediaDir_ = prefs.getString("mediaDir", mediaDir_);
-    currentPreset_ = prefs.getString("currentPreset", currentPreset_);
     std::string presetsdir = dataDir_ + "/presets";
-
     std::setlocale(LC_ALL, "en_US.UTF-8");
 
     struct stat st;
@@ -114,26 +124,25 @@ bool Rack::loadSettings(const mec::Preferences &prefs) {
         }
     }
 
-    loadFilePreset(currentPreset_);
+    if(currentPreset().length()>0) loadFilePreset(currentPreset_);
+
+    model()->publishMetaData();
     return ret;
 }
 
 
 bool Rack::saveSettings(const std::string &filename) {
-    std::ofstream outfile(filename.c_str());
-    cJSON *root = cJSON_CreateObject();
+    {
+        std::string rackPrefFile = dataDir_+ "/" + filename + ".json";
+        std::ofstream outfile(rackPrefFile.c_str());
+        cJSON *root = cJSON_CreateObject();
 
-
-    cJSON_AddStringToObject(root, "dataDir", dataDir_.c_str());
-    cJSON_AddStringToObject(root, "mediaDir", mediaDir_.c_str());
-    cJSON_AddStringToObject(root, "currentPreset", currentPreset_.c_str());
-
-    // const char* text = cJSON_PrintUnformatted(root);
-    const char *text = cJSON_Print(root);
-    outfile << text << std::endl;
-    outfile.close();
-    cJSON_Delete(root);
-
+        cJSON_AddStringToObject(root, "currentPreset", currentPreset_.c_str());
+        const char *text = cJSON_Print(root);
+        outfile << text << std::endl;
+        outfile.close();
+        cJSON_Delete(root);
+    }
     return true;
 }
 
@@ -213,7 +222,6 @@ bool Rack::loadFilePreset(const std::string& presetId) {
         }
     }
     currentPreset_ = presetId;
-    model()->publishMetaData();
     model()->loadPreset(CS_LOCAL, id(), currentPreset());
     return ret;
 }
@@ -549,6 +557,11 @@ bool Rack::applyModulePreset(std::shared_ptr<Module> module, const ModulePreset 
 void Rack::dumpSettings() const {
     LOG_1("Rack Settings :" << id());
     LOG_1("------------------------");
+    LOG_1("dataDir : "  << dataDir());
+    LOG_1("mediaDir : " << mediaDir());
+    LOG_1("moduleDir : "  << moduleDir());
+    LOG_1("userModuleDir : "  << userModuleDir());
+    LOG_1("currentPreset : "  << currentPreset());
     for (const auto &preset : presets_) {
         LOG_1("Preset : " << preset);
     }

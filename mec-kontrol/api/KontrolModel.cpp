@@ -34,6 +34,9 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack) const {
             publishResource(CS_LOCAL, *rack, resType, res);
         }
     }
+
+    publishPreset(rack);
+
     for (const auto &p : modules) {
         if (p != nullptr) publishMetaData(rack, p);
     }
@@ -44,7 +47,7 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack) const {
 
 void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std::shared_ptr<Module> &module) const {
     publishModule(CS_LOCAL, *rack, *module);
-    publishPreset(rack);
+
     for (const auto &param: module->getParams()) {
         publishParam(CS_LOCAL, *rack, *module, *param);
     }
@@ -54,6 +57,7 @@ void KontrolModel::publishMetaData(const std::shared_ptr<Rack> &rack, const std:
     for (const auto &param: module->getParams()) {
         publishChanged(CS_LOCAL, *rack, *module, *param);
     }
+
     publishMidiMapping(CS_LOCAL, *rack, *module, module->getMidiMapping());
 }
 
@@ -67,12 +71,8 @@ void KontrolModel::publishPreset(const std::shared_ptr<Rack> &rack) const {
 std::shared_ptr<Rack> KontrolModel::createLocalRack(unsigned port) {
     std::string host = "127.0.0.1";
     auto rackId = Rack::createId(host, port);
-    const char* datadir = getenv("DATA_DIR");
-    const char* mediadir = getenv("MEDIA_DIR");
-    std::string dataDir = datadir ? datadir : "./data/orac";
-    std::string mediaDir = datadir ? datadir : "./media";
 
-    localRack_ = createRack(CS_LOCAL, rackId, host, port,dataDir, mediaDir);
+    localRack_ = createRack(CS_LOCAL, rackId, host, port);
     return localRack_;
 }
 
@@ -175,12 +175,9 @@ std::shared_ptr<Rack> KontrolModel::createRack(
         ChangeSource src,
         const EntityId &rackId,
         const std::string &host,
-        unsigned port,
-        const std::string &dataDir,
-        const std::string &mediaDir
-) {
+        unsigned port) {
     std::string desc = host;
-    auto rack = std::make_shared<Rack>(host, port, desc, dataDir, mediaDir);
+    auto rack = std::make_shared<Rack>(host, port, desc);
     racks_[rack->id()] = rack;
 
     publishRack(src, *rack);
