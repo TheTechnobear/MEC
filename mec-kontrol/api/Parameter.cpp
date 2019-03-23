@@ -35,6 +35,7 @@ static const char *PTS_Percent = "pct";
 static const char *PTS_Frequency = "freq";
 static const char *PTS_Time = "time";
 static const char *PTS_Pitch = "pitch";
+static const char *PTS_Pan = "pan";
 
 std::shared_ptr<Parameter> createParameter(const std::string &t) {
     if (t == PTS_Float) return std::make_shared<Parameter_Float>(PT_Float);
@@ -44,6 +45,7 @@ std::shared_ptr<Parameter> createParameter(const std::string &t) {
     else if (t == PTS_Frequency) return std::make_shared<Parameter_Frequency>(PT_Frequency);
     else if (t == PTS_Time) return std::make_shared<Parameter_Time>(PT_Time);
     else if (t == PTS_Pitch) return std::make_shared<Parameter_Pitch>(PT_Pitch);
+    else if (t == PTS_Pan) return std::make_shared<Parameter_Pan>(PT_Pan);
 
     std::cerr << "parameter type not found: " << t << std::endl;
 
@@ -72,6 +74,9 @@ void Parameter::createArgs(std::vector<ParamValue> &args) const {
             break;
         case PT_Pitch:
             args.push_back(ParamValue(PTS_Pitch));
+            break;
+        case PT_Pan:
+            args.push_back(ParamValue(PTS_Pan));
             break;
         default:
             args.push_back(ParamValue("invalid"));
@@ -435,6 +440,22 @@ float Parameter_Int::asFloat(const ParamValue& v) const {
 const std::string &Parameter_Pitch::displayUnit() const {
     static std::string sUnit = "st";
     return sUnit;
+}
+
+
+std::string Parameter_Pan::displayValue() const {
+    char buf[11];
+    float c = current_.floatValue();
+    if(c==0.5f) {
+        sprintf(buf, "C");
+    } else if (c>0.5f) {
+        int i = int(((c - 0.5f) * 2.0f ) * 100.0f);
+        sprintf(buf, "%-3dR", i);
+    } else {
+        int i = int(((0.5 - c) * 2.0f ) * 100.0f);
+        sprintf(buf, "L%3d ", i);
+    }
+    return std::string(buf);
 }
 
 

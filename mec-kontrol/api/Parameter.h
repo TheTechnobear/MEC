@@ -18,7 +18,8 @@ enum ParameterType {
     PT_Percent,
     PT_Frequency,
     PT_Time,
-    PT_Pitch
+    PT_Pitch,
+    PT_Pan
 };
 
 class Parameter : public Entity {
@@ -172,5 +173,12 @@ public:
     const std::string &displayUnit() const override;
 };
 
+
+class Parameter_Pan : public Parameter_Float {
+public:
+    Parameter_Pan(ParameterType type) : Parameter_Float(type) { ; }
+
+    std::string displayValue() const override;
+};
 
 } //namespace
