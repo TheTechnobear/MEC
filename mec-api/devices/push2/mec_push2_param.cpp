@@ -2,6 +2,8 @@
 
 #include <mec_log.h>
 
+#include <unordered_set>
+
 namespace mec {
 std::string centreText(const std::string t) {
     const unsigned max_len = 16;
@@ -102,13 +104,13 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
     } else if (cc == P2_CURSOR_LEFT_CC) {
         if (moduleIdxOffset_ > 0) {
             auto pRack = model_->getRack(parent_.currentRack());
-            auto pModules = model_->getModules(pRack);
+            auto pModules = getModules(pRack);
             moduleIdxOffset_--;
             displayPage();
         }
     } else if (cc == P2_CURSOR_RIGHT_CC) {
         auto pRack = model_->getRack(parent_.currentRack());
-        auto pModules = model_->getModules(pRack);
+        auto pModules = getModules(pRack);
 
         if (pModules.size() > (moduleIdxOffset_ + 8)) {
             moduleIdxOffset_++;
@@ -137,7 +139,7 @@ void P2_ParamMode::displayPage() {
     for (unsigned int i = P2_TRACK_SELECT_CC_START; i < P2_TRACK_SELECT_CC_END; i++) { parent_.sendCC(0, i, 0); }
 
     auto pRack = model_->getRack(parent_.currentRack());
-    auto pModules = model_->getModules(pRack);
+    auto pModules = getModules(pRack);
     auto pModule = model_->getModule(pRack, parent_.currentModule());
     auto pPage = model_->getPage(pModule, parent_.currentPage());
     auto pPages = model_->getPages(pModule);
@@ -201,7 +203,7 @@ void P2_ParamMode::displayPage() {
 
 void P2_ParamMode::setCurrentModule(int moduleIdx) {
     auto pRack = model_->getRack(parent_.currentRack());
-    auto pModules = model_->getModules(pRack);
+    auto pModules = getModules(pRack);
 //    auto pModule = model_->getModule(pRack, parent_.currentModule());
 ////    auto pPage = model_->getPage(pModule, parent_.currentPage());
 //    auto pPages = model_->getPages(pModule);
@@ -256,10 +258,10 @@ void P2_ParamMode::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, 
         setCurrentModule(0);
     } else {
         // adjust moduleidx
-        auto prack = model_->getRack(parent_.currentRack());
-        auto modules = model_->getModules(prack);
+        auto pRack = model_->getRack(parent_.currentRack());
+        auto pModules = getModules(pRack);
         unsigned int i = 0;
-        for (auto mod : modules) {
+        for (auto mod : pModules) {
             if (mod->id() == parent_.currentModule()) {
                 moduleIdx_ = i;
 
@@ -344,6 +346,54 @@ void P2_ParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
         i++;
     }
 }
+
+std::vector<std::shared_ptr<Kontrol::Module>> P2_ParamMode::getModules(const std::shared_ptr<Kontrol::Rack>& pRack) {
+    std::vector<std::shared_ptr<Kontrol::Module>> ret;
+    auto modulelist = model_->getModules(pRack);
+    std::unordered_set<std::string> done;
+
+    for (auto mid : moduleOrder_) {
+        auto pModule = model_->getModule(pRack, mid);
+        if(pModule!=nullptr) {
+            ret.push_back(pModule);
+            done.insert(mid);
+        }
+    }
+    for (auto pModule : modulelist) {
+        if(done.find(pModule->id()) != done.end()) {
+            ret.push_back(pModule);
+        }
+    }
+
+    return ret;
+}
+
+
+
+void P2_ParamMode::resource(Kontrol::ChangeSource src,
+        const Kontrol::Rack &rack,
+        const std::string& resType, const std::string & res) {
+    P2_DisplayMode::resource(src, rack, resType, resType);
+    if(resType=="moduleorder") {
+        moduleOrder_.clear();
+        if(res.length()>0) {
+            int lidx =0;
+            int idx = 0;
+            int len = 0;
+            while((idx=res.find(" ",lidx)) != std::string::npos) {
+                len = idx - lidx;
+                moduleOrder_.push_back(res.substr(lidx,len));
+                lidx = idx + 1;
+            }
+            len = res.length() - lidx;
+            if(len>0) moduleOrder_.push_back(res.substr(lidx,len));
+        }
+
+        // redisplay page
+        displayPage();
+    }
+}
+
 
 void P2_ParamMode::activate() {
     P2_DisplayMode::activate();

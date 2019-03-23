@@ -65,8 +65,7 @@ public:
     void modulationLearn(bool b);
 
     virtual void midiCC(unsigned num, unsigned value);
-    virtual void digital(unsigned bus, bool value);
-    virtual void analog(unsigned bus, float value);
+    virtual void modulate(unsigned bus, float value);
 
 
     void sendPdMessage(const char *obj, float f);
@@ -90,6 +89,7 @@ public:
     virtual bool enableMenu() { return  enableMenu_; }
     virtual void enableMenu(bool b) { enableMenu_=b; }
 
+    std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack>& rack);
 
 private:
     std::shared_ptr<Kontrol::KontrolModel> model_;
@@ -101,5 +101,5 @@ private:
     bool midiLearnActive_;
     bool modulationLearnActive_;
     bool enableMenu_;
-
+    std::vector<std::string> moduleOrder_;
 };

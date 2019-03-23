@@ -101,6 +101,7 @@ private:
     friend class OscDisplayPacketListener;
     friend class OscDisplayListener;
 
+    std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack>& rack);
 
     bool listen(unsigned port);
     bool connect(const std::string& host, unsigned port);
@@ -155,6 +156,7 @@ private:
 
     OscDisplayModes currentMode_;
     std::map<OscDisplayModes, std::shared_ptr<OscDisplayMode>> modes_;
+    std::vector<std::string> moduleOrder_;
 
 };
 

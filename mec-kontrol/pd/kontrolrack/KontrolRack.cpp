@@ -290,13 +290,8 @@ EXTERN void KontrolRack_setup(void) {
                     A_DEFFLOAT, A_DEFFLOAT, A_NULL);
 
     class_addmethod(KontrolRack_class,
-                    (t_method) KontrolRack_analog, gensym("analog"),
+                    (t_method) KontrolRack_modulate, gensym("modulate"),
                     A_DEFFLOAT, A_DEFFLOAT, A_NULL);
-
-    class_addmethod(KontrolRack_class,
-                    (t_method) KontrolRack_digital, gensym("digital"),
-                    A_DEFFLOAT, A_DEFFLOAT, A_NULL);
-
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_loadsettings, gensym("loadsettings"),
@@ -335,6 +330,9 @@ EXTERN void KontrolRack_setup(void) {
                     (t_method) KontrolRack_enablemenu, gensym("enablemenu"),
                     A_DEFFLOAT, A_NULL);
 
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_setmoduleorder, gensym("setmoduleorder"),
+                    A_GIMME, A_NULL);
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_test, gensym("test"),
@@ -669,13 +667,10 @@ void KontrolRack_savepreset(t_KontrolRack *x, t_symbol *preset) {
     }
 }
 
-void KontrolRack_analog(t_KontrolRack *x, t_floatarg bus, t_floatarg value) {
-    if (x->device_) x->device_->analog((unsigned) bus, value);
+void KontrolRack_modulate(t_KontrolRack *x, t_floatarg bus, t_floatarg value) {
+    if (x->device_) x->device_->modulate((unsigned) bus, value);
 }
 
-void KontrolRack_digital(t_KontrolRack *x, t_floatarg bus, t_floatarg value) {
-    if (x->device_) x->device_->digital((unsigned) bus, (bool) value > 0.5);
-}
 
 void KontrolRack_getparam(t_KontrolRack* x,
         t_symbol* modId, t_symbol* paramId,
@@ -815,6 +810,26 @@ static std::string getParamSymbol(bool singleModuleMode, const Kontrol::Module &
         return param.id();
     }
 }
+
+void KontrolRack_setmoduleorder(t_KontrolRack *x,t_symbol* s, int argc, t_atom *argv) {
+    std::string buf;
+    for(int i=0; i<argc;i++) {
+        t_atom* arg = argv + i;
+        if (arg->a_type == A_SYMBOL) {
+            t_symbol *sym = atom_getsymbol(arg);
+            buf += sym->s_name;
+            if(i != argc-1) buf += " ";
+        }
+    }
+    post("module order set to [%s]",buf.c_str());
+    Kontrol::KontrolModel::model()->getLocalRack()->addResource("moduleorder",buf);
+    Kontrol::KontrolModel::model()->publishResource(Kontrol::CS_LOCAL,
+            *Kontrol::KontrolModel::model()->getLocalRack(),
+            "moduleorder",buf);
+}
+
+
+
 
 //-----------------------
 void PdCallback::rack(Kontrol::ChangeSource src, const Kontrol::Rack & rack)  {

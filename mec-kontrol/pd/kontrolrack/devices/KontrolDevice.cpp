@@ -2,6 +2,7 @@
 
 #include "../../m_pd.h"
 
+#include <unordered_set>
 //#include <iostream>
 
 KontrolDevice::KontrolDevice() {
@@ -103,6 +104,22 @@ void KontrolDevice::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rac
                              const std::string &resValue) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->resource(src, rack, resType, resValue);
+
+    if(resType=="moduleorder") {
+        moduleOrder_.clear();
+        if(resType.length()>0) {
+            int lidx =0;
+            int idx = 0;
+            int len = 0;
+            while((idx=resType.find(" ",lidx)) != std::string::npos) {
+                len = idx - lidx;
+                moduleOrder_.push_back(resType.substr(lidx,len));
+                lidx = idx + 1;
+            }
+            len = resType.length() - lidx;
+            if(len>0) moduleOrder_.push_back(resType.substr(lidx,len));
+        }
+    }
 }
 
 void KontrolDevice::deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) {
@@ -137,14 +154,7 @@ void KontrolDevice::midiCC(unsigned num, unsigned value) {
     }
 }
 
-void KontrolDevice::digital(unsigned bus, bool value) {
-//    auto rack = model()->getLocalRack();
-//    if (rack != nullptr) {
-//        rack->changeDigital(bus, value);
-//    }
-}
-
-void KontrolDevice::analog(unsigned bus, float value) {
+void KontrolDevice:: modulate(unsigned bus, float value) {
     if (modulationLearnActive_) {
         if (!lastParamId_.empty()) {
             auto rack = model()->getRack(currentRackId_);
@@ -264,4 +274,26 @@ void KontrolDevice::sendPdModuleMessage(const std::string& msg, const std::strin
 
 void KontrolDevice::currentModule(const Kontrol::EntityId &moduleId) {
     model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, moduleId);
+}
+
+
+std::vector<std::shared_ptr<Kontrol::Module>> KontrolDevice::getModules(const std::shared_ptr<Kontrol::Rack>& pRack) {
+    std::vector<std::shared_ptr<Kontrol::Module>> ret;
+    auto modulelist = model_->getModules(pRack);
+    std::unordered_set<std::string> done;
+
+    for (auto mid : moduleOrder_) {
+        auto pModule = model_->getModule(pRack, mid);
+        if(pModule!=nullptr) {
+            ret.push_back(pModule);
+            done.insert(mid);
+        }
+    }
+    for (auto pModule : modulelist) {
+        if(done.find(pModule->id()) != done.end()) {
+            ret.push_back(pModule);
+        }
+    }
+
+    return ret;
 }

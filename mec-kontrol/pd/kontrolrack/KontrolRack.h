@@ -53,8 +53,7 @@ void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value);
 void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value);
 
 
-void KontrolRack_analog(t_KontrolRack *x, t_floatarg bus, t_floatarg value);
-void KontrolRack_digital(t_KontrolRack *x, t_floatarg bus, t_floatarg value);
+void KontrolRack_modulate(t_KontrolRack *x, t_floatarg bus, t_floatarg value);
 
 void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_savesettings(t_KontrolRack *x, t_symbol *settings);
@@ -71,6 +70,9 @@ void KontrolRack_getsetting(t_KontrolRack* x, t_symbol* setting, t_symbol* defva
 
 
 void KontrolRack_loadresources(t_KontrolRack *x);
+
+void KontrolRack_setmoduleorder(t_KontrolRack *x,t_symbol* s, int argc, t_atom *argv);
+
 }
 
 extern void KontrolRack_cleanup(void);

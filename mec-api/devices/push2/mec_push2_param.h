@@ -29,11 +29,16 @@ public:
     void midiLearn(Kontrol::ChangeSource src, bool b) override;
     void modulationLearn(Kontrol::ChangeSource src, bool b) override;
 
+    void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string&, const std::string &) override;
+
+
     void setCurrentPage(int page);
     void setCurrentModule(int mod);
     void activate() override;
 private:
     void displayPage();
+
+    std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack>& rack);
 
     void drawParam(unsigned pos, const Kontrol::Parameter &param);
 
@@ -46,6 +51,7 @@ private:
     int moduleIdxOffset_ = 0;
     int pageIdx_ = -1;
     int pageIdxOffset_ = 0;
+    std::vector<std::string> moduleOrder_;
 };
 
 }

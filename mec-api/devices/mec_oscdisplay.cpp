@@ -1,6 +1,7 @@
 #include "mec_oscdisplay.h"
 
 #include <algorithm>
+#include <unordered_set>
 
 #include <osc/OscOutboundPacketStream.h>
 #include <osc/OscReceivedElements.h>
@@ -63,6 +64,7 @@ private:
     OscDisplay &parent_;
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
+
 };
 
 
@@ -378,6 +380,7 @@ void OscDisplayParamMode::prevPage() {
         setCurrentPage(pagenum, true);
     }
 }
+
 
 //---- OscDisplayMenuMode
 void OscDisplayMenuMode::activate() {
@@ -1119,6 +1122,22 @@ void OscDisplay::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                           const std::string &res, const std::string &value) {
     modes_[currentMode_]->resource(src, rack, res, value);
     paramDisplay_->resource(src, rack, res, value);
+
+    if(res=="moduleorder") {
+        moduleOrder_.clear();
+        if(res.length()>0) {
+            int lidx =0;
+            int idx = 0;
+            int len = 0;
+            while((idx=res.find(" ",lidx)) != std::string::npos) {
+                len = idx - lidx;
+                moduleOrder_.push_back(res.substr(lidx,len));
+                lidx = idx + 1;
+            }
+            len = res.length() - lidx;
+            if(len>0) moduleOrder_.push_back(res.substr(lidx,len));
+        }
+    }
 }
 
 void OscDisplay::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
@@ -1160,9 +1179,31 @@ void OscDisplay::prevPage() {
     paramDisplay_->prevPage();
 }
 
+std::vector<std::shared_ptr<Kontrol::Module>> OscDisplay::getModules(const std::shared_ptr<Kontrol::Rack>& pRack) {
+    std::vector<std::shared_ptr<Kontrol::Module>> ret;
+    auto modulelist = model()->getModules(pRack);
+    std::unordered_set<std::string> done;
+
+    for (auto mid : moduleOrder_) {
+        auto pModule = model()->getModule(pRack, mid);
+        if(pModule!=nullptr) {
+            ret.push_back(pModule);
+            done.insert(mid);
+        }
+    }
+    for (auto pModule : modulelist) {
+        if(done.find(pModule->id()) != done.end()) {
+            ret.push_back(pModule);
+        }
+    }
+
+    return ret;
+}
+
+
 void OscDisplay::nextModule() {
     auto rack = model()->getRack(currentRack());
-    auto modules = model()->getModules(rack);
+    auto modules = getModules(rack);
     bool found = false;
     for (auto module:modules) {
         if (found) {
@@ -1177,7 +1218,7 @@ void OscDisplay::nextModule() {
 
 void OscDisplay::prevModule() {
     auto rack = model()->getRack(currentRack());
-    auto modules = model()->getModules(rack);
+    auto modules = getModules(rack);
     Kontrol::EntityId prevId;
     for (auto module:modules) {
         if (module->id() == currentModule()) {

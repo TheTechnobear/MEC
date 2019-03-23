@@ -482,7 +482,7 @@ void OParamMode::activateShortcut(unsigned key) {
     if (key > 0) {
         unsigned moduleIdx = key - 1;
         auto rack = parent_.model()->getRack(parent_.currentRack());
-        auto modules = parent_.model()->getModules(rack);
+        auto modules = parent_.getModules(rack);
         if (moduleIdx < modules.size()) {
             auto module = modules[moduleIdx];
             auto moduleId = module->id();
@@ -873,7 +873,8 @@ void OModuleSelectMenu::activate() {
     if (cmodule == nullptr) return;
     unsigned idx = 0;
     items_.clear();
-    for (const auto &module : rack->getModules()) {
+    auto modules = parent_.getModules(rack);
+    for (const auto &module : modules) {
         std::string desc = module->id() + ":" + module->displayName();
         items_.push_back(desc);
         if (module->id() == cmodule->id()) {
@@ -891,7 +892,7 @@ void OModuleSelectMenu::clicked(unsigned idx) {
     if (idx < getSize()) {
         unsigned moduleIdx = idx;
         auto rack = parent_.model()->getRack(parent_.currentRack());
-        auto modules = parent_.model()->getModules(rack);
+        auto modules = parent_.getModules(rack);
         if (moduleIdx < modules.size()) {
             auto module = modules[moduleIdx];
             auto moduleId = module->id();
