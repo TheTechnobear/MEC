@@ -53,6 +53,8 @@ public:
 
     void keyPress(unsigned, unsigned) override { ; }
 
+    void selectPage(unsigned) override { ; }
+
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
@@ -102,6 +104,9 @@ public:
     void changeEncoder(unsigned encoder, float value) override;
     void encoderButton(unsigned encoder, bool value) override;
     void keyPress(unsigned, unsigned) override;
+    void selectPage(unsigned) override;
+
+
     void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
     void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                  const Kontrol::Parameter &) override;
@@ -394,6 +399,11 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
     } catch (std::out_of_range) { ;
     }
 }
+
+void OParamMode::selectPage(unsigned page) {
+    setCurrentPage(page,false);
+}
+
 
 void OParamMode::changeEncoder(unsigned enc, float value) {
     OBaseMode::changeEncoder(enc, value);

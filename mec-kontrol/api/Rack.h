@@ -144,8 +144,8 @@ public:
 
 
     bool changeModulation(unsigned bus, float value);
-    void addModulationMapping(unsigned bus, const EntityId &moduleId, const EntityId &paramId);
-    void removeModulationMapping(unsigned bus, const EntityId &moduleId, const EntityId &paramId);
+    void addModulationMapping(const std::string &src, unsigned bus, const EntityId &moduleId, const EntityId &paramId);
+    void removeModulationMapping(const std::string &src, unsigned bus, const EntityId &moduleId, const EntityId &paramId);
 
 
     static std::shared_ptr<KontrolModel> model();

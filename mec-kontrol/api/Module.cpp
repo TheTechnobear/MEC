@@ -283,7 +283,8 @@ std::vector<EntityId> Module::getParamsForModulation(unsigned bus) {
 
 }
 
-void Module::addModulationMapping(unsigned bus, const EntityId &paramId) {
+void Module::addModulationMapping(const std::string &src, unsigned bus, const EntityId &paramId) {
+    //TODO: modulation mapping will be unique to src, so that they can be combined
     auto v = modulation_mapping_[bus];
     for (auto &it : v) {
         if (it == paramId) {
@@ -294,7 +295,8 @@ void Module::addModulationMapping(unsigned bus, const EntityId &paramId) {
 }
 
 
-void Module::removeModulationMapping(unsigned bus, const EntityId &paramId) {
+void Module::removeModulationMapping(const std::string &src, unsigned bus, const EntityId &paramId) {
+    //TODO: modulation mapping will be unique to src, so that they can be combined
     auto v = modulation_mapping_[bus];
     for (auto it = v.begin(); it != v.end(); it++) {
         if (*it == paramId) {

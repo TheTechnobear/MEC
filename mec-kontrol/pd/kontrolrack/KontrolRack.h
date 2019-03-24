@@ -53,7 +53,7 @@ void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value);
 void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value);
 
 
-void KontrolRack_modulate(t_KontrolRack *x, t_floatarg bus, t_floatarg value);
+void KontrolRack_modulate(t_KontrolRack *x, t_symbol* src, t_floatarg bus, t_floatarg value);
 
 void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_savesettings(t_KontrolRack *x, t_symbol *settings);
@@ -65,8 +65,13 @@ void KontrolRack_enablemenu(t_KontrolRack *x, t_floatarg f);
 void KontrolRack_monitorenable(t_KontrolRack *x, t_floatarg f);
 
 void KontrolRack_test(t_KontrolRack *x, t_floatarg f);
+
 void KontrolRack_getparam(t_KontrolRack* x, t_symbol* modId, t_symbol* paramId, t_floatarg defvalue, t_symbol* sendsym);
+void KontrolRack_setparam(t_KontrolRack* x, t_symbol* modId, t_symbol* paramId, t_floatarg value);
+
 void KontrolRack_getsetting(t_KontrolRack* x, t_symbol* setting, t_symbol* defvalue, t_symbol* sendsym);
+
+void KontrolRack_selectpage(t_KontrolRack* x, t_floatarg value);
 
 
 void KontrolRack_loadresources(t_KontrolRack *x);

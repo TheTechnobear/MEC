@@ -307,14 +307,14 @@ bool Rack::changeModulation(unsigned bus, float value) {
     return ret;
 }
 
-void Rack::addModulationMapping(unsigned bus, const EntityId &moduleId, const EntityId &paramId) {
+void Rack::addModulationMapping(const std::string &src, unsigned bus, const EntityId &moduleId, const EntityId &paramId) {
     auto module = getModule(moduleId);
-    if (module != nullptr) module->addModulationMapping(bus, paramId);
+    if (module != nullptr) module->addModulationMapping(src, bus, paramId);
 }
 
-void Rack::removeModulationMapping(unsigned bus, const EntityId &moduleId, const EntityId &paramId) {
+void Rack::removeModulationMapping(const std::string &src, unsigned bus, const EntityId &moduleId, const EntityId &paramId) {
     auto module = getModule(moduleId);
-    if (module != nullptr) module->removeModulationMapping(bus, paramId);
+    if (module != nullptr) module->removeModulationMapping(src, bus, paramId);
 }
 
 

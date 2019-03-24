@@ -61,6 +61,13 @@ void KontrolDevice::keyPress(unsigned key, unsigned value) {
     if (m != nullptr) m->keyPress(key, value);
 }
 
+
+void KontrolDevice::selectPage(unsigned page) {
+    auto m = modes_[currentMode_];
+    if (m != nullptr) m->selectPage(page);
+}
+
+
 void KontrolDevice::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     auto m = modes_[currentMode_];
     if (m != nullptr) m->rack(src, rack);
@@ -154,18 +161,19 @@ void KontrolDevice::midiCC(unsigned num, unsigned value) {
     }
 }
 
-void KontrolDevice:: modulate(unsigned bus, float value) {
+void KontrolDevice:: modulate(const std::string& src, unsigned bus, float value) {
+    //TODO: when adding src dependent modulation, check to see what we should use for mod learn
     if (modulationLearnActive_) {
         if (!lastParamId_.empty()) {
             auto rack = model()->getRack(currentRackId_);
             if (rack != nullptr) {
                 if (value > 0.1) {
                     //std::cerr << "modulation learn" << bus << " " << lastParamId_ << std::endl;
-                    rack->addModulationMapping(bus, currentModuleId_, lastParamId_);
+                    rack->addModulationMapping("local", bus, currentModuleId_, lastParamId_);
                     lastParamId_ = "";
                 } else {
                     //std::cerr << "modulation unlearn" << bus << " " << lastParamId_ << std::endl;
-                    rack->removeModulationMapping(bus, currentModuleId_, lastParamId_);
+                    rack->removeModulationMapping("local", bus, currentModuleId_, lastParamId_);
                     lastParamId_ = "";
                 }
             }

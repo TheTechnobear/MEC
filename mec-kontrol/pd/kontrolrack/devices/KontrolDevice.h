@@ -20,6 +20,7 @@ public:
     virtual void changeEncoder(unsigned encoder, float value) = 0;
     virtual void encoderButton(unsigned encoder, bool value) = 0;
     virtual void keyPress(unsigned key, unsigned value) = 0;
+    virtual void selectPage(unsigned page) = 0;
 
 protected:
 };
@@ -39,6 +40,7 @@ public:
     virtual void changeEncoder(unsigned encoder, float value);
     virtual void encoderButton(unsigned encoder, bool value);
     virtual void keyPress(unsigned key, unsigned value);
+    virtual void selectPage(unsigned page);
 
     //Kontrol::KontrolCallback
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
@@ -65,7 +67,7 @@ public:
     void modulationLearn(bool b);
 
     virtual void midiCC(unsigned num, unsigned value);
-    virtual void modulate(unsigned bus, float value);
+    virtual void modulate(const std::string& src, unsigned bus, float value);
 
 
     void sendPdMessage(const char *obj, float f);

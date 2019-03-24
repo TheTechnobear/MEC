@@ -24,6 +24,9 @@ public:
 
     void keyPress(unsigned, unsigned) override { ; }
 
+    void selectPage(unsigned) override { ; }
+
+
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }

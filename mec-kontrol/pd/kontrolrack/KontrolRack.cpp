@@ -291,7 +291,7 @@ EXTERN void KontrolRack_setup(void) {
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_modulate, gensym("modulate"),
-                    A_DEFFLOAT, A_DEFFLOAT, A_NULL);
+                    A_DEFSYMBOL, A_DEFFLOAT, A_DEFFLOAT, A_NULL);
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_loadsettings, gensym("loadsettings"),
@@ -321,6 +321,14 @@ EXTERN void KontrolRack_setup(void) {
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_getparam, gensym("getparam"),
                     A_DEFSYMBOL, A_DEFSYMBOL, A_DEFFLOAT, A_DEFSYMBOL, A_NULL);
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_setparam, gensym("setparam"),
+                    A_DEFSYMBOL, A_DEFSYMBOL, A_DEFFLOAT, A_NULL);
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_selectpage, gensym("selectpage"),
+                    A_DEFFLOAT, A_NULL);
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_getsetting, gensym("getsetting"),
@@ -622,7 +630,7 @@ void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings) {
             rack->dumpSettings();
         } else {
             post("No local rack found");
-        };
+        }
     }
 }
 
@@ -635,7 +643,9 @@ void KontrolRack_savesettings(t_KontrolRack *x, t_symbol *settings) {
             rack->saveSettings(settingsId + ".json");
         } else {
             post("No local rack found");
-        };
+        }
+    } else {
+        post("error savesettings name");
     }
 }
 
@@ -648,9 +658,11 @@ void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset) {
             post("loading preset : %s", preset->s_name);
             rack->loadPreset(presetId);
             rack->dumpCurrentValues();
+        } else {
+            post("No local rack found");
         }
     } else {
-        post("No local rack found");
+        post("error loadpreset name");
     }
 }
 
@@ -662,13 +674,51 @@ void KontrolRack_savepreset(t_KontrolRack *x, t_symbol *preset) {
             post("save preset : %s", preset->s_name);
             rack->savePreset(presetId);
         }
+        else {
+            post("No local rack found");
+        }
     } else {
-        post("No local rack found");
+        post("error save name");
     }
 }
 
-void KontrolRack_modulate(t_KontrolRack *x, t_floatarg bus, t_floatarg value) {
-    if (x->device_) x->device_->modulate((unsigned) bus, value);
+void KontrolRack_modulate(t_KontrolRack *x, t_symbol* src, t_floatarg bus, t_floatarg value) {
+    if(src== nullptr || src->s_name==nullptr) {
+        post("error modulate srcid bus value");
+        return;
+    }
+
+    if (x->device_) {
+        x->device_->modulate(src->s_name, (unsigned) bus, value);
+    }
+}
+
+
+void KontrolRack_setparam(t_KontrolRack* x, t_symbol* modId, t_symbol* paramId, t_floatarg value) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (!rack) { post("No local rack found"); return;}
+
+    if(modId != nullptr && modId->s_name != nullptr
+       && paramId != nullptr && paramId->s_name != nullptr
+       ) {
+        auto module = rack->getModule(modId->s_name);
+        if (module) {
+            auto param = module->getParam(paramId->s_name);
+            if (param
+                ) {
+                Kontrol::KontrolModel::model()->changeParam(
+                        Kontrol::CS_LOCAL,
+                        rack->id(),
+                        module->id(),
+                        param->id(),
+                        param->calcFloat(value)
+                        );
+            }
+        }
+
+    } else {
+        post("error setparam modid paramid value");
+    }
 }
 
 
@@ -676,20 +726,20 @@ void KontrolRack_getparam(t_KontrolRack* x,
         t_symbol* modId, t_symbol* paramId,
         t_floatarg defvalue,
         t_symbol* sendsym) {
-    if(sendsym != nullptr && sendsym->s_name != nullptr) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (!rack) { post("No local rack found"); return;}
+
+    if(    sendsym != nullptr && sendsym->s_name != nullptr
+        && modId != nullptr && modId->s_name != nullptr
+        && paramId != nullptr && paramId->s_name != nullptr
+        ) {
         float value = defvalue;
-        if (modId != nullptr && modId->s_name != nullptr
-            && paramId != nullptr && paramId->s_name != nullptr
-                ) {
-            auto rack = Kontrol::KontrolModel::model()->getLocalRack();
-            if (rack) {
-                auto module = rack->getModule(modId->s_name);
-                if (module) {
-                    auto param = module->getParam(paramId->s_name);
-                    if (param) {
-                        value = param->asFloat(param->current());
-                    }
-                }
+
+        auto module = rack->getModule(modId->s_name);
+        if (module) {
+            auto param = module->getParam(paramId->s_name);
+            if (param) {
+                value = param->asFloat(param->current());
             }
         }
 
@@ -703,7 +753,10 @@ void KontrolRack_getparam(t_KontrolRack* x,
         } else {
             post("getparam sendsym not found %s", sendsym->s_name);
         }
+    } else {
+        post("error getparam modid paramid defvalue sendsym");
     }
+
 }
 
 
@@ -826,6 +879,11 @@ void KontrolRack_setmoduleorder(t_KontrolRack *x,t_symbol* s, int argc, t_atom *
     Kontrol::KontrolModel::model()->publishResource(Kontrol::CS_LOCAL,
             *Kontrol::KontrolModel::model()->getLocalRack(),
             "moduleorder",buf);
+}
+
+
+void KontrolRack_selectpage(t_KontrolRack* x, t_floatarg page) {
+    if (x->device_) x->device_->selectPage((unsigned) page);
 }
 
 
