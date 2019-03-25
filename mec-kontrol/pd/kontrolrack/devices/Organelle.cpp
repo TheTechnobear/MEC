@@ -254,6 +254,11 @@ void OParamMode::display() {
 
 
 void OParamMode::activate() {
+    auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
+    if (module != nullptr) {
+        auto page = parent_.model()->getPage(module, pageId_);
+        parent_.sendPdMessage("activePage", module->id(), (page == nullptr ? "none" : page->id()));
+    }
     display();
 }
 
@@ -580,6 +585,7 @@ void OParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &r
 }
 
 void OMenuMode::activate() {
+    parent_.sendPdMessage("activePage", "none","none");
     display();
     popupTime_ = MENU_TIMEOUT;
     clickedDown_ = false;

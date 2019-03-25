@@ -71,6 +71,7 @@ public:
 
 
     void sendPdMessage(const char *obj, float f);
+    void sendPdMessage(const std::string& msg, const std::string& v1, const std::string& v2);
     void sendPdModuleMessage(const std::string& msg, const std::string& module, float value);
     void sendPdModuleMessage(const std::string& msg, const std::string& module, const std::string& v1);
     void sendPdModuleMessage(const std::string& msg, const std::string& module, const std::string& v1, float v2);

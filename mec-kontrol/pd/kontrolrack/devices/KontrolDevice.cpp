@@ -231,6 +231,23 @@ void KontrolDevice::sendPdMessage(const char *obj, float f) {
     pd_forwardmess(sendobj, 1, &a);
 }
 
+
+void KontrolDevice::sendPdMessage(const std::string& msg, const std::string& v1,
+                                        const std::string& v2) {
+
+    std::string m = msg;
+    t_pd *sendobj = get_object(m.c_str());
+    if (!sendobj) {
+//        post("KontrolDevice::sendPdModuleMessage to %s failed", m.c_str());
+        return;
+    }
+
+    t_atom a[2];
+    SETSYMBOL(&a[0], gensym(v1.c_str()));
+    SETSYMBOL(&a[1], gensym(v2.c_str()));
+    pd_forwardmess(sendobj, 2, a);
+}
+
 void KontrolDevice::sendPdModuleMessage(const std::string& msg, const std::string& module,
         float v1) {
     std::string m = msg + "-" + module;
