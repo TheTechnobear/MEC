@@ -117,6 +117,7 @@ bool Module::loadModuleDefinitions(const mec::Preferences &module) {
     pages_.clear();
     pageIds_.clear();
     midi_mapping_.clear();
+    modulation_mapping_.clear();
 
     if (module.exists("parameters")) {
         // load parameters
