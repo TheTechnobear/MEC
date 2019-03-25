@@ -401,7 +401,7 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 }
 
 void OParamMode::selectPage(unsigned page) {
-    setCurrentPage(page,false);
+    setCurrentPage(page,true);
 }
 
 

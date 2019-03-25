@@ -114,17 +114,17 @@ void KontrolDevice::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rac
 
     if(resType=="moduleorder") {
         moduleOrder_.clear();
-        if(resType.length()>0) {
+        if(resValue.length()>0) {
             int lidx =0;
             int idx = 0;
             int len = 0;
-            while((idx=resType.find(" ",lidx)) != std::string::npos) {
+            while((idx=resValue.find(" ",lidx)) != std::string::npos) {
                 len = idx - lidx;
-                moduleOrder_.push_back(resType.substr(lidx,len));
+                moduleOrder_.push_back(resValue.substr(lidx,len));
                 lidx = idx + 1;
             }
-            len = resType.length() - lidx;
-            if(len>0) moduleOrder_.push_back(resType.substr(lidx,len));
+            len = resValue.length() - lidx;
+            if(len>0) moduleOrder_.push_back(resValue.substr(lidx,len));
         }
     }
 }
