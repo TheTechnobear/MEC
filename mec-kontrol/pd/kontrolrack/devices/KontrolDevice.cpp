@@ -298,7 +298,7 @@ std::vector<std::shared_ptr<Kontrol::Module>> KontrolDevice::getModules(const st
         }
     }
     for (auto pModule : modulelist) {
-        if(done.find(pModule->id()) != done.end()) {
+        if(done.find(pModule->id()) == done.end()) {
             ret.push_back(pModule);
         }
     }
