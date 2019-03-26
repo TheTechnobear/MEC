@@ -193,7 +193,8 @@ void P2_ParamMode::displayPage() {
     }
 
     for (i = 0; i < 8 && miter != pModules.cend(); miter++, i++) {
-        push2Api_->drawCell8(5, i, centreText((*miter)->displayName()).c_str(), page_clrs[(i + moduleIdxOffset_) % 8]);
+        std::string mname = (*miter)->id() + ":" + (*miter)->displayName();
+        push2Api_->drawCell8(5, i, centreText(mname).c_str(), page_clrs[(i + moduleIdxOffset_) % 8]);
         parent_.sendCC(0, P2_TRACK_SELECT_CC_START + i, (i + moduleIdxOffset_) == moduleIdx_ ? 122 : 124);
     }
 

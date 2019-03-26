@@ -124,6 +124,13 @@ void P2_ModuleMode::displayPage() {
     auto rack = racks[0];
     if (rack == nullptr) return;
 
+    while(selectedIdx_ > pageOffset_ + (MAX_ROW * MAX_COL)) {
+        pageOffset_ ++;
+    }
+    if(selectedIdx_ < pageOffset_) {
+        pageOffset_ = selectedIdx_;
+    }
+
     int x = 0, y = 0;
     int idx = 0;
     auto modules = rack->getResources("module");
