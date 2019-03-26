@@ -398,7 +398,7 @@ void OParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
             parent_.flipDisplay();
         }
 
-        parent_.sendPdModuleMessage("activePage", module->id(), (page == nullptr ? "none" : page->id()));
+        parent_.sendPdMessage("activePage", module->id(), (page == nullptr ? "none" : page->id()));
 
         for (unsigned int i = 0; i < ORGANELLE_NUM_PARAMS; i++) {
             pots_->locked_[i] = Pots::K_LOCKED;
