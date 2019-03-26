@@ -199,6 +199,9 @@ public:
 
     void activate() override;
     void clicked(unsigned idx) override;
+private:
+    void populateMenu(const std::string& catSel);
+    std::string cat_;
 };
 
 class OModuleSelectMenu : public OFixedMenuMode {
@@ -846,6 +849,70 @@ void OPresetMenu::clicked(unsigned idx) {
     }
 }
 
+void OModuleMenu::populateMenu(const std::string& catSel) {
+    auto rack = model()->getRack(parent_.currentRack());
+    auto module = model()->getModule(rack, parent_.currentModule());
+    if (module == nullptr) return;
+    unsigned idx = 0;
+    auto res = rack->getResources("module");
+    items_.clear();
+    cur_ = 0;
+    top_ = 0;
+    std::set<std::string> cats;
+    unsigned catlen = cat_.length();
+
+    if(catlen) {
+        items_.push_back("..");
+        idx++;
+    }
+
+    for (const auto &modtype : res) {
+        if(cat_.length()) {
+            size_t pos=modtype.find(cat_);
+            if(pos==0) {
+               std::string mod=modtype.substr(catlen,modtype.length()-catlen);
+                items_.push_back(mod);
+                if (module->type() == modtype ) {
+                    cur_ = idx;
+                    top_ = idx;
+                }
+                idx++;
+            } // else filtered
+        } else {
+            // top level, so get categories
+            size_t pos=modtype.find("/");
+            if(pos==std::string::npos) {
+                items_.push_back(modtype);
+                if (modtype == module->type()) {
+                    cur_ = idx;
+                    top_ = idx;
+                }
+                idx++;
+            } else {
+                cats.insert(modtype.substr(0,pos+1));
+            }
+        }
+    }
+
+
+    size_t pos =std::string::npos;
+    std::string modcat;
+    pos = module->type().find("/");
+    if(pos!=std::string::npos) {
+        modcat=module->type().substr(0,pos+1);
+    }
+
+
+    for(auto s: cats) {
+        items_.push_back(s);
+        if (catSel.length() && s == catSel) {
+            cur_ = idx;
+            top_ = idx;
+        }
+        idx++;
+    }
+}
+
 
 void OModuleMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
@@ -853,30 +920,46 @@ void OModuleMenu::activate() {
     if (module == nullptr) return;
     unsigned idx = 0;
     auto res = rack->getResources("module");
-    items_.clear();
-    for (const auto &modtype : res) {
-        items_.push_back(modtype);
-        if (modtype == module->type()) {
-            cur_ = idx;
-            top_ = idx;
-        }
-        idx++;
+    cat_="";
+
+    size_t pos =std::string::npos;
+    pos = module->type().find("/");
+    if(pos!=std::string::npos) {
+        cat_=module->type().substr(0,pos+1);
     }
+
+    populateMenu(cat_);
+
     OFixedMenuMode::activate();
 }
 
 
 void OModuleMenu::clicked(unsigned idx) {
     if (idx < getSize()) {
-        auto rack = model()->getRack(parent_.currentRack());
-        auto module = model()->getModule(rack, parent_.currentModule());
-        if (module == nullptr) return;
-
         auto modtype = items_[idx];
-        if (modtype != module->type()) {
-            //FIXME, workaround since changing the module needs to tell params to change page
-            parent_.changeMode(OM_PARAMETER);
-            model()->loadModule(Kontrol::CS_LOCAL, rack->id(), module->id(), modtype);
+        if (modtype == "..") {
+            std::string oldcat = cat_;
+            cat_ = "";
+            populateMenu(oldcat);
+            display();
+            return;
+        } else {
+            if(cat_.length()) {
+                // module dir
+                Kontrol::EntityId modType = cat_ + modtype;
+                auto rack = model()->getRack(parent_.currentRack());
+                auto module = model()->getModule(rack, parent_.currentModule());
+                if (modType != module->type()) {
+                    //FIXME, workaround since changing the module needs to tell params to change page
+                    parent_.changeMode(OM_PARAMETER);
+                    model()->loadModule(Kontrol::CS_LOCAL, rack->id(), module->id(), modType);
+                }
+            } else {
+                cat_ = modtype;
+                populateMenu("");
+                display();
+                return;
+            }
         }
     }
     parent_.changeMode(OM_PARAMETER);
