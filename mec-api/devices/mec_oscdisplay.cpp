@@ -280,7 +280,7 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 
         std::string md = "";
         std::string pd = "";
-        if (module) md = module->displayName();
+        if (module) md = module->id() + " : " +module->displayName();
         if (page) pd = page->displayName();
         parent_.displayTitle(md, pd);
     } catch (std::out_of_range) { ;
