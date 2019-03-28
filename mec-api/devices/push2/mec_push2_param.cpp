@@ -101,6 +101,9 @@ void P2_ParamMode::processCC(unsigned cc, unsigned v) {
     } else if (cc == P2_SETUP_CC) {
         parent_.midiLearn(!parent_.midiLearn());
         parent_.sendCC(0, P2_SETUP_CC, (parent_.midiLearn() ? 0x7f : 0x10));
+    } else if (cc == P2_AUTOMATE_CC) {
+        parent_.modulationLearn(!parent_.modulationLearn());
+        parent_.sendCC(0, P2_AUTOMATE_CC, (parent_.modulationLearn() ? 0x7f : 0x7b));
     } else if (cc == P2_CURSOR_LEFT_CC) {
         if (moduleIdxOffset_ > 0) {
             auto pRack = model_->getRack(parent_.currentRack());
@@ -408,6 +411,7 @@ void P2_ParamMode::activate() {
     parent_.sendCC(0, P2_CURSOR_LEFT_CC, 0x00);
     parent_.sendCC(0, P2_CURSOR_RIGHT_CC, 0x00);
     parent_.sendCC(0, P2_SETUP_CC, (parent_.midiLearn() ? 0x7f : 0x10));
+    parent_.sendCC(0, P2_AUTOMATE_CC, (parent_.modulationLearn() ? 0x7f : 0x7b));
 }
 
 
@@ -423,7 +427,7 @@ void P2_ParamMode::midiLearn(Kontrol::ChangeSource src, bool b) {
 }
 
 void P2_ParamMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
-    parent_.sendCC(0, P2_SETUP_CC, (parent_.midiLearn() ? 0x7f : 0x10));
+    parent_.sendCC(0, P2_AUTOMATE_CC, (parent_.modulationLearn() ? 0x7f : 0x7b));
 }
 
 

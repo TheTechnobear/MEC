@@ -274,15 +274,9 @@ EXTERN void KontrolRack_setup(void) {
                     (t_method) KontrolRack_key, gensym("key"),
                     A_DEFFLOAT, A_DEFFLOAT, A_NULL);
 
-    // class_addmethod(KontrolRack_class,
-    //                 (t_method) KontrolRack_vol, gensym("vol"),
-    //                 A_DEFFLOAT, A_NULL);
-    // class_addmethod(KontrolRack_class,
-    //                 (t_method) KontrolRack_expRaw, gensym("expRaw"),
-    //                 A_DEFFLOAT, A_NULL);
-    // class_addmethod(KontrolRack_class,
-    //                 (t_method) KontrolRack_fsRaw, gensym("fsRaw"),
-    //                 A_DEFFLOAT, A_NULL);
+    class_addmethod(KontrolRack_class,
+                 (t_method) KontrolRack_pgm, gensym("pgm"),
+                 A_DEFFLOAT, A_NULL);
 
 
     class_addmethod(KontrolRack_class,
@@ -618,6 +612,23 @@ void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value) {
 void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value) {
     if (x->device_) x->device_->keyPress((unsigned) key, (unsigned) value);
 }
+
+void KontrolRack_pgm(t_KontrolRack *x, t_floatarg f) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (!rack) { post("No local rack found"); return; }
+    auto presets = rack->getPresetList();
+    unsigned pnum = f;
+
+    if( pnum < presets.size() ) {
+        auto preset = presets[pnum];
+        rack->loadPreset(preset);
+        post("pgm change : preset changed to %d : %s", pnum, preset.c_str());
+    } else {
+        post("pgm change : preset out of range %d", pnum);
+    }
+
+}
+
 
 
 void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings) {

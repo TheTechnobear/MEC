@@ -174,7 +174,7 @@ bool Push2::processMidi(const MidiMsg &midimsg) {
             msg.data_.touch_.x_ = 0;
             msg.data_.touch_.y_ = 0;
             msg.data_.touch_.z_ = float(midimsg.data[2]) / 127.0f;
-            addTouchMsg(msg);
+            queueMecMsg(msg);
             break;
         }
         case 0xB0: { // CC

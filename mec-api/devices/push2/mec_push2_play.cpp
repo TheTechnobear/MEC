@@ -1,6 +1,7 @@
 #include "mec_push2_play.h"
 
 #include <mec_log.h>
+#include <mec_msg_queue.h>
 
 #define PAD_NOTE_ON_CLR (int8_t) 127
 #define PAD_NOTE_OFF_CLR (int8_t) 0
@@ -132,7 +133,7 @@ void P2_PlayMode::processNoteOn(unsigned n, unsigned v) {
         msg.data_.touch_.x_ = 0;
         msg.data_.touch_.y_ = 0;
         msg.data_.touch_.z_ = float(v) / 127.0f;
-        parent_.addTouchMsg(msg);
+        parent_.queueMecMsg(msg);
 
         parent_.sendNoteOn(0, n, PAD_NOTE_ON_CLR);
     }
@@ -152,7 +153,7 @@ void P2_PlayMode::processNoteOff(unsigned n, unsigned v) {
         msg.data_.touch_.x_ = 0;
         msg.data_.touch_.y_ = 0;
         msg.data_.touch_.z_ = float(v) / 127.0f;
-        parent_.addTouchMsg(msg);
+        parent_.queueMecMsg(msg);
 
 
         unsigned clr = determinePadScaleColour(r, c);
@@ -161,8 +162,15 @@ void P2_PlayMode::processNoteOff(unsigned n, unsigned v) {
     }
 }
 
-void P2_PlayMode::processCC(unsigned , unsigned ) {
-    ;
+void P2_PlayMode::processCC(unsigned n, unsigned v) {
+    if(n == P2_ACCENT_CC) {
+        parent_.sendCC(0, P2_ACCENT_CC,v > 0 ? 0x7f : 0x10);
+        MecMsg msg;
+        msg.type_ = MecMsg::CONTROL;
+        msg.data_.control_.controlId_ = 69; // default AUX CC
+        msg.data_.control_.value_ = float(v) / 127.0f;
+        parent_.queueMecMsg(msg);
+    }
 }
 
 }

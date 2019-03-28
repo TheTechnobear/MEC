@@ -44,6 +44,9 @@ static const unsigned P2_CURSOR_RIGHT_CC = 45;
 static const unsigned P2_CURSOR_UP = 46;
 static const unsigned P2_CURSOR_DOWN = 47;
 
+static const unsigned P2_ACCENT_CC = 57;
+static const unsigned P2_AUTOMATE_CC = 89;
+static const unsigned P2_RECORD_CC = 86;
 
 
 

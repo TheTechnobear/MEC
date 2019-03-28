@@ -51,6 +51,7 @@ void KontrolRack_knob3Raw(t_KontrolRack *x, t_floatarg f);
 void KontrolRack_knob4Raw(t_KontrolRack *x, t_floatarg f);
 void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value);
 void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value);
+void KontrolRack_pgm(t_KontrolRack *x, t_floatarg f);
 
 
 void KontrolRack_modulate(t_KontrolRack *x, t_symbol* src, t_floatarg bus, t_floatarg value);

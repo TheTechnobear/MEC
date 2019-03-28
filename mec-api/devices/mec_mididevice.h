@@ -30,7 +30,7 @@ public:
 
     bool sendNoteOff(unsigned ch, unsigned note, unsigned vel) { return send(MidiMsg(int(0x80 + ch), note, vel)); }
 
-    void addTouchMsg(MecMsg& msg) { queue_.addToQueue(msg);}
+    void queueMecMsg(MecMsg &msg) { queue_.addToQueue(msg);}
 
 protected:
     virtual RtMidiIn::RtMidiCallback getMidiCallback();
