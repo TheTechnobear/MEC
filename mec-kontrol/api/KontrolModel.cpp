@@ -350,7 +350,7 @@ void KontrolModel::assignModulation(ChangeSource src,
                       unsigned bus) {
     if (src.type()==ChangeSource::REMOTE  && localRack() && rackId == localRack()->id()) {
         //TODO: when adding src dependent modulation, check to see what we should use for remote mod
-        localRack()->addModulationMapping("remote", bus, moduleId, paramId);
+        localRack()->addModulationMapping("mod", bus, moduleId, paramId);
     }
 
     auto rack = getRack(rackId);
@@ -370,7 +370,7 @@ void KontrolModel::unassignModulation(ChangeSource src,
                         unsigned bus) {
     if (src.type()==ChangeSource::REMOTE && localRack() && rackId == localRack()->id()) {
         //TODO: when adding src dependent modulation, check to see what we should use for remote mod
-        localRack()->removeModulationMapping("remote", bus, moduleId, paramId);
+        localRack()->removeModulationMapping("mod", bus, moduleId, paramId);
     }
 
     auto rack = getRack(rackId);

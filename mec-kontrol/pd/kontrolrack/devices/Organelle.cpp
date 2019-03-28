@@ -1034,8 +1034,6 @@ bool Organelle::init() {
 
     if (KontrolDevice::init()) {
         // setup mother.pd for reasonable behaviour, basically takeover
-        sendPdMessage("midiOutGate", 0.0f);
-        // sendPdMessage("midiInGate",0.0f);
         sendPdMessage("enableSubMenu", 1.0f);
         connect();
         changeMode(OM_PARAMETER);
