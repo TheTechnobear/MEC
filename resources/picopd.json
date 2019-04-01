@@ -49,7 +49,7 @@
                 "virtual" : 0,
                 "voices" : 4,
                 "pitchbend range" : 48.0,
-                "device" : "Pure Data:Pure Data Midi-In 1 128:0"
+                "device" : "Pure Data:0"
             },
             "_console" : {
                 "throttle" : 0

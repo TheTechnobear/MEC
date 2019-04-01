@@ -3,15 +3,17 @@
 #include "mec_log.h"
 #include "../mec_voice.h"
 
+#ifdef __linux__
+#include <alsa/asoundlib.h>
+extern unsigned int portInfo(snd_seq_t *seq, snd_seq_port_info_t *pinfo, unsigned int type, int portNumber);
+#endif
+
 namespace mec {
-
-
 
 #ifdef __linux__
 #include <alsa/asoundlib.h>
 
 // Imported from RtMidi library.
-extern unsigned int portInfo(snd_seq_t *seq, snd_seq_port_info_t *pinfo, unsigned int type, int portNumber);
 
 bool findMidiPortId(unsigned &result, const std::string &portName, bool outputPort) {
     snd_seq_t *seq;
@@ -115,7 +117,7 @@ bool MidiDevice::init(void *arg) {
         unsigned port;
         if (findMidiPortId(port, input_device.c_str(), false)) {
             try {
-                midiInDevice_->openPort(i,"MIDI IN");
+                midiInDevice_->openPort(port,"MIDI IN");
                 found = true;
                 LOG_1("Midi input opened :" << input_device);
             } catch (RtMidiError &error) {
@@ -163,7 +165,7 @@ bool MidiDevice::init(void *arg) {
             unsigned port;
             if (findMidiPortId(port, input_device.c_str(), true)) {
                 try {
-                    midiOutDevice_->openPort(i,"MIDI OUT");
+                    midiOutDevice_->openPort(port,"MIDI OUT");
                     LOG_0("Midi output opened :" << output_device);
                     found = true;
                 } catch (RtMidiError &error) {
