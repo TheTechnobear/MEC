@@ -29,9 +29,17 @@
 namespace Kontrol {
 
 
-void  Rack::init() {
+// mainDir_  : directory where main patch is based, usually ".", this is important since modules are loaded relative to it
+// dataDir_  : used for presets
+// mediaDir_ : user for samples etc
+// userModuleDir_  : an optional directory for loading modules which will override modules in moduleDir_
+// moduleDir_ : main module dir, usual mainDir+'modules", if moved it should be absolute
+
+
+void  Rack::initPrefs() {
     mec::Preferences prefs("orac.json");
     if(prefs.valid()) {
+        mainDir_ = prefs.getString("mainDir", mainDir_);
         dataDir_ = prefs.getString("dataDir", dataDir_);
         mediaDir_ = prefs.getString("mediaDir", mediaDir_);
         moduleDir_ = prefs.getString("moduleDir", moduleDir_);
@@ -557,6 +565,7 @@ bool Rack::applyModulePreset(std::shared_ptr<Module> module, const ModulePreset 
 void Rack::dumpSettings() const {
     LOG_1("Rack Settings :" << id());
     LOG_1("------------------------");
+    LOG_1("mainDir : "  << mainDir());
     LOG_1("dataDir : "  << dataDir());
     LOG_1("mediaDir : " << mediaDir());
     LOG_1("moduleDir : "  << moduleDir());

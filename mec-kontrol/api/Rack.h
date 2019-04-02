@@ -92,14 +92,14 @@ public:
          const std::string &displayName
          ) :    Entity(createId(host, port), displayName),
                 host_(host), port_(port),
+                mainDir_("."),
                 dataDir_("./data/orac"),
                 mediaDir_("./media"),
                 userModuleDir_("./usermodules"),
-                moduleDir_("./modules") {
-        init();
+                moduleDir_("modules") {
     }
 
-    void init();
+    void initPrefs();
 
     static EntityId createId(const std::string &host, unsigned port) {
         return (host + ":" + std::to_string(port));
@@ -123,10 +123,12 @@ public:
     bool savePreset(std::string presetId);
     std::vector<std::string> getPresetList();
 
+    const std::string &mainDir() const { return mainDir_; }
     const std::string &dataDir() const { return dataDir_; }
     const std::string &mediaDir() const { return mediaDir_; }
     const std::string &moduleDir() const { return moduleDir_; }
     const std::string &userModuleDir() const { return userModuleDir_; }
+    void mainDir(const std::string &d) { mainDir_ = d; }
     void dataDir(const std::string &d) { dataDir_ = d; }
     void mediaDir(const std::string &d) { mediaDir_ = d; }
     void moduleDir(const std::string &d) { moduleDir_ = d; }
@@ -182,6 +184,7 @@ private:
     // platform prefs
     std::string host_;
     unsigned port_;
+    std::string mainDir_;
     std::string mediaDir_;
     std::string dataDir_;
     std::string moduleDir_;

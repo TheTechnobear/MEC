@@ -519,7 +519,7 @@ void KontrolModel::publishMidiMapping(ChangeSource src, const Rack &rack, const 
 
 bool KontrolModel::loadModuleDefinitions(const EntityId &rackId, const EntityId &moduleId,
                                          const std::string &filename) {
-    mec::Preferences prefs(filename);
+    mec::Preferences prefs(localRack()->mainDir() + "/" + filename);
     return loadModuleDefinitions(rackId, moduleId, prefs);
 }
 

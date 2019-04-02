@@ -194,6 +194,7 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     x->model_ = Kontrol::KontrolModel::model();
 
     x->model_->createLocalRack((unsigned int) clientport);
+    x->model_->localRack()->initPrefs();
 
     if(device=="organelle") {
         post("KontrolRack: device = %s", device.c_str());
@@ -853,7 +854,7 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
     struct stat st;
 
     std::setlocale(LC_ALL, "en_US.UTF-8");
-    loadModuleDir(rack->moduleDir(),"");
+    loadModuleDir(rack->mainDir()+"/"+rack->moduleDir(),"");
     if (rack->userModuleDir().length() > 0) {
         loadModuleDir(rack->userModuleDir(),"");
     }
