@@ -114,6 +114,18 @@ void KontrolRack_connectObjs(t_pd *sendObj, unsigned fromObj, unsigned fromLet, 
 }
 
 
+void KontrolRack_dspState(bool onoff) {
+    t_pd *pdSendObj = gensym("pd")->s_thing;;
+    if (!pdSendObj) {
+        post("KontrolRack_dspState: unable to find  pd to change dsp state to %d", onoff);
+    } else {
+        t_atom args[2];
+        SETSYMBOL(&args[0], gensym("dsp"));
+        SETFLOAT(&args[1], onoff);
+        pd_forwardmess(pdSendObj, 2, args);
+    }
+}
+
 
 /// main PD methods
 void KontrolRack_tick(t_KontrolRack *x) {
@@ -408,6 +420,7 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *modType
 
     post("loadmodule: loading %s into %s", modType->s_name, modId->s_name);
 
+    KontrolRack_dspState(false);
     KontrolRack_sendMsg(sendObj, "clear");
 
     KontrolRack_obj(sendObj, 10, 10, "r~", (std::string("inL-") + modId->s_name).c_str()); //obj0
@@ -420,6 +433,8 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *modType
     KontrolRack_connectObjs(sendObj, 1, 0, 2, 1);
     KontrolRack_connectObjs(sendObj, 2, 0, 3, 0);
     KontrolRack_connectObjs(sendObj, 2, 1, 4, 0);
+
+    KontrolRack_dspState(true);
 
     auto module = Kontrol::KontrolModel::model()->getModule(rack, modId->s_name);
     if (module == nullptr) {
