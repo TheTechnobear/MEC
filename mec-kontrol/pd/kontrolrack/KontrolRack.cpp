@@ -434,11 +434,11 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *modType
     KontrolRack_connectObjs(sendObj, 2, 0, 3, 0);
     KontrolRack_connectObjs(sendObj, 2, 1, 4, 0);
 
-    KontrolRack_dspState(true);
 
     auto module = Kontrol::KontrolModel::model()->getModule(rack, modId->s_name);
     if (module == nullptr) {
         post("unable to initialise module %s %s", modId->s_name, modType->s_name);
+        KontrolRack_dspState(true);
         return;
     }
 
@@ -550,6 +550,8 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *modType
             KontrolRack_sendMsg(sendobj, x->active_module_);
         }
     }
+
+    KontrolRack_dspState(true);
 }
 
 void KontrolRack_singlemodulemode(t_KontrolRack *x, t_floatarg f) {
