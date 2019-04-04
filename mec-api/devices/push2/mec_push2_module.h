@@ -19,8 +19,13 @@ private:
     Push2 &parent_;
     std::shared_ptr<Push2API::Push2> push2Api_;
     std::shared_ptr<Kontrol::KontrolModel> model_;
-    unsigned selectedIdx_;
-    unsigned pageOffset_;
+    std::set<std::string>  modules_;
+    std::set<std::string> categories_;
+
+    unsigned selectedModuleIdx_;
+    unsigned moduleOffset_;
+    unsigned selectedCatIdx_;
+    unsigned catOffset_;
 };
 
 }
