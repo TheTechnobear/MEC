@@ -115,6 +115,7 @@ void KontrolRack_connectObjs(t_pd *sendObj, unsigned fromObj, unsigned fromLet, 
 
 
 void KontrolRack_dspState(bool onoff) {
+#ifndef __COBALT__ 
     t_pd *pdSendObj = gensym("pd")->s_thing;;
     if (!pdSendObj) {
         post("KontrolRack_dspState: unable to find  pd to change dsp state to %d", onoff);
@@ -124,6 +125,7 @@ void KontrolRack_dspState(bool onoff) {
         SETFLOAT(&args[1], onoff);
         pd_forwardmess(pdSendObj, 2, args);
     }
+#endif
 }
 
 
