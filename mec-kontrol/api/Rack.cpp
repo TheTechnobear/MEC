@@ -141,7 +141,7 @@ bool Rack::loadSettings(const std::string &filename) {
 
 bool Rack::saveSettings(const std::string &filename) {
     {
-        std::string rackPrefFile = dataDir_+ "/" + filename + ".json";
+        std::string rackPrefFile = dataDir_+ "/" + filename;
         std::ofstream outfile(rackPrefFile.c_str());
         cJSON *root = cJSON_CreateObject();
 
@@ -244,13 +244,24 @@ bool Rack::saveFilePreset(const std::string& presetId) {
     std::ofstream outfile(filename.c_str());
     cJSON *root = cJSON_CreateObject();
 
+    // store modules sorted, so easier to find ;)
+    std::set<EntityId> moduleIds;
     for (const auto &mp : rackPreset_) {
+        // check module exists still, useful if renaming
+        if(getModule(mp.first)) {
+            moduleIds.insert(mp.first);
+        }
+    }
 
-        auto moduleId = mp.first;
-        auto modulePreset = mp.second;
-        cJSON *mjson = cJSON_CreateObject();
-        cJSON_AddItemToObject(root, moduleId.c_str(), mjson);
-        saveModulePreset(modulePreset, mjson);
+    for (const auto &mid : moduleIds) {
+        auto mp = rackPreset_.find(mid);
+        if(mp!=rackPreset_.end()) {
+            auto moduleId = mp->first;
+            auto modulePreset = mp->second;
+            cJSON *mjson = cJSON_CreateObject();
+            cJSON_AddItemToObject(root, moduleId.c_str(), mjson);
+            saveModulePreset(modulePreset, mjson);
+        }
     }
 
     // const char* text = cJSON_PrintUnformatted(root);
