@@ -1028,6 +1028,7 @@ void PdCallback::loadPreset(Kontrol::ChangeSource, const Kontrol::Rack & r, std:
     if (rack && rack->id() != r.id())return;
     post("preset loaded  : %s", preset.c_str());
     KontrolRack_sendMsg(gensym("rackLoadPreset")->s_thing, gensym(preset.c_str()));
+    KontrolRack_sendMsg(gensym("rackCurrentPreset")->s_thing, gensym(rack->currentPreset().c_str()));
 }
 
 void PdCallback::saveSettings(Kontrol::ChangeSource, const Kontrol::Rack & r ) {
