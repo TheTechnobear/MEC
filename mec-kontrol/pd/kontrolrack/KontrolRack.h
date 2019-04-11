@@ -60,6 +60,11 @@ void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_savesettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset);
 void KontrolRack_savepreset(t_KontrolRack *x, t_symbol *preset);
+
+void KontrolRack_nextpreset(t_KontrolRack *x);
+void KontrolRack_prevpreset(t_KontrolRack *x);
+
+
 void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol* mod);
 void KontrolRack_singlemodulemode(t_KontrolRack *x, t_floatarg f);
 void KontrolRack_enablemenu(t_KontrolRack *x, t_floatarg f);

@@ -316,6 +316,13 @@ EXTERN void KontrolRack_setup(void) {
                     A_DEFSYMBOL, A_NULL);
 
     class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_nextpreset, gensym("nextpreset"),
+                     A_NULL);
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_prevpreset, gensym("prevpreset"),
+                     A_NULL);
+
+    class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_loadmodule, gensym("loadmodule"),
                     A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
 
@@ -638,7 +645,6 @@ void KontrolRack_pgm(t_KontrolRack *x, t_floatarg f) {
     if (!rack) { post("No local rack found"); return; }
     auto presets = rack->getPresetList();
     unsigned pnum = f;
-
     if( pnum < presets.size() ) {
         auto preset = presets[pnum];
         rack->loadPreset(preset);
@@ -646,7 +652,58 @@ void KontrolRack_pgm(t_KontrolRack *x, t_floatarg f) {
     } else {
         post("pgm change : preset out of range %d", pnum);
     }
+}
 
+
+
+void KontrolRack_nextpreset(t_KontrolRack *x) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (!rack) { post("No local rack found"); return; }
+    auto presets = rack->getPresetList();
+    if(presets.size()==0) return;
+
+    auto  curPreset = rack->currentPreset();
+    unsigned idx=0, pnum = 0;
+    for(auto p : presets) {
+        if(p==curPreset) {
+            pnum = idx + 1;
+            if(pnum > (presets.size()-1)) pnum = 0;
+            break;
+        }
+        idx++;
+    }
+
+    if( pnum < presets.size() ) {
+        auto preset = presets[pnum];
+        rack->loadPreset(preset);
+        post("nextpreset : preset changed to %d : %s", pnum, preset.c_str());
+    }
+}
+
+
+void KontrolRack_prevpreset(t_KontrolRack *x) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (!rack) { post("No local rack found"); return; }
+    auto presets = rack->getPresetList();
+    if(presets.size()==0) return;
+
+    auto  curPreset = rack->currentPreset();
+    unsigned idx=0, pnum=0;
+    for(auto p : presets) {
+        if(p==curPreset) {
+            if(idx==0) pnum = presets.size() -1;
+            else pnum = idx - 1;
+
+            break;
+        }
+        idx++;
+    }
+
+    if( pnum < presets.size() ) {
+        auto preset = presets[pnum];
+        rack->loadPreset(preset);
+        post("prevpreset : preset changed to %d : %s", pnum, preset.c_str());
+    }
 }
 
 
