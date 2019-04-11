@@ -177,6 +177,18 @@ bool Rack::savePreset(std::string presetId) {
         }
     }
 
+    //FIXME: probably presets_ should not exist, should use resources
+    //also new preset ID, should not be done on client, but on server
+    //other multi clients might trip over each other!
+    bool found=false;
+    for(auto p: presets_) {
+        if(p==presetId) {
+            found=true;
+            break;
+        }
+    }
+    if(!found) presets_.push_back(presetId);
+
     addResource("preset",presetId);
     model()->publishResource(CS_LOCAL,*this,"preset",presetId);
 
