@@ -97,6 +97,7 @@ public:
     void modulationLearn(bool b);
     bool modulationLearn() { return modulationLearnActive_;}
 
+    unsigned menuTimeout() {return menuTimeout_;}
 private:
     friend class OscDisplayPacketListener;
     friend class OscDisplayListener;
@@ -157,6 +158,7 @@ private:
     OscDisplayModes currentMode_;
     std::map<OscDisplayModes, std::shared_ptr<OscDisplayMode>> modes_;
     std::vector<std::string> moduleOrder_;
+    unsigned menuTimeout_;
 
 };
 

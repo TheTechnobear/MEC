@@ -11,7 +11,6 @@
 
 namespace mec {
 
-static const auto MENU_TIMEOUT = 350;
 static const float MAX_POT_VALUE = 1.0F;
 
 static const unsigned OSC_WRITE_POLL_WAIT_TIMEOUT = 1000;
@@ -388,7 +387,7 @@ void OscDisplayParamMode::prevPage() {
 //---- OscDisplayMenuMode
 void OscDisplayMenuMode::activate() {
     display();
-    popupTime_ = MENU_TIMEOUT;
+    popupTime_ = parent_.menuTimeout();
 }
 
 void OscDisplayMenuMode::poll() {
@@ -439,7 +438,7 @@ void OscDisplayMenuMode::navPrev() {
             if (line <= OSC_NUM_TEXTLINES) parent_.invertLine(line);
         }
     }
-    popupTime_ = MENU_TIMEOUT;
+    popupTime_ = parent_.menuTimeout();
 }
 
 
@@ -465,7 +464,7 @@ void OscDisplayMenuMode::navNext() {
             if (line <= OSC_NUM_TEXTLINES) parent_.invertLine(line);
         }
     }
-    popupTime_ = MENU_TIMEOUT;
+    popupTime_ = parent_.menuTimeout();
 }
 
 
@@ -991,8 +990,11 @@ bool OscDisplay::init(void *arg) {
     active_ = false;
     writeRunning_ = false;
     listenRunning_ = false;
+    static const auto MENU_TIMEOUT = 350;
 
     unsigned listenPort = prefs.getInt("listen port", 6100);
+    menuTimeout_ = prefs.getInt("menu timeout", MENU_TIMEOUT);
+
 
     active_ = true;
     if (active_) {

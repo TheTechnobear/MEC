@@ -1,7 +1,8 @@
 {
     "mec"  :  {
         "oscdisplay"  :  {
-            "listen port" : 6100
+            "listen port" : 6100,
+            "menu timeout" : 350
         },
 
         "kontrol"  :  {
