@@ -281,10 +281,6 @@ void P2_ModuleMode::activate() {
         auto cat = modtype.substr(0, pos + 1);
         categories_.insert(cat);
         if(selcat == cat) {
-            selectedCatIdx_ = categories_.size()-1;
-            if(selectedCatIdx_ > (MAX_ROW-1)) {
-                catOffset_ = selectedCatIdx_ - (MAX_ROW-1);
-            }
             if(modtype == pModule->type()) {
                 selectedModuleIdx_ = idx;
                 if (selectedModuleIdx_ > ((MAX_COL-1) * MAX_ROW) -1) {
@@ -297,6 +293,18 @@ void P2_ModuleMode::activate() {
             modules_.insert(mod);
             idx++;
         }
+    }
+
+    idx = 0;
+    for(const auto cat: categories_) {
+        if(cat == selcat) {
+            selectedCatIdx_ = idx;
+            if(selectedCatIdx_ > (MAX_ROW-1)) {
+                catOffset_ = selectedCatIdx_ - (MAX_ROW-1);
+            }
+            break;
+        }
+        idx++;
     }
 
 
