@@ -930,7 +930,12 @@ void KontrolRack_loadresources(t_KontrolRack *x) {
     struct stat st;
 
     std::setlocale(LC_ALL, "en_US.UTF-8");
-    loadModuleDir(rack->mainDir()+"/"+rack->moduleDir(),"");
+
+    std::string moddir;
+    if(rack->moduleDir().at(0)=='/') moddir = rack->moduleDir();
+    else moddir = rack->mainDir()+"/"+rack->moduleDir();
+
+    loadModuleDir(moddir,"");
     if (rack->userModuleDir().length() > 0) {
         loadModuleDir(rack->userModuleDir(),"");
     }
