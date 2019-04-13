@@ -264,6 +264,8 @@ void P2_ModuleMode::activate() {
     selectedModuleIdx_ = 0;
     selectedCatIdx_ = 0;
     catOffset_ = 0;
+    modules_.clear();
+    categories_.clear();
 
     auto res = pRack->getResources("module");
 
