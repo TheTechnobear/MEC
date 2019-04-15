@@ -296,7 +296,7 @@ EXTERN void KontrolRack_setup(void) {
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_midiCC, gensym("midiCC"),
-                    A_DEFFLOAT, A_DEFFLOAT, A_NULL);
+                    A_DEFFLOAT, A_DEFFLOAT, A_DEFFLOAT, A_NULL);
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_modulate, gensym("modulate"),
@@ -632,8 +632,8 @@ void KontrolRack_knob4Raw(t_KontrolRack *x, t_floatarg f) {
     if (x->device_) x->device_->changePot(3, f);
 }
 
-void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg cc, t_floatarg value) {
-    if (x->device_) x->device_->midiCC((unsigned) cc, (unsigned) value);
+void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg ch, t_floatarg cc, t_floatarg value) {
+    if (x->device_) x->device_->midiCC(unsigned (ch*127 + cc) , (unsigned) value);
 }
 
 void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value) {

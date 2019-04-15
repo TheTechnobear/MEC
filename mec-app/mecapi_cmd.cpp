@@ -115,8 +115,10 @@ class MecOSCCallback : public MecCmdCallback {
 public:
     MecOSCCallback(mec::Preferences &p)
             : prefs_(p),
-              transmitSocket_(IpEndpointName(p.getString("host", "127.0.0.1").c_str(), p.getInt("port", 9001))),
-              valid_(true) {
+              transmitSocket_(IpEndpointName(p.getString("host", "127.0.0.1").c_str(), p.getInt("port", 3123))),
+              valid_(true),
+              touchOffset_(p.getInt("touch offset",1))
+              {
         if (valid_) {
             LOG_0("mecapi_proc enabling for osc");
         }
@@ -125,17 +127,17 @@ public:
     bool isValid() { return valid_; }
 
     void touchOn(int touchId, float note, float x, float y, float z) {
-        std::string topic = "/t3d/tch" + std::to_string(touchId);
+        std::string topic = "/t3d/tch" + std::to_string(touchId+touchOffset_);
         sendMsg(topic, touchId, note, x, y, z);
     }
 
     void touchContinue(int touchId, float note, float x, float y, float z) {
-        std::string topic = "/t3d/tch" + std::to_string(touchId);
+        std::string topic = "/t3d/tch" + std::to_string(touchId+touchOffset_);
         sendMsg(topic, touchId, note, x, y, z);
     }
 
     void touchOff(int touchId, float note, float x, float y, float z) {
-        std::string topic = "/t3d/tch" + std::to_string(touchId);
+        std::string topic = "/t3d/tch" + std::to_string(touchId+touchOffset_);
         sendMsg(topic, touchId, note, x, y, 0);
 
     }
@@ -165,6 +167,7 @@ private:
     UdpTransmitSocket transmitSocket_;
     char buffer_[OUTPUT_BUFFER_SIZE];
     bool valid_;
+    unsigned touchOffset_;
 };
 
 class MecMidiProcessor : public mec::Midi_Processor {
