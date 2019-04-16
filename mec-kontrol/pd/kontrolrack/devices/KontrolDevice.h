@@ -5,7 +5,7 @@
 
 #include <map>
 #include <memory>
-
+#include <unordered_set>
 
 class KontrolDevice;
 
@@ -100,9 +100,13 @@ private:
     unsigned currentMode_;
     Kontrol::EntityId currentRackId_;
     Kontrol::EntityId currentModuleId_;
-    Kontrol::EntityId lastParamId_; // for midi learn
+
     bool midiLearnActive_;
     bool modulationLearnActive_;
     bool enableMenu_;
     std::vector<std::string> moduleOrder_;
+
+    Kontrol::EntityId modParamId_;
+    Kontrol::EntityId modModuleId_;
+    std::unordered_set<Kontrol::EntityId> modulators_;
 };

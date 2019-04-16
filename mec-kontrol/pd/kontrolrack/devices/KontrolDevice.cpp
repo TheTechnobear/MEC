@@ -29,7 +29,9 @@ bool KontrolDevice::init() {
     midiLearn(Kontrol::CS_LOCAL, false);
     modulationLearn(Kontrol::CS_LOCAL, false);
     enableMenu(true);
-    lastParamId_ = "";
+    modParamId_ = "";
+    modModuleId_ = "";
+    modulators_.clear();
     for (const auto &m : modes_) {
         if (m.second != nullptr) m.second->init();
     }
@@ -100,7 +102,11 @@ void KontrolDevice::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack
     if ((midiLearnActive_ || modulationLearnActive_)
         && rack.id() == currentRackId_
         && module.id() == currentModuleId_) {
-        lastParamId_ = param.id();
+
+        if(modulators_.find(currentModuleId_) == modulators_.end()) {
+            modModuleId_ = module.id();
+            modParamId_ = param.id();
+        }
     }
 
     auto m = modes_[currentMode_];
@@ -140,17 +146,17 @@ void KontrolDevice::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &r
 
 void KontrolDevice::midiCC(unsigned num, unsigned value) {
     if (midiLearnActive_) {
-        if (!lastParamId_.empty()) {
+        if (!modModuleId_.empty() && !modParamId_.empty()) {
             auto rack = model()->getRack(currentRackId_);
             if (rack != nullptr) {
                 if (value > 0) {
-                    rack->addMidiCCMapping(num, currentModuleId_, lastParamId_);
-                    lastParamId_ = "";
+                    rack->addMidiCCMapping(num, modModuleId_, modParamId_);
                 } else {
-                    //std::cerr << "midiCC unlearn" << num << " " << lastParamId_ << std::endl;
-                    rack->removeMidiCCMapping(num, currentModuleId_, lastParamId_);
-                    lastParamId_ = "";
+                    //std::cerr << "midiCC unlearn" << num << " " << modParamId_ << std::endl;
+                    rack->removeMidiCCMapping(num, modModuleId_, modParamId_);
                 }
+                modParamId_ = "";
+                modModuleId_ = "";
             }
         }
     }
@@ -164,18 +170,19 @@ void KontrolDevice::midiCC(unsigned num, unsigned value) {
 void KontrolDevice:: modulate(const std::string& src, unsigned bus, float value) {
     //TODO: when adding src dependent modulation, check to see what we should use for mod learn
     if (modulationLearnActive_) {
-        if (!lastParamId_.empty()) {
+        modulators_.insert(src);
+        if (!modModuleId_.empty() && !modParamId_.empty()) {
             auto rack = model()->getRack(currentRackId_);
             if (rack != nullptr) {
                 if (value > 0.1) {
-                    //std::cerr << "modulation learn" << bus << " " << lastParamId_ << std::endl;
-                    rack->addModulationMapping("mod", bus, currentModuleId_, lastParamId_);
-                    lastParamId_ = "";
+                    //std::cerr << "modulation learn" << bus << " " << modParamId_ << std::endl;
+                    rack->addModulationMapping(src, bus, modModuleId_, modParamId_);
                 } else {
-                    //std::cerr << "modulation unlearn" << bus << " " << lastParamId_ << std::endl;
-                    rack->removeModulationMapping("mod", bus, currentModuleId_, lastParamId_);
-                    lastParamId_ = "";
+                    //std::cerr << "modulation unlearn" << bus << " " << modParamId_ << std::endl;
+                    rack->removeModulationMapping(src, bus, modModuleId_, modParamId_);
                 }
+                modParamId_ = "";
+                modModuleId_ = "";
             }
         }
     }
@@ -189,14 +196,18 @@ void KontrolDevice:: modulate(const std::string& src, unsigned bus, float value)
 
 
 void KontrolDevice::midiLearn(Kontrol::ChangeSource src, bool b) {
-    lastParamId_ = "";
+    modParamId_ = "";
+    modModuleId_ = "";
+    modulators_.clear();
     modulationLearnActive_ = false;
     midiLearnActive_ = b;
 }
 
 void KontrolDevice::modulationLearn(Kontrol::ChangeSource src, bool b) {
-    lastParamId_ = "";
+    modParamId_ = "";
+    modModuleId_ = "";
     midiLearnActive_ = false;
+    modulators_.clear();
     modulationLearnActive_ = b;
 }
 
