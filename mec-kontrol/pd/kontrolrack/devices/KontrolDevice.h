@@ -108,5 +108,6 @@ private:
 
     Kontrol::EntityId modParamId_;
     Kontrol::EntityId modModuleId_;
+    int modSource_;
     std::unordered_set<Kontrol::EntityId> modulators_;
 };

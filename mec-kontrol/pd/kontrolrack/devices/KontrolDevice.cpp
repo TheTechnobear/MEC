@@ -31,6 +31,7 @@ bool KontrolDevice::init() {
     enableMenu(true);
     modParamId_ = "";
     modModuleId_ = "";
+    modSource_ = -1;
     modulators_.clear();
     for (const auto &m : modes_) {
         if (m.second != nullptr) m.second->init();
@@ -106,6 +107,7 @@ void KontrolDevice::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack
         if(modulators_.find(currentModuleId_) == modulators_.end()) {
             modModuleId_ = module.id();
             modParamId_ = param.id();
+            modSource_ = -1;
         }
     }
 
@@ -146,7 +148,9 @@ void KontrolDevice::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &r
 
 void KontrolDevice::midiCC(unsigned num, unsigned value) {
     if (midiLearnActive_) {
-        if (!modModuleId_.empty() && !modParamId_.empty()) {
+        if (!modModuleId_.empty() && !modParamId_.empty()
+             && (modSource_ < 0 || modSource_ == num)
+        ) {
             auto rack = model()->getRack(currentRackId_);
             if (rack != nullptr) {
                 if (value > 0) {
@@ -155,8 +159,7 @@ void KontrolDevice::midiCC(unsigned num, unsigned value) {
                     //std::cerr << "midiCC unlearn" << num << " " << modParamId_ << std::endl;
                     rack->removeMidiCCMapping(num, modModuleId_, modParamId_);
                 }
-                modParamId_ = "";
-                modModuleId_ = "";
+                modSource_ = num;
             }
         }
     }
@@ -171,7 +174,9 @@ void KontrolDevice:: modulate(const std::string& src, unsigned bus, float value)
     //TODO: when adding src dependent modulation, check to see what we should use for mod learn
     if (modulationLearnActive_) {
         modulators_.insert(src);
-        if (!modModuleId_.empty() && !modParamId_.empty()) {
+        if (!modModuleId_.empty() && !modParamId_.empty()
+            && (modSource_ < 0 || modSource_ == bus)
+            ) {
             auto rack = model()->getRack(currentRackId_);
             if (rack != nullptr) {
                 if (value > 0.1) {
@@ -181,8 +186,7 @@ void KontrolDevice:: modulate(const std::string& src, unsigned bus, float value)
                     //std::cerr << "modulation unlearn" << bus << " " << modParamId_ << std::endl;
                     rack->removeModulationMapping(src, bus, modModuleId_, modParamId_);
                 }
-                modParamId_ = "";
-                modModuleId_ = "";
+                modSource_ = bus;
             }
         }
     }
