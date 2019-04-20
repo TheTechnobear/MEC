@@ -41,6 +41,7 @@ public:
     virtual void encoderButton(unsigned encoder, bool value);
     virtual void keyPress(unsigned key, unsigned value);
     virtual void selectPage(unsigned page);
+    virtual void selectModule(unsigned module);
 
     //Kontrol::KontrolCallback
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override;

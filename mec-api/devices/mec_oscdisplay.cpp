@@ -290,8 +290,11 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 }
 
 
-void OscDisplayParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &) {
+void OscDisplayParamMode::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module & module) {
     if (rack.id() == parent_.currentRack()) {
+        if(src!= Kontrol::CS_LOCAL &&  module.id() != parent_.currentModule()) {
+            parent_.currentModule(module.id());
+        }
         pageIdx_ = -1;
         setCurrentPage(0, false);
     }
@@ -1211,17 +1214,17 @@ void OscDisplay::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
 
     if(res=="moduleorder") {
         moduleOrder_.clear();
-        if(res.length()>0) {
+        if(value.length()>0) {
             int lidx =0;
             int idx = 0;
             int len = 0;
-            while((idx=res.find(" ",lidx)) != std::string::npos) {
+            while((idx=value.find(" ",lidx)) != std::string::npos) {
                 len = idx - lidx;
-                moduleOrder_.push_back(res.substr(lidx,len));
+                moduleOrder_.push_back(value.substr(lidx,len));
                 lidx = idx + 1;
             }
-            len = res.length() - lidx;
-            if(len>0) moduleOrder_.push_back(res.substr(lidx,len));
+            len = value.length() - lidx;
+            if(len>0) moduleOrder_.push_back(value.substr(lidx,len));
         }
     }
 }

@@ -315,6 +315,17 @@ void Push2::modulationLearn(bool b) {
     model_->modulationLearn(Kontrol::CS_LOCAL, b);
 }
 
+void Push2::activeModule(Kontrol::ChangeSource source, const Kontrol::Rack & rack, const Kontrol::Module & module) {
+    if(rack.id() != rackId_ || source == Kontrol::CS_LOCAL) return;
+
+    if(module.id()!= moduleId_) {
+        if (currentDisplayMode()) currentDisplayMode()->activeModule(source,rack, module);
+        // if displaymode doesnt update, then we need to
+        if(module.id()!= moduleId_) currentModule(module.id());
+    }
+}
+
+
 void Push2::currentModule(const Kontrol::EntityId id) {
     moduleId_ = id;
     model_->activeModule(Kontrol::CS_LOCAL, rackId_, moduleId_);

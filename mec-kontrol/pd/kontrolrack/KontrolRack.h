@@ -60,6 +60,7 @@ void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_savesettings(t_KontrolRack *x, t_symbol *settings);
 void KontrolRack_loadpreset(t_KontrolRack *x, t_symbol *preset);
 void KontrolRack_savepreset(t_KontrolRack *x, t_symbol *preset);
+void KontrolRack_savecurrentpreset(t_KontrolRack *x);
 
 void KontrolRack_nextpreset(t_KontrolRack *x);
 void KontrolRack_prevpreset(t_KontrolRack *x);
@@ -78,7 +79,7 @@ void KontrolRack_setparam(t_KontrolRack* x, t_symbol* modId, t_symbol* paramId, 
 void KontrolRack_getsetting(t_KontrolRack* x, t_symbol* setting, t_symbol* defvalue, t_symbol* sendsym);
 
 void KontrolRack_selectpage(t_KontrolRack* x, t_floatarg value);
-
+void KontrolRack_selectmodule(t_KontrolRack* x, t_floatarg value);
 
 void KontrolRack_loadresources(t_KontrolRack *x);
 

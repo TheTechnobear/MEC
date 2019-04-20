@@ -82,6 +82,8 @@ public:
 
     void midiLearn(Kontrol::ChangeSource src, bool b) override  { ; }
     void modulationLearn(Kontrol::ChangeSource src, bool b) override { ; }
+
+    void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
 };
 
 class P2_PadMode : Kontrol::KontrolCallback {
@@ -168,6 +170,7 @@ public:
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; };
 
+    void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 
 
     void addDisplayMode(PushDisplayModes mode, std::shared_ptr<P2_DisplayMode>);

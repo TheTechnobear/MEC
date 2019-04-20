@@ -70,6 +70,20 @@ void KontrolDevice::selectPage(unsigned page) {
     if (m != nullptr) m->selectPage(page);
 }
 
+void KontrolDevice::selectModule(unsigned modidx) {
+    auto rack = model()->getRack(currentRack());
+    if(rack == nullptr) return;
+
+    auto modules = getModules(rack);
+    if(modidx < modules.size()) {
+        auto module = modules.at(modidx);
+        if(module!=nullptr) {
+            currentModule(module->id());
+        }
+    }
+}
+
+
 
 void KontrolDevice::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     auto m = modes_[currentMode_];

@@ -430,5 +430,21 @@ void P2_ParamMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
     parent_.sendCC(0, P2_AUTOMATE_CC, (parent_.modulationLearn() ? 0x7f : 0x7b));
 }
 
+void P2_ParamMode::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack & rack, const Kontrol::Module &module) {
+    if (parent_.currentRack() != rack.id()) return;
+    if (parent_.currentModule() != module.id()) {
+
+        auto pRack = model_->getRack(parent_.currentRack());
+        auto pModules = getModules(pRack);
+        int idx =0;
+        for(auto mod : pModules) {
+            if(mod->id() == module.id()) {
+                setCurrentModule(idx);
+                break;
+            }
+            idx++;
+        }
+    }
+}
 
 } //namespace

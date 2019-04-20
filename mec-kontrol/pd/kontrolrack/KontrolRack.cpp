@@ -323,6 +323,10 @@ EXTERN void KontrolRack_setup(void) {
                      A_NULL);
 
     class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_savecurrentpreset, gensym("savecurrentpreset"),
+                    A_NULL);
+
+    class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_loadmodule, gensym("loadmodule"),
                     A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
 
@@ -341,6 +345,11 @@ EXTERN void KontrolRack_setup(void) {
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_setparam, gensym("setparam"),
                     A_DEFSYMBOL, A_DEFSYMBOL, A_DEFFLOAT, A_NULL);
+
+
+    class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_selectmodule, gensym("selectmodule"),
+                    A_DEFFLOAT, A_NULL);
 
     class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_selectpage, gensym("selectpage"),
@@ -707,6 +716,22 @@ void KontrolRack_prevpreset(t_KontrolRack *x) {
 }
 
 
+void KontrolRack_savecurrentpreset(t_KontrolRack *x) {
+    auto rack = Kontrol::KontrolModel::model()->getLocalRack();
+    if (!rack) {
+        post("No local rack found");
+        return;
+    }
+    auto presets = rack->getPresetList();
+    if (presets.size() == 0) return;
+
+    auto curPreset = rack->currentPreset();
+    if (!curPreset.empty()) {
+        rack->savePreset(curPreset);
+    }
+}
+
+
 
 void KontrolRack_loadsettings(t_KontrolRack *x, t_symbol *settings) {
     if (settings != nullptr && settings->s_name != nullptr && strlen(settings->s_name) > 0) {
@@ -979,7 +1004,9 @@ void KontrolRack_selectpage(t_KontrolRack* x, t_floatarg page) {
     if (x->device_) x->device_->selectPage((unsigned) page);
 }
 
-
+void KontrolRack_selectmodule(t_KontrolRack* x, t_floatarg module) {
+    if (x->device_) x->device_->selectModule((unsigned) module);
+}
 
 
 //-----------------------
