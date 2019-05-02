@@ -75,7 +75,8 @@ bool Push2::init(void *arg) {
 
         push2Api_->clearDisplay();
 
-        // Kontrol setup
+
+                // Kontrol setup
         model_ = Kontrol::KontrolModel::model();
 
         // setup initial modes
@@ -90,6 +91,7 @@ bool Push2::init(void *arg) {
 
         active_ = true;
         processor_ = std::thread(push2_processor_func, this);
+        push2Api_-> drawCell8(1,0,"Welcome to MEC",Push2API::Push2::Colour(0xFF,0xFF,0xFF));
         LOG_0("Push2::init - complete");
 
         sendCC(0,P2_DEVICE_CC,0x7f);
