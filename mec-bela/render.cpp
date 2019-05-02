@@ -1,155 +1,168 @@
 #include <Bela.h>
-#include <Midi.h>
 
 #include <mec_api.h>
-#include <processors/mec_mpe_processor.h>
+#include <math.h>
 
-Midi 			gMidi;
-mec::MecApi* 		gMecApi=NULL;
-mec::Callback* 	gMecCallback=NULL;
-const char* 	gMidiPort0 = "hw:1,0,0";
+mec::MecApi* 	gMecApi=NULL;
+class BelaMecCallback;
+BelaMecCallback* 	gMecCallback=NULL;
 
 
 AuxiliaryTask gMecProcessTask;
 
-/*
 
-struct MidiVoiceData {
-	unsigned startNote_;
-	unsigned note_;		 //0
-	unsigned pitchbend_; //1
-	unsigned timbre_;    //2
-	unsigned pressure_;  //3
-	bool active_;
-	int changeMask_;
-};
-MidiVoiceData gMidiVoices[16];
-
-class BelaMidiMecCallback : public mec::Callback {
+class BelaMecCallback : public mec::Callback {
 public:
-	BelaMidiMecCallback() :	pitchbendRange_(48.0) {
+	BelaMecCallback()  {
 		;
 	}
 	
-    virtual void touchOn(int touchId, float note, float x, float y, float z) {
-    	// rt_printf("touchOn %i , %f, %f %f %f", touchId,note,x,y,z);
-    	int ch = touchId + 1;
+    void touchOn(int touchId, float note, float x, float y, float z) override {
+    	// rt_printf("touchOn %i , %f, %f %f %f\n", touchId,note,x,y,z);
+    	if(note>=1024) {
+			button(note-1024,true); 		
+    	} else {
+			if(!active_) {
+				active_=true;
+				touchId_=touchId;
+				note_=note;
+				x_=x;
+				y_=y;
+				z_=z;
+			}
+    	}
+    }
 
-	    MidiVoiceData& voice = gMidiVoices[ch];
+    void touchContinue(int touchId, float note, float x, float y, float z) override {
+    	// rt_printf("touchContinue %i , %f, %f %f %f\n", touchId,note,x,y,z);
+	   	if(note>=1024) {
+    		;
+    	} else {
+			if(active_ && touchId==touchId_) {
+				note_=note;
+				x_=x;
+				y_=y;
+				z_=z;
+			}
+	    }
+    }
+
+    void touchOff(int touchId, float note, float x, float y, float z) override {
+    	// rt_printf("touchOff %i , %f, %f %f %f\n", touchId,note,x,y,z);
+	   	if(note>=1024) {
+			button(note-1024,false); 		
+	    } else {
+			if(active_ && touchId==touchId_) {
+				active_=false;
+				note_=note;
+				x_=x;
+				y_=y;
+				z_=z;
+			}
+	    }
+    }
     
-    	voice.startNote_ = note;
-    	
-	    float semis = note - float(voice.startNote_); 
-	    unsigned pb = bipolar14bit(semis / pitchbendRange_);
-		unsigned pressure = unipolar7bit(z); // note on, we use as velocity
-		unsigned timbre = bipolar7bit(y);
+    void control(int ctrlId, float v) override {
+    	// rt_printf("control %i , %f\n", ctrlId,v);
+    	switch (ctrlId) {
+    		case 0 : {
+    			breath_=v;
+    			break;
+    		}
+    		case 17 : {
+    			ribbon_=v;
+    			break;
+    		}
+    	}
+    }
+    void button(unsigned butId, bool state) {
+    	// rt_printf("button %i , %i\n", butId,state);
+    	// pico = 48,49,50,51
+    }
+    
+    void render(BelaContext *context) {
+		float a0=transpose(note_,0,0);
+		float a1=active_;
+		float a2=scaleY(y_,1.0f);
+		float a3=pressure(z_,1.0f);
+		float a4=breath_;
+		float a5=ribbon_;
+		float a6= 0.0f;
+		float a7= 0.0f;
 		
-		gMidi.writePitchBend(ch, pb);
-    	gMidi.writeNoteOn(ch ,note, pressure);
-    	gMidi.writeControlChange(ch,74,timbre);
-    	gMidi.writeChannelPressure(ch,0);
-
-    	voice.note_ = note;
-    	voice.pitchbend_ = pb;
-    	voice.timbre_ = timbre;
-    	voice.pressure_ = 0; // we used it for velocity
-    	voice.changeMask_ = 0;
-    	voice.active_ = true;
-    }
-
-    virtual void touchContinue(int touchId, float note, float x, float y, float z) {
-    	// only send out one set of updates per render call
-    	int ch = touchId + 1;
-	    MidiVoiceData& voice = gMidiVoices[ch];
-
-	    float semis = note - float(voice.startNote_); 
-	    unsigned pb = bipolar14bit(semis / pitchbendRange_);
-    	unsigned timbre = bipolar7bit(y);
-    	unsigned pressure = unipolar7bit(z);
-
-    	voice.changeMask_ = 		voice.changeMask_ 
-    								|   ((pb != voice.pitchbend_) << 1) 
-    								|   ((timbre != voice.timbre_) << 2) 
-    								|   ((pressure != voice.pressure_) << 3);
-		// voice.startNote_ = 0;
-    	voice.note_ = note;
-    	voice.pitchbend_ = pb;
-    	voice.timbre_ = timbre;
-    	voice.pressure_ = pressure;
-    }
-
-    virtual void touchOff(int touchId, float note, float x, float y, float z) {
-    	// rt_printf("touchOff %i , %f, %f %f %f", touchId,note,x,y,z);
-    	int ch = touchId + 1;
-	    MidiVoiceData& voice = gMidiVoices[ch];
-
-  	    float semis = note - float(voice.startNote_); 
-	    unsigned pb = bipolar14bit(semis / pitchbendRange_);
-
-		// unsigned pressure = unipolar7bit(z); 
-		unsigned timbre = bipolar7bit(y);
-
-		gMidi.writePitchBend(ch, pb);
-    	gMidi.writeControlChange(ch,74,timbre);
-    	gMidi.writeChannelPressure(ch,0);
-    	gMidi.writeNoteOff(ch,voice.startNote_,0);
-
-		voice.startNote_ = 0;
-    	voice.note_ = 0;
-    	voice.pitchbend_ = 0;
-    	voice.timbre_ = 0;
-    	voice.pressure_ = 0;
-    	voice.changeMask_ = 0;
-    	voice.active_ = true;
+		for(unsigned int n = 0; n < context->analogFrames; n++) {
+			analogWriteOnce(context, n, 0,a0);
+			analogWriteOnce(context, n, 1,a1);
+			analogWriteOnce(context, n, 2,a2);
+			analogWriteOnce(context, n, 3,a3);
+			analogWriteOnce(context, n, 4,a4);
+			analogWriteOnce(context, n, 5,a5);
+			analogWriteOnce(context, n, 6,a6);
+			analogWriteOnce(context, n, 7,a7);
+		}    	
     }
     
-    virtual void control(int ctrlId, float v)  {
-    	gMidi.writeControlChange(0,ctrlId,v*127);
-    }
     
-    int bipolar14bit(float v) {return ((v * 0x2000) + 0x2000);}
-    int bipolar7bit(float v) {return ((v / 2) + 0.5)  * 127; }
-    int unipolar7bit(float v) {return v * 127;}
+private: 
+
+	static constexpr float PRESSURE_CURVE=0.5f;
+
+	float audioAmp(float z, float mult ) {
+		return powf(z, PRESSURE_CURVE) * mult;
+	}
+
+	float pressure(float z, float mult ) {
+		return ( (powf(z, PRESSURE_CURVE) * mult * ( 1.0f-ZERO_OFFSET) ) ) + ZERO_OFFSET;	
+	}
+	
+
+	float scaleY(float y, float mult) {
+		return ( (y * mult)  * ( 1.0f-ZERO_OFFSET) )  + ZERO_OFFSET ;	
+	}
+
+	float scaleX(float x, float mult) {
+		return ( (x * mult)  * ( 1.0f-ZERO_OFFSET) )  + ZERO_OFFSET ;	
+	}
+	
+	float transpose (float pitch, int octave, int semi) {
+		return pitch + (((( START_OCTAVE + octave) * 12 ) + semi) *  semiMult_ );
+	}
+
+
+
+#ifdef SALT
+	static constexpr float 	OUT_VOLT_RANGE=10.0f;
+	static constexpr float 	ZERO_OFFSET=0.5f;
+	static constexpr int   	START_OCTAVE=5;
+#else 
+	static constexpr float 	OUT_VOLT_RANGE=5.0f;
+	static constexpr float 	ZERO_OFFSET=0;
+	static constexpr int 	START_OCTAVE=1.0f;
+#endif 
+
+	static constexpr float semiMult_ = (1.0f / (OUT_VOLT_RANGE * 12.0f)); // 1.0 = 10v = 10 octaves 
+
+	float touchId_;   
+    float note_;
+    float x_,y_,z_;
+    float active_;
+
+    float breath_;
+    float ribbon_;
     
+
 private:
-    float pitchbendRange_;
-};
-*/
-
-// this replaces the above, and can all be removed after testing
-class MecMpeProcessor : public mec::MPE_Processor {
-public:
-    MecMpeProcessor() {
-         // p.getInt("voices", 15);
-        setPitchbendRange(48.0);
-    }   
-
-    bool isValid() { return output_.isOpen();}
-
-    void  process(mec::MidiProcessor::MidiMsg& m) {
-        if(output_.isOpen()) {
-            midi_byte_t msg[4];
-            msg_[0] = m.data[0];
-            msg_[1] = m.data[1];
-            msg_[2] = m.data[2];
-            msg_[3] = m.data[3];
-            gMidi.writeOutput(msg,m.size);
-        }
-    }
 };
 
 void mecProcess(void* pvMec) {
-	MecApi *pMecApi = (MecApi*) pvMec;
+	mec::MecApi *pMecApi = (mec::MecApi*) pvMec;
 	pMecApi->process();
 }
 
 
-bool setup(BelaContext *context, void *userData)
-{
-	gMidi.writeTo(gMidiPort0);
-
+bool setup(BelaContext *context, void *userData) {
 	gMecApi=new mec::MecApi();
-	gMecCallback=new MecMpeProcessor();
+	gMecCallback=new BelaMecCallback();
 	gMecApi->init();
 	gMecApi->subscribe(gMecCallback);
 	
@@ -175,24 +188,13 @@ void render(BelaContext *context, void *userData)
 			audioWrite(context, n, channel, 0.0f);
 		}
 	}
-
+	
+	gMecCallback->render(context);
+	
+	
 	if(decimation <= 1 || ((renderFrame % decimation) ==0) ) {	
-		for(int ch=0;ch<16;ch++) {
-		    MidiVoiceData& voice = gMidiVoices[ch];
-		    if(voice.active_) {
-				if(voice.changeMask_ & (1 << 1)) {
-					gMidi.writePitchBend(ch, voice.pitchbend_);
-				}
-				if(voice.changeMask_ & (1 << 2)) {
-			    	gMidi.writeControlChange(ch,74,voice.timbre_);
-				}
-				if(voice.changeMask_ & (1 << 3)) {
-			    	gMidi.writeChannelPressure(ch,voice.pressure_);
-				}
-		    }
-			voice.changeMask_ = 0;
-		}
 	}
+
 }
 
 void cleanup(BelaContext *context, void *userData)
