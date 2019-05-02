@@ -642,7 +642,7 @@ void KontrolRack_knob4Raw(t_KontrolRack *x, t_floatarg f) {
 }
 
 void KontrolRack_midiCC(t_KontrolRack *x, t_floatarg ch, t_floatarg cc, t_floatarg value) {
-    if (x->device_) x->device_->midiCC(unsigned (ch*127 + cc) , (unsigned) value);
+    if (x->device_) x->device_->midiCC(unsigned (ch * 128 + cc) , (unsigned) value);
 }
 
 void KontrolRack_key(t_KontrolRack *x, t_floatarg key, t_floatarg value) {
