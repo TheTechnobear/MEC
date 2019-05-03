@@ -21,11 +21,7 @@ if (NOT DISABLE_EIGENHARP)
             devices/mec_eigenharp.h
             )
 
-    add_subdirectory(devices/eigenharp)
-
-    set(EIGENHARP_LIB mec-eigenharp)
-
-    include_directories("devices/eigenharp")
+    set(EIGENHARP_LIB eigenapi)
 else()
     add_definitions(-DDISABLE_EIGENHARP=1)
 endif()
@@ -99,8 +95,6 @@ set(MECAPI_SRC
 
 include_directories(
         "devices/push2"
-        "devices/eigenharp"
-        "devices/soundplanelite2"
         "${PROJECT_SOURCE_DIR}/../mec-utils"
         "${PROJECT_SOURCE_DIR}/../mec-kontrol/api"
 )

@@ -4,3 +4,6 @@
 [submodule "external/SoundplaneLite"]
 	path = external/SoundplaneLite
 	url = https://github.com/thetechnobear/SoundplaneLite
+[submodule "external/EigenLite"]
+	path = external/EigenLite
+	url = https://github.com/thetechnobear/EigenLite

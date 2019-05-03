@@ -1,10 +1,9 @@
-#ifndef MECEigenharp_H
-#define MECEigenharp_H
+#pragma once
 
 #include "../mec_api.h"
 #include "../mec_device.h"
 
-#include <eigenfreed/eigenfreed.h>
+#include <eigenapi.h>
 #include <memory>
 
 namespace mec {
@@ -27,4 +26,3 @@ private:
 
 }
 
-#endif // MECEigenharp_H
