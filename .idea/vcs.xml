@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/EigenLite" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/SoundplaneLite" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/mec-max/source/max-api" vcs="Git" />
   </component>
