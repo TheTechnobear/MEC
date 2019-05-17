@@ -1084,7 +1084,7 @@ void PdCallback::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &r, con
     auto rack = Kontrol::KontrolModel::model()->getLocalRack();
     if (rack && rack->id() == r.id()) {
         t_pd *sendobj;
-        sendobj = gensym("screenLine5")->s_thing;
+        sendobj = gensym("auxLine")->s_thing;
         if (sendobj != nullptr) {
             KontrolRack_sendMsg(sendobj, "   ");
         }
