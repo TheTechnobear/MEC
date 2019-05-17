@@ -759,7 +759,8 @@ void OMainMenu::clicked(unsigned idx) {
         }
         case MMI_HOME: {
             parent_.changeMode(OM_PARAMETER);
-            parent_.sendPdMessage("goHome", 1.0);
+            parent_.sendGoHome();
+//            parent_.sendPdMessage("goHome", 1.0);
             break;
         }
         default:
@@ -1034,8 +1035,9 @@ bool Organelle::init() {
 
     if (KontrolDevice::init()) {
         // setup mother.pd for reasonable behaviour, basically takeover
-        sendPdMessage("enableSubMenu", 1.0f);
+//        sendPdMessage("enableSubMenu", 1.0f);
         connect();
+        sendEnableSubMenu();
         changeMode(OM_PARAMETER);
         return true;
     }
@@ -1088,6 +1090,24 @@ void Organelle::send(const char *data, unsigned size) {
     memcpy(msg.buffer_, data, (size_t) msg.size_);
     messageQueue_.enqueue(msg);
 }
+
+
+void Organelle::sendEnableSubMenu() {
+    osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+    ops << osc::BeginMessage("/enablepatchsub")
+        << 1
+        << osc::EndMessage;
+    send(ops.Data(), ops.Size());
+}
+
+void Organelle::sendGoHome() {
+    osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+    ops << osc::BeginMessage("/gohome")
+        << 1
+        << osc::EndMessage;
+    send(ops.Data(), ops.Size());
+}
+
 
 
 void Organelle::displayPopup(const std::string &text, bool dblline) {

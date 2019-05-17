@@ -27,6 +27,9 @@ public:
 
     void writePoll();
 
+
+    void sendEnableSubMenu();
+    void sendGoHome();
 private:
     void send(const char *data, unsigned size);
     void stop() override ;
