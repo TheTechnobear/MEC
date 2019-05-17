@@ -492,6 +492,8 @@ void OParamMode::activateShortcut(unsigned key) {
             //(also changing module means we need to have the menu enabled again)
 
             // re-enable main menu
+            encoderDown_ = false;
+            encoderAction_ = false;
             parent_.enableMenu(true);
             parent_.changeMode(OM_MAINMENU);
         }
