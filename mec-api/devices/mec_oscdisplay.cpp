@@ -956,7 +956,7 @@ private:
     bool isArgFalse(osc::ReceivedMessage::const_iterator arg) {
         if(
                 (arg->IsFloat() && (arg->AsFloat() >= 0.5))
-                || (arg->IsInt32() && (arg->IsInt32() > 0  ))
+                || (arg->IsInt32() && (arg->AsInt32() > 0  ))
                 ) return false;
         return true;
     }
