@@ -75,6 +75,7 @@
     },
 
     "mec-app"  :  {
+	"realtime" : true,
         "outputs" : {
             "_osc" : {
                 "host" : "127.0.0.1",
