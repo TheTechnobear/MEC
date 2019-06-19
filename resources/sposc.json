@@ -3,7 +3,7 @@
         "soundplane"  :  {
             "app state dir" : ".",
             "steal voices" : true,
-            "voices " : 4
+            "voices" : 4
         }
     },
 
@@ -11,7 +11,7 @@
         "outputs" : {
             "osc" : {
                 "host" : "127.0.0.1",
-                "port" : 9002
+                "port" : 3123
             },
 
             "_console" : {
