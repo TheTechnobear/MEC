@@ -205,6 +205,11 @@ void OscDisplayParamMode::display() {
 //    auto pages = parent_.model()->getPages(module);
     auto params = parent_.model()->getParams(module, page);
 
+    std::string md = "";
+    std::string pd = "";
+    if (module) md = module->id() + " : " + module->displayName();
+    if (page) pd = page->displayName();
+    parent_.displayTitle(md, pd);
 
     unsigned int j = 0;
     for (auto param : params) {
