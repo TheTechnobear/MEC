@@ -214,9 +214,9 @@ void OscDisplayParamMode::display() {
         j++;
         if (j == OSC_NUM_PARAMS) break;
     }
-    for (; j < OSC_NUM_PARAMS; j++) {
-        parent_.clearParamNum(j + 1);
-    }
+//    for (; j < OSC_NUM_PARAMS; j++) {
+//        parent_.clearParamNum(j + 1);
+//    }
 }
 
 
@@ -232,7 +232,7 @@ void OscDisplayParamMode::changePot(unsigned pot, float rawvalue) {
 //        auto pages = parent_.model()->getPages(module);
         auto params = parent_.model()->getParams(module, page);
 
-        if (!(pot < params.size())) return;
+        if (pot >= params.size()) return;
 
         auto &param = params[pot];
         auto paramId = param->id();
@@ -265,6 +265,12 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 //        auto params = parent_.model()->getParams(module,page);
 
         if (pageIdx_ != pageIdx) {
+            std::string md = "";
+            std::string pd = "";
+            if (module) md = module->id() + " : " +module->displayName();
+            if (page) pd = page->displayName();
+            parent_.displayTitle(md, pd);
+
             if (pageIdx < pages.size()) {
                 pageIdx_ = pageIdx;
                 try {
@@ -275,17 +281,12 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
                 } catch (std::out_of_range) { ;
                 }
             } else {
-                for (int j=0; j < OSC_NUM_PARAMS; j++) {
-                    parent_.clearParamNum(j + 1);
-                }
+//                for (int j=0; j < OSC_NUM_PARAMS; j++) {
+//                    parent_.clearParamNum(j + 1);
+//                }
             }
         }
 
-        std::string md = "";
-        std::string pd = "";
-        if (module) md = module->id() + " : " +module->displayName();
-        if (page) pd = page->displayName();
-        parent_.displayTitle(md, pd);
     } catch (std::out_of_range) { ;
     }
 }
@@ -1098,9 +1099,6 @@ bool OscDisplay::connect(const std::string &hostname, unsigned port) {
 #endif
 
     clearDisplay();
-    changeMode(OscDisplayModes::OSM_MAINMENU);
-    modes_[currentMode_]->activate();
-    paramDisplay_->activate();
 
     // send out current module and page
     auto rack = model()->getRack(currentRack());
@@ -1111,6 +1109,11 @@ bool OscDisplay::connect(const std::string &hostname, unsigned port) {
     if (module) md = module->id() + " : " +module->displayName();
     if (page) pd = page->displayName();
     displayTitle(md, pd);
+
+    changeMode(OscDisplayModes::OSM_MAINMENU);
+    modes_[currentMode_]->activate();
+    paramDisplay_->activate();
+
 
     return true;
 }
@@ -1384,11 +1387,7 @@ void OscDisplay::modulationLearn(bool b) {
 void OscDisplay::sendOscString(const std::string& topic, std::string value) {
     osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
     ops << osc::BeginMessage(topic.c_str());
-    if(value.length()) {
-        ops << value.c_str();
-    } else {
-        ops << osc::Nil;
-    }
+    ops << value.c_str();
     ops << osc::EndMessage;
     send(ops.Data(), ops.Size());
 }
@@ -1401,37 +1400,37 @@ void OscDisplay::clearDisplay() {
 }
 
 void OscDisplay::clearParamNum(unsigned num) {
-    std::string p = "P" + std::to_string(num);
-    {
-        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
-        std::string field = "/" + p + "Desc";
-        const char *addr = field.c_str();
-        ops << osc::BeginMessage(addr)
-            << osc::Nil
-            << osc::EndMessage;
-        send(ops.Data(), ops.Size());
-    }
-
-    {
-        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
-        std::string field = "/" + p + "Ctrl";
-        const char *addr = field.c_str();
-        float v = 0.0;
-        ops << osc::BeginMessage(addr)
-            << v
-            << osc::EndMessage;
-        send(ops.Data(), ops.Size());
-    }
-
-    {
-        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
-        std::string field = "/" + p + "Value";
-        const char *addr = field.c_str();
-        ops << osc::BeginMessage(addr)
-            << osc::Nil
-            << osc::EndMessage;
-        send(ops.Data(), ops.Size());
-    }
+//    std::string p = "P" + std::to_string(num);
+//    {
+//        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+//        std::string field = "/" + p + "Desc";
+//        const char *addr = field.c_str();
+//        ops << osc::BeginMessage(addr)
+//            << ""
+//            << osc::EndMessage;
+//        send(ops.Data(), ops.Size());
+//    }
+//
+//    {
+//        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+//        std::string field = "/" + p + "Ctrl";
+//        const char *addr = field.c_str();
+//        float v = 0.0;
+//        ops << osc::BeginMessage(addr)
+//            << v
+//            << osc::EndMessage;
+//        send(ops.Data(), ops.Size());
+//    }
+//
+//    {
+//        osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
+//        std::string field = "/" + p + "Value";
+//        const char *addr = field.c_str();
+//        ops << osc::BeginMessage(addr)
+//            << ""
+//            << osc::EndMessage;
+//        send(ops.Data(), ops.Size());
+//    }
 
 }
 
@@ -1464,15 +1463,12 @@ void OscDisplay::displayParamNum(unsigned num, const Kontrol::Parameter &param, 
 void OscDisplay::displayLine(unsigned line, const char *disp) {
     if (writeSocket_ == nullptr) return;
 
+    if(disp && strlen(disp)>0)
     {
         osc::OutboundPacketStream ops(screenBuf_, OUTPUT_BUFFER_SIZE);
         ops << osc::BeginMessage("/text");
         ops << (int8_t) line;
-        if(disp && strlen(disp)>0) {
-            ops << disp;
-        } else {
-            ops << osc::Nil;
-        }
+        ops << disp;
         ops << osc::EndMessage;
         send(ops.Data(), ops.Size());
     }
