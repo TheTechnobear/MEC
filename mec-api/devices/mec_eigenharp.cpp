@@ -3,6 +3,7 @@
 #include "mec_log.h"
 #include "../mec_surfacemapper.h"
 #include "../mec_voice.h"
+#include <unistd.h>
 
 
 #include <set>
@@ -186,18 +187,15 @@ bool Eigenharp::init(void *arg) {
     std::string fwDir = prefs.getString("firmware dir", "./resources/");
     minPollTime_ = prefs.getInt("min poll time", 100);
     eigenD_.reset(new EigenApi::Eigenharp(fwDir.c_str()));
+    eigenD_->setPollTime(minPollTime_);
     EigenharpHandler *pCb = new EigenharpHandler(prefs, callback_);
     if (pCb->isValid()) {
         eigenD_->addCallback(pCb);
-        if (eigenD_->create()) {
-            if (eigenD_->start()) {
-                active_ = true;
-                LOG_1("Eigenharp::init - started");
-            } else {
-                LOG_2("Eigenharp::init - failed to start");
-            }
+        if (eigenD_->start()) {
+            active_ = true;
+            LOG_1("Eigenharp::init - started");
         } else {
-            LOG_2("Eigenharp::init - create failed");
+            LOG_2("Eigenharp::init - failed to start");
         }
     } else {
         LOG_2("Eigenharp::init - invalid callback");
@@ -207,14 +205,14 @@ bool Eigenharp::init(void *arg) {
 }
 
 bool Eigenharp::process() {
-    const int sleepTime = 0;
-    if (active_) eigenD_->poll(sleepTime, minPollTime_);
+    if (active_) eigenD_->process();
     return true;
 }
 
 void Eigenharp::deinit() {
+    LOG_1("Eigenharp:deinit");
     if (!eigenD_) return;
-    eigenD_->destroy();
+    eigenD_->stop();
     eigenD_.reset();
     active_ = false;
 }
