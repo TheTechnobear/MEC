@@ -143,6 +143,7 @@ int main(int ac, char **av) {
         //TODO:  need to review the threads, really we need to be having devices and outputs as separte threads
         bool rt=app_prefs.getBool("realtime",false);
         if(rt) {
+            LOG_0("realtime mec thread");
             makeThreadRealtime(mec_thread);
         }
 #endif

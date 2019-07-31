@@ -51,25 +51,35 @@ public:
     void touchOn(unsigned voice, float x, float y, float z) override {
         unsigned ix = unsigned(x);
         unsigned iy = unsigned(y);
-        unsigned fn = (ix + y * 4) + (x -ix);
+        float fn = (ix + (iy * 4)) + (x -ix - 0.5f);
+        float fx = (x-float(ix)-0.5f) * 2.0f;
+        float fy = (y-float(iy)-0.5f) * 2.0f;
+        float fz = z;
+        //fprintf(stderr,"on %d %f %f %f, %f - %f %f %f \n", voice, x, y, z, fn, fx,fy,fz);
 
-        touch(true, voice, fn, x-ix, y-iy, z );
+        touch(true, voice, fn, fx,fy,fz);
     }
     void touchContinue(unsigned voice, float x,float y, float z) override {
         unsigned ix = unsigned(x);
         unsigned iy = unsigned(y);
-        unsigned fn = (ix + y * 4) + (x -ix);
+        float fn = (ix + (iy * 4)) + (x -ix + 0.5f);
+        float fx = (x-float(ix)-0.5f) * 2.0f;
+        float fy = (y-float(iy)-0.5f) * 2.0f;
+        float fz = z;
+        //fprintf(stderr,"cont %d %f %f %f, %f - %f %f %f \n", voice, x, y, z, fn, fx,fy,fz);
 
-        touch(true, voice, fn, x-ix, y-iy, z );
-
+        touch(true, voice, fn, fx,fy,fz);
     }
 
     void touchOff(unsigned voice, float x,float y, float z) override {
         unsigned ix = unsigned(x);
         unsigned iy = unsigned(y);
-        unsigned fn = (ix + y * 4) + (x -ix);
-
-        touch(false, voice, fn, x-ix, y-iy, z );
+        float fn = (ix + (iy * 4)) + (x -ix + 0.5f);
+        float fx = (x-float(ix)-0.5f) * 2.0f;
+        float fy = (y-float(iy)-0.5f) * 2.0f;
+        float fz = 0.0f; //z;
+        //fprintf(stderr,"off %d %f %f %f, %f - %f %f %f \n", voice, x, y, z, fn, fx,fy,fz);
+        touch(false, voice, fn, fx,fy,fz);
     }
 
     bool isValid() { return valid_; }
@@ -86,8 +96,8 @@ public:
         float fn = n;
         float mn = note(fn);
         float mx = clamp(x, -1.0f, 1.0f);
-        float my = clamp((y - 0.5f) * 2.0f, -1.0f, 1.0f);
-        float mz = clamp(z, 0.0f, 1.0f);
+        float my = clamp(y, -1.0f, 1.0f);
+        float mz = clamp(z,  0.0f, 1.0f);
         unsigned long long t = 0;
 
         //MecMsg msg;
