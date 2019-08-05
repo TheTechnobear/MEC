@@ -13,8 +13,9 @@ namespace mec {
 ////////////////////////////////////////////////
 class EigenharpHandler : public EigenApi::Callback {
 public:
-    EigenharpHandler(Preferences &p, ICallback &cb)
-            : prefs_(p),
+    EigenharpHandler(EigenApi::Eigenharp* api, Preferences &p, ICallback &cb)
+            : api_(api),
+              prefs_(p),
               callback_(cb),
               valid_(true),
               voices_(static_cast<unsigned>(p.getInt("voices", 15)),
@@ -52,6 +53,21 @@ public:
         LOG_1(" r: " << rows << " c: " << cols);
         LOG_1(" s: " << ribbons << " p: " << pedals);
 
+        if (prefs_.exists("leds")) {
+            Preferences leds(prefs_.getSubTree("leds"));
+            if (leds.exists("green")) {
+                Preferences::Array a(leds.getArray("green"));
+                for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),1); }
+            }
+            if (leds.exists("orange")) {
+                Preferences::Array a(leds.getArray("orange"));
+                for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),3); }
+            }
+            if (leds.exists("red")) {
+                Preferences::Array a(leds.getArray("red"));
+                for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),2); }
+            }
+        }
         if (prefs_.exists("mapping")) {
             Preferences map(prefs_.getSubTree("mapping"));
             if (map.exists(dk)) {
@@ -154,7 +170,8 @@ private:
     float note(unsigned key, float mx) {
         return mapper_.noteFromKey(key) + ((mx > 0.0 ? mx * mx : -mx * mx) * pitchbendRange_);
     }
-
+    
+    EigenApi::Eigenharp* api_;
     Preferences prefs_;
     ICallback &callback_;
     SurfaceMapper mapper_;
@@ -188,7 +205,7 @@ bool Eigenharp::init(void *arg) {
     minPollTime_ = prefs.getInt("min poll time", 100);
     eigenD_.reset(new EigenApi::Eigenharp(fwDir.c_str()));
     eigenD_->setPollTime(minPollTime_);
-    EigenharpHandler *pCb = new EigenharpHandler(prefs, callback_);
+    EigenharpHandler *pCb = new EigenharpHandler(eigenD_.get(), prefs, callback_);
     if (pCb->isValid()) {
         eigenD_->addCallback(pCb);
         if (eigenD_->start()) {
