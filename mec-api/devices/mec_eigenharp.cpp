@@ -53,26 +53,27 @@ public:
         LOG_1(" r: " << rows << " c: " << cols);
         LOG_1(" s: " << ribbons << " p: " << pedals);
 
-        if (prefs_.exists("leds")) {
-            Preferences leds(prefs_.getSubTree("leds"));
-            if (leds.exists("green")) {
-                Preferences::Array a(leds.getArray("green"));
-                for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),1); }
+        if(prefs_.exists(dk)) {
+            Preferences device_prefs(prefs_.getSubTree(dk));
+
+            if (device_prefs.exists("leds")) {
+                Preferences leds(device_prefs.getSubTree("leds"));
+                if (leds.exists("green")) {
+                    Preferences::Array a(leds.getArray("green"));
+                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),1); }
+                }
+                if (leds.exists("orange")) {
+                    Preferences::Array a(leds.getArray("orange"));
+                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),3); }
+                }
+                if (leds.exists("red")) {
+                    Preferences::Array a(leds.getArray("red"));
+                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),2); }
+                }
             }
-            if (leds.exists("orange")) {
-                Preferences::Array a(leds.getArray("orange"));
-                for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),3); }
-            }
-            if (leds.exists("red")) {
-                Preferences::Array a(leds.getArray("red"));
-                for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),2); }
-            }
-        }
-        if (prefs_.exists("mapping")) {
-            Preferences map(prefs_.getSubTree("mapping"));
-            if (map.exists(dk)) {
-                Preferences devmap(map.getSubTree(dk));
-                mapper_.load(devmap);
+            if (device_prefs.exists("mapping")) {
+                Preferences map(device_prefs.getSubTree("mapping"));
+                mapper_.load(map);
             }
         }
     }
