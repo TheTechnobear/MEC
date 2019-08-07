@@ -11,11 +11,18 @@ namespace mec {
 
 class Voices {
 public:
-    const float V_SCALE_AMT = 4.0f;
-    const float V_CURVE_AMT = 1.0f;
+    static constexpr float V_SCALE_AMT = 4.0f;
+    static constexpr float V_CURVE_AMT = 1.0f;
 
-    Voices(unsigned voiceCount = 15, unsigned velocityCount = 5)
-            : maxVoices_(voiceCount), velocityCount_(velocityCount) {
+    Voices( unsigned voiceCount = 15, 
+            unsigned velCount = 5,
+            float velCurve = V_CURVE_AMT,
+            float velScale = V_SCALE_AMT)
+            :   maxVoices_(voiceCount), 
+                velCount_(velCount),
+                velCurve_(velCurve),
+                velScale_(velScale)
+                 {
         voices_.resize(maxVoices_);
         for (int i = 0; i < maxVoices_; i++) {
             voices_[i].i_ = i;
@@ -75,8 +82,8 @@ public:
         voice->state_ = Voice::PENDING;
         voice->v_ = 0;
 
-        voice->vel_.scale_ = V_SCALE_AMT;
-        voice->vel_.curve_ = V_CURVE_AMT;
+        voice->vel_.scale_ = velScale_;
+        voice->vel_.curve_ = velCurve_;
         voice->vel_.vcount_ = 0;
         voice->vel_.sumx_ = voice->vel_.sumy_ = voice->vel_.sumxy_ = voice->vel_.sumxsq_ = 0.0;
         voice->vel_.x_ = 0.0;
@@ -98,7 +105,7 @@ public:
         if (voice->state_ == Voice::PENDING) {
 
 
-            if (voice->vel_.vcount_ < velocityCount_) {
+            if (voice->vel_.vcount_ < velCount_) {
                 voice->vel_.sumx_ += voice->vel_.x_;
                 voice->vel_.sumy_ += p;
                 voice->vel_.sumxy_ += (voice->vel_.x_ * p);
@@ -152,7 +159,9 @@ private:
     std::list<Voice *> freeVoices_;
     std::list<Voice *> usedVoices_;
     unsigned maxVoices_;
-    unsigned velocityCount_;
+    unsigned velCount_;
+    float velScale_;
+    float velCurve_;
 };
 }
 

@@ -19,7 +19,10 @@ public:
               callback_(cb),
               valid_(true),
               voices_(static_cast<unsigned>(p.getInt("voices", 15)),
-                      static_cast<unsigned>(p.getInt("velocity count", 5))),
+                      static_cast<unsigned>(p.getInt("velocity count", 5)),
+                      static_cast<float>(p.getDouble("velocity curve", Voices::V_CURVE_AMT )),
+                      static_cast<float>(p.getDouble("velocity scale", Voices::V_SCALE_AMT ))
+                      ),
               pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
               stealVoices_(p.getBool("steal voices", true)),
               throttle_(p.getInt("throttle", 0) == 0

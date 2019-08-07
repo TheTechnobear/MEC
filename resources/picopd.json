@@ -4,7 +4,9 @@
             "steal voices" : true,
             "voices" : 4,
             "velocity count" : 5,
-            "pitchbend range" : 2.0,
+            "velocity curve" : 1.0,
+            "velocity scale" : 4.0,
+           "pitchbend range" : 2.0,
             "firmware dir" : "../resources/",
             "throttle" : 0,
             "pico" : {
