@@ -112,10 +112,10 @@ public:
                 voice->vel_.sumxsq_ += (voice->vel_.x_ * voice->vel_.x_);
                 voice->vel_.vcount_++;
                 voice->vel_.x_++;
-
-                if (p <= 1.0) {
-                    return;
-                }
+                return;
+                // if (p <= 1.0) {
+                //     return;
+                // }
                 // else max pressure, so consider 'complete'
             }
 
