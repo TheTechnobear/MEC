@@ -108,11 +108,15 @@ public:
                     LOG_2("voice steal required for " << key);
                     // no available voices, steal?
                     Voices::Voice *stolen = voices_.oldestActiveVoice();
-                    callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
-                    stolenKeys_.insert((unsigned) stolen->id_);
-                    voices_.stopVoice(stolen);
-                    voice = voices_.startVoice(key);
-                    // if(voice) { LOG_1("voice steal found for " << key  "stolen from " << stolen->id_)); }
+                    if(stolen) {
+                        callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
+                        stolenKeys_.insert((unsigned) stolen->id_);
+                        voices_.stopVoice(stolen);
+                        voice = voices_.startVoice(key);
+                        // if(voice) { LOG_1("voice steal found for " << key  "stolen from " << stolen->id_)); }
+                   } else {
+                     LOG_1("unable to steal voice " << key);
+                   }
                 }
             }
 
