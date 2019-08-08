@@ -12,7 +12,6 @@
     },
 
     "mec-app"  :  {
-	"realtime" : true,
         "outputs" : {
             "midi" : {
                 "virtual" : 0,
