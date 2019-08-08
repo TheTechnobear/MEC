@@ -205,7 +205,7 @@ bool Eigenharp::init(void *arg) {
         deinit();
     }
     active_ = false;
-    std::string fwDir = prefs.getString("firmware dir", "./resources/");
+    std::string fwDir = prefs.getString("firmware dir", ".");
     minPollTime_ = prefs.getInt("min poll time", 100);
     eigenD_.reset(new EigenApi::Eigenharp(fwDir.c_str()));
     eigenD_->setPollTime(minPollTime_);
