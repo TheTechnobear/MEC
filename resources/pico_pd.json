@@ -1,21 +1,10 @@
 {
     "mec"  :  {
         "eigenharp" : {
-            "steal voices" : true,
             "voices" : 4,
-            "velocity count" : 5,
-            "velocity curve" : 1.0,
-            "velocity scale" : 4.0,
-            "pitchbend range" : 2.0,
             "firmware dir" : "../resources/",
-            "throttle" : 0,
             "pico" : {
                 "mapping": {
-                    "_notes": [
-                        2,
-                        5,
-                        12
-                    ],
                     "calculated": {
                         "keys in col": 9,
                         "row multiplier": 1,
@@ -46,12 +35,6 @@
                         "row multiplier": 3,
                         "col multipler": -1,
                         "note offset": 26
-                    },
-                    "calculated-factory" : {
-                        "keys in col"    : 24,
-                        "row multiplier" : 1,
-                        "col multipler"  : 4,
-                        "note offset"    : 20
                     }
                 },
                 "leds" : {
@@ -64,14 +47,12 @@
     },
 
     "mec-app"  :  {
-	"realtime" : true,
         "outputs" : {
-            "osc" : {
-                "host" : "127.0.0.1",
-                "port" : 3123,
-                "touch offset" : 1,
-                "x offset" : 0.5,
-                "y offset" : 0.5
+            "midi" : {
+                "virtual" : 0,
+                "voices" : 4,
+                "pitchbend range" : 48.0,
+                "device" : "Pure Data:0"
             },
             "_console" : {
                 "throttle" : 0

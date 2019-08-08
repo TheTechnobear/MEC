@@ -18,8 +18,8 @@ public:
               prefs_(p),
               callback_(cb),
               valid_(true),
-              voices_(static_cast<unsigned>(p.getInt("voices", 15)),
-                      static_cast<unsigned>(p.getInt("velocity count", 5)),
+              voices_(static_cast<unsigned>(p.getInt("voices", Voices::NUM_VOICES)),
+                      static_cast<unsigned>(p.getInt("velocity count", Voices::V_COUNT)),
                       static_cast<float>(p.getDouble("velocity curve", Voices::V_CURVE_AMT )),
                       static_cast<float>(p.getDouble("velocity scale", Voices::V_SCALE_AMT ))
                       ),

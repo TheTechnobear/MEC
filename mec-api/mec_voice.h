@@ -11,11 +11,13 @@ namespace mec {
 
 class Voices {
 public:
-    static constexpr float V_SCALE_AMT = 4.0f;
-    static constexpr float V_CURVE_AMT = 1.0f;
+    static constexpr float NUM_VOICES    = 15;
+    static constexpr float V_SCALE_AMT  = 4.0f;
+    static constexpr float V_CURVE_AMT  = 4.0f;
+    static constexpr float V_COUNT      = 4;
 
-    Voices( unsigned voiceCount = 15, 
-            unsigned velCount = 5,
+    Voices( unsigned voiceCount = NUM_VOICES, 
+            unsigned velCount = V_COUNT,
             float velCurve = V_CURVE_AMT,
             float velScale = V_SCALE_AMT)
             :   maxVoices_(voiceCount), 

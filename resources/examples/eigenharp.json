@@ -2,12 +2,12 @@
     "mec"  :  {
         "eigenharp" : {
             "steal voices" : true,
-            "voices" : 4,
-            "velocity count" : 5,
-            "velocity curve" : 1.0,
+            "voices" : 15,
+            "velocity count" : 4,
+            "velocity curve" : 4.0,
             "velocity scale" : 4.0,
             "pitchbend range" : 2.0,
-            "firmware dir" : "../resources/",
+            "firmware dir" : ".",
             "throttle" : 0,
             "pico" : {
                 "mapping": {
@@ -64,17 +64,10 @@
     },
 
     "mec-app"  :  {
-	"realtime" : true,
+        "realtime" : true,
         "outputs" : {
-            "osc" : {
-                "host" : "127.0.0.1",
-                "port" : 3123,
-                "touch offset" : 1,
-                "x offset" : 0.5,
-                "y offset" : 0.5
-            },
-            "_console" : {
-                "throttle" : 0
+            "console" : {
+                "throttle" : 1
             }
         }
     }

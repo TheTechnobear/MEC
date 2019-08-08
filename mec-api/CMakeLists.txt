@@ -19,6 +19,7 @@ if (NOT DISABLE_EIGENHARP)
     set(EIGENHARP_SRC
             devices/mec_eigenharp.cpp
             devices/mec_eigenharp.h
+            mec_voice.h
             )
 
     set(EIGENHARP_LIB eigenapi)
