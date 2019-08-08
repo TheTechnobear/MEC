@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 2.8.11)
 
 project(mec)
 
+
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
+  if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+  endif()
+endif()
+
+
 set(PROJECT_NAME MEC)
 set(MEC_VERSION_MAJOR 0)
 set(MEC_VERSION_MINOR 1)
