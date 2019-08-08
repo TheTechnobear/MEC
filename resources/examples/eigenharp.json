@@ -7,7 +7,7 @@
             "velocity curve" : 4.0,
             "velocity scale" : 4.0,
             "pitchbend range" : 2.0,
-            "firmware dir" : ".",
+            "firmware dir" : "./",
             "throttle" : 0,
             "pico" : {
                 "mapping": {
