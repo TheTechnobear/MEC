@@ -104,7 +104,7 @@ add_library(mec-api SHARED ${MECAPI_SRC})
 
 set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB})
 
-target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api splite cjson oscpack rtmidi portaudio)
+target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api splite cjson oscpack rtmidi portaudio moodycamel)
 set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
 add_subdirectory(tests)
 
