@@ -44,12 +44,8 @@ public:
     ~MsgQueue();
     bool addToQueue(MecMsg&);
     bool nextMsg(MecMsg&);
-    bool isEmpty();
-    bool isFull();
-    int  available();
-    int  pending();
     bool process(ICallback&);
-
+    bool send(MecMsg& msg, ICallback &c);
 private:
     std::unique_ptr<MsgQueue_impl> impl_;
 };

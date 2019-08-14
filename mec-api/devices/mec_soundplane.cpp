@@ -29,10 +29,8 @@ public:
 class SoundplaneHandler : public ::SPLiteCallback {
 public:
     SoundplaneHandler(Preferences &p, 
-		    //MsgQueue &q)
 		    ICallback& cb)
             : prefs_(p),
-              //queue_(q),
               callback_(cb),
               valid_(true),
               voices_(static_cast<unsigned>(p.getInt("voices", 15))),
@@ -100,13 +98,6 @@ public:
         float mz = clamp(z,  0.0f, 1.0f);
         unsigned long long t = 0;
 
-        //MecMsg msg;
-        //msg.type_ = MecMsg::TOUCH_OFF;
-        //msg.data_.touch_.touchId_ = -1;
-        //msg.data_.touch_.note_ = mn;
-        //msg.data_.touch_.x_ = mx;
-        //msg.data_.touch_.y_ = my;
-        //msg.data_.touch_.z_ = mz;
         if (a) {
             // LOG_1("SoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
             // LOG_1(" touch: " <<  touch);
@@ -125,16 +116,6 @@ public:
                 if (!voice && stealVoices_) {
                     // no available voices, steal?
                     Voices::Voice *stolen = voices_.oldestActiveVoice();
-
-                    //MecMsg stolenMsg;
-                    //stolenMsg.type_ = MecMsg::TOUCH_OFF;
-                    //stolenMsg.data_.touch_.touchId_ = stolen->i_;
-                    //stolenMsg.data_.touch_.note_ = stolen->note_;
-                    //stolenMsg.data_.touch_.x_ = stolen->x_;
-                    //stolenMsg.data_.touch_.y_ = stolen->y_;
-                    //stolenMsg.data_.touch_.z_ = 0.0f;
-                    //stolenTouches_.insert((unsigned) stolen->id_);
-                    //queue_.addToQueue(stolenMsg);
                     callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
                     voices_.stopVoice(stolen);
 
@@ -142,9 +123,6 @@ public:
                 }
 
                 if (voice) {
-                    //msg.type_ = MecMsg::TOUCH_ON;
-                    //msg.data_.touch_.touchId_ = voice->i_;
-                    //queue_.addToQueue(msg);
                     callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
                     voice->note_ = mn;
                     voice->x_ = mx;
@@ -153,10 +131,7 @@ public:
                     voice->t_ = t;
                 }
             } else {
-                //msg.type_ = MecMsg::TOUCH_CONTINUE;
-                //msg.data_.touch_.touchId_ = voice->i_;
-                //queue_.addToQueue(msg);
-		callback_.touchContinue(voice->i_, mn, mx, my, mz);
+        		callback_.touchContinue(voice->i_, mn, mx, my, mz);
                 voice->note_ = mn;
                 voice->x_ = mx;
                 voice->y_ = my;
@@ -177,22 +152,12 @@ public:
             stolenTouches_.erase(touch);
         }
     }
-
-//    virtual void control(const char *dev, unsigned long long t, int id, float val) {
-//        MecMsg msg;
-//        msg.type_ = MecMsg::CONTROL;
-//        msg.data_.control_.controlId_ = id;
-//        msg.data_.control_.value_ = clamp(val, -1.0f, 1.0f);
-//        queue_.addToQueue(msg);
-//    }
-
 private:
     inline float clamp(float v, float mn, float mx) { return (std::max(std::min(v, mx), mn)); }
 
     float note(float n) { return n; }
 
     Preferences prefs_;
-    //MsgQueue &queue_;
     ICallback &callback_;
     Voices voices_;
     bool valid_;
@@ -225,7 +190,6 @@ bool Soundplane::init(void *arg) {
 
 
     std::shared_ptr<::SPLiteCallback> callback
-        //= std::shared_ptr<::SPLiteCallback>(new SoundplaneHandler(prefs, queue_));
         = std::shared_ptr<::SPLiteCallback>(new SoundplaneHandler(prefs, callback_));
     device_->addCallback(callback);
 
@@ -237,8 +201,7 @@ bool Soundplane::init(void *arg) {
 }
 
 bool Soundplane::process() {
-    device_->process();
-    return queue_.process(callback_);
+    return device_->process();
 }
 
 void Soundplane::deinit() {

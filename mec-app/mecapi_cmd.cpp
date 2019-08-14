@@ -25,10 +25,11 @@ inline void pthread_exit(void *value_ptr)
 #include "midi_output.h"
 
 #include <mec_api.h>
+#include <mec_utils.h>
 #include <mec_prefs.h>
+#include <mec_msg_queue.h>
 #include <processors/mec_mpe_processor.h>
 
-#define OUTPUT_BUFFER_SIZE 1024
 
 //hacks for now
 //#define VELOCITY 1.0f
@@ -164,6 +165,8 @@ public:
     }
 
 private:
+    static constexpr unsigned OUTPUT_BUFFER_SIZE=1024;
+
     mec::Preferences prefs_;
     UdpTransmitSocket transmitSocket_;
     char buffer_[OUTPUT_BUFFER_SIZE];
@@ -243,6 +246,91 @@ private:
 };
 
 
+class CallbackQueue : public mec::ICallback {
+public:
+    CallbackQueue() {
+    }
+
+    void subscribe(ICallback* pCB) {
+        callbacks_.push_back(pCB);
+    }
+
+
+    void touchOn(int touchId, float note, float x, float y, float z) override {
+        mec::MecMsg msg;
+        msg.type_ = mec::MecMsg::TOUCH_ON;
+        msg.data_.touch_.touchId_  = touchId;
+        msg.data_.touch_.note_ = note;
+        msg.data_.touch_.x_ = x;
+        msg.data_.touch_.y_ = y;
+        msg.data_.touch_.z_ = z;
+        queue_.addToQueue(msg);
+    }
+
+    void touchContinue(int touchId, float note, float x, float y, float z) override {
+        mec::MecMsg msg;
+        msg.type_ = mec::MecMsg::TOUCH_CONTINUE;
+        msg.data_.touch_.touchId_  = touchId;
+        msg.data_.touch_.note_ = note;
+        msg.data_.touch_.x_ = x;
+        msg.data_.touch_.y_ = y;
+        msg.data_.touch_.z_ = z;
+        queue_.addToQueue(msg);
+    }
+
+    void touchOff(int touchId, float note, float x, float y, float z) override {
+        mec::MecMsg msg;
+        msg.type_ = mec::MecMsg::TOUCH_OFF;
+        msg.data_.touch_.touchId_  = touchId;
+        msg.data_.touch_.note_ = note;
+        msg.data_.touch_.x_ = x;
+        msg.data_.touch_.y_ = y;
+        msg.data_.touch_.z_ = z;
+        queue_.addToQueue(msg);
+    }
+
+    void control(int ctrlId, float v) override {
+        mec::MecMsg msg;
+        msg.type_ = mec::MecMsg::CONTROL;
+        msg.data_.control_.controlId_ = ctrlId;
+        msg.data_.control_.value_ = v;
+        queue_.addToQueue(msg);
+    }
+
+    void mec_control(int cmd, void* other) override {
+        mec::MecMsg msg;
+        msg.type_ = mec::MecMsg::MEC_CONTROL;
+        msg.data_.mec_control_.cmd_ = static_cast<mec::MecMsg::mec_cmd>(cmd);
+//        msg.data_.mec_control_.other_=other;
+        queue_.addToQueue(msg);
+
+    }
+
+
+    void process() {
+        mec::MecMsg msg;
+        while(queue_.nextMsg(msg)) {
+            for(auto pCb : callbacks_) {
+                queue_.send(msg,*pCb);
+            }
+        }
+    }
+private:
+    mec::MsgQueue queue_;
+    std::vector<ICallback*> callbacks_;
+
+};
+
+
+void *mecapi_queue_proc(void *arg) {
+    CallbackQueue* pCallbackQueue = static_cast<CallbackQueue*>(arg);
+    while(keepRunning) {
+        pCallbackQueue->process();
+    }
+    return nullptr;
+}
+
+
 void *mecapi_proc(void *arg) {
     static int exitCode = 0;
 
@@ -259,22 +347,42 @@ void *mecapi_proc(void *arg) {
 
     mec::Preferences outprefs(app_prefs.getSubTree("outputs"));
 
+
+    bool queuedOutput = app_prefs.getBool("queuedOutput", true);
+
+
     std::unique_ptr<mec::MecApi> mecApi;
     mecApi.reset(new mec::MecApi(arg));
+
+    CallbackQueue* pCallbackQueue= nullptr;
+    std::thread callbackQueueThread;
+    if(queuedOutput) {
+        LOG_0("mecapi_proc using queued output");
+        pCallbackQueue = new CallbackQueue();
+        mecApi->subscribe(pCallbackQueue);
+    }
 
     if (outprefs.exists("midi")) {
         mec::Preferences cbprefs(outprefs.getSubTree("midi"));
         if(cbprefs.getBool("mpe",true)) {
             MecMpeProcessor *pCb = new MecMpeProcessor(cbprefs);
             if (pCb->isValid()) {
-                mecApi->subscribe(pCb);
+                if(pCallbackQueue) {
+                    pCallbackQueue->subscribe(pCb);
+                } else {
+                    mecApi->subscribe(pCb);
+                }
             } else {
                 delete pCb;
             }
         } else {
             MecMidiProcessor *pCb = new MecMidiProcessor(cbprefs);
             if (pCb->isValid()) {
-                mecApi->subscribe(pCb);
+                if(pCallbackQueue) {
+                    pCallbackQueue->subscribe(pCb);
+                } else {
+                    mecApi->subscribe(pCb);
+                }
             } else {
                 delete pCb;
             }
@@ -284,7 +392,11 @@ void *mecapi_proc(void *arg) {
         mec::Preferences cbprefs(outprefs.getSubTree("osc"));
         MecOSCCallback *pCb = new MecOSCCallback(cbprefs);
         if (pCb->isValid()) {
-            mecApi->subscribe(pCb);
+            if(pCallbackQueue) {
+                pCallbackQueue->subscribe(pCb);
+            } else {
+                mecApi->subscribe(pCb);
+            }
         } else {
             delete pCb;
         }
@@ -293,7 +405,11 @@ void *mecapi_proc(void *arg) {
         mec::Preferences cbprefs(outprefs.getSubTree("console"));
         MecConsoleCallback *pCb = new MecConsoleCallback(cbprefs);
         if (pCb->isValid()) {
-            mecApi->subscribe(pCb);
+            if(pCallbackQueue) {
+                pCallbackQueue->subscribe(pCb);
+            } else {
+                mecApi->subscribe(pCb);
+            }
         } else {
             delete pCb;
         }
@@ -301,16 +417,52 @@ void *mecapi_proc(void *arg) {
 
     mecApi->init();
 
+    if(pCallbackQueue) {
+        // start the callback queue AFTER all callbacks
+        // have been added to avoid threading issue.
+        LOG_0("mecapi_proc start queued output");
+#ifdef __COBALT__
+        pthread_t ph = callbackQueueThread.native_handle();
+        pthread_create(&ph, 0,mecapi_queue_proc,pCallbackQueue);
+#else
+        // this seems unlikely to be needed or wanted
+        callbackQueueThread = std::thread(mecapi_queue_proc,pCallbackQueue);
+        bool rt=app_prefs.getBool("rt output",false);
+        if(rt) {
+            LOG_0("realtime outputQueue thread");
+            makeThreadRealtime(callbackQueueThread);
+        }
+#endif
+
+    }
+
+
     {
         mecAppLock lock;
         while (keepRunning) {
             mecApi->process();
             mec_waitFor(lock,5);
         }
+
     }
 
     // delete the api, so that it can clean up
     LOG_0("mecapi_proc stopping");
+
+
+    if(pCallbackQueue) {
+        LOG_0("wait for callback queue");
+        if(callbackQueueThread.joinable()) {
+            callbackQueueThread.join();
+        }
+        LOG_0("callback queue done");
+        sleep(1);
+        delete pCallbackQueue;
+        pCallbackQueue = nullptr;
+    }
+
+
+    LOG_0("mecapi_proc clear mecapi");
     mecApi.reset();
     sleep(1);
     LOG_0("mecapi_proc stopped");

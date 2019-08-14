@@ -27,7 +27,6 @@ private:
     ICallback &callback_;
     std::unique_ptr<SPLiteDevice> device_;
     bool active_;
-    MsgQueue queue_;
 };
 
 }
