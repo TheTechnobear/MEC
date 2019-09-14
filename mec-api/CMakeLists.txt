@@ -63,6 +63,15 @@ else()
     add_definitions(-DDISABLE_OSCDISPLAY=1)
 endif()
 
+if (NOT DISABLE_FATES)
+    set(FATES_SRC
+            devices/mec_fates.cpp
+            devices/mec_fates.h
+            )
+else()
+    add_definitions(-DDISABLE_FATES=1)
+endif()
+
 
 set(MECAPI_SRC
         mec_api.cpp
@@ -92,6 +101,7 @@ set(MECAPI_SRC
         ${EIGENHARP_SRC}
         ${PUSH2_SRC}
         ${OSCDISPLAY_SRC}
+        ${FATES_SRC}
         )
 
 include_directories(
@@ -104,7 +114,7 @@ add_library(mec-api SHARED ${MECAPI_SRC})
 
 set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB})
 
-target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api splite cjson oscpack rtmidi portaudio moodycamel)
+target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api cjson oscpack rtmidi portaudio moodycamel)
 set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
 add_subdirectory(tests)
 

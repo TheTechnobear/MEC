@@ -14,8 +14,11 @@
 #if !DISABLE_PUSH2
 #   include "devices/mec_push2.h"
 #endif
-#if !DISABLE_SIMPLEOSC
+#if !DISABLE_OSCDISPLAY
 #   include "devices/mec_oscdisplay.h"
+#endif
+#if !DISABLE_FATES
+#   include "devices/mec_fates.h"
 #endif
 
 #include "devices/mec_mididevice.h"
@@ -337,7 +340,7 @@ void MecApi_Impl::initDevices() {
 #endif
 
 
-#if !DISABLE_OSCDISPLAY_SRC
+#if !DISABLE_OSCDISPLAY
     if (prefs_->exists("oscdisplay")) {
         LOG_1("oscdisplay initialise ");
         std::shared_ptr<OscDisplay> device = std::make_shared<OscDisplay>();
@@ -352,6 +355,27 @@ void MecApi_Impl::initDevices() {
             }
         } else {
             LOG_1("oscdisplay init failed ");
+            device->deinit();
+        }
+    }
+#endif
+
+
+#if !DISABLE_FATES
+    if (prefs_->exists("fates")) {
+        LOG_1("fates initialise ");
+        std::shared_ptr<Fates> device = std::make_shared<Fates>();
+//        std::shared_ptr<OscDisplay> device = std::make_shared<OscDisplay>(*this);
+        Kontrol::KontrolModel::model()->addCallback("fates", device);
+        if (device->init(prefs_->getSubTree("fates"))) {
+            if (device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("fates init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("fates init failed ");
             device->deinit();
         }
     }
