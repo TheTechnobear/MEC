@@ -4,6 +4,8 @@
 
 #include "../mec_device.h"
 
+#include <fateslite/FatesDevice.h>
+
 
 #include <KontrolModel.h>
 
