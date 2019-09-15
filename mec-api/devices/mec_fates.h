@@ -4,7 +4,7 @@
 
 #include "../mec_device.h"
 
-#include <fateslite/FatesDevice.h>
+#include <FatesDevice.h>
 
 
 #include <KontrolModel.h>
@@ -126,6 +126,7 @@ private:
     static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
 
 
+    FatesLite::FatesDevice device_;
     bool active_;
 
     Kontrol::EntityId currentRackId_;

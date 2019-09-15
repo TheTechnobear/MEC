@@ -68,6 +68,7 @@ if (NOT DISABLE_FATES)
             devices/mec_fates.cpp
             devices/mec_fates.h
             )
+    set(FATESLITE_LIB fateslite)
 else()
     add_definitions(-DDISABLE_FATES=1)
 endif()
@@ -112,7 +113,7 @@ include_directories(
 
 add_library(mec-api SHARED ${MECAPI_SRC})
 
-set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB})
+set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB} ${FATESLITE_LIB})
 
 target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api cjson oscpack rtmidi portaudio moodycamel)
 set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)

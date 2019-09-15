@@ -103,7 +103,8 @@ add_subdirectory(external/SoundplaneLite/splite)
 add_subdirectory(external/EigenLite/eigenapi)
 
 if(NOT DISABLE_FATES) 
-add_subdirectory(external/FatesLite/fateslite)
+    message("FATES enabled")
+    add_subdirectory(external/FatesLite/fateslite)
 endif()
 
 

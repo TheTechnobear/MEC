@@ -838,6 +838,7 @@ Fates::~Fates() {
 
 bool Fates::init(void *arg) {
     Preferences prefs(arg);
+    device_.start();
 
     if (active_) {
         LOG_2("Fates::init - already active deinit");
@@ -864,6 +865,7 @@ bool Fates::init(void *arg) {
 }
 
 void Fates::deinit() {
+    device_.stop();
     active_ = false;
     return;
 }
