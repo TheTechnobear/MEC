@@ -9,8 +9,12 @@ namespace mec {
 
 static const float MAX_POT_VALUE = 1.0F;
 
+const unsigned SCREEN_HEIGHT=64;
+const unsigned SCREEN_WIDTH=128;
+
 static const unsigned FATES_NUM_TEXTLINES = 5;
-static const unsigned FATES_NUM_PARAMS = 8;
+static const unsigned FATES_NUM_TEXTCHARS = (128 / 4);
+static const unsigned FATES_NUM_PARAMS = 4;
 
 
 class FatesBaseMode : public FatesMode {
@@ -87,9 +91,14 @@ public:
     void onButton(unsigned id, unsigned value) override;
     void onEncoder(unsigned id, int value) override;
 
-
     void nextPage();
     void prevPage();
+
+    // this go soon
+    void navPrev() override {;}
+    void navNext() override {;}
+    void navActivate() override {;}
+    
 
 private:
     void setCurrentPage(unsigned pageIdx, bool UI);
@@ -255,24 +264,23 @@ void FatesParamMode::onButton(unsigned id, unsigned value) {
 
 }
 
-void FatesParamMode::onEncoder(unsigned idx, int value) {
+void FatesParamMode::onEncoder(unsigned idx, int v) {
     try {
-        auto pRack = model_->getRack(parent_.currentRack());
-        auto pModule = model_->getModule(pRack, parent_.currentModule());
-        auto pPage = model_->getPage(pModule, parent_.currentPage());
-        auto pParams = model_->getParams(pModule, pPage);
+        auto pRack = model()->getRack(parent_.currentRack());
+        auto pModule = model()->getModule(pRack, parent_.currentModule());
+        auto pPage = model()->getPage(pModule, parent_.currentPage());
+        auto pParams = model()->getParams(pModule, pPage);
 
         if (idx >= pParams.size()) return;
 
         auto &param = pParams[idx];
         // auto page = pages_[currentPage_]
         if (param != nullptr) {
-//            const int steps = 1;
-            // LOG_0("v = " << v);
-//            float value = v & 0x40 ? (128.0f - (float) v) / (128.0f * steps) * -1.0f : float(v) / (128.0f * steps);
-
+            const float steps = 128.0f;
+	    float value = float(v) / steps;
             Kontrol::ParamValue calc = param->calcRelative(value);
-            model_->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
+            std::cerr << "onEncoder " << idx << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
+            model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
         }
     } catch (std::out_of_range) {
 
@@ -876,6 +884,8 @@ Fates::~Fates() {
 
 bool Fates::init(void *arg) {
     Preferences prefs(arg);
+    std::shared_ptr<FatesLite::FatesCallback> cb=std::make_shared<FatesDeviceCallback>(*this);
+    device_.addCallback(cb);
     device_.start();
 
     if (active_) {
@@ -891,7 +901,7 @@ bool Fates::init(void *arg) {
     active_ = true;
     if (active_) {
         // add modes before KD init
-        addMode(FM_PARAMETER, std::make_shared<FatesMainMenu>(*this));
+        addMode(FM_PARAMETER, std::make_shared<FatesParamMode>(*this));
         addMode(FM_MAINMENU, std::make_shared<FatesMainMenu>(*this));
         addMode(FM_PRESETMENU, std::make_shared<FatesPresetMenu>(*this));
         addMode(FM_MODULEMENU, std::make_shared<FatesModuleMenu>(*this));
@@ -914,8 +924,8 @@ bool Fates::isActive() {
 
 // Kontrol::KontrolCallback
 bool Fates::process() {
-    device_.process();
     modes_[currentMode_]->poll();
+    device_.process();
     return true;
 }
 
@@ -1126,21 +1136,28 @@ void Fates::clearParamNum(unsigned num) {
 
 }
 
+
+std::string asDisplayString(const Kontrol::Parameter &param, unsigned width){
+    std::string pad;
+    std::string ret;
+    std::string value = param.displayValue();
+    std::string unit = std::string(param.displayUnit() + "  ").substr(0, 2);
+    const std::string &dName = param.displayName();
+    unsigned long fillc = width - (dName.length() + value.length() + 1 + unit.length());
+    for (; fillc > 0; fillc--) pad += " ";
+    ret = dName + pad + value + " " + unit;
+    if (ret.length() > width) ret = ret.substr(width - ret.length(), width);
+    return ret;
+}
+
+
 void Fates::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl) {
-//    std::string p = "P" + std::to_string(num);
-//    {
-//        std::string field = "/" + p + "Desc";
-//        sendOscString(field,param.displayName());
-//    }
-//    {
-//        std::string field = "/" + p + "Value";
-//        std::string val= param.displayValue() + " " + param.displayUnit();
-//
-//    }
+    std::string disp = asDisplayString(param, FATES_NUM_TEXTCHARS);
+    displayLine(num, disp.c_str());
 }
 
 void Fates::displayLine(unsigned line, const char *disp) {
-    device_.displayLine(8, line*10+10, disp)
+    device_.displayLine(0, line*10+10, disp);
 }
 
 void Fates::invertLine(unsigned line) {
