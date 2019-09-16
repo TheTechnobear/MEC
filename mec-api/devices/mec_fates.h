@@ -4,15 +4,15 @@
 
 #include "../mec_device.h"
 
-#include <FatesDevice.h>
-
-
 #include <KontrolModel.h>
 
 #include <ip/UdpSocket.h>
 #include <string>
 #include <readerwriterqueue.h>
 #include <thread>
+
+#include <FatesDevice.h>
+
 
 
 namespace mec {
@@ -36,6 +36,12 @@ public:
 
     virtual void poll() = 0;
     virtual void activate() = 0;
+
+    // fates device
+    virtual void onButton(unsigned id, unsigned value) = 0;
+    virtual void onEncoder(unsigned id, int value) = 0;
+
+
     virtual void navPrev()=0;
     virtual void navNext()=0;
     virtual void navActivate()=0;
@@ -95,6 +101,9 @@ public:
     Kontrol::EntityId currentPage() { return currentPageId_; }
     void currentPage(const Kontrol::EntityId &id) { currentPageId_ = id;}
 
+    // from fates device
+    void onButton(unsigned id, unsigned value);
+    void onEncoder(unsigned id, int value);
 
     void midiLearn(bool b);
     bool midiLearn() { return midiLearnActive_;}
@@ -142,5 +151,21 @@ private:
     unsigned menuTimeout_;
 
 };
+
+class FatesDeviceCallback : public FatesLite::FatesCallback {
+public:
+    FatesDeviceCallback(Fates & p) : parent_(p) {;}
+
+    void onButton(unsigned id, unsigned value) override {
+        parent_.onButton(id, value);
+    }
+   void onEncoder(unsigned id, int value) override {
+        parent_.onEncoder(id, value);
+    }
+
+private:
+    Fates& parent_;
+};
+
 
 }

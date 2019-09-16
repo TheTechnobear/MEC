@@ -13,13 +13,12 @@ static const unsigned FATES_NUM_TEXTLINES = 5;
 static const unsigned FATES_NUM_PARAMS = 8;
 
 
-
-
 class FatesBaseMode : public FatesMode {
 public:
     explicit FatesBaseMode(Fates &p) : parent_(p), popupTime_(-1) { ; }
 
 
+    // Kontrol
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override { ; }
@@ -38,7 +37,11 @@ public:
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
+    // FatesDevice
+    void onButton(unsigned id, unsigned value) override { ; }
+    void onEncoder(unsigned id, int value)  { ; }
 
+    // Mode
     virtual bool init() { return true; } // override
     void poll() override;
 
@@ -79,6 +82,11 @@ public:
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
                     const std::string &) override;
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
+
+
+    void onButton(unsigned id, unsigned value) override;
+    void onEncoder(unsigned id, int value) override;
+
 
     void nextPage();
     void prevPage();
@@ -242,6 +250,36 @@ void FatesParamMode::changePot(unsigned pot, float rawvalue) {
     }
 
 }
+
+void FatesParamMode::onButton(unsigned id, unsigned value) {
+
+}
+
+void FatesParamMode::onEncoder(unsigned idx, int value) {
+    try {
+        auto pRack = model_->getRack(parent_.currentRack());
+        auto pModule = model_->getModule(pRack, parent_.currentModule());
+        auto pPage = model_->getPage(pModule, parent_.currentPage());
+        auto pParams = model_->getParams(pModule, pPage);
+
+        if (idx >= pParams.size()) return;
+
+        auto &param = pParams[idx];
+        // auto page = pages_[currentPage_]
+        if (param != nullptr) {
+//            const int steps = 1;
+            // LOG_0("v = " << v);
+//            float value = v & 0x40 ? (128.0f - (float) v) / (128.0f * steps) * -1.0f : float(v) / (128.0f * steps);
+
+            Kontrol::ParamValue calc = param->calcRelative(value);
+            model_->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
+        }
+    } catch (std::out_of_range) {
+
+    }
+}
+
+
 
 void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
     auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
@@ -876,6 +914,7 @@ bool Fates::isActive() {
 
 // Kontrol::KontrolCallback
 bool Fates::process() {
+    device_.process();
     modes_[currentMode_]->poll();
     return true;
 }
@@ -1053,6 +1092,16 @@ void Fates::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, 
 }
 
 
+void Fates::onButton(unsigned id, unsigned value) {
+    modes_[currentMode_]->onButton(id,value);
+
+}
+void Fates::onEncoder(unsigned id, int value) {
+    modes_[currentMode_]->onEncoder(id,value);
+}
+
+
+
 void Fates::midiLearn(bool b) {
     model()->midiLearn(Kontrol::CS_LOCAL, b);
 }
@@ -1070,6 +1119,7 @@ void Fates::displayPopup(const std::string &text, bool) {
 
 
 void Fates::clearDisplay() {
+    device_.displayClear();
 }
 
 void Fates::clearParamNum(unsigned num) {
@@ -1090,6 +1140,7 @@ void Fates::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool 
 }
 
 void Fates::displayLine(unsigned line, const char *disp) {
+    device_.displayLine(8, line*10+10, disp)
 }
 
 void Fates::invertLine(unsigned line) {
