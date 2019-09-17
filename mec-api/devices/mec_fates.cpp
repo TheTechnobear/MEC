@@ -15,7 +15,7 @@ const unsigned SCREEN_WIDTH=128;
 static const unsigned FATES_NUM_TEXTLINES = 5;
 static const unsigned FATES_NUM_TEXTCHARS = (128 / 4);
 static const unsigned FATES_NUM_PARAMS = 4;
-
+static constexpr unsigned FATES_NUM_BUTTONS = 3;
 
 class FatesBaseMode : public FatesMode {
 public:
@@ -42,11 +42,11 @@ public:
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     // FatesDevice
-    void onButton(unsigned id, unsigned value) override { ; }
-    void onEncoder(unsigned id, int value)  { ; }
+    void onButton(unsigned id, unsigned value) override { buttonState_[id]=value;}
+    void onEncoder(unsigned id, int value) override  { ; }
 
     // Mode
-    virtual bool init() { return true; } // override
+    bool init() overrode { return true; }
     void poll() override;
 
     void activate() override { ; }
@@ -57,6 +57,7 @@ protected:
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
 
     int popupTime_;
+    bool buttonState_[FATES_NUM_BUTTONS]= { false,false,false};
 };
 
 
@@ -66,7 +67,6 @@ public:
 
     bool init() override { return true; };
     void activate() override;
-    void changePot(unsigned pot, float value);
 
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
@@ -88,17 +88,13 @@ public:
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 
 
-    void onButton(unsigned id, unsigned value) override;
+    void onButton(unsigned id, int value) override;
     void onEncoder(unsigned id, int value) override;
 
     void nextPage();
     void prevPage();
 
-    // this go soon
-    void navPrev() override {;}
-    void navNext() override {;}
-    void navActivate() override {;}
-    
+
 
 private:
     void setCurrentPage(unsigned pageIdx, bool UI);
@@ -124,9 +120,12 @@ public:
 
     void poll() override;
     void activate() override;
-    void navPrev() override;
-    void navNext() override;
-    void navActivate() override;
+    virtual void navPrev();
+    virtual void navNext();
+    virtual void navActivate();
+
+    void onButton(unsigned id, int value) override;
+    void onEncoder(unsigned id, int value) override;
 
     void savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
     void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
@@ -221,70 +220,69 @@ void FatesParamMode::display() {
         j++;
         if (j == FATES_NUM_PARAMS) break;
     }
-//    for (; j < FATES_NUM_PARAMS; j++) {
-//        parent_.clearParamNum(j + 1);
-//    }
+
+    for (; j < FATES_NUM_PARAMS; j++) {
+        parent_.clearParamNum(j + 1);
+    }
 }
 
 
 void FatesParamMode::activate() {
+    FatesBaseMode::activate();
     display();
 }
 
-void FatesParamMode::changePot(unsigned pot, float rawvalue) {
-    try {
-        auto rack = parent_.model()->getRack(parent_.currentRack());
-        auto module = parent_.model()->getModule(rack, parent_.currentModule());
-        auto page = parent_.model()->getPage(module, pageId_);
-//        auto pages = parent_.model()->getPages(module);
-        auto params = parent_.model()->getParams(module, page);
-
-        if (pot >= params.size()) return;
-
-        auto &param = params[pot];
-        auto paramId = param->id();
-
-        Kontrol::ParamValue calc;
-
-        if (rawvalue != std::numeric_limits<float>::max()) {
-            float value = rawvalue / MAX_POT_VALUE;
-            calc = param->calcFloat(value);
-            //std::cerr << "changePot " << pot << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
-        }
-
-        model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), parent_.currentModule(), paramId, calc);
-
-    } catch (std::out_of_range) {
-        return;
-    }
-
-}
-
 void FatesParamMode::onButton(unsigned id, unsigned value) {
-
+    FatesBaseMode::onButton(id,value);
+    switch (id) {
+        case 0 : {
+            if(!value) {
+                // on release of button
+                parent_.changeMode(FM_MAINMENU);
+            }
+            break;
+        }
+        case 1 : {
+            break;
+        }
+        case 2 : {
+            break;
+        }
+        default:
+    }
 }
 
 void FatesParamMode::onEncoder(unsigned idx, int v) {
-    try {
-        auto pRack = model()->getRack(parent_.currentRack());
-        auto pModule = model()->getModule(pRack, parent_.currentModule());
-        auto pPage = model()->getPage(pModule, parent_.currentPage());
-        auto pParams = model()->getParams(pModule, pPage);
-
-        if (idx >= pParams.size()) return;
-
-        auto &param = pParams[idx];
-        // auto page = pages_[currentPage_]
-        if (param != nullptr) {
-            const float steps = 128.0f;
-	    float value = float(v) / steps;
-            Kontrol::ParamValue calc = param->calcRelative(value);
-            std::cerr << "onEncoder " << idx << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
-            model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
+    FatesBaseMode::onEncoder(id,value);
+    if(idx==2 && buttonState_[2]) {
+        // if holding button 3. then turning encoder 3 changed page
+        if(v>0) {
+            nextPage();
+        } else {
+            prevPage();
         }
-    } catch (std::out_of_range) {
 
-    }
+    } else {
+        try {
+            auto pRack = model()->getRack(parent_.currentRack());
+            auto pModule = model()->getModule(pRack, parent_.currentModule());
+            auto pPage = model()->getPage(pModule, parent_.currentPage());
+            auto pParams = model()->getParams(pModule, pPage);
+
+            if (idx >= pParams.size()) return;
+
+            auto &param = pParams[idx];
+            // auto page = pages_[currentPage_]
+            if (param != nullptr) {
+                const float steps = 128.0f;
+            float value = float(v) / steps;
+                Kontrol::ParamValue calc = param->calcRelative(value);
+                std::cerr << "onEncoder " << idx << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
+                model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
+            }
+        } catch (std::out_of_range) {
+        }
+   }
 }
 
 
@@ -317,9 +315,9 @@ void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
                 } catch (std::out_of_range) { ;
                 }
             } else {
-//                for (int j=0; j < FATES_NUM_PARAMS; j++) {
-//                    parent_.clearParamNum(j + 1);
-//                }
+                for (int j=0; j < FATES_NUM_PARAMS; j++) {
+                    parent_.clearParamNum(j + 1);
+                }
             }
         }
 
@@ -434,7 +432,7 @@ void FatesMenuMode::activate() {
 void FatesMenuMode::poll() {
     FatesBaseMode::poll();
     if (popupTime_ == 0) {
-        parent_.changeMode(FM_MAINMENU);
+        parent_.changeMode(FM_PARAMETER);
         popupTime_ = -1;
     }
 }
@@ -455,6 +453,40 @@ void FatesMenuMode::displayItem(unsigned i) {
             parent_.invertLine(line);
         }
     }
+}
+
+void FatesMenuMode::onButton(unsigned id, int value) {
+    FatesBaseMode::onButton(id,value);
+    switch (id) {
+        case 0 : {
+            if(!value) {
+                // on release of button
+                parent_.changeMode(FM_PARAMETER);
+            }
+            break;
+        }
+        case 1 : {
+            break;
+        }
+        case 2 : {
+            if(!value) {
+                navActivate();
+            }
+            break;
+        }
+        default:
+    }
+}
+
+void FatesMenuMode::onEncoder(unsigned id, int value) {
+    if(id==2) {
+        if(value>0) {
+            navNext();
+        } else {
+            navPrev();
+        }
+    }
+
 }
 
 
@@ -1124,6 +1156,12 @@ void Fates::modulationLearn(bool b) {
 //--- display functions
 
 void Fates::displayPopup(const std::string &text, bool) {
+    // temp
+    std::string txt="|      ";
+    txt=txt+ "     |";
+    displayLine(1, "----------------------------------");
+    displayLine(2, "|"
+    displayLine(3, "----------------------------------");
 }
 
 
@@ -1133,7 +1171,8 @@ void Fates::clearDisplay() {
 }
 
 void Fates::clearParamNum(unsigned num) {
-
+    // temp
+    displayLine(num, "                                                            ");
 }
 
 
@@ -1157,14 +1196,18 @@ void Fates::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool 
 }
 
 void Fates::displayLine(unsigned line, const char *disp) {
-    device_.displayLine(0, line*10+10, disp);
+    device_.displayLine(0, (line+1)*10+10, disp);
 }
 
 void Fates::invertLine(unsigned line) {
-
+    // temp
+    device_.displayLine(0, (line+1)*10+10, " > ");
 }
 
 void Fates::displayTitle(const std::string &module, const std::string &page) {
+    // temp
+    std::string title= "module + " : " + page + "                        ";
+    device_.displayLine(0,10, title);
 }
 
 

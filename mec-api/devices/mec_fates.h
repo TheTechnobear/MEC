@@ -40,11 +40,6 @@ public:
     // fates device
     virtual void onButton(unsigned id, unsigned value) = 0;
     virtual void onEncoder(unsigned id, int value) = 0;
-
-
-    virtual void navPrev()=0;
-    virtual void navNext()=0;
-    virtual void navActivate()=0;
 };
 
 
