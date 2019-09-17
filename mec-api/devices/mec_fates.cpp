@@ -46,7 +46,7 @@ public:
     void onEncoder(unsigned id, int value) override  { ; }
 
     // Mode
-    bool init() overrode { return true; }
+    bool init() override { return true; }
     void poll() override;
 
     void activate() override { ; }
@@ -88,7 +88,7 @@ public:
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 
 
-    void onButton(unsigned id, int value) override;
+    void onButton(unsigned id, unsigned value) override;
     void onEncoder(unsigned id, int value) override;
 
     void nextPage();
@@ -124,7 +124,7 @@ public:
     virtual void navNext();
     virtual void navActivate();
 
-    void onButton(unsigned id, int value) override;
+    void onButton(unsigned id, unsigned value) override;
     void onEncoder(unsigned id, int value) override;
 
     void savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
@@ -249,11 +249,12 @@ void FatesParamMode::onButton(unsigned id, unsigned value) {
             break;
         }
         default:
+		 ;
     }
 }
 
 void FatesParamMode::onEncoder(unsigned idx, int v) {
-    FatesBaseMode::onEncoder(id,value);
+    FatesBaseMode::onEncoder(idx,v);
     if(idx==2 && buttonState_[2]) {
         // if holding button 3. then turning encoder 3 changed page
         if(v>0) {
@@ -277,7 +278,7 @@ void FatesParamMode::onEncoder(unsigned idx, int v) {
                 const float steps = 128.0f;
             float value = float(v) / steps;
                 Kontrol::ParamValue calc = param->calcRelative(value);
-                std::cerr << "onEncoder " << idx << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
+                //std::cerr << "onEncoder " << idx << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
                 model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
             }
         } catch (std::out_of_range) {
@@ -455,7 +456,7 @@ void FatesMenuMode::displayItem(unsigned i) {
     }
 }
 
-void FatesMenuMode::onButton(unsigned id, int value) {
+void FatesMenuMode::onButton(unsigned id, unsigned value) {
     FatesBaseMode::onButton(id,value);
     switch (id) {
         case 0 : {
@@ -475,6 +476,7 @@ void FatesMenuMode::onButton(unsigned id, int value) {
             break;
         }
         default:
+		 ;
     }
 }
 
@@ -1160,7 +1162,7 @@ void Fates::displayPopup(const std::string &text, bool) {
     std::string txt="|      ";
     txt=txt+ "     |";
     displayLine(1, "----------------------------------");
-    displayLine(2, "|"
+    displayLine(2, "|");
     displayLine(3, "----------------------------------");
 }
 
@@ -1196,17 +1198,17 @@ void Fates::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool 
 }
 
 void Fates::displayLine(unsigned line, const char *disp) {
-    device_.displayLine(0, (line+1)*10+10, disp);
+    device_.displayLine(0, line*10+10, disp);
 }
 
 void Fates::invertLine(unsigned line) {
     // temp
-    device_.displayLine(0, (line+1)*10+10, " > ");
+    device_.displayLine(0, line*10+10, " > ");
 }
 
 void Fates::displayTitle(const std::string &module, const std::string &page) {
     // temp
-    std::string title= "module + " : " + page + "                        ";
+    std::string title= module + " : " + page + "                        ";
     device_.displayLine(0,10, title);
 }
 

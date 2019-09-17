@@ -34,6 +34,7 @@ public:
     FatesMode() { ; }
     virtual ~FatesMode() { ; }
 
+    virtual bool init() = 0;
     virtual void poll() = 0;
     virtual void activate() = 0;
 
