@@ -1173,8 +1173,7 @@ void Fates::clearDisplay() {
 }
 
 void Fates::clearParamNum(unsigned num) {
-    // temp
-    displayLine(num, "                                                            ");
+    device_.clearLine(num);
 }
 
 
@@ -1198,18 +1197,17 @@ void Fates::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool 
 }
 
 void Fates::displayLine(unsigned line, const char *disp) {
-    device_.displayLine(0, line*10+10, disp);
-}
+    device_.displayLine(line,disp);
 
 void Fates::invertLine(unsigned line) {
-    // temp
-    device_.displayLine(0, line*10+10, " > ");
+    device_.invertLine(line);
+}
 }
 
 void Fates::displayTitle(const std::string &module, const std::string &page) {
     // temp
     std::string title= module + " : " + page + "                        ";
-    device_.displayLine(0,10, title);
+    device_.displayLine(0,title);
 }
 
 
