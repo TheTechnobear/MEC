@@ -107,6 +107,8 @@ public:
     bool modulationLearn() { return modulationLearnActive_;}
 
     unsigned menuTimeout() {return menuTimeout_;}
+    void nextModule();
+    void prevModule();
 private:
 
     void navPrev();
@@ -115,8 +117,6 @@ private:
 
     void nextPage();
     void prevPage();
-    void nextModule();
-    void prevModule();
 
     friend class FatesListener;
 

@@ -13,7 +13,8 @@ const unsigned SCREEN_HEIGHT=64;
 const unsigned SCREEN_WIDTH=128;
 
 static const unsigned FATES_NUM_TEXTLINES = 5;
-static const unsigned FATES_NUM_TEXTCHARS = (128 / 4);
+//static const unsigned FATES_NUM_TEXTCHARS = (128 / 4); = 32
+static const unsigned FATES_NUM_TEXTCHARS = 30;
 static const unsigned FATES_NUM_PARAMS = 4;
 static constexpr unsigned FATES_NUM_BUTTONS = 3;
 
@@ -205,11 +206,18 @@ void FatesBaseMode::poll() {
 //------ FatesParamMode
 
 void FatesParamMode::display() {
+    parent_.clearDisplay();
     auto rack = parent_.model()->getRack(parent_.currentRack());
     auto module = parent_.model()->getModule(rack, parent_.currentModule());
     auto page = parent_.model()->getPage(module, pageId_);
 //    auto pages = parent_.model()->getPages(module);
     auto params = parent_.model()->getParams(module, page);
+
+    std::string md = "";
+    std::string pd = "";
+    if (module) md = module->id() + " : " +module->displayName();
+    if (page) pd = page->displayName();
+    parent_.displayTitle(md, pd);
 
 
     unsigned int j = 0;
@@ -263,6 +271,13 @@ void FatesParamMode::onEncoder(unsigned idx, int v) {
             prevPage();
         }
 
+    } else if(idx==1 && buttonState_[2]) {
+        // if holding button 3. then turning encoder 2 changed module
+        if(v>0) {
+            parent_.nextModule();
+        } else {
+            parent_.prevModule();
+	}
     } else {
         try {
             auto pRack = model()->getRack(parent_.currentRack());
@@ -290,7 +305,6 @@ void FatesParamMode::onEncoder(unsigned idx, int v) {
 
 void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
     auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
-    if (module == nullptr) return;
 
     try {
         auto rack = parent_.model()->getRack(parent_.currentRack());
@@ -300,12 +314,7 @@ void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 //        auto params = parent_.model()->getParams(module,page);
 
         if (pageIdx_ != pageIdx) {
-            std::string md = "";
-            std::string pd = "";
-            if (module) md = module->id() + " : " +module->displayName();
-            if (page) pd = page->displayName();
-            parent_.displayTitle(md, pd);
-
+            pageIdx_ = pageIdx;
             if (pageIdx < pages.size()) {
                 pageIdx_ = pageIdx;
                 try {
@@ -316,9 +325,11 @@ void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
                 } catch (std::out_of_range) { ;
                 }
             } else {
-                for (int j=0; j < FATES_NUM_PARAMS; j++) {
-                    parent_.clearParamNum(j + 1);
-                }
+	   	parent_.clearDisplay();
+		std::string md = "";
+		std::string pd = "";
+		if (module) md = module->id() + " : " +module->displayName();
+		parent_.displayTitle(md, "none");
             }
         }
 
@@ -481,7 +492,7 @@ void FatesMenuMode::onButton(unsigned id, unsigned value) {
 }
 
 void FatesMenuMode::onEncoder(unsigned id, int value) {
-    if(id==2) {
+    if(id==0) {
         if(value>0) {
             navNext();
         } else {
@@ -1039,11 +1050,15 @@ void Fates::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
             int len = 0;
             while((idx=value.find(" ",lidx)) != std::string::npos) {
                 len = idx - lidx;
-                moduleOrder_.push_back(value.substr(lidx,len));
+		std::string mid = value.substr(lidx,len);
+                moduleOrder_.push_back(mid);
                 lidx = idx + 1;
             }
             len = value.length() - lidx;
-            if(len>0) moduleOrder_.push_back(value.substr(lidx,len));
+            if(len>0)  {
+		std::string mid = value.substr(lidx,len);
+		moduleOrder_.push_back(mid);
+	    }
         }
     }
 }
@@ -1072,7 +1087,8 @@ std::vector<std::shared_ptr<Kontrol::Module>> Fates::getModules(const std::share
         if(pModule!=nullptr) {
             ret.push_back(pModule);
             done.insert(mid);
-        }
+	}
+
     }
     for (auto pModule : modulelist) {
         if(done.find(pModule->id()) == done.end()) {
@@ -1088,6 +1104,7 @@ void Fates::nextModule() {
     auto rack = model()->getRack(currentRack());
     auto modules = getModules(rack);
     bool found = false;
+
     for (auto module:modules) {
         if (found) {
             currentModule(module->id());
@@ -1173,7 +1190,7 @@ void Fates::clearDisplay() {
 }
 
 void Fates::clearParamNum(unsigned num) {
-    device_.clearLine(num);
+    device_.clearText(num);
 }
 
 
@@ -1192,22 +1209,31 @@ std::string asDisplayString(const Kontrol::Parameter &param, unsigned width){
 
 
 void Fates::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl) {
-    std::string disp = asDisplayString(param, FATES_NUM_TEXTCHARS);
-    displayLine(num, disp.c_str());
+    //std::string disp = asDisplayString(param, FATES_NUM_TEXTCHARS);
+    //displayLine(num, disp.c_str());
+    const std::string &dName = param.displayName();
+    std::string value = param.displayValue();
+    std::string unit = param.displayUnit();
+    device_.clearText(num);
+    device_.displayText(num,0,dName.c_str());
+    device_.displayText(num,17,value.c_str());
+    device_.displayText(num,27,unit.c_str());
 }
 
 void Fates::displayLine(unsigned line, const char *disp) {
-    device_.displayLine(line,disp);
+    device_.clearText(line);
+    device_.displayText(line,disp);
+}
 
 void Fates::invertLine(unsigned line) {
-    device_.invertLine(line);
-}
+    device_.invertText(line);
 }
 
 void Fates::displayTitle(const std::string &module, const std::string &page) {
-    // temp
-    std::string title= module + " : " + page + "                        ";
-    device_.displayLine(0,title);
+    if(module.size() == 0 || page.size()==0) return;
+    std::string title= module + " > " + page ;
+    device_.clearText(0);
+    device_.displayText(0,title);
 }
 
 
