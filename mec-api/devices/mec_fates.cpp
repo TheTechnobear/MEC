@@ -87,6 +87,7 @@ public:
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
                     const std::string &) override;
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
+    void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
 
 
     void onButton(unsigned id, unsigned value) override;
@@ -309,7 +310,7 @@ void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
     try {
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto module = parent_.model()->getModule(rack, parent_.currentModule());
-        auto page = parent_.model()->getPage(module, pageId_);
+        //auto page = parent_.model()->getPage(module, pageId_);
         auto pages = parent_.model()->getPages(module);
 //        auto params = parent_.model()->getParams(module,page);
 
@@ -318,7 +319,7 @@ void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
             if (pageIdx < pages.size()) {
                 pageIdx_ = pageIdx;
                 try {
-                    page = pages[pageIdx_];
+                    auto page = pages[pageIdx_];
                     pageId_ = page->id();
                     parent_.currentPage(pageId_);
                     display();
@@ -398,6 +399,11 @@ void FatesParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rac
             moduleType_ = modType;
         }
     }
+}
+
+void FatesParamMode::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+	pageIdx_ = -1;
+	setCurrentPage(0,false);
 }
 
 void FatesParamMode::nextPage() {
@@ -665,7 +671,7 @@ void FatesMainMenu::clicked(unsigned idx) {
             if (rack != nullptr) {
                 model()->saveSettings(Kontrol::CS_LOCAL, rack->id());
             }
-            parent_.changeMode(FM_MAINMENU);
+            parent_.changeMode(FM_PARAMETER);
             break;
         }
         default:
@@ -733,7 +739,7 @@ void FatesPresetMenu::clicked(unsigned idx) {
             if (rack != nullptr) {
                 rack->savePreset(rack->currentPreset());
             }
-            parent_.changeMode(FM_MAINMENU);
+            parent_.changeMode(FM_PARAMETER);
             break;
         }
         case FATES_PMI_NEW: {
@@ -742,7 +748,7 @@ void FatesPresetMenu::clicked(unsigned idx) {
                 std::string newPreset = "new-" + std::to_string(presets_.size());
                 model()->savePreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
-            parent_.changeMode(FM_MAINMENU);
+            parent_.changeMode(FM_PARAMETER);
             break;
         }
         case FATES_PMI_SEP: {
@@ -752,7 +758,7 @@ void FatesPresetMenu::clicked(unsigned idx) {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 std::string newPreset = presets_[idx - FATES_PMI_LAST];
-                parent_.changeMode(FM_MAINMENU);
+                parent_.changeMode(FM_PARAMETER);
                 model()->loadPreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
             break;
@@ -863,7 +869,7 @@ void FatesModuleMenu::clicked(unsigned idx) {
                 auto module = model()->getModule(rack, parent_.currentModule());
                 if (modType != module->type()) {
                     //FIXME, workaround since changing the module needs to tell params to change page
-                    parent_.changeMode(FM_MAINMENU);
+                    parent_.changeMode(FM_PARAMETER);
                     model()->loadModule(Kontrol::CS_LOCAL, rack->id(), module->id(), modType);
                 }
             } else {
@@ -938,7 +944,7 @@ bool Fates::init(void *arg) {
         deinit();
     }
     active_ = false;
-    static const auto MENU_TIMEOUT = 350;
+    static const auto MENU_TIMEOUT = 2000;
 
     menuTimeout_ = prefs.getInt("menu timeout", MENU_TIMEOUT);
 
@@ -1230,7 +1236,7 @@ void Fates::invertLine(unsigned line) {
 }
 
 void Fates::displayTitle(const std::string &module, const std::string &page) {
-    if(module.size() == 0 || page.size()==0) return;
+    //if(module.size() == 0 || page.size()==0) return;
     std::string title= module + " > " + page ;
     device_.clearText(0);
     device_.displayText(0,title);
