@@ -19,9 +19,9 @@ set(CMAKE_OSX_ARCHITECTURES "x86_64")
 
 if(NUI) 
 	set(DISABLE_NUI 0)
-else(FATES)
+else(NUI)
 	set(DISABLE_NUI 1)
-endif(FATES)
+endif(NUI)
 
 if(WIN32)
     message("windows support limited")

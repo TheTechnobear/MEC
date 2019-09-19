@@ -69,10 +69,10 @@ if (NOT DISABLE_NUI)
             devices/mec_nui.h
             devices/nui/nui_basemode.cpp
             devices/nui/nui_basemode.h
-            devices/nui/nui_param_1.cpp
-            devices/nui/nui_param_1.h
             devices/nui/nui_menu.cpp
             devices/nui/nui_menu.h
+            devices/nui/nui_param_1.cpp
+            devices/nui/nui_param_1.h
             )
     set(NUILITE_LIB nuilite)
 else()

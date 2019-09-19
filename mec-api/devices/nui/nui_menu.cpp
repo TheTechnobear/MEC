@@ -1,5 +1,8 @@
 #include "nui_menu.h"
 
+namespace mec {
+
+static const unsigned NUI_NUM_TEXTLINES = 5;
 
 //---- NuiMenuMode
 void NuiMenuMode::activate() {
@@ -477,3 +480,6 @@ void NuiModuleSelectMenu::clicked(unsigned idx) {
         }
     }
 }
+
+
+}//mec

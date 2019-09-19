@@ -1,5 +1,9 @@
 #pragma once
 
+#include "nui_basemode.h"
+
+namespace mec {
+
 
 class NuiMenuMode : public NuiBaseMode {
 public:
@@ -87,3 +91,7 @@ public:
     void activate() override;
     void clicked(unsigned idx) override;
 };
+
+
+
+} // mec

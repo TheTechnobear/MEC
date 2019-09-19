@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include "../mec_device.h"
 
 #include <KontrolModel.h>
@@ -14,11 +12,8 @@
 #include <NuiDevice.h>
 
 
-
 namespace mec {
 
-
-#include "nui/nui_menu.h"
 
 class NuiParamMode;
 class NuiListener;

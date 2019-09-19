@@ -1,5 +1,7 @@
 #include "nui_param_1.h"
 
+namespace mec {
+
 static const unsigned NUI_NUM_PARAMS = 4;
 
 
@@ -236,3 +238,8 @@ void NuiParamMode1::prevPage() {
         setCurrentPage(pagenum, true);
     }
 }
+
+
+
+
+} // mec

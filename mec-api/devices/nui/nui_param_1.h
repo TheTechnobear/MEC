@@ -1,10 +1,13 @@
 #pragma once
 
+#include "nui_basemode.h"
+
+namespace mec {
 
 
-class NuiParamMode : public NuiBaseMode  {
+class NuiParamMode1 : public NuiBaseMode  {
 public:
-    explicit NuiParamMode(Nui &p) : NuiBaseMode(p),  pageIdx_(-1) { ; }
+    explicit NuiParamMode1(Nui &p) : NuiBaseMode(p),  pageIdx_(-1) { ; }
 
     bool init() override { return true; };
     void activate() override;
@@ -46,3 +49,8 @@ private:
     int pageIdx_ = -1;
     Kontrol::EntityId pageId_;
 };
+
+
+
+
+} // mec

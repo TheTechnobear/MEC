@@ -5,9 +5,11 @@
 
 #include <mec_log.h>
 
-namespace mec {
+#include "nui/nui_basemode.h"
+#include "nui/nui_menu.h"
+#include "nui/nui_param_1.h"
 
-static const float MAX_POT_VALUE = 1.0F;
+namespace mec {
 
 const unsigned SCREEN_HEIGHT=64;
 const unsigned SCREEN_WIDTH=128;
@@ -37,9 +39,9 @@ bool Nui::init(void *arg) {
     static const auto MENU_TIMEOUT = 2000;
     menuTimeout_ = prefs.getInt("menu timeout", MENU_TIMEOUT);
     std::string res = prefs.getString("resource path", "/home/we/norns/resources");
-    if(!device_) return;
-
+    std::string splash = prefs.getString("splash", "./oracsplash4.png");
     device_=std::make_shared<NuiLite::NuiDevice>(res.c_str());
+    if(!device_) return false;
 
     unsigned parammode = prefs.getInt("param display",0);
 

@@ -1,5 +1,10 @@
 #pragma once
 
+
+#include "../mec_nui.h"
+
+namespace mec {
+
 static constexpr unsigned NUI_NUM_BUTTONS = 3;
 
 class NuiBaseMode : public NuiMode {
@@ -46,3 +51,4 @@ protected:
 };
 
 
+} //mec
