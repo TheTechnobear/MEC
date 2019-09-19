@@ -313,35 +313,56 @@ void Nui::clearDisplay() {
 
 void Nui::clearParamNum(unsigned num) {
     if(!device_) return;
-    device_->clearText(num);
-}
-
-
-std::string asDisplayString(const Kontrol::Parameter &param, unsigned width){
-    std::string pad;
-    std::string ret;
-    std::string value = param.displayValue();
-    std::string unit = std::string(param.displayUnit() + "  ").substr(0, 2);
-    const std::string &dName = param.displayName();
-    unsigned long fillc = width - (dName.length() + value.length() + 1 + unit.length());
-    for (; fillc > 0; fillc--) pad += " ";
-    ret = dName + pad + value + " " + unit;
-    if (ret.length() > width) ret = ret.substr(width - ret.length(), width);
-    return ret;
+//    device_->clearText(num);
+    
+    unsigned row,col;
+    switch(num) {
+	case 1 : row = 0, col=0; break;
+	case 2 : row = 1, col=0; break;
+	case 3 : row = 1, col=1; break;
+	case 4 : row = 0, col=1; break;
+        default : return;
+    }
+    unsigned x = col*64;
+    unsigned y1 = (row+1) * 20;
+    unsigned y2 = y1 + 10;
+    device_->clearRect(x,y1,62+(col*2),-10,0);
+    device_->clearRect(x,y2,62+(col*2) ,-10,0);
+    
 }
 
 
 void Nui::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl) {
-    //std::string disp = asDisplayString(param, NUI_NUM_TEXTCHARS);
-    //displayLine(num, disp.c_str());
     if(!device_) return;
     const std::string &dName = param.displayName();
     std::string value = param.displayValue();
     std::string unit = param.displayUnit();
+
+    /*
     device_->clearText(num);
     device_->displayText(num,0,dName.c_str());
     device_->displayText(num,17,value.c_str());
     device_->displayText(num,27,unit.c_str());
+    */
+    bool selected = false;
+    unsigned row,col;
+    switch(num) {
+	case 1 : row = 0, col=0; break;
+	case 2 : row = 1, col=0; break;
+	case 3 : row = 1, col=1; break;
+	case 4 : row = 0, col=1; break;
+        default : return;
+    }
+
+    unsigned x = col*64;
+    unsigned y1 = (row+1) * 20;
+    unsigned y2 = y1 + 10;
+    unsigned clr = selected ? 15: 0;
+    device_->clearRect(x,y1,62+(col*2),-10,5);
+    device_->drawText(x + 1,y1 -1,dName.c_str(),clr);
+    device_->clearRect(x,y2,62+(col*2) ,-10,0);
+    device_->drawText(x + 1,y2 -1,value,15);
+    device_->drawText(x + 1 + 40,y2 -1,unit,15);
 }
 
 void Nui::displayLine(unsigned line, const char *disp) {
@@ -359,8 +380,9 @@ void Nui::displayTitle(const std::string &module, const std::string &page) {
     if(!device_) return;
     if(module.size() == 0 || page.size()==0) return;
     std::string title= module + " > " + page ;
-    device_->clearText(0);
-    device_->displayText(0,title);
+
+    device_->clearRect(0,0, 128,10,1);
+    device_->drawText(0,8,title.c_str(),15);
 }
 
 
