@@ -17,6 +17,9 @@
 
 namespace mec {
 
+
+#include "nui/nui_menu.h"
+
 class NuiParamMode;
 class NuiListener;
 
@@ -122,7 +125,7 @@ private:
 
     std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack>& rack);
 
-    bool connect(const std::string& host, unsigned port);
+//    bool connect(const std::string& host, unsigned port);
 
 
     void stop() override;
@@ -131,7 +134,7 @@ private:
     static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
 
 
-    NuiLite::NuiDevice device_;
+    std::shared_ptr<NuiLite::NuiDevice> device_;
     bool active_;
 
     Kontrol::EntityId currentRackId_;
