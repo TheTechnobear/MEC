@@ -11,28 +11,28 @@
 #include <readerwriterqueue.h>
 #include <thread>
 
-#include <FatesDevice.h>
+#include <NuiDevice.h>
 
 
 
 namespace mec {
 
-class FatesParamMode;
-class FatesListener;
+class NuiParamMode;
+class NuiListener;
 
 
-enum FatesModes {
-    FM_PARAMETER,
-    FM_MAINMENU,
-    FM_PRESETMENU,
-    FM_MODULEMENU,
-    FM_MODULESELECTMENU
+enum NuiModes {
+    NM_PARAMETER,
+    NM_MAINMENU,
+    NM_PRESETMENU,
+    NM_MODULEMENU,
+    NM_MODULESELECTMENU
 };
 
-class FatesMode : public Kontrol::KontrolCallback {
+class NuiMode : public Kontrol::KontrolCallback {
 public:
-    FatesMode() { ; }
-    virtual ~FatesMode() { ; }
+    NuiMode() { ; }
+    virtual ~NuiMode() { ; }
 
     virtual bool init() = 0;
     virtual void poll() = 0;
@@ -44,10 +44,10 @@ public:
 };
 
 
-class Fates : public Device, public Kontrol::KontrolCallback {
+class Nui : public Device, public Kontrol::KontrolCallback {
 public:
-    Fates();
-    virtual ~Fates();
+    Nui();
+    virtual ~Nui();
 
     //mec::Device
     bool init(void*) override;
@@ -68,8 +68,8 @@ public:
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &, const std::string &) override;
     void savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
     void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
-    void addMode(FatesModes mode, std::shared_ptr<FatesMode>);
-    void changeMode(FatesModes);
+    void addMode(NuiModes mode, std::shared_ptr<NuiMode>);
+    void changeMode(NuiModes);
     void midiLearn(Kontrol::ChangeSource src, bool b) override;
     void modulationLearn(Kontrol::ChangeSource src, bool b) override;
 
@@ -118,7 +118,7 @@ private:
     void nextPage();
     void prevPage();
 
-    friend class FatesListener;
+    friend class NuiListener;
 
     std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack>& rack);
 
@@ -131,7 +131,7 @@ private:
     static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
 
 
-    FatesLite::FatesDevice device_;
+    NuiLite::NuiDevice device_;
     bool active_;
 
     Kontrol::EntityId currentRackId_;
@@ -141,16 +141,16 @@ private:
     bool midiLearnActive_;
     bool modulationLearnActive_;
 
-    FatesModes currentMode_;
-    std::map<FatesModes, std::shared_ptr<FatesMode>> modes_;
+    NuiModes currentMode_;
+    std::map<NuiModes, std::shared_ptr<NuiMode>> modes_;
     std::vector<std::string> moduleOrder_;
     unsigned menuTimeout_;
 
 };
 
-class FatesDeviceCallback : public FatesLite::FatesCallback {
+class NuiDeviceCallback : public NuiLite::NuiCallback {
 public:
-    FatesDeviceCallback(Fates & p) : parent_(p) {;}
+    NuiDeviceCallback(Nui & p) : parent_(p) {;}
 
     void onButton(unsigned id, unsigned value) override {
         parent_.onButton(id, value);
@@ -160,7 +160,7 @@ public:
     }
 
 private:
-    Fates& parent_;
+    Nui& parent_;
 };
 
 

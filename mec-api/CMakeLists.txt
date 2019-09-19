@@ -63,14 +63,14 @@ else()
     add_definitions(-DDISABLE_OSCDISPLAY=1)
 endif()
 
-if (NOT DISABLE_FATES)
-    set(FATES_SRC
-            devices/mec_fates.cpp
-            devices/mec_fates.h
+if (NOT DISABLE_NUI)
+	set(NUI_SRC
+            devices/mec_nui.cpp
+            devices/mec_nui.h
             )
-    set(FATESLITE_LIB fateslite)
+    set(NUILITE_LIB nuilite)
 else()
-    add_definitions(-DDISABLE_FATES=1)
+	add_definitions(-DDISABLE_NUI=1)
 endif()
 
 
@@ -102,7 +102,7 @@ set(MECAPI_SRC
         ${EIGENHARP_SRC}
         ${PUSH2_SRC}
         ${OSCDISPLAY_SRC}
-        ${FATES_SRC}
+	${NUI_SRC}
         )
 
 include_directories(
@@ -113,7 +113,7 @@ include_directories(
 
 add_library(mec-api SHARED ${MECAPI_SRC})
 
-set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB} ${FATESLITE_LIB})
+set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB} ${NUILITE_LIB})
 
 target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api cjson oscpack rtmidi portaudio moodycamel)
 set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)

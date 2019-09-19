@@ -7,6 +7,6 @@
 [submodule "external/EigenLite"]
 	path = external/EigenLite
 	url = https://github.com/thetechnobear/EigenLite
-[submodule "external/FatesLite"]
-	path = external/FatesLite
-	url = https://github.com/thetechnobear/FatesLite
+[submodule "external/NuiLite"]
+	path = external/NuiLite
+	url = https://github.com/thetechnobear/NuiLite

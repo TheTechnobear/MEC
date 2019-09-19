@@ -17,8 +17,8 @@
 #if !DISABLE_OSCDISPLAY
 #   include "devices/mec_oscdisplay.h"
 #endif
-#if !DISABLE_FATES
-#   include "devices/mec_fates.h"
+#if !DISABLE_NUI
+#   include "devices/mec_nui.h"
 #endif
 
 #include "devices/mec_mididevice.h"
@@ -361,21 +361,20 @@ void MecApi_Impl::initDevices() {
 #endif
 
 
-#if !DISABLE_FATES
-    if (prefs_->exists("fates")) {
-        LOG_1("fates initialise ");
-        std::shared_ptr<Fates> device = std::make_shared<Fates>();
-//        std::shared_ptr<OscDisplay> device = std::make_shared<OscDisplay>(*this);
-        Kontrol::KontrolModel::model()->addCallback("fates", device);
-        if (device->init(prefs_->getSubTree("fates"))) {
+#if !DISABLE_NUI
+    if (prefs_->exists("nui")) {
+        LOG_1("nui initialise ");
+        std::shared_ptr<Nui> device = std::make_shared<Nui>();
+        Kontrol::KontrolModel::model()->addCallback("nui", device);
+        if (device->init(prefs_->getSubTree("nui"))) {
             if (device->isActive()) {
                 devices_.push_back(device);
             } else {
-                LOG_1("fates init inactive ");
+                LOG_1("nui init inactive ");
                 device->deinit();
             }
         } else {
-            LOG_1("fates init failed ");
+            LOG_1("nui init failed ");
             device->deinit();
         }
     }

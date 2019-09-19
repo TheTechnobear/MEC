@@ -1,4 +1,4 @@
-#include "mec_fates.h"
+#include "mec_nui.h"
 
 #include <algorithm>
 #include <unordered_set>
@@ -12,15 +12,15 @@ static const float MAX_POT_VALUE = 1.0F;
 const unsigned SCREEN_HEIGHT=64;
 const unsigned SCREEN_WIDTH=128;
 
-static const unsigned FATES_NUM_TEXTLINES = 5;
-//static const unsigned FATES_NUM_TEXTCHARS = (128 / 4); = 32
-static const unsigned FATES_NUM_TEXTCHARS = 30;
-static const unsigned FATES_NUM_PARAMS = 4;
-static constexpr unsigned FATES_NUM_BUTTONS = 3;
+static const unsigned NUI_NUM_TEXTLINES = 5;
+//static const unsigned NUI_NUM_TEXTCHARS = (128 / 4); = 32
+static const unsigned NUI_NUM_TEXTCHARS = 30;
+static const unsigned NUI_NUM_PARAMS = 4;
+static constexpr unsigned NUI_NUM_BUTTONS = 3;
 
-class FatesBaseMode : public FatesMode {
+class NuiBaseMode : public NuiMode {
 public:
-    explicit FatesBaseMode(Fates &p) : parent_(p), popupTime_(-1) { ; }
+    explicit NuiBaseMode(Nui &p) : parent_(p), popupTime_(-1) { ; }
 
 
     // Kontrol
@@ -42,7 +42,7 @@ public:
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
-    // FatesDevice
+    // NuiDevice
     void onButton(unsigned id, unsigned value) override { buttonState_[id]=value;}
     void onEncoder(unsigned id, int value) override  { ; }
 
@@ -53,18 +53,18 @@ public:
     void activate() override { ; }
 
 protected:
-    Fates &parent_;
+    Nui &parent_;
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
 
     int popupTime_;
-    bool buttonState_[FATES_NUM_BUTTONS]= { false,false,false};
+    bool buttonState_[NUI_NUM_BUTTONS]= { false,false,false};
 };
 
 
-class FatesParamMode : public FatesBaseMode  {
+class NuiParamMode : public NuiBaseMode  {
 public:
-    explicit FatesParamMode(Fates &p) : FatesBaseMode(p),  pageIdx_(-1) { ; }
+    explicit NuiParamMode(Nui &p) : NuiBaseMode(p),  pageIdx_(-1) { ; }
 
     bool init() override { return true; };
     void activate() override;
@@ -110,9 +110,9 @@ private:
 
 
 
-class FatesMenuMode : public FatesBaseMode {
+class NuiMenuMode : public NuiBaseMode {
 public:
-    explicit FatesMenuMode(Fates &p) : FatesBaseMode(p), cur_(0), top_(0) { ; }
+    explicit NuiMenuMode(Nui &p) : NuiBaseMode(p), cur_(0), top_(0) { ; }
 
     virtual unsigned getSize() = 0;
     virtual std::string getItemText(unsigned idx) = 0;
@@ -141,9 +141,9 @@ protected:
 };
 
 
-class FatesFixedMenuMode : public FatesMenuMode {
+class NuiFixedMenuMode : public NuiMenuMode {
 public:
-    explicit FatesFixedMenuMode(Fates &p) : FatesMenuMode(p) { ; }
+    explicit NuiFixedMenuMode(Nui &p) : NuiMenuMode(p) { ; }
 
     unsigned getSize() override { return items_.size(); };
 
@@ -153,9 +153,9 @@ protected:
     std::vector<std::string> items_;
 };
 
-class FatesMainMenu : public FatesMenuMode {
+class NuiMainMenu : public NuiMenuMode {
 public:
-    explicit FatesMainMenu(Fates &p) : FatesMenuMode(p) { ; }
+    explicit NuiMainMenu(Nui &p) : NuiMenuMode(p) { ; }
 
     bool init() override;
     unsigned getSize() override;
@@ -164,9 +164,9 @@ public:
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
 };
 
-class FatesPresetMenu : public FatesMenuMode {
+class NuiPresetMenu : public NuiMenuMode {
 public:
-    explicit FatesPresetMenu(Fates &p) : FatesMenuMode(p) { ; }
+    explicit NuiPresetMenu(Nui &p) : NuiMenuMode(p) { ; }
 
     bool init() override;
     void activate() override;
@@ -178,9 +178,9 @@ private:
 };
 
 
-class FatesModuleMenu : public FatesFixedMenuMode {
+class NuiModuleMenu : public NuiFixedMenuMode {
 public:
-    explicit FatesModuleMenu(Fates &p) : FatesFixedMenuMode(p) { ; }
+    explicit NuiModuleMenu(Nui &p) : NuiFixedMenuMode(p) { ; }
 
     void activate() override;
     void clicked(unsigned idx) override;
@@ -189,24 +189,24 @@ private:
     std::string cat_;
 };
 
-class FatesModuleSelectMenu : public FatesFixedMenuMode {
+class NuiModuleSelectMenu : public NuiFixedMenuMode {
 public:
-    explicit FatesModuleSelectMenu(Fates &p) : FatesFixedMenuMode(p) { ; }
+    explicit NuiModuleSelectMenu(Nui &p) : NuiFixedMenuMode(p) { ; }
 
     void activate() override;
     void clicked(unsigned idx) override;
 };
 
-//------ FatesBaseMode
+//------ NuiBaseMode
 
-void FatesBaseMode::poll() {
+void NuiBaseMode::poll() {
     if (popupTime_ < 0) return;
     popupTime_--;
 }
 
-//------ FatesParamMode
+//------ NuiParamMode
 
-void FatesParamMode::display() {
+void NuiParamMode::display() {
     parent_.clearDisplay();
     auto rack = parent_.model()->getRack(parent_.currentRack());
     auto module = parent_.model()->getModule(rack, parent_.currentModule());
@@ -227,27 +227,27 @@ void FatesParamMode::display() {
             parent_.displayParamNum(j + 1, *param, true);
         }
         j++;
-        if (j == FATES_NUM_PARAMS) break;
+        if (j == NUI_NUM_PARAMS) break;
     }
 
-    for (; j < FATES_NUM_PARAMS; j++) {
+    for (; j < NUI_NUM_PARAMS; j++) {
         parent_.clearParamNum(j + 1);
     }
 }
 
 
-void FatesParamMode::activate() {
-    FatesBaseMode::activate();
+void NuiParamMode::activate() {
+    NuiBaseMode::activate();
     display();
 }
 
-void FatesParamMode::onButton(unsigned id, unsigned value) {
-    FatesBaseMode::onButton(id,value);
+void NuiParamMode::onButton(unsigned id, unsigned value) {
+    NuiBaseMode::onButton(id,value);
     switch (id) {
         case 0 : {
             if(!value) {
                 // on release of button
-                parent_.changeMode(FM_MAINMENU);
+                parent_.changeMode(NM_MAINMENU);
             }
             break;
         }
@@ -262,8 +262,8 @@ void FatesParamMode::onButton(unsigned id, unsigned value) {
     }
 }
 
-void FatesParamMode::onEncoder(unsigned idx, int v) {
-    FatesBaseMode::onEncoder(idx,v);
+void NuiParamMode::onEncoder(unsigned idx, int v) {
+    NuiBaseMode::onEncoder(idx,v);
     if(idx==2 && buttonState_[2]) {
         // if holding button 3. then turning encoder 3 changed page
         if(v>0) {
@@ -304,7 +304,7 @@ void FatesParamMode::onEncoder(unsigned idx, int v) {
 
 
 
-void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
+void NuiParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
     auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
 
     try {
@@ -339,7 +339,7 @@ void FatesParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 }
 
 
-void FatesParamMode::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module & module) {
+void NuiParamMode::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module & module) {
     if (rack.id() == parent_.currentRack()) {
         if(src!= Kontrol::CS_LOCAL &&  module.id() != parent_.currentModule()) {
             parent_.currentModule(module.id());
@@ -350,7 +350,7 @@ void FatesParamMode::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack
 }
 
 
-void FatesParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void NuiParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
                                   const Kontrol::Parameter &param) {
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
 
@@ -362,7 +362,7 @@ void FatesParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rac
 
 
     unsigned sz = params.size();
-    sz = sz < FATES_NUM_PARAMS ? sz : FATES_NUM_PARAMS;
+    sz = sz < NUI_NUM_PARAMS ? sz : NUI_NUM_PARAMS;
     for (unsigned int i = 0; i < sz; i++) {
         try {
             auto &p = params.at(i);
@@ -377,7 +377,7 @@ void FatesParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rac
     } // for
 }
 
-void FatesParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
+void NuiParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
                                  const Kontrol::Module &module) {
     if (moduleType_ != module.type()) {
         pageIdx_ = -1;
@@ -385,13 +385,13 @@ void FatesParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &r
     moduleType_ = module.type();
 }
 
-void FatesParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
+void NuiParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                                const Kontrol::Page &page) {
     if (pageIdx_ < 0) setCurrentPage(0, false);
 }
 
 
-void FatesParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
+void NuiParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
                                      const Kontrol::EntityId &moduleId, const std::string &modType) {
     if (parent_.currentModule() == moduleId) {
         if (moduleType_ != modType) {
@@ -401,12 +401,12 @@ void FatesParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rac
     }
 }
 
-void FatesParamMode::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void NuiParamMode::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
 	pageIdx_ = -1;
 	setCurrentPage(0,false);
 }
 
-void FatesParamMode::nextPage() {
+void NuiParamMode::nextPage() {
     if (pageIdx_ < 0) {
         setCurrentPage(0, false);
         return;
@@ -427,7 +427,7 @@ void FatesParamMode::nextPage() {
     }
 }
 
-void FatesParamMode::prevPage() {
+void NuiParamMode::prevPage() {
     if (pageIdx_ < 0) {
         setCurrentPage(0, false);
         return;
@@ -441,28 +441,28 @@ void FatesParamMode::prevPage() {
 }
 
 
-//---- FatesMenuMode
-void FatesMenuMode::activate() {
+//---- NuiMenuMode
+void NuiMenuMode::activate() {
     display();
     popupTime_ = parent_.menuTimeout();
 }
 
-void FatesMenuMode::poll() {
-    FatesBaseMode::poll();
+void NuiMenuMode::poll() {
+    NuiBaseMode::poll();
     if (popupTime_ == 0) {
-        parent_.changeMode(FM_PARAMETER);
+        parent_.changeMode(NM_PARAMETER);
         popupTime_ = -1;
     }
 }
 
-void FatesMenuMode::display() {
+void NuiMenuMode::display() {
     parent_.clearDisplay();
-    for (unsigned i = top_; i < top_ + FATES_NUM_TEXTLINES; i++) {
+    for (unsigned i = top_; i < top_ + NUI_NUM_TEXTLINES; i++) {
         displayItem(i);
     }
 }
 
-void FatesMenuMode::displayItem(unsigned i) {
+void NuiMenuMode::displayItem(unsigned i) {
     if (i < getSize()) {
         std::string item = getItemText(i);
         unsigned line = i - top_ + 1;
@@ -473,13 +473,13 @@ void FatesMenuMode::displayItem(unsigned i) {
     }
 }
 
-void FatesMenuMode::onButton(unsigned id, unsigned value) {
-    FatesBaseMode::onButton(id,value);
+void NuiMenuMode::onButton(unsigned id, unsigned value) {
+    NuiBaseMode::onButton(id,value);
     switch (id) {
         case 0 : {
             if(!value) {
                 // on release of button
-                parent_.changeMode(FM_PARAMETER);
+                parent_.changeMode(NM_PARAMETER);
             }
             break;
         }
@@ -497,7 +497,7 @@ void FatesMenuMode::onButton(unsigned id, unsigned value) {
     }
 }
 
-void FatesMenuMode::onEncoder(unsigned id, int value) {
+void NuiMenuMode::onEncoder(unsigned id, int value) {
     if(id==0) {
         if(value>0) {
             navNext();
@@ -509,7 +509,7 @@ void FatesMenuMode::onEncoder(unsigned id, int value) {
 }
 
 
-void FatesMenuMode::navPrev() {
+void NuiMenuMode::navPrev() {
     unsigned cur = cur_;
     if (cur_ > 0) {
         cur--;
@@ -518,23 +518,23 @@ void FatesMenuMode::navPrev() {
             top_ = cur;
             cur_ = cur;
             display();
-        } else if (cur >= top_ + FATES_NUM_TEXTLINES) {
-            top_ = cur - (FATES_NUM_TEXTLINES - 1);
+        } else if (cur >= top_ + NUI_NUM_TEXTLINES) {
+            top_ = cur - (NUI_NUM_TEXTLINES - 1);
             cur_ = cur;
             display();
         } else {
             line = cur_ - top_ + 1;
-            if (line <= FATES_NUM_TEXTLINES) parent_.invertLine(line);
+            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
             cur_ = cur;
             line = cur_ - top_ + 1;
-            if (line <= FATES_NUM_TEXTLINES) parent_.invertLine(line);
+            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
         }
     }
     popupTime_ = parent_.menuTimeout();
 }
 
 
-void FatesMenuMode::navNext() {
+void NuiMenuMode::navNext() {
     unsigned cur = cur_;
     cur++;
     cur = std::min(cur, getSize() - 1);
@@ -544,42 +544,42 @@ void FatesMenuMode::navNext() {
             top_ = cur;
             cur_ = cur;
             display();
-        } else if (cur >= top_ + FATES_NUM_TEXTLINES) {
-            top_ = cur - (FATES_NUM_TEXTLINES - 1);
+        } else if (cur >= top_ + NUI_NUM_TEXTLINES) {
+            top_ = cur - (NUI_NUM_TEXTLINES - 1);
             cur_ = cur;
             display();
         } else {
             line = cur_ - top_ + 1;
-            if (line <= FATES_NUM_TEXTLINES) parent_.invertLine(line);
+            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
             cur_ = cur;
             line = cur_ - top_ + 1;
-            if (line <= FATES_NUM_TEXTLINES) parent_.invertLine(line);
+            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
         }
     }
     popupTime_ = parent_.menuTimeout();
 }
 
 
-void FatesMenuMode::navActivate() {
+void NuiMenuMode::navActivate() {
     clicked(cur_);
 }
 
-void FatesMenuMode::savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void NuiMenuMode::savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
     display();
     KontrolCallback::savePreset(source, rack, preset);
 }
 
-void FatesMenuMode::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void NuiMenuMode::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
     display();
     KontrolCallback::loadPreset(source, rack, preset);
 }
 
-void FatesMenuMode::midiLearn(Kontrol::ChangeSource src, bool b) {
+void NuiMenuMode::midiLearn(Kontrol::ChangeSource src, bool b) {
     display();
     KontrolCallback::midiLearn(src, b);
 }
 
-void FatesMenuMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
+void NuiMenuMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
     display();
     KontrolCallback::modulationLearn(src, b);
 }
@@ -587,26 +587,26 @@ void FatesMenuMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
 
 /// main menu
 enum OscMainMenuItms {
-    FATES_MMI_MODULE,
-    FATES_MMI_PRESET,
-    FATES_MMI_MIDILEARN,
-    FATES_MMI_MODLEARN,
-    FATES_MMI_SAVE,
-    FATES_MMI_SIZE
+    NUI_MMI_MODULE,
+    NUI_MMI_PRESET,
+    NUI_MMI_MIDILEARN,
+    NUI_MMI_MODLEARN,
+    NUI_MMI_SAVE,
+    NUI_MMI_SIZE
 };
 
-bool FatesMainMenu::init() {
+bool NuiMainMenu::init() {
     return true;
 }
 
 
-unsigned FatesMainMenu::getSize() {
-    return (unsigned) FATES_MMI_SIZE;
+unsigned NuiMainMenu::getSize() {
+    return (unsigned) NUI_MMI_SIZE;
 }
 
-std::string FatesMainMenu::getItemText(unsigned idx) {
+std::string NuiMainMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case FATES_MMI_MODULE: {
+        case NUI_MMI_MODULE: {
             auto rack = model()->getRack(parent_.currentRack());
             auto module = model()->getModule(rack, parent_.currentModule());
             if (module == nullptr)
@@ -614,22 +614,22 @@ std::string FatesMainMenu::getItemText(unsigned idx) {
             else
                 return parent_.currentModule() + ":" + module->displayName();
         }
-        case FATES_MMI_PRESET: {
+        case NUI_MMI_PRESET: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 return rack->currentPreset();
             }
             return "No Preset";
         }
-        case FATES_MMI_SAVE:
+        case NUI_MMI_SAVE:
             return "Save";
-        case FATES_MMI_MIDILEARN: {
+        case NUI_MMI_MIDILEARN: {
             if (parent_.midiLearn()) {
                 return "Midi Learn        [X]";
             }
             return "Midi Learn        [ ]";
         }
-        case FATES_MMI_MODLEARN: {
+        case NUI_MMI_MODLEARN: {
             if (parent_.modulationLearn()) {
                 return "Mod Learn         [X]";
             }
@@ -642,36 +642,36 @@ std::string FatesMainMenu::getItemText(unsigned idx) {
 }
 
 
-void FatesMainMenu::clicked(unsigned idx) {
+void NuiMainMenu::clicked(unsigned idx) {
     switch (idx) {
-        case FATES_MMI_MODULE: {
-            parent_.changeMode(FM_MODULEMENU);
+        case NUI_MMI_MODULE: {
+            parent_.changeMode(NM_MODULEMENU);
             break;
         }
-        case FATES_MMI_PRESET: {
-            parent_.changeMode(FM_PRESETMENU);
+        case NUI_MMI_PRESET: {
+            parent_.changeMode(NM_PRESETMENU);
             break;
         }
-        case FATES_MMI_MIDILEARN: {
+        case NUI_MMI_MIDILEARN: {
             parent_.midiLearn(!parent_.midiLearn());
-            displayItem(FATES_MMI_MIDILEARN);
-            displayItem(FATES_MMI_MODLEARN);
-            // parent_.changeMode(FM_PARAMETER);
+            displayItem(NUI_MMI_MIDILEARN);
+            displayItem(NUI_MMI_MODLEARN);
+            // parent_.changeMode(NM_PARAMETER);
             break;
         }
-        case FATES_MMI_MODLEARN: {
+        case NUI_MMI_MODLEARN: {
             parent_.modulationLearn(!parent_.modulationLearn());
-            displayItem(FATES_MMI_MIDILEARN);
-            displayItem(FATES_MMI_MODLEARN);
-            // parent_.changeMode(FM_PARAMETER);
+            displayItem(NUI_MMI_MIDILEARN);
+            displayItem(NUI_MMI_MODLEARN);
+            // parent_.changeMode(NM_PARAMETER);
             break;
         }
-        case FATES_MMI_SAVE: {
+        case NUI_MMI_SAVE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 model()->saveSettings(Kontrol::CS_LOCAL, rack->id());
             }
-            parent_.changeMode(FM_PARAMETER);
+            parent_.changeMode(NM_PARAMETER);
             break;
         }
         default:
@@ -679,24 +679,24 @@ void FatesMainMenu::clicked(unsigned idx) {
     }
 }
 
-void FatesMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) {
+void NuiMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) {
     display();
 }
 
 // preset menu
 enum OscPresetMenuItms {
-    FATES_PMI_SAVE,
-    FATES_PMI_NEW,
-    FATES_PMI_SEP,
-    FATES_PMI_LAST
+    NUI_PMI_SAVE,
+    NUI_PMI_NEW,
+    NUI_PMI_SEP,
+    NUI_PMI_LAST
 };
 
 
-bool FatesPresetMenu::init() {
+bool NuiPresetMenu::init() {
     return true;
 }
 
-void FatesPresetMenu::activate() {
+void NuiPresetMenu::activate() {
     presets_.clear();
     auto rack = model()->getRack(parent_.currentRack());
     if (rack == nullptr) return;
@@ -710,55 +710,55 @@ void FatesPresetMenu::activate() {
         }
         idx++;
     }
-    FatesMenuMode::activate();
+    NuiMenuMode::activate();
 }
 
 
-unsigned FatesPresetMenu::getSize() {
-    return (unsigned) FATES_PMI_LAST + presets_.size();
+unsigned NuiPresetMenu::getSize() {
+    return (unsigned) NUI_PMI_LAST + presets_.size();
 }
 
-std::string FatesPresetMenu::getItemText(unsigned idx) {
+std::string NuiPresetMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case FATES_PMI_SAVE:
+        case NUI_PMI_SAVE:
             return "Save Preset";
-        case FATES_PMI_NEW:
+        case NUI_PMI_NEW:
             return "New Preset";
-        case FATES_PMI_SEP:
+        case NUI_PMI_SEP:
             return "--------------------";
         default:
-            return presets_[idx - FATES_PMI_LAST];
+            return presets_[idx - NUI_PMI_LAST];
     }
 }
 
 
-void FatesPresetMenu::clicked(unsigned idx) {
+void NuiPresetMenu::clicked(unsigned idx) {
     switch (idx) {
-        case FATES_PMI_SAVE: {
+        case NUI_PMI_SAVE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 rack->savePreset(rack->currentPreset());
             }
-            parent_.changeMode(FM_PARAMETER);
+            parent_.changeMode(NM_PARAMETER);
             break;
         }
-        case FATES_PMI_NEW: {
+        case NUI_PMI_NEW: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 std::string newPreset = "new-" + std::to_string(presets_.size());
                 model()->savePreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
-            parent_.changeMode(FM_PARAMETER);
+            parent_.changeMode(NM_PARAMETER);
             break;
         }
-        case FATES_PMI_SEP: {
+        case NUI_PMI_SEP: {
             break;
         }
         default: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
-                std::string newPreset = presets_[idx - FATES_PMI_LAST];
-                parent_.changeMode(FM_PARAMETER);
+                std::string newPreset = presets_[idx - NUI_PMI_LAST];
+                parent_.changeMode(NM_PARAMETER);
                 model()->loadPreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
             break;
@@ -767,7 +767,7 @@ void FatesPresetMenu::clicked(unsigned idx) {
 }
 
 
-void FatesModuleMenu::populateMenu(const std::string& catSel) {
+void NuiModuleMenu::populateMenu(const std::string& catSel) {
     auto rack = model()->getRack(parent_.currentRack());
     auto module = model()->getModule(rack, parent_.currentModule());
     if (module == nullptr) return;
@@ -833,7 +833,7 @@ void FatesModuleMenu::populateMenu(const std::string& catSel) {
 
 
 
-void FatesModuleMenu::activate() {
+void NuiModuleMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
     auto module = model()->getModule(rack, parent_.currentModule());
     if (module == nullptr) return;
@@ -848,11 +848,11 @@ void FatesModuleMenu::activate() {
     }
 
     populateMenu(cat_);
-    FatesFixedMenuMode::activate();
+    NuiFixedMenuMode::activate();
 }
 
 
-void FatesModuleMenu::clicked(unsigned idx) {
+void NuiModuleMenu::clicked(unsigned idx) {
     if (idx < getSize()) {
         auto modtype = items_[idx];
         if (modtype == "..") {
@@ -869,7 +869,6 @@ void FatesModuleMenu::clicked(unsigned idx) {
                 auto module = model()->getModule(rack, parent_.currentModule());
                 if (modType != module->type()) {
                     //FIXME, workaround since changing the module needs to tell params to change page
-                    parent_.changeMode(FM_PARAMETER);
                     model()->loadModule(Kontrol::CS_LOCAL, rack->id(), module->id(), modType);
                 }
             } else {
@@ -880,11 +879,11 @@ void FatesModuleMenu::clicked(unsigned idx) {
             }
         }
     }
-    parent_.changeMode(FM_MAINMENU);
+    parent_.changeMode(NM_PARAMETER);
 }
 
 
-void FatesModuleSelectMenu::activate() {
+void NuiModuleSelectMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
     auto cmodule = model()->getModule(rack, parent_.currentModule());
     if (cmodule == nullptr) return;
@@ -899,12 +898,12 @@ void FatesModuleSelectMenu::activate() {
         }
         idx++;
     }
-    FatesFixedMenuMode::activate();
+    NuiFixedMenuMode::activate();
 }
 
 
-void FatesModuleSelectMenu::clicked(unsigned idx) {
-    parent_.changeMode(FM_MAINMENU);
+void NuiModuleSelectMenu::clicked(unsigned idx) {
+    parent_.changeMode(NM_MAINMENU);
     if (idx < getSize()) {
         unsigned moduleIdx = idx;
         auto rack = parent_.model()->getRack(parent_.currentRack());
@@ -920,27 +919,27 @@ void FatesModuleSelectMenu::clicked(unsigned idx) {
 }
 
 
-Fates::Fates() :
+Nui::Nui() :
         active_(false),
         modulationLearnActive_(false),
         midiLearnActive_(false) {
 }
 
-Fates::~Fates() {
+Nui::~Nui() {
     deinit();
 }
 
 
 //mec::Device
 
-bool Fates::init(void *arg) {
+bool Nui::init(void *arg) {
     Preferences prefs(arg);
-    std::shared_ptr<FatesLite::FatesCallback> cb=std::make_shared<FatesDeviceCallback>(*this);
+    std::shared_ptr<NuiLite::NuiCallback> cb=std::make_shared<NuiDeviceCallback>(*this);
     device_.addCallback(cb);
     device_.start();
 
     if (active_) {
-        LOG_2("Fates::init - already active deinit");
+        LOG_2("Nui::init - already active deinit");
         deinit();
     }
     active_ = false;
@@ -953,41 +952,41 @@ bool Fates::init(void *arg) {
     active_ = true;
     if (active_) {
         // add modes before KD init
-        addMode(FM_PARAMETER, std::make_shared<FatesParamMode>(*this));
-        addMode(FM_MAINMENU, std::make_shared<FatesMainMenu>(*this));
-        addMode(FM_PRESETMENU, std::make_shared<FatesPresetMenu>(*this));
-        addMode(FM_MODULEMENU, std::make_shared<FatesModuleMenu>(*this));
-        addMode(FM_MODULESELECTMENU, std::make_shared<FatesModuleSelectMenu>(*this));
+        addMode(NM_PARAMETER, std::make_shared<NuiParamMode>(*this));
+        addMode(NM_MAINMENU, std::make_shared<NuiMainMenu>(*this));
+        addMode(NM_PRESETMENU, std::make_shared<NuiPresetMenu>(*this));
+        addMode(NM_MODULEMENU, std::make_shared<NuiModuleMenu>(*this));
+        addMode(NM_MODULESELECTMENU, std::make_shared<NuiModuleSelectMenu>(*this));
 
-        changeMode(FM_PARAMETER);
+        changeMode(NM_PARAMETER);
     }
     device_.drawPNG(0,0,"./oracsplash4.png");
     device_.displayText(0,"Connecting to ORAC...");
     return active_;
 }
 
-void Fates::deinit() {
+void Nui::deinit() {
     device_.stop();
     active_ = false;
     return;
 }
 
-bool Fates::isActive() {
+bool Nui::isActive() {
     return active_;
 }
 
 // Kontrol::KontrolCallback
-bool Fates::process() {
+bool Nui::process() {
     modes_[currentMode_]->poll();
     device_.process();
     return true;
 }
 
-void Fates::stop() {
+void Nui::stop() {
     deinit();
 }
 
-bool Fates::connect(const std::string &hostname, unsigned port) {
+bool Nui::connect(const std::string &hostname, unsigned port) {
     clearDisplay();
 
     // send out current module and page
@@ -1000,7 +999,7 @@ bool Fates::connect(const std::string &hostname, unsigned port) {
     if (page) pd = page->displayName();
     displayTitle(md, pd);
 
-    changeMode(FatesModes::FM_PARAMETER);
+    changeMode(NuiModes::NM_PARAMETER);
     modes_[currentMode_]->activate();
 
 
@@ -1009,21 +1008,21 @@ bool Fates::connect(const std::string &hostname, unsigned port) {
 
 
 //--modes and forwarding
-void Fates::addMode(FatesModes mode, std::shared_ptr<FatesMode> m) {
+void Nui::addMode(NuiModes mode, std::shared_ptr<NuiMode> m) {
     modes_[mode] = m;
 }
 
-void Fates::changeMode(FatesModes mode) {
+void Nui::changeMode(NuiModes mode) {
     currentMode_ = mode;
     auto m = modes_[mode];
     m->activate();
 }
 
-void Fates::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
+void Nui::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     modes_[currentMode_]->rack(src, rack);
 }
 
-void Fates::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+void Nui::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
     if (currentModuleId_.empty()) {
         currentRackId_ = rack.id();
         currentModule(module.id());
@@ -1032,22 +1031,22 @@ void Fates::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const K
     modes_[currentMode_]->module(src, rack, module);
 }
 
-void Fates::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+void Nui::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                       const Kontrol::Module &module, const Kontrol::Page &page) {
     modes_[currentMode_]->page(src, rack, module, page);
 }
 
-void Fates::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+void Nui::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                        const Kontrol::Module &module, const Kontrol::Parameter &param) {
     modes_[currentMode_]->param(src, rack, module, param);
 }
 
-void Fates::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+void Nui::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                          const Kontrol::Module &module, const Kontrol::Parameter &param) {
     modes_[currentMode_]->changed(src, rack, module, param);
 }
 
-void Fates::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+void Nui::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                           const std::string &res, const std::string &value) {
     modes_[currentMode_]->resource(src, rack, res, value);
 
@@ -1072,21 +1071,21 @@ void Fates::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
     }
 }
 
-void Fates::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
+void Nui::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     modes_[currentMode_]->deleteRack(src, rack);
 }
 
-void Fates::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+void Nui::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                               const Kontrol::Module &module) {
     modes_[currentMode_]->activeModule(src, rack, module);
 }
 
-void Fates::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+void Nui::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                             const Kontrol::EntityId &modId, const std::string &modType) {
     modes_[currentMode_]->loadModule(src, rack, modId, modType);
 }
 
-std::vector<std::shared_ptr<Kontrol::Module>> Fates::getModules(const std::shared_ptr<Kontrol::Rack>& pRack) {
+std::vector<std::shared_ptr<Kontrol::Module>> Nui::getModules(const std::shared_ptr<Kontrol::Rack>& pRack) {
     std::vector<std::shared_ptr<Kontrol::Module>> ret;
     auto modulelist = model()->getModules(pRack);
     std::unordered_set<std::string> done;
@@ -1109,7 +1108,7 @@ std::vector<std::shared_ptr<Kontrol::Module>> Fates::getModules(const std::share
 }
 
 
-void Fates::nextModule() {
+void Nui::nextModule() {
     auto rack = model()->getRack(currentRack());
     auto modules = getModules(rack);
     bool found = false;
@@ -1125,7 +1124,7 @@ void Fates::nextModule() {
     }
 }
 
-void Fates::prevModule() {
+void Nui::prevModule() {
     auto rack = model()->getRack(currentRack());
     auto modules = getModules(rack);
     Kontrol::EntityId prevId;
@@ -1140,50 +1139,50 @@ void Fates::prevModule() {
     }
 }
 
-void Fates::midiLearn(Kontrol::ChangeSource src, bool b) {
+void Nui::midiLearn(Kontrol::ChangeSource src, bool b) {
     if(b) modulationLearnActive_ = false;
     midiLearnActive_ = b;
     modes_[currentMode_]->midiLearn(src, b);
 
 }
 
-void Fates::modulationLearn(Kontrol::ChangeSource src, bool b) {
+void Nui::modulationLearn(Kontrol::ChangeSource src, bool b) {
     if(b) midiLearnActive_ = false;
     modulationLearnActive_ = b;
     modes_[currentMode_]->modulationLearn(src, b);
 }
 
-void Fates::savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void Nui::savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
     modes_[currentMode_]->savePreset(source, rack, preset);
 }
 
-void Fates::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void Nui::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
     modes_[currentMode_]->loadPreset(source, rack, preset);
 }
 
 
-void Fates::onButton(unsigned id, unsigned value) {
+void Nui::onButton(unsigned id, unsigned value) {
     modes_[currentMode_]->onButton(id,value);
 
 }
-void Fates::onEncoder(unsigned id, int value) {
+void Nui::onEncoder(unsigned id, int value) {
     modes_[currentMode_]->onEncoder(id,value);
 }
 
 
 
-void Fates::midiLearn(bool b) {
+void Nui::midiLearn(bool b) {
     model()->midiLearn(Kontrol::CS_LOCAL, b);
 }
 
-void Fates::modulationLearn(bool b) {
+void Nui::modulationLearn(bool b) {
     model()->modulationLearn(Kontrol::CS_LOCAL, b);
 }
 
 
 //--- display functions
 
-void Fates::displayPopup(const std::string &text, bool) {
+void Nui::displayPopup(const std::string &text, bool) {
     // temp
     std::string txt="|      ";
     txt=txt+ "     |";
@@ -1194,11 +1193,11 @@ void Fates::displayPopup(const std::string &text, bool) {
 
 
 
-void Fates::clearDisplay() {
+void Nui::clearDisplay() {
     device_.displayClear();
 }
 
-void Fates::clearParamNum(unsigned num) {
+void Nui::clearParamNum(unsigned num) {
     device_.clearText(num);
 }
 
@@ -1217,8 +1216,8 @@ std::string asDisplayString(const Kontrol::Parameter &param, unsigned width){
 }
 
 
-void Fates::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl) {
-    //std::string disp = asDisplayString(param, FATES_NUM_TEXTCHARS);
+void Nui::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl) {
+    //std::string disp = asDisplayString(param, NUI_NUM_TEXTCHARS);
     //displayLine(num, disp.c_str());
     const std::string &dName = param.displayName();
     std::string value = param.displayValue();
@@ -1229,16 +1228,16 @@ void Fates::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool 
     device_.displayText(num,27,unit.c_str());
 }
 
-void Fates::displayLine(unsigned line, const char *disp) {
+void Nui::displayLine(unsigned line, const char *disp) {
     device_.clearText(line);
     device_.displayText(line,disp);
 }
 
-void Fates::invertLine(unsigned line) {
+void Nui::invertLine(unsigned line) {
     device_.invertText(line);
 }
 
-void Fates::displayTitle(const std::string &module, const std::string &page) {
+void Nui::displayTitle(const std::string &module, const std::string &page) {
     if(module.size() == 0 || page.size()==0) return;
     std::string title= module + " > " + page ;
     device_.clearText(0);
@@ -1246,7 +1245,7 @@ void Fates::displayTitle(const std::string &module, const std::string &page) {
 }
 
 
-void Fates::currentModule(const Kontrol::EntityId &modId) {
+void Nui::currentModule(const Kontrol::EntityId &modId) {
     currentModuleId_ = modId;
     model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
 }
