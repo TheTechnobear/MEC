@@ -946,6 +946,7 @@ bool Fates::init(void *arg) {
     active_ = false;
     static const auto MENU_TIMEOUT = 2000;
 
+    // TOODO - prefs : font directory, slashscreen
     menuTimeout_ = prefs.getInt("menu timeout", MENU_TIMEOUT);
 
 
@@ -960,6 +961,8 @@ bool Fates::init(void *arg) {
 
         changeMode(FM_PARAMETER);
     }
+    device_.drawPNG(0,0,"./oracsplash4.png");
+    device_.displayText(0,"Connecting to ORAC...");
     return active_;
 }
 
@@ -1236,7 +1239,7 @@ void Fates::invertLine(unsigned line) {
 }
 
 void Fates::displayTitle(const std::string &module, const std::string &page) {
-    //if(module.size() == 0 || page.size()==0) return;
+    if(module.size() == 0 || page.size()==0) return;
     std::string title= module + " > " + page ;
     device_.clearText(0);
     device_.displayText(0,title);
