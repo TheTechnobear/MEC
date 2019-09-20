@@ -39,10 +39,11 @@ public:
     void nextPage();
     void prevPage();
 
+protected:
+    virtual void setCurrentPage(unsigned pageIdx, bool UI);
+    virtual void displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local);
 
-
-private:
-    void setCurrentPage(unsigned pageIdx, bool UI);
+    void changeParam(unsigned idx, int relValue);
     void display();
 
     std::string moduleType_;

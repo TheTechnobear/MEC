@@ -8,6 +8,7 @@
 #include "nui/nui_basemode.h"
 #include "nui/nui_menu.h"
 #include "nui/nui_param_1.h"
+#include "nui/nui_param_2.h"
 
 namespace mec {
 
@@ -59,12 +60,13 @@ bool Nui::init(void *arg) {
 
     active_ = true;
     if (active_) {
-        switch(parammode) {
-            case 0:
-            default:
-                addMode(NM_PARAMETER, std::make_shared<NuiParamMode1>(*this));
-                break;
+        if(parammode==1 || device_->numEncoders()==3) {
+            addMode(NM_PARAMETER, std::make_shared<NuiParamMode2>(*this));
+
+        } else {
+            addMode(NM_PARAMETER, std::make_shared<NuiParamMode1>(*this));
         }
+
         addMode(NM_MAINMENU, std::make_shared<NuiMainMenu>(*this));
         addMode(NM_PRESETMENU, std::make_shared<NuiPresetMenu>(*this));
         addMode(NM_MODULEMENU, std::make_shared<NuiModuleMenu>(*this));
@@ -296,12 +298,7 @@ void Nui::modulationLearn(bool b) {
 //--- display functions
 
 void Nui::displayPopup(const std::string &text, bool) {
-    // temp
-    std::string txt="|      ";
-    txt=txt+ "     |";
-    displayLine(1, "----------------------------------");
-    displayLine(2, "|");
-    displayLine(3, "----------------------------------");
+    // not used currently
 }
 
 
@@ -313,8 +310,7 @@ void Nui::clearDisplay() {
 
 void Nui::clearParamNum(unsigned num) {
     if(!device_) return;
-//    device_->clearText(num);
-    
+
     unsigned row,col;
     switch(num) {
 	case 1 : row = 0, col=0; break;
@@ -332,19 +328,12 @@ void Nui::clearParamNum(unsigned num) {
 }
 
 
-void Nui::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl) {
+void Nui::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl, bool selected) {
     if(!device_) return;
     const std::string &dName = param.displayName();
     std::string value = param.displayValue();
     std::string unit = param.displayUnit();
 
-    /*
-    device_->clearText(num);
-    device_->displayText(num,0,dName.c_str());
-    device_->displayText(num,17,value.c_str());
-    device_->displayText(num,27,unit.c_str());
-    */
-    bool selected = false;
     unsigned row,col;
     switch(num) {
 	case 1 : row = 0, col=0; break;

@@ -5,6 +5,8 @@ namespace mec {
 static const unsigned NUI_NUM_PARAMS = 4;
 
 
+
+
 void NuiParamMode1::display() {
     parent_.clearDisplay();
     auto rack = parent_.model()->getRack(parent_.currentRack());
@@ -23,7 +25,7 @@ void NuiParamMode1::display() {
     unsigned int j = 0;
     for (auto param : params) {
         if (param != nullptr) {
-            parent_.displayParamNum(j + 1, *param, true);
+            displayParamNum(j + 1, *param, true);
         }
         j++;
         if (j == NUI_NUM_PARAMS) break;
@@ -61,6 +63,32 @@ void NuiParamMode1::onButton(unsigned id, unsigned value) {
     }
 }
 
+void NuiParamMode1::displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local) {
+    parent_.displayParamNum(j + 1, *param, true, false);
+}
+
+void NuiParamMode1::changeParam(unsigned idx, int relValue) {
+    try {
+        auto pRack = model()->getRack(parent_.currentRack());
+        auto pModule = model()->getModule(pRack, parent_.currentModule());
+        auto pPage = model()->getPage(pModule, parent_.currentPage());
+        auto pParams = model()->getParams(pModule, pPage);
+
+        if (idx >= pParams.size()) return;
+
+        auto &param = pParams[idx];
+        if (param != nullptr) {
+            const float steps = 128.0f;
+            float value = float(v) / steps;
+            Kontrol::ParamValue calc = param->calcRelative(value);
+            //std::cerr << "changeParam " << idx << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
+            model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
+        }
+    } catch (std::out_of_range) {
+    }
+}
+
+
 void NuiParamMode1::onEncoder(unsigned idx, int v) {
     NuiBaseMode::onEncoder(idx,v);
     if(idx==2 && buttonState_[2]) {
@@ -79,33 +107,13 @@ void NuiParamMode1::onEncoder(unsigned idx, int v) {
             parent_.prevModule();
         }
     } else {
-        try {
-            auto pRack = model()->getRack(parent_.currentRack());
-            auto pModule = model()->getModule(pRack, parent_.currentModule());
-            auto pPage = model()->getPage(pModule, parent_.currentPage());
-            auto pParams = model()->getParams(pModule, pPage);
-
-            if (idx >= pParams.size()) return;
-
-            auto &param = pParams[idx];
-            // auto page = pages_[currentPage_]
-            if (param != nullptr) {
-                const float steps = 128.0f;
-                float value = float(v) / steps;
-                Kontrol::ParamValue calc = param->calcRelative(value);
-                //std::cerr << "onEncoder " << idx << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
-                model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
-            }
-        } catch (std::out_of_range) {
-        }
+        changeParam(idx,value);
     }
 }
 
 
 
 void NuiParamMode1::setCurrentPage(unsigned pageIdx, bool UI) {
-    auto module = model()->getModule(model()->getRack(parent_.currentRack()), parent_.currentModule());
-
     try {
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto module = parent_.model()->getModule(rack, parent_.currentModule());

@@ -74,7 +74,7 @@ public:
     void changePot(unsigned pot, float value);
 
     void displayPopup(const std::string &text, bool);
-    void displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local);
+    void displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local, bool selected);
     void clearParamNum(unsigned num);
     void displayLine(unsigned line, const char *);
     void invertLine(unsigned line);
