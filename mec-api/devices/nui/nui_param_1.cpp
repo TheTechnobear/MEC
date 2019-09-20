@@ -64,7 +64,7 @@ void NuiParamMode1::onButton(unsigned id, unsigned value) {
 }
 
 void NuiParamMode1::displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local) {
-    parent_.displayParamNum(j + 1, *param, true, false);
+    parent_.displayParamNum(num,p, local,false);
 }
 
 void NuiParamMode1::changeParam(unsigned idx, int relValue) {
@@ -79,7 +79,7 @@ void NuiParamMode1::changeParam(unsigned idx, int relValue) {
         auto &param = pParams[idx];
         if (param != nullptr) {
             const float steps = 128.0f;
-            float value = float(v) / steps;
+            float value = float(relValue) / steps;
             Kontrol::ParamValue calc = param->calcRelative(value);
             //std::cerr << "changeParam " << idx << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
             model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), pModule->id(), param->id(), calc);
@@ -107,7 +107,7 @@ void NuiParamMode1::onEncoder(unsigned idx, int v) {
             parent_.prevModule();
         }
     } else {
-        changeParam(idx,value);
+        changeParam(idx,v);
     }
 }
 
@@ -175,7 +175,7 @@ void NuiParamMode1::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack
             auto &p = params.at(i);
             if (p->id() == param.id()) {
                 p->change(param.current(), src == Kontrol::CS_PRESET);
-                parent_.displayParamNum(i + 1, param, src != Kontrol::CS_LOCAL);
+                displayParamNum(i + 1, param, src != Kontrol::CS_LOCAL);
                 return;
             }
         } catch (std::out_of_range) {

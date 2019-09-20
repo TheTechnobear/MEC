@@ -1,15 +1,20 @@
 #include "nui_param_2.h"
 
+#include <iostream>
 
-void NuiParamMode2::activate() {
-    NuiParamMode1::activate();
-}
+namespace mec {
 
 static unsigned parameterOrder[]={1,4,2,3};
+
+bool NuiParamMode2::init() {
+	selectedParamIdx_=0;
+	return NuiParamMode1::init();
+}
+
 void NuiParamMode2::onEncoder(unsigned id, int value) {
     if(buttonState_[2]) {
         // change module/page functionality
-        NuiParamMode1::onEncoder();
+        NuiParamMode1::onEncoder(id,value);
     } else {
         switch(id) {
             case 0: {
@@ -20,23 +25,25 @@ void NuiParamMode2::onEncoder(unsigned id, int value) {
                 auto module = parent_.model()->getModule(rack, parent_.currentModule());
                 auto page = parent_.model()->getPage(module, pageId_);
                 auto params = parent_.model()->getParams(module,page);
-                if(params) {
-                    if(value) {
-                        selectedParamIdx_++;
-                        if(selectedParamIdx_>= params.size()) {
-                            selectedParamIdx_ = 1;
-                        }
-                    } else {
-                        selectedParamIdx_--;
-                        if(selectedParamIdx_< 1)) {
-                            selectedParamIdx_ = params.size();
-                        }
-                    }
+	        std::cerr << "s idx 1 << " << selectedParamIdx_ <<  "  : " << params.size() << " , " << value << std::endl;
+                if(value>0) {
+                     selectedParamIdx_++;
+                     if(selectedParamIdx_>= params.size() || selectedParamIdx_>3) {
+                         selectedParamIdx_ = 0;
+                     }
+                } else {
+                     if(selectedParamIdx_ > 0){
+                     	selectedParamIdx_--;
+		     } else {
+                         selectedParamIdx_ = params.size()-1;
+                     }
                 }
+	        std::cerr << "s idx 2 << " << selectedParamIdx_ <<  "  : " << params.size() << " , " << value << std::endl;
+		display();
                 break;
             }
             case 2: {
-                changeParam(parameterOrder[selectedParamIdx_],value);
+                changeParam(parameterOrder[selectedParamIdx_]-1,value);
                 break;
             }
             default:
@@ -52,15 +59,19 @@ void NuiParamMode2:: setCurrentPage(unsigned pageIdx, bool UI) {
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto module = parent_.model()->getModule(rack, parent_.currentModule());
         //auto page = parent_.model()->getPage(module, pageId_);
+
+	if(module==nullptr) return;
         auto pages = parent_.model()->getPages(module);
 
         if (pageIdx_ != pageIdx) {
             if (pageIdx < pages.size()) {
                 try {
-                    auto page = pages[pageIdx_];
+                    auto page = pages[pageIdx];
+		    if(page==nullptr) return; 
+
                     auto params = parent_.model()->getParams(module,page);
-                    if(selectedParamIdx_> params.size()) {
-                        selectedParamIdx_ = 1;
+                    if(selectedParamIdx_>= params.size() || selectedParamIdx_>3) {
+                        selectedParamIdx_ = 0;
                     }
                 } catch (std::out_of_range) { ;
                 }
@@ -70,9 +81,13 @@ void NuiParamMode2:: setCurrentPage(unsigned pageIdx, bool UI) {
     } catch (std::out_of_range) { ;
     }
 
+    // dont use pageIdx_ prior to this, since it might be -1
     return NuiParamMode1::setCurrentPage(pageIdx, UI);
 }
 
-void NuiParamMode1::displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local) {
-    parent_.displayParamNum(j + 1, *param, true, num == parameterOrder[selectedParamIdx_]);
+void NuiParamMode2::displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local) {
+    parent_.displayParamNum(num,p,local, num == parameterOrder[selectedParamIdx_]);
 }
+
+
+} // mec

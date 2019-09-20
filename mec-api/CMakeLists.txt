@@ -73,6 +73,8 @@ if (NOT DISABLE_NUI)
             devices/nui/nui_menu.h
             devices/nui/nui_param_1.cpp
             devices/nui/nui_param_1.h
+            devices/nui/nui_param_2.cpp
+            devices/nui/nui_param_2.h
             )
     set(NUILITE_LIB nuilite)
 else()
