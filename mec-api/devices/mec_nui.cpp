@@ -73,7 +73,7 @@ bool Nui::init(void *arg) {
         changeMode(NM_PARAMETER);
     }
     device_->drawPNG(0, 0, splash.c_str());
-    device_->displayText(0, "Connecting to ORAC...");
+    device_->displayText(0,1,"Connecting...");
     return active_;
 }
 
