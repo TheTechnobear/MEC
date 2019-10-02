@@ -1,10 +1,8 @@
 #include "nui_param_2.h"
 
-#include <iostream>
+//#include <iostream>
 
 namespace mec {
-
-static unsigned parameterOrder[]={1,4,2,3};
 
 bool NuiParamMode2::init() {
 	selectedParamIdx_=0;
@@ -25,7 +23,6 @@ void NuiParamMode2::onEncoder(unsigned id, int value) {
                 auto module = parent_.model()->getModule(rack, parent_.currentModule());
                 auto page = parent_.model()->getPage(module, pageId_);
                 auto params = parent_.model()->getParams(module,page);
-	        std::cerr << "s idx 1 << " << selectedParamIdx_ <<  "  : " << params.size() << " , " << value << std::endl;
                 if(value>0) {
                      selectedParamIdx_++;
                      if(selectedParamIdx_>= params.size() || selectedParamIdx_>3) {
@@ -38,12 +35,11 @@ void NuiParamMode2::onEncoder(unsigned id, int value) {
                          selectedParamIdx_ = params.size()-1;
                      }
                 }
-	        std::cerr << "s idx 2 << " << selectedParamIdx_ <<  "  : " << params.size() << " , " << value << std::endl;
 		display();
                 break;
             }
             case 2: {
-                changeParam(parameterOrder[selectedParamIdx_]-1,value);
+                changeParam(selectedParamIdx_,value);
                 break;
             }
             default:
@@ -86,7 +82,7 @@ void NuiParamMode2:: setCurrentPage(unsigned pageIdx, bool UI) {
 }
 
 void NuiParamMode2::displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local) {
-    parent_.displayParamNum(num,p,local, num == parameterOrder[selectedParamIdx_]);
+    parent_.displayParamNum(num,p,local, num == selectedParamIdx_);
 }
 
 

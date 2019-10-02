@@ -313,10 +313,10 @@ void Nui::clearParamNum(unsigned num) {
 
     unsigned row,col;
     switch(num) {
-	case 1 : row = 0, col=0; break;
+	case 0 : row = 0, col=0; break;
+	case 1 : row = 0, col=1; break;
 	case 2 : row = 1, col=0; break;
 	case 3 : row = 1, col=1; break;
-	case 4 : row = 0, col=1; break;
         default : return;
     }
     unsigned x = col*64;
@@ -336,10 +336,10 @@ void Nui::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool di
 
     unsigned row,col;
     switch(num) {
-	case 1 : row = 0, col=0; break;
+	case 0 : row = 0, col=0; break;
+	case 1 : row = 0, col=1; break;
 	case 2 : row = 1, col=0; break;
 	case 3 : row = 1, col=1; break;
-	case 4 : row = 0, col=1; break;
         default : return;
     }
 

@@ -1,9 +1,12 @@
 #include "nui_param_1.h"
 
+//#include <iostream>
 namespace mec {
 
 static const unsigned NUI_NUM_PARAMS = 4;
 
+
+static unsigned param1EncoderMap[] = {0,2,3,1};
 
 
 
@@ -25,14 +28,14 @@ void NuiParamMode1::display() {
     unsigned int j = 0;
     for (auto param : params) {
         if (param != nullptr) {
-            displayParamNum(j + 1, *param, true);
+            displayParamNum(j, *param, true);
         }
         j++;
         if (j == NUI_NUM_PARAMS) break;
     }
 
     for (; j < NUI_NUM_PARAMS; j++) {
-        parent_.clearParamNum(j + 1);
+        parent_.clearParamNum(j);
     }
 }
 
@@ -74,9 +77,11 @@ void NuiParamMode1::changeParam(unsigned idx, int relValue) {
         auto pPage = model()->getPage(pModule, parent_.currentPage());
         auto pParams = model()->getParams(pModule, pPage);
 
-        if (idx >= pParams.size()) return;
+       
 
+        if (idx >= pParams.size()) return;
         auto &param = pParams[idx];
+
         if (param != nullptr) {
             const float steps = 128.0f;
             float value = float(relValue) / steps;
@@ -107,7 +112,9 @@ void NuiParamMode1::onEncoder(unsigned idx, int v) {
             parent_.prevModule();
         }
     } else {
-        changeParam(idx,v);
+	if (idx >= sizeof(idx)) return;
+        auto paramIdx = param1EncoderMap[idx];
+        changeParam(paramIdx,v);
     }
 }
 
@@ -175,7 +182,7 @@ void NuiParamMode1::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack
             auto &p = params.at(i);
             if (p->id() == param.id()) {
                 p->change(param.current(), src == Kontrol::CS_PRESET);
-                displayParamNum(i + 1, param, src != Kontrol::CS_LOCAL);
+                displayParamNum(i, param, src != Kontrol::CS_LOCAL);
                 return;
             }
         } catch (std::out_of_range) {
