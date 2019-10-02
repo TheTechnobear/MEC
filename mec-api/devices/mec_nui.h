@@ -16,6 +16,7 @@ namespace mec {
 
 
 class NuiParamMode;
+
 class NuiListener;
 
 
@@ -30,6 +31,7 @@ enum NuiModes {
 class NuiMode : public Kontrol::KontrolCallback {
 public:
     NuiMode() { ; }
+
     virtual ~NuiMode() { ; }
 
     virtual bool init() = 0;
@@ -48,9 +50,9 @@ public:
     virtual ~Nui();
 
     //mec::Device
-    bool init(void*) override;
+    bool init(void *) override;
     bool process() override;
-    void deinit() override ;
+    void deinit() override;
     bool isActive() override;
 
     //Kontrol::KontrolCallback
@@ -58,12 +60,15 @@ public:
     void rack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
     void module(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
     void page(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Page &) override;
-    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
-    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &) override;
+    void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+               const Kontrol::Parameter &) override;
+    void changed(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
+                 const Kontrol::Parameter &) override;
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &) override;
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
-    void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &, const std::string &) override;
+    void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &,
+                    const std::string &) override;
     void savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
     void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
     void addMode(NuiModes mode, std::shared_ptr<NuiMode>);
@@ -93,18 +98,23 @@ public:
 
 
     Kontrol::EntityId currentPage() { return currentPageId_; }
-    void currentPage(const Kontrol::EntityId &id) { currentPageId_ = id;}
+
+    void currentPage(const Kontrol::EntityId &id) { currentPageId_ = id; }
 
     // from fates device
     void onButton(unsigned id, unsigned value);
     void onEncoder(unsigned id, int value);
 
     void midiLearn(bool b);
-    bool midiLearn() { return midiLearnActive_;}
-    void modulationLearn(bool b);
-    bool modulationLearn() { return modulationLearnActive_;}
 
-    unsigned menuTimeout() {return menuTimeout_;}
+    bool midiLearn() { return midiLearnActive_; }
+
+    void modulationLearn(bool b);
+
+    bool modulationLearn() { return modulationLearnActive_; }
+
+    unsigned menuTimeout() { return menuTimeout_; }
+
     void nextModule();
     void prevModule();
 private:
@@ -118,7 +128,7 @@ private:
 
     friend class NuiListener;
 
-    std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack>& rack);
+    std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack> &rack);
 
 //    bool connect(const std::string& host, unsigned port);
 
@@ -148,17 +158,18 @@ private:
 
 class NuiDeviceCallback : public NuiLite::NuiCallback {
 public:
-    NuiDeviceCallback(Nui & p) : parent_(p) {;}
+    NuiDeviceCallback(Nui &p) : parent_(p) { ; }
 
     void onButton(unsigned id, unsigned value) override {
         parent_.onButton(id, value);
     }
-   void onEncoder(unsigned id, int value) override {
+
+    void onEncoder(unsigned id, int value) override {
         parent_.onEncoder(id, value);
     }
 
 private:
-    Nui& parent_;
+    Nui &parent_;
 };
 
 

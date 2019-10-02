@@ -12,13 +12,12 @@
 
 namespace mec {
 
-const unsigned SCREEN_HEIGHT=64;
-const unsigned SCREEN_WIDTH=128;
+const unsigned SCREEN_HEIGHT = 64;
+const unsigned SCREEN_WIDTH = 128;
 
 static const unsigned NUI_NUM_TEXTLINES = 5;
 //static const unsigned NUI_NUM_TEXTCHARS = (128 / 4); = 32
 static const unsigned NUI_NUM_TEXTCHARS = 30;
-
 
 
 Nui::Nui() :
@@ -41,12 +40,12 @@ bool Nui::init(void *arg) {
     menuTimeout_ = prefs.getInt("menu timeout", MENU_TIMEOUT);
     std::string res = prefs.getString("resource path", "/home/we/norns/resources");
     std::string splash = prefs.getString("splash", "./oracsplash4.png");
-    device_=std::make_shared<NuiLite::NuiDevice>(res.c_str());
-    if(!device_) return false;
+    device_ = std::make_shared<NuiLite::NuiDevice>(res.c_str());
+    if (!device_) return false;
 
-    unsigned parammode = prefs.getInt("param display",0);
+    unsigned parammode = prefs.getInt("param display", 0);
 
-    std::shared_ptr<NuiLite::NuiCallback> cb=std::make_shared<NuiDeviceCallback>(*this);
+    std::shared_ptr<NuiLite::NuiCallback> cb = std::make_shared<NuiDeviceCallback>(*this);
     device_->addCallback(cb);
     device_->start();
 
@@ -57,10 +56,9 @@ bool Nui::init(void *arg) {
     active_ = false;
 
 
-
     active_ = true;
     if (active_) {
-        if(parammode==1 || device_->numEncoders()==3) {
+        if (parammode == 1 || device_->numEncoders() == 3) {
             addMode(NM_PARAMETER, std::make_shared<NuiParamMode2>(*this));
 
         } else {
@@ -74,14 +72,14 @@ bool Nui::init(void *arg) {
 
         changeMode(NM_PARAMETER);
     }
-    device_->drawPNG(0,0,splash.c_str());
-    device_->displayText(0,"Connecting to ORAC...");
+    device_->drawPNG(0, 0, splash.c_str());
+    device_->displayText(0, "Connecting to ORAC...");
     return active_;
 }
 
 void Nui::deinit() {
     device_->stop();
-    device_= nullptr;
+    device_ = nullptr;
     active_ = false;
     return;
 }
@@ -93,7 +91,7 @@ bool Nui::isActive() {
 // Kontrol::KontrolCallback
 bool Nui::process() {
     modes_[currentMode_]->poll();
-    if(device_) device_->process();
+    if (device_) device_->process();
     return true;
 }
 
@@ -147,41 +145,41 @@ void Nui::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kon
 }
 
 void Nui::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                      const Kontrol::Module &module, const Kontrol::Page &page) {
+               const Kontrol::Module &module, const Kontrol::Page &page) {
     modes_[currentMode_]->page(src, rack, module, page);
 }
 
 void Nui::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                       const Kontrol::Module &module, const Kontrol::Parameter &param) {
+                const Kontrol::Module &module, const Kontrol::Parameter &param) {
     modes_[currentMode_]->param(src, rack, module, param);
 }
 
 void Nui::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                         const Kontrol::Module &module, const Kontrol::Parameter &param) {
+                  const Kontrol::Module &module, const Kontrol::Parameter &param) {
     modes_[currentMode_]->changed(src, rack, module, param);
 }
 
 void Nui::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                          const std::string &res, const std::string &value) {
+                   const std::string &res, const std::string &value) {
     modes_[currentMode_]->resource(src, rack, res, value);
 
-    if(res=="moduleorder") {
+    if (res == "moduleorder") {
         moduleOrder_.clear();
-        if(value.length()>0) {
-            int lidx =0;
+        if (value.length() > 0) {
+            int lidx = 0;
             int idx = 0;
             int len = 0;
-            while((idx=value.find(" ",lidx)) != std::string::npos) {
+            while ((idx = value.find(" ", lidx)) != std::string::npos) {
                 len = idx - lidx;
-		std::string mid = value.substr(lidx,len);
+                std::string mid = value.substr(lidx, len);
                 moduleOrder_.push_back(mid);
                 lidx = idx + 1;
             }
             len = value.length() - lidx;
-            if(len>0)  {
-		std::string mid = value.substr(lidx,len);
-		moduleOrder_.push_back(mid);
-	    }
+            if (len > 0) {
+                std::string mid = value.substr(lidx, len);
+                moduleOrder_.push_back(mid);
+            }
         }
     }
 }
@@ -191,30 +189,30 @@ void Nui::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
 }
 
 void Nui::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                              const Kontrol::Module &module) {
+                       const Kontrol::Module &module) {
     modes_[currentMode_]->activeModule(src, rack, module);
 }
 
 void Nui::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                            const Kontrol::EntityId &modId, const std::string &modType) {
+                     const Kontrol::EntityId &modId, const std::string &modType) {
     modes_[currentMode_]->loadModule(src, rack, modId, modType);
 }
 
-std::vector<std::shared_ptr<Kontrol::Module>> Nui::getModules(const std::shared_ptr<Kontrol::Rack>& pRack) {
+std::vector<std::shared_ptr<Kontrol::Module>> Nui::getModules(const std::shared_ptr<Kontrol::Rack> &pRack) {
     std::vector<std::shared_ptr<Kontrol::Module>> ret;
     auto modulelist = model()->getModules(pRack);
     std::unordered_set<std::string> done;
 
     for (auto mid : moduleOrder_) {
         auto pModule = model()->getModule(pRack, mid);
-        if(pModule!=nullptr) {
+        if (pModule != nullptr) {
             ret.push_back(pModule);
             done.insert(mid);
-	}
+        }
 
     }
     for (auto pModule : modulelist) {
-        if(done.find(pModule->id()) == done.end()) {
+        if (done.find(pModule->id()) == done.end()) {
             ret.push_back(pModule);
         }
     }
@@ -255,14 +253,14 @@ void Nui::prevModule() {
 }
 
 void Nui::midiLearn(Kontrol::ChangeSource src, bool b) {
-    if(b) modulationLearnActive_ = false;
+    if (b) modulationLearnActive_ = false;
     midiLearnActive_ = b;
     modes_[currentMode_]->midiLearn(src, b);
 
 }
 
 void Nui::modulationLearn(Kontrol::ChangeSource src, bool b) {
-    if(b) midiLearnActive_ = false;
+    if (b) midiLearnActive_ = false;
     modulationLearnActive_ = b;
     modes_[currentMode_]->modulationLearn(src, b);
 }
@@ -277,13 +275,13 @@ void Nui::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, st
 
 
 void Nui::onButton(unsigned id, unsigned value) {
-    modes_[currentMode_]->onButton(id,value);
+    modes_[currentMode_]->onButton(id, value);
 
 }
+
 void Nui::onEncoder(unsigned id, int value) {
-    modes_[currentMode_]->onEncoder(id,value);
+    modes_[currentMode_]->onEncoder(id, value);
 }
-
 
 
 void Nui::midiLearn(bool b) {
@@ -302,76 +300,93 @@ void Nui::displayPopup(const std::string &text, bool) {
 }
 
 
-
 void Nui::clearDisplay() {
-    if(!device_) return;
+    if (!device_) return;
     device_->displayClear();
 }
 
 void Nui::clearParamNum(unsigned num) {
-    if(!device_) return;
+    if (!device_) return;
 
-    unsigned row,col;
-    switch(num) {
-	case 0 : row = 0, col=0; break;
-	case 1 : row = 0, col=1; break;
-	case 2 : row = 1, col=0; break;
-	case 3 : row = 1, col=1; break;
-        default : return;
+    unsigned row, col;
+    switch (num) {
+        case 0 :
+            row = 0, col = 0;
+            break;
+        case 1 :
+            row = 0, col = 1;
+            break;
+        case 2 :
+            row = 1, col = 0;
+            break;
+        case 3 :
+            row = 1, col = 1;
+            break;
+        default :
+            return;
     }
-    unsigned x = col*64;
-    unsigned y1 = (row+1) * 20;
+    unsigned x = col * 64;
+    unsigned y1 = (row + 1) * 20;
     unsigned y2 = y1 + 10;
-    device_->clearRect(x,y1,62+(col*2),-10,0);
-    device_->clearRect(x,y2,62+(col*2) ,-10,0);
-    
+    device_->clearRect(x, y1, 62 + (col * 2), -10, 0);
+    device_->clearRect(x, y2, 62 + (col * 2), -10, 0);
+
 }
 
 
 void Nui::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl, bool selected) {
-    if(!device_) return;
+    if (!device_) return;
     const std::string &dName = param.displayName();
     std::string value = param.displayValue();
     std::string unit = param.displayUnit();
 
-    unsigned row,col;
-    switch(num) {
-	case 0 : row = 0, col=0; break;
-	case 1 : row = 0, col=1; break;
-	case 2 : row = 1, col=0; break;
-	case 3 : row = 1, col=1; break;
-        default : return;
+    unsigned row, col;
+    switch (num) {
+        case 0 :
+            row = 0, col = 0;
+            break;
+        case 1 :
+            row = 0, col = 1;
+            break;
+        case 2 :
+            row = 1, col = 0;
+            break;
+        case 3 :
+            row = 1, col = 1;
+            break;
+        default :
+            return;
     }
 
-    unsigned x = col*64;
-    unsigned y1 = (row+1) * 20;
+    unsigned x = col * 64;
+    unsigned y1 = (row + 1) * 20;
     unsigned y2 = y1 + 10;
-    unsigned clr = selected ? 15: 0;
-    device_->clearRect(x,y1,62+(col*2),-10,5);
-    device_->drawText(x + 1,y1 -1,dName.c_str(),clr);
-    device_->clearRect(x,y2,62+(col*2) ,-10,0);
-    device_->drawText(x + 1,y2 -1,value,15);
-    device_->drawText(x + 1 + 40,y2 -1,unit,15);
+    unsigned clr = selected ? 15 : 0;
+    device_->clearRect(x, y1, 62 + (col * 2), -10, 5);
+    device_->drawText(x + 1, y1 - 1, dName.c_str(), clr);
+    device_->clearRect(x, y2, 62 + (col * 2), -10, 0);
+    device_->drawText(x + 1, y2 - 1, value, 15);
+    device_->drawText(x + 1 + 40, y2 - 1, unit, 15);
 }
 
 void Nui::displayLine(unsigned line, const char *disp) {
-    if(!device_) return;
+    if (!device_) return;
     device_->clearText(line);
-    device_->displayText(line,disp);
+    device_->displayText(line, disp);
 }
 
 void Nui::invertLine(unsigned line) {
-    if(!device_) return;
+    if (!device_) return;
     device_->invertText(line);
 }
 
 void Nui::displayTitle(const std::string &module, const std::string &page) {
-    if(!device_) return;
-    if(module.size() == 0 || page.size()==0) return;
-    std::string title= module + " > " + page ;
+    if (!device_) return;
+    if (module.size() == 0 || page.size() == 0) return;
+    std::string title = module + " > " + page;
 
-    device_->clearRect(0,0, 128,10,1);
-    device_->drawText(0,8,title.c_str(),15);
+    device_->clearRect(0, 0, 128, 10, 1);
+    device_->drawText(0, 8, title.c_str(), 15);
 }
 
 
