@@ -32,11 +32,13 @@ public:
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     // NuiDevice
-    void onButton(unsigned id, unsigned value) override { buttonState_[id]=value;}
-    void onEncoder(unsigned id, int value) override  { ; }
+    void onButton(unsigned id, unsigned value) override { buttonState_[id] = value; }
+
+    void onEncoder(unsigned id, int value) override { ; }
 
     // Mode
     bool init() override { return true; }
+
     void poll() override;
 
     void activate() override { ; }
@@ -47,7 +49,7 @@ protected:
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
 
     int popupTime_;
-    bool buttonState_[NUI_NUM_BUTTONS]= { false,false,false};
+    bool buttonState_[NUI_NUM_BUTTONS] = {false, false, false};
 };
 
 

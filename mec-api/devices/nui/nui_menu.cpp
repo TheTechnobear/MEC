@@ -37,10 +37,10 @@ void NuiMenuMode::displayItem(unsigned i) {
 }
 
 void NuiMenuMode::onButton(unsigned id, unsigned value) {
-    NuiBaseMode::onButton(id,value);
+    NuiBaseMode::onButton(id, value);
     switch (id) {
         case 0 : {
-            if(!value) {
+            if (!value) {
                 // on release of button
                 parent_.changeMode(NM_PARAMETER);
             }
@@ -50,19 +50,18 @@ void NuiMenuMode::onButton(unsigned id, unsigned value) {
             break;
         }
         case 2 : {
-            if(!value) {
+            if (!value) {
                 navActivate();
             }
             break;
         }
-        default:
-            ;
+        default:;
     }
 }
 
 void NuiMenuMode::onEncoder(unsigned id, int value) {
-    if(id==0) {
-        if(value>0) {
+    if (id == 0) {
+        if (value > 0) {
             navNext();
         } else {
             navPrev();
@@ -330,7 +329,7 @@ void NuiPresetMenu::clicked(unsigned idx) {
 }
 
 
-void NuiModuleMenu::populateMenu(const std::string& catSel) {
+void NuiModuleMenu::populateMenu(const std::string &catSel) {
     auto rack = model()->getRack(parent_.currentRack());
     auto module = model()->getModule(rack, parent_.currentModule());
     if (module == nullptr) return;
@@ -342,18 +341,18 @@ void NuiModuleMenu::populateMenu(const std::string& catSel) {
     std::set<std::string> cats;
     unsigned catlen = cat_.length();
 
-    if(catlen) {
+    if (catlen) {
         items_.push_back("..");
         idx++;
     }
 
     for (const auto &modtype : res) {
-        if(cat_.length()) {
-            size_t pos=modtype.find(cat_);
-            if(pos==0) {
-                std::string mod=modtype.substr(catlen,modtype.length()-catlen);
+        if (cat_.length()) {
+            size_t pos = modtype.find(cat_);
+            if (pos == 0) {
+                std::string mod = modtype.substr(catlen, modtype.length() - catlen);
                 items_.push_back(mod);
-                if (module->type() == modtype ) {
+                if (module->type() == modtype) {
                     cur_ = idx;
                     top_ = idx;
                 }
@@ -361,8 +360,8 @@ void NuiModuleMenu::populateMenu(const std::string& catSel) {
             } // else filtered
         } else {
             // top level, so get categories
-            size_t pos=modtype.find("/");
-            if(pos==std::string::npos) {
+            size_t pos = modtype.find("/");
+            if (pos == std::string::npos) {
                 items_.push_back(modtype);
                 if (modtype == module->type()) {
                     cur_ = idx;
@@ -370,21 +369,21 @@ void NuiModuleMenu::populateMenu(const std::string& catSel) {
                 }
                 idx++;
             } else {
-                cats.insert(modtype.substr(0,pos+1));
+                cats.insert(modtype.substr(0, pos + 1));
             }
         }
     }
 
 
-    size_t pos =std::string::npos;
+    size_t pos = std::string::npos;
     std::string modcat;
     pos = module->type().find("/");
-    if(pos!=std::string::npos) {
-        modcat=module->type().substr(0,pos+1);
+    if (pos != std::string::npos) {
+        modcat = module->type().substr(0, pos + 1);
     }
 
 
-    for(auto s: cats) {
+    for (auto s: cats) {
         items_.push_back(s);
         if (catSel.length() && s == catSel) {
             cur_ = idx;
@@ -395,19 +394,18 @@ void NuiModuleMenu::populateMenu(const std::string& catSel) {
 }
 
 
-
 void NuiModuleMenu::activate() {
     auto rack = model()->getRack(parent_.currentRack());
     auto module = model()->getModule(rack, parent_.currentModule());
     if (module == nullptr) return;
     unsigned idx = 0;
     auto res = rack->getResources("module");
-    cat_="";
+    cat_ = "";
 
-    size_t pos =std::string::npos;
+    size_t pos = std::string::npos;
     pos = module->type().find("/");
-    if(pos!=std::string::npos) {
-        cat_=module->type().substr(0,pos+1);
+    if (pos != std::string::npos) {
+        cat_ = module->type().substr(0, pos + 1);
     }
 
     populateMenu(cat_);
@@ -425,7 +423,7 @@ void NuiModuleMenu::clicked(unsigned idx) {
             display();
             return;
         } else {
-            if(cat_.length()) {
+            if (cat_.length()) {
                 // module dir
                 Kontrol::EntityId modType = cat_ + modtype;
                 auto rack = model()->getRack(parent_.currentRack());

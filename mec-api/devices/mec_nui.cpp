@@ -73,7 +73,7 @@ bool Nui::init(void *arg) {
         changeMode(NM_PARAMETER);
     }
     device_->drawPNG(0, 0, splash.c_str());
-    device_->displayText(0,1,"Connecting...");
+    device_->displayText(15, 0, 1, "Connecting...");
     return active_;
 }
 
@@ -328,8 +328,8 @@ void Nui::clearParamNum(unsigned num) {
     unsigned x = col * 64;
     unsigned y1 = (row + 1) * 20;
     unsigned y2 = y1 + 10;
-    device_->clearRect(x, y1, 62 + (col * 2), -10, 0);
-    device_->clearRect(x, y2, 62 + (col * 2), -10, 0);
+    device_->clearRect(0, x, y1, 62 + (col * 2), -10);
+    device_->clearRect(0, x, y2, 62 + (col * 2), -10);
 
 }
 
@@ -362,17 +362,17 @@ void Nui::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool di
     unsigned y1 = (row + 1) * 20;
     unsigned y2 = y1 + 10;
     unsigned clr = selected ? 15 : 0;
-    device_->clearRect(x, y1, 62 + (col * 2), -10, 5);
-    device_->drawText(x + 1, y1 - 1, dName.c_str(), clr);
-    device_->clearRect(x, y2, 62 + (col * 2), -10, 0);
-    device_->drawText(x + 1, y2 - 1, value, 15);
-    device_->drawText(x + 1 + 40, y2 - 1, unit, 15);
+    device_->clearRect(5, x, y1, 62 + (col * 2), -10);
+    device_->drawText(clr, x + 1, y1 - 1, dName.c_str());
+    device_->clearRect(0, x, y2, 62 + (col * 2), -10);
+    device_->drawText(15, x + 1, y2 - 1, value;
+    device_->drawText(15, x + 1 + 40, y2 - 1, unit);
 }
 
 void Nui::displayLine(unsigned line, const char *disp) {
     if (!device_) return;
-    device_->clearText(line);
-    device_->displayText(line, disp);
+    device_->clearText(0, line);
+    device_->displayText(15, line, 0, disp);
 }
 
 void Nui::invertLine(unsigned line) {
@@ -385,8 +385,8 @@ void Nui::displayTitle(const std::string &module, const std::string &page) {
     if (module.size() == 0 || page.size() == 0) return;
     std::string title = module + " > " + page;
 
-    device_->clearRect(0, 0, 128, 10, 1);
-    device_->drawText(0, 8, title.c_str(), 15);
+    device_->clearRect(1, 0, 0, 128, 10);
+    device_->drawText(15, 0, 8, title.c_str());
 }
 
 

@@ -80,7 +80,7 @@ public:
     void activate() override;
     void clicked(unsigned idx) override;
 private:
-    void populateMenu(const std::string& catSel);
+    void populateMenu(const std::string &catSel);
     std::string cat_;
 };
 
@@ -91,7 +91,6 @@ public:
     void activate() override;
     void clicked(unsigned idx) override;
 };
-
 
 
 } // mec
