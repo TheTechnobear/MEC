@@ -436,11 +436,25 @@ void KontrolRack_loadmodule(t_KontrolRack *x, t_symbol *modId, t_symbol *modType
         return;
     }
 
-    post("loadmodule: loading %s into %s", modType->s_name, modId->s_name);
+    post("loadmodule: unloading existing module in %s",modId->s_name);
+    {
+
+        // send an unload bang when to module before we unload it.
+        std::string sendsym = std::string("unloadbang-") + modId->s_name;
+        t_pd *sendobj = gensym(sendsym.c_str())->s_thing;
+        if (sendobj != nullptr) {
+            pd_bang(sendobj);
+        } else {
+//            post("unloadbang missing for %s", sendsym.c_str());
+        }
+    }
 
     KontrolRack_dspState(false);
     KontrolRack_sendMsg(sendObj, "clear");
 
+    post("loadmodule: module cleared from %s",modId->s_name);
+
+    post("loadmodule: loading %s into %s", modType->s_name, modId->s_name);
     KontrolRack_obj(sendObj, 10, 10, "r~", (std::string("inL-") + modId->s_name).c_str()); //obj0
     KontrolRack_obj(sendObj, 110, 10, "r~", (std::string("inR-") + modId->s_name).c_str()); //obj1
     KontrolRack_obj(sendObj, 10, 60, pdModule.c_str(), modId->s_name); // obj2

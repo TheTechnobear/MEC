@@ -17,19 +17,28 @@ set(MEC_VERSION_UPDATE 1)
 set(MEC_VERSION "${MEC_VERSION_MAJOR}.${MEC_VERSION_MINOR}.${MEC_VERSION_UPDATE}")
 set(CMAKE_OSX_ARCHITECTURES "x86_64")
 
+if(NUI) 
+	set(DISABLE_NUI 0)
+else(NUI)
+	set(DISABLE_NUI 1)
+endif(NUI)
+
 if(WIN32)
     message("windows support limited")
     set(DISABLE_LIBUSB 1)
     set(DISABLE_EIGENHARP 1)
     set(DISABLE_SOUNDPLANELITE 1)
     set(DISABLE_PUSH2 1)
+    set(DISABLE_NUI 1)
 endif()
 
 if (APPLE)
     set(EXECUTABLE_NAME MicroExpression)
+    set(DISABLE_NUI 1)
 elseif (UNIX)
     set(EXECUTABLE_NAME microexpression)
 endif (APPLE)
+
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -92,6 +101,11 @@ add_subdirectory(external/rtmidi rtmidi)
 add_subdirectory(external/moodycamel)
 add_subdirectory(external/SoundplaneLite/splite)
 add_subdirectory(external/EigenLite/eigenapi)
+
+if(NOT DISABLE_NUI) 
+    message("NUI  enabled")
+    add_subdirectory(external/NuiLite/nuilite)
+endif()
 
 
 add_subdirectory(mec-utils)
