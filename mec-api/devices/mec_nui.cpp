@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <unordered_set>
+#include <unistd.h>
 
 #include <mec_log.h>
 
@@ -37,10 +38,15 @@ bool Nui::init(void *arg) {
     Preferences prefs(arg);
 
     static const auto MENU_TIMEOUT = 2000;
+    static const auto POLL_FREQ = 1;
+    static const auto POLL_SLEEP = 1000;
     menuTimeout_ = prefs.getInt("menu timeout", MENU_TIMEOUT);
     std::string res = prefs.getString("resource path", "/home/we/norns/resources");
     std::string splash = prefs.getString("splash", "./oracsplash4.png");
     device_ = std::make_shared<NuiLite::NuiDevice>(res.c_str());
+    pollFreq_ = prefs.getInt("poll freq",POLL_FREQ);
+    pollSleep_ = prefs.getInt("poll sleep",POLL_SLEEP);
+    pollCount_ = 0;
     if (!device_) return false;
 
     unsigned parammode = prefs.getInt("param display", 0);
@@ -90,8 +96,15 @@ bool Nui::isActive() {
 
 // Kontrol::KontrolCallback
 bool Nui::process() {
-    modes_[currentMode_]->poll();
-    if (device_) device_->process();
+    pollCount_++;
+    if ( ( pollCount_ % pollFreq_) == 0) {
+        modes_[currentMode_]->poll();
+        if (device_) device_->process();
+    }
+
+    if(pollSleep_) {
+        usleep(pollSleep_);
+    }
     return true;
 }
 

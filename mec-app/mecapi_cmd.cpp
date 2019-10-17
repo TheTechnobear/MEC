@@ -248,7 +248,7 @@ private:
 
 class CallbackQueue : public mec::ICallback {
 public:
-    CallbackQueue() {
+    CallbackQueue(unsigned pt) : pollTime_(pt){
     }
 
     void subscribe(ICallback* pCB) {
@@ -314,10 +314,12 @@ public:
                 queue_.send(msg,*pCb);
             }
         }
+        if(pollTime_>0) usleep(pollTime_);
     }
 private:
     mec::MsgQueue queue_;
     std::vector<ICallback*> callbacks_;
+    unsigned pollTime_;
 
 };
 
@@ -358,7 +360,8 @@ void *mecapi_proc(void *arg) {
     std::thread callbackQueueThread;
     if(queuedOutput) {
         LOG_0("mecapi_proc using queued output");
-        pCallbackQueue = new CallbackQueue();
+        unsigned queuePollTime = app_prefs.getBool("queue poll time", 100);
+        pCallbackQueue = new CallbackQueue(queuePollTime);
         mecApi->subscribe(pCallbackQueue);
     }
 
@@ -437,13 +440,13 @@ void *mecapi_proc(void *arg) {
     }
 
 
+    unsigned locktime=app_prefs.getInt("lock time",5);
     {
         mecAppLock lock;
         while (keepRunning) {
             mecApi->process();
-            mec_waitFor(lock,5);
+            mec_waitFor(lock,locktime);
         }
-
     }
 
     // delete the api, so that it can clean up

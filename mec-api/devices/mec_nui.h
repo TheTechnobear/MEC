@@ -154,6 +154,10 @@ private:
     std::vector<std::string> moduleOrder_;
     unsigned menuTimeout_;
 
+    unsigned pollCount_;
+    unsigned pollFreq_;
+    unsigned pollSleep_;
+
 };
 
 class NuiDeviceCallback : public NuiLite::NuiCallback {
