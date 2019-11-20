@@ -264,7 +264,7 @@ public:
         msg.data_.touch_.x_ = x;
         msg.data_.touch_.y_ = y;
         msg.data_.touch_.z_ = z;
-        queue_.addToQueue(msg);
+        if(!queue_.addToQueue(msg)) LOG_0("unable to add touchOn to queue id:" << touchId);
     }
 
     void touchContinue(int touchId, float note, float x, float y, float z) override {
@@ -275,7 +275,7 @@ public:
         msg.data_.touch_.x_ = x;
         msg.data_.touch_.y_ = y;
         msg.data_.touch_.z_ = z;
-        queue_.addToQueue(msg);
+        if(!queue_.addToQueue(msg)) LOG_0("unable to add touchContinue to queue id:" << touchId);
     }
 
     void touchOff(int touchId, float note, float x, float y, float z) override {
@@ -286,7 +286,7 @@ public:
         msg.data_.touch_.x_ = x;
         msg.data_.touch_.y_ = y;
         msg.data_.touch_.z_ = z;
-        queue_.addToQueue(msg);
+        if(!queue_.addToQueue(msg)) LOG_0("unable to add touchOff to queue id:" << touchId);
     }
 
     void control(int ctrlId, float v) override {
@@ -294,7 +294,7 @@ public:
         msg.type_ = mec::MecMsg::CONTROL;
         msg.data_.control_.controlId_ = ctrlId;
         msg.data_.control_.value_ = v;
-        queue_.addToQueue(msg);
+        if(!queue_.addToQueue(msg)) LOG_0("unable to add control to queue control:" << ctrlId);
     }
 
     void mec_control(int cmd, void* other) override {
@@ -302,7 +302,7 @@ public:
         msg.type_ = mec::MecMsg::MEC_CONTROL;
         msg.data_.mec_control_.cmd_ = static_cast<mec::MecMsg::mec_cmd>(cmd);
 //        msg.data_.mec_control_.other_=other;
-        queue_.addToQueue(msg);
+        if(!queue_.addToQueue(msg)) LOG_0("unable to add mec_control to queue cmd:" << cmd);
 
     }
 

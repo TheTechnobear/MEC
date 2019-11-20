@@ -96,29 +96,35 @@ public:
             LOG_3(" r: " << r << " y: " << y << " p: " << p);
             LOG_3(" mn: " << mn << " mx: " << mx << " my: " << my << " mz: " << mz);
 
+            if (inactiveKeys_.find(key) != inactiveKeys_.end()) {
+                // this key has been stolen, must be released to reactivate it
+                return;
+            }
+
             if (!voice) {
-                if (stolenKeys_.find(key) != stolenKeys_.end()) {
-                    // this key has been stolen, must be released to reactivate it
-                    return;
-                }
 
                 voice = voices_.startVoice(key);
 
                 if (!voice && stealVoices_) {
-                    LOG_2("voice steal required for " << key);
+                    // LOG_1("voice steal required for " << key);
                     // no available voices, steal?
                     Voices::Voice *stolen = voices_.oldestActiveVoice();
                     if(stolen) {
-                        callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
-                        stolenKeys_.insert((unsigned) stolen->id_);
+                        if(stolen->state_ == Voices::Voice::ACTIVE) {
+                            // LOG_1("voice stolen found for " << key  << " stolen from (active) " << stolen->id_);
+                            callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
+                        } else {
+                            // LOG_1("voice stolen found for " << key  << " stolen from (inactive) " << stolen->id_);
+                        }
+                        inactiveKeys_.insert((unsigned) stolen->id_);
                         voices_.stopVoice(stolen);
                         voice = voices_.startVoice(key);
-                        // if(voice) { LOG_1("voice steal found for " << key  "stolen from " << stolen->id_)); }
+                        // if(voice) { LOG_1("voice steal found for " << key << "stolen from " << stolen->id_); }
                    } else {
                      LOG_1("unable to steal voice " << key);
                    }
                 }
-            }
+            } 
 
             if (voice) {
                 if (voice->state_ == Voices::Voice::PENDING) {
@@ -141,17 +147,33 @@ public:
                 voice->x_ = mx;
                 voice->y_ = my;
                 voice->z_ = mz;
+            } else {
+                // else no voice available
+                // LOG_2("mark inactive key " << key);
+                inactiveKeys_.insert(key);
             }
-            // else no voice available
 
         } else {
-
-            if (voice) {
-                LOG_2("stop voice for " << key << " ch " << voice->i_);
-                callback_.touchOff(voice->i_, mn, mx, my, mz);
-                voices_.stopVoice(voice);
+            if (inactiveKeys_.find(key) == inactiveKeys_.end()) {
+                if (voice) {
+                    if(voice->state_ == Voices::Voice::ACTIVE) {
+                        LOG_2("stop voice for " << key << " ch " << voice->i_);
+                        callback_.touchOff(voice->i_, mn, mx, my, mz);
+                        voices_.stopVoice(voice);
+                    }
+                    else if(voice->state_ == Voices::Voice::PENDING) {
+                        // dont send touchoff, as touchOn not sent
+                        voices_.stopVoice(voice);
+                    } else {
+                        LOG_1("voice already inactive" << key << " ch " << voice->i_);
+                    }
+                } else {
+                    LOG_1("trying to stop voice, but not found" << key);
+                }
+            } else {
+                // LOG_2("remove inactive key " << key);
+                inactiveKeys_.erase(key);
             }
-            stolenKeys_.erase(key);
         }
     }
 
@@ -188,7 +210,7 @@ private:
     float pitchbendRange_;
     bool stealVoices_;
     unsigned long long throttle_;
-    std::set<unsigned> stolenKeys_;
+    std::set<unsigned> inactiveKeys_;
 };
 
 

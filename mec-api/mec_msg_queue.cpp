@@ -6,7 +6,7 @@
 #include <readerwriterqueue.h>
 namespace mec {
 
-const int MAX_QUEUE_SIZE = 32;
+const int MAX_QUEUE_SIZE = 128;
 
 
 class MsgQueue_impl {
@@ -105,7 +105,6 @@ MsgQueue_impl::~MsgQueue_impl() {
 
 bool MsgQueue_impl::addToQueue(MecMsg &msg) {
     return queue_.try_enqueue(msg);
-    return true;
 }
 
 bool MsgQueue_impl::nextMsg(MecMsg &msg) {
