@@ -26,7 +26,7 @@ endif(NUI)
 
 if(TTUI) 
     set(DISABLE_TTUI 0)
-else(NUI)
+else(TTUI)
     set(DISABLE_TTUI 1)
 endif(TTUI)
 
@@ -116,8 +116,9 @@ if(NOT DISABLE_NUI)
     add_subdirectory(external/NuiLite/nuilite)
 endif()
 
-if(NOT DISABLE_NUI) 
+if(NOT DISABLE_TTUI) 
     message("TTUI  enabled")
+    add_subdirectory(external/ArduiPi_OLED arduiPi_OLED)
     add_subdirectory(external/TTuiLite/ttuilite)
 endif()
 

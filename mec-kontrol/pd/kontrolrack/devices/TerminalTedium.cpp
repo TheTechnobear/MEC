@@ -4,8 +4,6 @@
 
 #include "../../m_pd.h"
 
-#include 
-
 static const unsigned SCREEN_WIDTH = 21;
 
 static const unsigned PAGE_SWITCH_TIMEOUT = 50;
@@ -16,13 +14,15 @@ static const unsigned MENU_TIMEOUT = 350;
 
 const int8_t PATCH_SCREEN = 3;
 
-static const float MAX_POT_VALUE = 1023.0F;
 
-char TerminalTedium::screenBuf_[TerminalTedium::OUTPUT_BUFFER_SIZE];
+// TODO 
+//
+// split screen
+// redo display?
+// invert line? menu?
+// check POT = 4096?
 
-static const char *OSC_MOTHER_HOST = "127.0.0.1";
-static const unsigned OSC_MOTHER_PORT = 4001;
-static const unsigned MOTHER_WRITE_POLL_WAIT_TIMEOUT = 1000;
+static const float MAX_POT_VALUE = 4000.0f; 
 
 static const unsigned TERMINALTEDIUM_NUM_TEXTLINES = 4;
 static const unsigned TERMINALTEDIUM_NUM_PARAMS = 4;
@@ -1069,7 +1069,7 @@ void TerminalTedium::displayLine(unsigned line, const char *disp) {
 }
 
 void TerminalTedium::invertLine(unsigned line) {
-    device_.invertLine(0,line);
+    device_.invertText(0,line);
 }
 
 void TerminalTedium::flipDisplay() {

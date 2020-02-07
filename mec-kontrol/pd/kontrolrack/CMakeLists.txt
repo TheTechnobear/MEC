@@ -8,7 +8,7 @@ if (NOT DISABLE_TTUI)
         devices/TerminalTedium.cpp
         devices/TerminalTedium.h
        )
-    set(TTUILITE_LIB nuilite)
+    set(TTUILITE_LIB ttuilite)
 else()
     add_definitions(-DDISABLE_TTUI=1)
 endif()

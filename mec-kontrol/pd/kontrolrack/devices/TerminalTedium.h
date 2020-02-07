@@ -5,7 +5,7 @@
 #include <KontrolModel.h>
 
 
-#include <TTUiDevice.h>
+#include <TTuiDevice.h>
 #include <string>
 
 class TerminalTedium : public KontrolDevice {
@@ -30,5 +30,5 @@ private:
 
     std::string asDisplayString(const Kontrol::Parameter &p, unsigned width) const;
 
-    TTUiDevice device_;
+    TTuiLite::TTuiDevice device_;
 };
