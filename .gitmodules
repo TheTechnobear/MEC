@@ -10,3 +10,6 @@
 [submodule "external/NuiLite"]
 	path = external/NuiLite
 	url = https://github.com/thetechnobear/NuiLite
+[submodule "external/TTuiLite"]
+	path = external/TTuiLite
+	url = https://github.com/TheTechnobear/TTuiLite.git
