@@ -14,6 +14,8 @@ static const unsigned MENU_TIMEOUT = 350;
 
 const int8_t PATCH_SCREEN = 3;
 
+static const unsigned TT_WRITE_POLL_WAIT_TIMEOUT = 1000;
+
 
 // TODO 
 //
@@ -26,6 +28,9 @@ static const float MAX_POT_VALUE = 4000.0f;
 
 static const unsigned TERMINALTEDIUM_NUM_TEXTLINES = 4;
 static const unsigned TERMINALTEDIUM_NUM_PARAMS = 4;
+
+
+void *terminaltedium_write_thread_func(void *aObj);
 
 enum TerminalTediumModes {
     TT_PARAMETER,
@@ -999,7 +1004,7 @@ void TToduleSelectMenu::clicked(unsigned idx) {
 
 // TerminalTedium implmentation
 
-TerminalTedium::TerminalTedium() {
+TerminalTedium::TerminalTedium() messageQueue_(OscMsg::MAX_TT_OSC_MSGS) {
 }
 
 TerminalTedium::~TerminalTedium() {
@@ -1007,6 +1012,10 @@ TerminalTedium::~TerminalTedium() {
 }
 
 void TerminalTedium::stop() {
+    running_ = false;
+    writer_thread_.join();
+    TTMsg msg;
+    while (messageQueue_.try_dequeue(msg));
     device_.stop();
 }
 
@@ -1021,6 +1030,9 @@ bool TerminalTedium::init() {
 
     if (KontrolDevice::init()) {
         device_.start();
+        writer_thread_ = std::thread(terminaltedium_write_thread_func, this);
+        running_=true;
+
 
         changeMode(TT_PARAMETER);
         return true;
@@ -1030,6 +1042,7 @@ bool TerminalTedium::init() {
 
 
 void TerminalTedium::displayPopup(const std::string &text, bool dblline) {
+#if 0
     if (dblline) {
         device_.clearRect(0, 0, 2, 12, 118,38);
         // device_.drawRect(0, 1, 2, 12, 118,38);
@@ -1039,6 +1052,7 @@ void TerminalTedium::displayPopup(const std::string &text, bool dblline) {
     // device_.drawRect(0, 1, 4, 14, 114,34);
 
     device_.drawText(0, 1, 10,24, text);
+#endif 
 }
 
 
@@ -1055,24 +1069,67 @@ std::string TerminalTedium::asDisplayString(const Kontrol::Parameter &param, uns
     return ret;
 }
 
-void TerminalTedium::clearDisplay() {
-    device_.displayClear(0);
-}
-
 void TerminalTedium::displayParamLine(unsigned line, const Kontrol::Parameter &param) {
     std::string disp = asDisplayString(param, SCREEN_WIDTH);
     displayLine(line, disp.c_str());
 }
 
-void TerminalTedium::displayLine(unsigned line, const char *disp) {
-    device_.displayText(0, 1, line, 0, disp);
+void TerminalTedium::clearDisplay() {
+    TTMsg msg(TTMsg::DISPLAY_CLEAR,0)
+    messageQueue_.enqueue(msg);
+}
+
+
+
+void TerminalTedium::displayLine(unsigned line, const std::string& str) {
+    TTMsg msg(TTMsg::DISPLAY_LINE, 0, line,str.c_str,str.size() );
+    messageQueue_.enqueue(msg);
 }
 
 void TerminalTedium::invertLine(unsigned line) {
-    device_.invertText(0,line);
+    // device_.invertText(0,line);
 }
 
 void TerminalTedium::flipDisplay() {
-    device_.displayPaint();
+    TTMsg msg(TTMsg::RENDER)
+    messageQueue_.enqueue(msg);
+}
+
+
+
+
+//================
+
+void *terminaltedium_write_thread_func(void *aObj) {
+    post("start TerminalTedium write thead");
+    auto *pThis = static_cast<TerminalTedium *>(aObj);
+    pThis->writePoll();
+    post("TerminalTedium write thread ended");
+    return nullptr;
+}
+
+void TerminalTedium::writePoll() {
+    while (running_) {
+        TTMsg msg;
+        if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(TT_WRITE_POLL_WAIT_TIMEOUT))) {
+            switch(msg.type_) {
+                case RENDER: {
+                    display_.displayPaint();
+                    break;
+                } 
+                case DISPLAY_CLEAR: {
+                    device_.displayClear(msg.display_);
+                    break;
+                }
+                case DISPLAY_LINE: {
+                    unsigned clr=1;
+                    device_.displayText(msg.display_, clr, msg.line_, 0, msg.buffer_);
+                    break;
+                }
+            }
+
+
+        }
+    }
 }
 
