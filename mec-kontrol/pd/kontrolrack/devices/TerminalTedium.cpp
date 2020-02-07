@@ -1,6 +1,7 @@
 #include "TerminalTedium.h"
 
 #include <algorithm>
+#include <cstring>
 
 #include "../../m_pd.h"
 
@@ -1004,7 +1005,7 @@ void TToduleSelectMenu::clicked(unsigned idx) {
 
 // TerminalTedium implmentation
 
-TerminalTedium::TerminalTedium() messageQueue_(OscMsg::MAX_TT_OSC_MSGS) {
+TerminalTedium::TerminalTedium() : messageQueue_(TTMsg::MAX_N_TT_MSGS) {
 }
 
 TerminalTedium::~TerminalTedium() {
@@ -1075,14 +1076,14 @@ void TerminalTedium::displayParamLine(unsigned line, const Kontrol::Parameter &p
 }
 
 void TerminalTedium::clearDisplay() {
-    TTMsg msg(TTMsg::DISPLAY_CLEAR,0)
+    TTMsg msg(TTMsg::DISPLAY_CLEAR,0);
     messageQueue_.enqueue(msg);
 }
 
 
 
 void TerminalTedium::displayLine(unsigned line, const std::string& str) {
-    TTMsg msg(TTMsg::DISPLAY_LINE, 0, line,str.c_str,str.size() );
+    TTMsg msg(TTMsg::DISPLAY_LINE, 0, line,str.c_str(),str.size() );
     messageQueue_.enqueue(msg);
 }
 
@@ -1091,7 +1092,7 @@ void TerminalTedium::invertLine(unsigned line) {
 }
 
 void TerminalTedium::flipDisplay() {
-    TTMsg msg(TTMsg::RENDER)
+    TTMsg msg(TTMsg::RENDER);
     messageQueue_.enqueue(msg);
 }
 
@@ -1109,27 +1110,63 @@ void *terminaltedium_write_thread_func(void *aObj) {
 }
 
 void TerminalTedium::writePoll() {
-    while (running_) {
-        TTMsg msg;
-        if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(TT_WRITE_POLL_WAIT_TIMEOUT))) {
-            switch(msg.type_) {
-                case RENDER: {
-                    display_.displayPaint();
-                    break;
-                } 
-                case DISPLAY_CLEAR: {
-                    device_.displayClear(msg.display_);
-                    break;
-                }
-                case DISPLAY_LINE: {
-                    unsigned clr=1;
-                    device_.displayText(msg.display_, clr, msg.line_, 0, msg.buffer_);
-                    break;
-                }
-            }
-
-
+    static char lines [2][6][40];
+    static bool dirty [2][6]; 
+    bool render=false;
+    for(int d=0;d<2;d++){
+        for(int i=0;i<6;i++) { 
+            dirty[d][i]=false;
+            lines[d][i][0]=0;
         }
     }
+    while (running_) {
+        TTMsg msg;
+    
+        if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(TT_WRITE_POLL_WAIT_TIMEOUT))) {
+            // store lines to be displayed, and render only when queue is empty
+            do { 
+                switch(msg.type_) {
+                case TTMsg::RENDER: {
+                    render=true;
+                    break;
+                } 
+                case TTMsg::DISPLAY_CLEAR: {
+                    // do display clear immediately, otherwise we dont know order!
+                    device_.displayClear(msg.display_);
+                    for(int i=0;i<6;i++) { 
+                        dirty[msg.display_][i]=false;
+                        lines[msg.display_][i][0]=0;
+                    }
+                    break;
+                }
+                case TTMsg::DISPLAY_LINE: {
+                    if(msg.display_<2 && msg.line_<6) {
+                        strncpy(lines[msg.display_][msg.line_], msg.buffer_, msg.size_);
+                        dirty[msg.display_][msg.line_]=true;
+                    }
+                    break;
+                }
+                default: {
+                    ;
+                }
+                } // switch
+            } while(messageQueue_.try_dequeue(msg)); 
+
+
+            if(render) {
+                for(int d=0;d<2;d++) {
+                    for(int i=0;i<6;i++) {
+                        if(dirty[i] && lines[d][i][0]>0) {
+                            device_.displayText(d, 1, i, 0, lines[d][i]);
+                            dirty[d][i]=false;
+                            lines[d][i][0]=0;
+                        }
+                    }
+                }
+                device_.displayPaint();
+                render=false;
+            }
+        } // if wait
+    } // running
 }
 

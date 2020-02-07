@@ -1,12 +1,14 @@
 #pragma once
 
 #include "KontrolDevice.h"
-
 #include <KontrolModel.h>
 
+#include <cstring>
+#include <string>
+#include <thread>
+#include <readerwriterqueue.h>
 
 #include <TTuiDevice.h>
-#include <string>
 
 class TerminalTedium : public KontrolDevice {
 public:
@@ -18,7 +20,7 @@ public:
 
     void displayPopup(const std::string &text,bool dblLine);
     void displayParamLine(unsigned line, const Kontrol::Parameter &p);
-    void displayLine(unsigned line, const char *);
+    void displayLine(unsigned line, const std::string& str);
     void invertLine(unsigned line);
     void clearDisplay();
     void flipDisplay();
@@ -41,12 +43,18 @@ private:
             RENDER,
             DISPLAY_CLEAR, 
             DISPLAY_LINE,
+            MAX_TYPE
         } type_;
+	
 
+        TTMsg() : type_(MAX_TYPE), display_(-1), line_(-1), size_(0) {;}
         TTMsg(MsgType t) : type_(t), display_(-1), line_(-1), size_(0) {;}
-        TTMsg(MsgType t, int d, int l ) : TTMsg(t), display_(d), line_(l) {;}
-        TTMsg(MsgType t, int d, int l, const char* str, int sz ) : TTMsg(t), display_(d), line_(l)  {
-            size_ = (sz>=MAX_TT_MESSAGE_SIZE ? MAX_TT_MESSAGE_SIZE -1 ) 
+        TTMsg(MsgType t, int d) : TTMsg(t)  { display_=d;}
+        TTMsg(MsgType t, int d, int l ) : TTMsg(t)  { display_=d; line_= l;}
+        TTMsg(MsgType t, int d, int l, const char* str, int sz ) : TTMsg(t) {
+	    display_=d;
+	    line_=l;
+            size_ = (sz>=MAX_TT_MESSAGE_SIZE ? MAX_TT_MESSAGE_SIZE -1 : sz );
             strncpy(buffer_, str, size_);
             buffer_[MAX_TT_MESSAGE_SIZE-1]=0;
 
