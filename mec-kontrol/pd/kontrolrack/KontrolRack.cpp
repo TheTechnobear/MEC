@@ -13,6 +13,9 @@
 #include <algorithm>
 #include <clocale>
 
+#if ! DISABLE_TTUI
+    #include "devices/TerminalTedium.h"
+#endif 
 
 #include "devices/Organelle.h"
 #include "devices/MidiControl.h"
@@ -213,6 +216,11 @@ void *KontrolRack_new(t_symbol* sym, int argc, t_atom *argv) {
     if(device=="organelle") {
         post("KontrolRack: device = %s", device.c_str());
         x->device_ = std::make_shared<Organelle>();
+#if ! DISABLE_TTUI
+    } else if (device == "terminaltedium") {
+        post("KontrolRack: device = %s", device.c_str());
+        x->device_ = std::make_shared<TerminalTedium>();
+#endif        
     } else if (device == "bela") {
         post("KontrolRack: device = %s", device.c_str());
         x->device_ = std::make_shared<Bela>();

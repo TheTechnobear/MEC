@@ -23,6 +23,13 @@ else(NUI)
 	set(DISABLE_NUI 1)
 endif(NUI)
 
+
+if(TTUI) 
+    set(DISABLE_TTUI 0)
+else(NUI)
+    set(DISABLE_TTUI 1)
+endif(TTUI)
+
 if(WIN32)
     message("windows support limited")
     set(DISABLE_LIBUSB 1)
