@@ -32,10 +32,8 @@ public:
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &, const std::string &) override;
 
-
     void displayParamLine(unsigned line, const Kontrol::Parameter &p);
     void displayTitle(const std::string &module, const std::string &page);
-
 
     void displayLine(unsigned display, unsigned line, const std::string& str);
     void clearDisplay(unsigned display);
@@ -79,7 +77,7 @@ private:
             line_ = l;
             size_ = (sz >= MAX_TT_MESSAGE_SIZE ? MAX_TT_MESSAGE_SIZE - 1 : sz );
             strncpy(buffer_, str, size_);
-            buffer_[MAX_TT_MESSAGE_SIZE - 1] = 0;
+            buffer_[size_] = 0;
 
         }
 

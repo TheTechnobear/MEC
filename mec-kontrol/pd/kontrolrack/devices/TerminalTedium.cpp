@@ -21,11 +21,6 @@ static const unsigned PARAM_DISPLAY=0;
 static const unsigned MENU_DISPLAY=1;
 
 // TODO
-//
-// remove popup, activateShortcut?
-// split screen
-// redo display?
-// invert line? menu?
 // check POT = 4096?
 
 static const float MAX_POT_VALUE = 4000.0f;
@@ -180,6 +175,9 @@ public:
     TTMainMenu(TerminalTedium &p) : TTMenuMode(p) { ; }
 
     bool init() override;
+    void activate() override;
+    void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
+    void module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) override;
     unsigned getSize() override;
     std::string getItemText(unsigned idx) override;
     void clicked(unsigned idx) override;
@@ -250,7 +248,7 @@ void TTParamMode::display() {
 
     std::string md = "";
     std::string pd = "";
-    if (module) md = module->id() + " : " + module->displayName();
+    if (module) md = module->id() + ":" + module->displayName();
     if (page) pd = page->displayName();
     parent_.displayTitle(md, pd);
 
@@ -279,14 +277,6 @@ void TTParamMode::activate() {
 
 
 void TTParamMode::poll() {
-    TTBaseMode::poll();
-    // release pop, redraw display
-    if (popupTime_ == 0) {
-        display();
-
-        // cancel timing
-        popupTime_ = -1;
-    }
 }
 
 void TTParamMode::changePot(unsigned pot, float rawvalue) {
@@ -406,7 +396,7 @@ void TTParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
                 parent_.clearDisplay(PARAM_DISPLAY);
                 std::string md = "";
                 std::string pd = "";
-                if (module) md = module->id() + " : " + module->displayName();
+                if (module) md = module->id() + ":" + module->displayName();
                 parent_.displayTitle(md, "none");
             }
         }
@@ -598,6 +588,7 @@ void TTMenuMode::display() {
     for (unsigned i = top_; i < top_ + TERMINALTEDIUM_NUM_TEXTLINES; i++) {
         displayItem(i);
     }
+    parent_.flipDisplay(MENU_DISPLAY);
 }
 
 void TTMenuMode::displayItem(unsigned i) {
@@ -609,7 +600,6 @@ void TTMenuMode::displayItem(unsigned i) {
             parent_.invertLine(MENU_DISPLAY,line);
         }
     }
-    parent_.flipDisplay(MENU_DISPLAY);
 }
 
 
@@ -642,7 +632,7 @@ void TTMenuMode::changeEncoder(unsigned, float value) {
             parent_.flipDisplay(MENU_DISPLAY);
         }
     }
-    popupTime_ = MENU_TIMEOUT;
+    if(popupTime_>=0) popupTime_ = MENU_TIMEOUT;
 }
 
 
@@ -668,6 +658,25 @@ bool TTMainMenu::init() {
     return true;
 }
 
+void TTMainMenu::activate() {
+    TTMenuMode::activate();
+    // no popup time, since we are top menu
+    popupTime_ = -1;
+}
+
+void TTMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &) {
+    if (rack.id() == parent_.currentRack()) {
+        display();
+    }
+}
+
+void TTMainMenu::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+    if (rack.id() == parent_.currentRack()) {
+        if(module.id()==parent_.currentModule()) {
+            display();
+        }
+    }
+}
 
 unsigned TTMainMenu::getSize() {
     return (unsigned) MMI_SIZE;
@@ -725,6 +734,8 @@ void TTMainMenu::clicked(unsigned idx) {
         parent_.midiLearn(!parent_.midiLearn());
         displayItem(MMI_MIDILEARN);
         displayItem(MMI_MODLEARN);
+        unsigned line = cur_ - top_ + 1;
+        parent_.invertLine(MENU_DISPLAY,line);
         parent_.flipDisplay(MENU_DISPLAY);
         // parent_.changeMode(TT_PARAMETER);
         break;
@@ -733,6 +744,8 @@ void TTMainMenu::clicked(unsigned idx) {
         parent_.modulationLearn(!parent_.modulationLearn());
         displayItem(MMI_MIDILEARN);
         displayItem(MMI_MODLEARN);
+        unsigned line = cur_ - top_ + 1;
+        parent_.invertLine(MENU_DISPLAY,line);
         parent_.flipDisplay(MENU_DISPLAY);
         // parent_.changeMode(TT_PARAMETER);
         break;
@@ -1017,7 +1030,6 @@ bool TerminalTedium::init() {
         writer_thread_ = std::thread(terminaltedium_write_thread_func, this);
         running_ = true;
         encoderMenu_=false;
-        sendPdMessage("led0", (float) encoderMenu_);
         paramDisplay_->init();
         paramDisplay_->activate();
 
@@ -1051,8 +1063,9 @@ void TerminalTedium::displayParamLine(unsigned line, const Kontrol::Parameter &p
 
 void TerminalTedium::displayTitle(const std::string &module, const std::string &page) {
     if (module.size() == 0 || page.size() == 0) return;
-    std::string title = module + " > " + page;
-    displayLine(PARAM_DISPLAY,0,title);
+    //std::string title = module + ">" + page;
+    //displayLine(PARAM_DISPLAY,0,title);
+    displayLine(PARAM_DISPLAY,0,page);
 }
 
 
@@ -1067,8 +1080,8 @@ void TerminalTedium::displayLine(unsigned display, unsigned line, const std::str
     messageQueue_.enqueue(msg);
 }
 
-void TerminalTedium::flipDisplay(unsigned /*display*/) {
-    TTMsg msg(TTMsg::RENDER);
+void TerminalTedium::flipDisplay(unsigned display) {
+    TTMsg msg(TTMsg::RENDER,display);
     messageQueue_.enqueue(msg);
 }
 
@@ -1190,14 +1203,13 @@ void TerminalTedium::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &
     paramDisplay_->loadModule(src, rack, modId, modType);
 }
 
-
 //================
 
 void *terminaltedium_write_thread_func(void *aObj) {
-    post("start TerminalTedium write thead");
+    //post("start TerminalTedium write thead");
     auto *pThis = static_cast<TerminalTedium *>(aObj);
     pThis->writePoll();
-    post("TerminalTedium write thread ended");
+    //post("TerminalTedium write thread ended");
     return nullptr;
 }
 
@@ -1237,6 +1249,7 @@ void TerminalTedium::writePoll() {
                 case TTMsg::DISPLAY_LINE: {
                     if (msg.display_ < 2 && msg.line_ < 6) {
                         strncpy(lines[msg.display_][msg.line_], msg.buffer_, msg.size_);
+                        lines[msg.display_][msg.line_][msg.size_]=0;
                         dirty[msg.display_][msg.line_] = true;
                     }
                     break;
@@ -1258,11 +1271,10 @@ void TerminalTedium::writePoll() {
             if (render) {
                 for (int d = 0; d < 2; d++) {
                     for (int i = 0; i < 6; i++) {
-                        if (dirty[i] && lines[d][i][0] > 0) {
-                            //device_.clearText(d, !clr[d][i],i);
+                        if (dirty[d][i] && lines[d][i][0] > 0) {
+                            device_.clearText(d, !clr[d][i],i);
                             device_.displayText(d, clr[d][i], i, 0, lines[d][i]);
                             dirty[d][i] = false;
-                            lines[d][i][0] = 0;
                         }
                     }
                 }
