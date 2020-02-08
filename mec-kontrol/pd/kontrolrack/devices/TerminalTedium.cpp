@@ -37,7 +37,7 @@ static const unsigned TERMINALTEDIUM_NUM_PARAMS = 4;
 void *terminaltedium_write_thread_func(void *aObj);
 
 enum TerminalTediumModes {
-    TT_PARAMETER,
+    //TT_PARAMETER,
     TT_MAINMENU,
     TT_PRESETMENU,
     TT_MODULEMENU,
@@ -451,17 +451,18 @@ void TTParamMode::changeEncoder(unsigned enc, float value) {
         
         for(auto m : modules) {
             if(m->id()==cmoduleId){
-                moduleIdx=-1;
                 break;
             }
             moduleIdx++;
         }
         
+
         if(moduleIdx == -1 || (moduleIdx + 1) >= modules.size()) {
             moduleIdx = 0;
         } else {
             moduleIdx++;
         }
+
 
         auto module = modules[moduleIdx];
         auto moduleId = module->id();
@@ -587,7 +588,7 @@ void TTMenuMode::activate() {
 void TTMenuMode::poll() {
     TTBaseMode::poll();
     if (popupTime_ == 0) {
-        parent_.changeMode(TT_PARAMETER);
+        parent_.changeMode(TT_MAINMENU);
         popupTime_ = -1;
     }
 }
@@ -1015,9 +1016,10 @@ bool TerminalTedium::init() {
         device_.start();
         writer_thread_ = std::thread(terminaltedium_write_thread_func, this);
         running_ = true;
+        encoderMenu_=false;
+        sendPdMessage("led0", (float) encoderMenu_);
         paramDisplay_->init();
         paramDisplay_->activate();
-
 
         changeMode(TT_MAINMENU);
         return true;
@@ -1071,7 +1073,8 @@ void TerminalTedium::flipDisplay(unsigned /*display*/) {
 }
 
 void TerminalTedium::invertLine(unsigned display,unsigned line) {
-    ;
+    TTMsg msg(TTMsg::INVERT_LINE, display,line);
+    messageQueue_.enqueue(msg);
 }
 
 
@@ -1108,10 +1111,14 @@ void TerminalTedium::encoderButton(unsigned encoder, bool value) {
             int dur = std::chrono::duration_cast<std::chrono::milliseconds>(now - encoderDown_).count();
             if(dur > ENCODER_HOLD_MS) {
                 // long press = switch mode
+
                 encoderMenu_= ! encoderMenu_;
                 encoderDown_= now;
                 encoderLongHold_ = false;
-                // dont pass on to submodes
+                sendPdMessage("led0", (float) encoderMenu_);
+                if(encoderMenu_) {
+                    paramDisplay_->encoderButton(encoder,false);
+                }
                 return; 
             } else {
                 // = shot press, so end long hold
@@ -1197,11 +1204,13 @@ void *terminaltedium_write_thread_func(void *aObj) {
 void TerminalTedium::writePoll() {
     static char lines [2][6][40];
     static bool dirty [2][6];
+    static unsigned clr[2][6];
     bool render = false;
     for (int d = 0; d < 2; d++) {
         for (int i = 0; i < 6; i++) {
             dirty[d][i] = false;
             lines[d][i][0] = 0;
+            clr[d][i] = 1;
         }
     }
     while (running_) {
@@ -1221,12 +1230,20 @@ void TerminalTedium::writePoll() {
                     for (int i = 0; i < 6; i++) {
                         dirty[msg.display_][i] = false;
                         lines[msg.display_][i][0] = 0;
+                        clr[msg.display_][i] = 1;
                     }
                     break;
                 }
                 case TTMsg::DISPLAY_LINE: {
                     if (msg.display_ < 2 && msg.line_ < 6) {
                         strncpy(lines[msg.display_][msg.line_], msg.buffer_, msg.size_);
+                        dirty[msg.display_][msg.line_] = true;
+                    }
+                    break;
+                }
+                case TTMsg::INVERT_LINE: {
+                    if (msg.display_ < 2 && msg.line_ < 6) {
+                        clr[msg.display_][msg.line_] = ! clr[msg.display_][msg.line_];
                         dirty[msg.display_][msg.line_] = true;
                     }
                     break;
@@ -1242,7 +1259,8 @@ void TerminalTedium::writePoll() {
                 for (int d = 0; d < 2; d++) {
                     for (int i = 0; i < 6; i++) {
                         if (dirty[i] && lines[d][i][0] > 0) {
-                            device_.displayText(d, 1, i, 0, lines[d][i]);
+                            //device_.clearText(d, !clr[d][i],i);
+                            device_.displayText(d, clr[d][i], i, 0, lines[d][i]);
                             dirty[d][i] = false;
                             lines[d][i][0] = 0;
                         }

@@ -65,6 +65,7 @@ private:
             RENDER,
             DISPLAY_CLEAR,
             DISPLAY_LINE,
+            INVERT_LINE,
             MAX_TYPE
         } type_;
 
