@@ -18,6 +18,7 @@ public:
 
     //KontrolDevice
     virtual bool init() override;
+    virtual void poll() override;
     virtual void changePot(unsigned pot, float value);
     virtual void changeEncoder(unsigned encoder, float value);
     virtual void encoderButton(unsigned encoder, bool value);
@@ -53,6 +54,7 @@ private:
     std::chrono::system_clock::time_point encoderDown_;
     bool encoderLongHold_=false;
     bool encoderMenu_=false;
+    int  encoderMenuTime_=-1;
 
     // gpio will cause havoc on audio thread, so has to be on a different thread!
     struct TTMsg {

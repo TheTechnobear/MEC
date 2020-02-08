@@ -1102,6 +1102,7 @@ void TerminalTedium::changePot(unsigned pot, float value) {
 void TerminalTedium::changeEncoder(unsigned encoder, float value) {
     // if we press up/down, we also now ignore encoder down long hold
     if(encoderMenu_) {
+        encoderMenuTime_=MENU_TIMEOUT;
         encoderLongHold_=false;
         KontrolDevice::changeEncoder(encoder,value);
     } else {
@@ -1113,24 +1114,24 @@ void TerminalTedium::changeEncoder(unsigned encoder, float value) {
 static constexpr unsigned ENCODER_HOLD_MS=1000;
 
 void TerminalTedium::encoderButton(unsigned encoder, bool value) {
+    std::chrono::system_clock::time_point now=std::chrono::system_clock::now();
     if(value) {
         // encoder pressed down transition 
         // dont do anything yet other than record time!
-        encoderDown_=std::chrono::system_clock::now();
+        encoderDown_=now;
         encoderLongHold_ = true;
     } else {
         if(encoderLongHold_) {
-            std::chrono::system_clock::time_point now=std::chrono::system_clock::now();
             int dur = std::chrono::duration_cast<std::chrono::milliseconds>(now - encoderDown_).count();
             if(dur > ENCODER_HOLD_MS) {
                 // long press = switch mode
-
                 encoderMenu_= ! encoderMenu_;
                 encoderDown_= now;
                 encoderLongHold_ = false;
                 sendPdMessage("led0", (float) encoderMenu_);
                 if(encoderMenu_) {
                     paramDisplay_->encoderButton(encoder,false);
+                    encoderMenuTime_=MENU_TIMEOUT;
                 }
                 return; 
             } else {
@@ -1142,12 +1143,26 @@ void TerminalTedium::encoderButton(unsigned encoder, bool value) {
     }
     // pass thru encoder up/down except if long hold
     if(encoderMenu_) {
+        encoderMenuTime_=MENU_TIMEOUT;
         KontrolDevice::encoderButton(encoder,value);
     } else {
         paramDisplay_->encoderButton(encoder,value);
     }
 }
 
+void TerminalTedium::poll() {
+    KontrolDevice::poll();
+    if(encoderMenu_) {
+        if(encoderMenuTime_>0) {
+            encoderMenuTime_--;
+        } else if(encoderMenuTime_==0) {
+            encoderMenuTime_=-1;
+            encoderMenu_=false;
+            changeMode(TT_MAINMENU);
+            sendPdMessage("led0", (float) encoderMenu_);
+        }
+    }
+}
 
 
 // send messages to both current mode, and paramdisplay
