@@ -13,19 +13,22 @@ static const unsigned MODULE_SWITCH_TIMEOUT = 50;
 static const unsigned MENU_TIMEOUT = 350;
 
 
-const int8_t PATCH_SCREEN = 3;
-
 static const unsigned TT_WRITE_POLL_WAIT_TIMEOUT = 1000;
 
 
-// TODO 
+
+static const unsigned PARAM_DISPLAY=0;
+static const unsigned MENU_DISPLAY=1;
+
+// TODO
 //
+// remove popup, activateShortcut?
 // split screen
 // redo display?
 // invert line? menu?
 // check POT = 4096?
 
-static const float MAX_POT_VALUE = 4000.0f; 
+static const float MAX_POT_VALUE = 4000.0f;
 
 static const unsigned TERMINALTEDIUM_NUM_TEXTLINES = 4;
 static const unsigned TERMINALTEDIUM_NUM_PARAMS = 4;
@@ -108,7 +111,6 @@ public:
     void changePot(unsigned pot, float value) override;
     void changeEncoder(unsigned encoder, float value) override;
     void encoderButton(unsigned encoder, bool value) override;
-    void keyPress(unsigned, unsigned) override;
     void selectPage(unsigned) override;
 
 
@@ -134,7 +136,6 @@ private:
     int pageIdx_ = -1;
     Kontrol::EntityId pageId_;
 
-    bool encoderAction_ = false;
     bool encoderDown_ = false;
 };
 
@@ -239,13 +240,19 @@ bool TTParamMode::init() {
 }
 
 void TTParamMode::display() {
-    parent_.clearDisplay();
+    parent_.clearDisplay(PARAM_DISPLAY);
 
     auto rack = parent_.model()->getRack(parent_.currentRack());
     auto module = parent_.model()->getModule(rack, parent_.currentModule());
     auto page = parent_.model()->getPage(module, pageId_);
 //    auto pages = parent_.model()->getPages(module);
     auto params = parent_.model()->getParams(module, page);
+
+    std::string md = "";
+    std::string pd = "";
+    if (module) md = module->id() + " : " + module->displayName();
+    if (page) pd = page->displayName();
+    parent_.displayTitle(md, pd);
 
 
     unsigned int j = 0;
@@ -257,7 +264,7 @@ void TTParamMode::display() {
         if (j == TERMINALTEDIUM_NUM_PARAMS) break;
     }
 
-    parent_.flipDisplay();
+    parent_.flipDisplay(PARAM_DISPLAY);
 }
 
 
@@ -294,9 +301,9 @@ void TTParamMode::changePot(unsigned pot, float rawvalue) {
             // a page with no parameters is a custom page
             // and recieves pot events
             char msg[7];
-            sprintf(msg, "knob%d",pot+1);
+            sprintf(msg, "knob%d", pot + 1);
             pots_->locked_[pot] = Pots::K_UNLOCKED;
-            if(pots_->rawValue[pot]!=rawvalue) {
+            if (pots_->rawValue[pot] != rawvalue) {
                 float value = rawvalue / MAX_POT_VALUE;
                 parent_.sendPdModuleMessage(msg, module->id(), ( page == nullptr ? "none" : page->id() ) , value);
             }
@@ -390,17 +397,22 @@ void TTParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
                     page = pages[pageIdx_];
                     pageId_ = page->id();
                     display();
-                } catch (std::out_of_range) { ;
+                } catch (std::out_of_range) {
+                    ;
                 }
             } else {
                 // if no pages, or page selected is out of range, display blank
-                parent_.clearDisplay();
+                parent_.clearDisplay(PARAM_DISPLAY);
+                std::string md = "";
+                std::string pd = "";
+                if (module) md = module->id() + " : " + module->displayName();
+                parent_.displayTitle(md, "none");
             }
         }
 
         if (UI) {
-            displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT, false);
-            parent_.flipDisplay();
+            // displayPopup(page->displayName(), PAGE_SWITCH_TIMEOUT, false);
+            parent_.flipDisplay(PARAM_DISPLAY);
         }
 
         parent_.sendPdMessage("activePage", module->id(), (page == nullptr ? "none" : page->id()));
@@ -409,12 +421,13 @@ void TTParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
             pots_->locked_[i] = Pots::K_LOCKED;
             changePot(i, pots_->rawValue[i]);
         }
-    } catch (std::out_of_range) { ;
+    } catch (std::out_of_range) {
+        ;
     }
 }
 
 void TTParamMode::selectPage(unsigned page) {
-    setCurrentPage(page,true);
+    setCurrentPage(page, true);
 }
 
 
@@ -428,83 +441,8 @@ void TTParamMode::changeEncoder(unsigned enc, float value) {
     auto pages = parent_.model()->getPages(module);
 //        auto params = parent_.model()->getParams(module,page);
 
-    if (pages.size()<2) {
-        // if single page send encoder messages to modules
-        parent_.sendPdModuleMessage("enc", module->id(), value);
-        return;
-    }
-
-    if (pageIdx_ < 0) {
-        setCurrentPage(0, false);
-        return;
-    }
-
-
-    auto pagenum = (unsigned) pageIdx_;
-
-    if (value > 0) {
-        // clockwise
-        pagenum++;
-        pagenum = std::min(pagenum, (unsigned) pages.size() - 1);
-    } else {
-        // anti clockwise
-        if (pagenum > 0) pagenum--;
-    }
-
-    if (pagenum != pageIdx_) {
-        setCurrentPage(pagenum, true);
-    }
-}
-
-void TTParamMode::encoderButton(unsigned enc, bool value) {
-    TTBaseMode::encoderButton(enc, value);
-
-    if(parent_.enableMenu()) {
-        if (encoderAction_ && !value) {
-            parent_.changeMode(TT_MAINMENU);
-        }
-    } else {
-        auto rack = parent_.model()->getRack(parent_.currentRack());
-        auto module = parent_.model()->getModule(rack, parent_.currentModule());
-        parent_.sendPdModuleMessage("encbut", module->id(), value);
-    }
-
-    encoderDown_ = value;
-    encoderAction_ = value;
-}
-
-
-void TTParamMode::keyPress(unsigned key, unsigned value) {
-    if (value == 0 && encoderDown_) {
-        activateShortcut(key);
-        encoderAction_ = false;
-    }
-}
-
-void TTParamMode::activateShortcut(unsigned key) {
-    if (key == 0) {
-        if(parent_.enableMenu()) {
-            // normal op = select menu
-            encoderDown_ = false;
-            encoderAction_ = false;
-            parent_.changeMode(TT_MODULESELECTMENU);
-            return;
-        } else {
-            //TODO backcompat mode
-            //this is not good, as it will obliterate screen
-            //and also will mean encoder cannot be used again
-            //but it necessary otherwise you cannot change module
-            //(also changing module means we need to have the menu enabled again)
-
-            // re-enable main menu
-            encoderDown_ = false;
-            encoderAction_ = false;
-            parent_.enableMenu(true);
-            parent_.changeMode(TT_MAINMENU);
-        }
-    }
-
-    if (key > 0) {
+    if(encoderDown_) {
+        // if encoder is down, then we switch modules
         unsigned moduleIdx = key - 1;
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto modules = parent_.getModules(rack);
@@ -512,28 +450,58 @@ void TTParamMode::activateShortcut(unsigned key) {
             auto module = modules[moduleIdx];
             auto moduleId = module->id();
             if (parent_.currentModule() != moduleId) {
-                // re-enable main menu
-                parent_.enableMenu(true);
-
                 parent_.currentModule(moduleId);
-                displayPopup(module->id() + ":" + module->displayName(), MODULE_SWITCH_TIMEOUT, true);
                 parent_.flipDisplay();
             }
         }
-    }
+    } else {
+        // encoder up, so we swich pages
+
+        if (pages.size() < 2) {
+            // if single page send encoder messages to modules
+            parent_.sendPdModuleMessage("enc", module->id(), value);
+            return;
+        }
+
+        if (pageIdx_ < 0) {
+            setCurrentPage(0, false);
+            return;
+        }
+
+
+        auto pagenum = (unsigned) pageIdx_;
+
+        if (value > 0) {
+            // clockwise
+            pagenum++;
+            pagenum = std::min(pagenum, (unsigned) pages.size() - 1);
+        } else {
+            // anti clockwise
+            if (pagenum > 0) pagenum--;
+        }
+
+        if (pagenum != pageIdx_) {
+            setCurrentPage(pagenum, true);
+        }
+    } // else ! encoder down
 }
+
+void TTParamMode::encoderButton(unsigned enc, bool value) {
+    encoderDown_ = value;
+}
+
 
 void TTParamMode::activeModule(Kontrol::ChangeSource, const Kontrol::Rack &rack, const Kontrol::Module &) {
     if (rack.id() == parent_.currentRack()) {
         pageIdx_ = -1;
         setCurrentPage(0, false);
-        parent_.flipDisplay();
+        parent_.flipDisplay(PARAM_DISPLAY);
     }
 }
 
 
 void TTParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
-                         const Kontrol::Parameter &param) {
+                          const Kontrol::Parameter &param) {
     TTBaseMode::changed(src, rack, module, param);
     if (popupTime_ > 0) return;
 
@@ -559,7 +527,7 @@ void TTParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, 
                     pots_->locked_[i] = Pots::K_LOCKED;
                     changePot(i, pots_->rawValue[i]);
                 }
-                parent_.flipDisplay();
+                parent_.flipDisplay(PARAM_DISPLAY);
                 return;
             }
         } catch (std::out_of_range) {
@@ -577,14 +545,14 @@ void TTParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack
 }
 
 void TTParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
-                      const Kontrol::Page &page) {
+                       const Kontrol::Page &page) {
     TTBaseMode::page(source, rack, module, page);
     if (pageIdx_ < 0) setCurrentPage(0, false);
 }
 
 
 void TTParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
-                            const Kontrol::EntityId &moduleId, const std::string &modType) {
+                             const Kontrol::EntityId &moduleId, const std::string &modType) {
     TTBaseMode::loadModule(source, rack, moduleId, modType);
     if (parent_.currentModule() == moduleId) {
         if (moduleType_ != modType) {
@@ -595,7 +563,6 @@ void TTParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &
 }
 
 void TTMenuMode::activate() {
-    parent_.sendPdMessage("activePage", "none","none");
     display();
     popupTime_ = MENU_TIMEOUT;
     clickedDown_ = false;
@@ -610,7 +577,7 @@ void TTMenuMode::poll() {
 }
 
 void TTMenuMode::display() {
-    parent_.clearDisplay();
+    parent_.clearDisplay(MENU_DISPLAY);
     for (unsigned i = top_; i < top_ + TERMINALTEDIUM_NUM_TEXTLINES; i++) {
         displayItem(i);
     }
@@ -620,12 +587,12 @@ void TTMenuMode::displayItem(unsigned i) {
     if (i < getSize()) {
         std::string item = getItemText(i);
         unsigned line = i - top_ + 1;
-        parent_.displayLine(line, item.c_str());
+        parent_.displayLine(MENU_DISPLAY,line, item.c_str());
         if (i == cur_) {
-            parent_.invertLine(line);
+            parent_.invertLine(MENU_DISPLAY,line);
         }
     }
-    parent_.flipDisplay();
+    parent_.flipDisplay(MENU_DISPLAY);
 }
 
 
@@ -655,7 +622,7 @@ void TTMenuMode::changeEncoder(unsigned, float value) {
             cur_ = cur;
             line = cur_ - top_ + 1;
             if (line <= TERMINALTEDIUM_NUM_TEXTLINES) parent_.invertLine(line);
-            parent_.flipDisplay();
+            parent_.flipDisplay(MENU_DISPLAY);
         }
     }
     popupTime_ = MENU_TIMEOUT;
@@ -691,37 +658,37 @@ unsigned TTMainMenu::getSize() {
 
 std::string TTMainMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case MMI_MODULE: {
-            auto rack = model()->getRack(parent_.currentRack());
-            auto module = model()->getModule(rack, parent_.currentModule());
-            if (module == nullptr)
-                return parent_.currentModule();
-            else
-                return parent_.currentModule() + ":" + module->displayName();
+    case MMI_MODULE: {
+        auto rack = model()->getRack(parent_.currentRack());
+        auto module = model()->getModule(rack, parent_.currentModule());
+        if (module == nullptr)
+            return parent_.currentModule();
+        else
+            return parent_.currentModule() + ":" + module->displayName();
+    }
+    case MMI_PRESET: {
+        auto rack = model()->getRack(parent_.currentRack());
+        if (rack != nullptr) {
+            return rack->currentPreset();
         }
-        case MMI_PRESET: {
-            auto rack = model()->getRack(parent_.currentRack());
-            if (rack != nullptr) {
-                return rack->currentPreset();
-            }
-            return "No Preset";
+        return "No Preset";
+    }
+    case MMI_SAVE:
+        return "Save";
+    case MMI_MIDILEARN: {
+        if (parent_.midiLearn()) {
+            return "Midi Learn        [X]";
         }
-        case MMI_SAVE:
-            return "Save";
-        case MMI_MIDILEARN: {
-            if (parent_.midiLearn()) {
-                return "Midi Learn        [X]";
-            }
-            return "Midi Learn        [ ]";
+        return "Midi Learn        [ ]";
+    }
+    case MMI_MODLEARN: {
+        if (parent_.modulationLearn()) {
+            return "Mod Learn         [X]";
         }
-        case MMI_MODLEARN: {
-            if (parent_.modulationLearn()) {
-                return "Mod Learn         [X]";
-            }
-            return "Mod Learn         [ ]";
-        }
-        default:
-            break;
+        return "Mod Learn         [ ]";
+    }
+    default:
+        break;
     }
     return "";
 }
@@ -729,40 +696,39 @@ std::string TTMainMenu::getItemText(unsigned idx) {
 
 void TTMainMenu::clicked(unsigned idx) {
     switch (idx) {
-        case MMI_MODULE: {
-            parent_.changeMode(TT_MODULEMENU);
-            break;
+    case MMI_MODULE: {
+        parent_.changeMode(TT_MODULEMENU);
+        break;
+    }
+    case MMI_PRESET: {
+        parent_.changeMode(TT_PRESETMENU);
+        break;
+    }
+    case MMI_MIDILEARN: {
+        parent_.midiLearn(!parent_.midiLearn());
+        displayItem(MMI_MIDILEARN);
+        displayItem(MMI_MODLEARN);
+        parent_.flipDisplay(MENU_DISPLAY);
+        // parent_.changeMode(TT_PARAMETER);
+        break;
+    }
+    case MMI_MODLEARN: {
+        parent_.modulationLearn(!parent_.modulationLearn());
+        displayItem(MMI_MIDILEARN);
+        displayItem(MMI_MODLEARN);
+        parent_.flipDisplay(MENU_DISPLAY);
+        // parent_.changeMode(TT_PARAMETER);
+        break;
+    }
+    case MMI_SAVE: {
+        auto rack = model()->getRack(parent_.currentRack());
+        if (rack != nullptr) {
+            rack->saveSettings();
         }
-        case MMI_PRESET: {
-            parent_.changeMode(TT_PRESETMENU);
-            break;
-        }
-        case MMI_MIDILEARN: {
-            parent_.midiLearn(!parent_.midiLearn());
-            displayItem(MMI_MIDILEARN);
-            displayItem(MMI_MODLEARN);
-            parent_.flipDisplay();
-            // parent_.changeMode(TT_PARAMETER);
-            break;
-        }
-        case MMI_MODLEARN: {
-            parent_.modulationLearn(!parent_.modulationLearn());
-            displayItem(MMI_MIDILEARN);
-            displayItem(MMI_MODLEARN);
-            parent_.flipDisplay();
-            // parent_.changeMode(TT_PARAMETER);
-            break;
-        }
-        case MMI_SAVE: {
-            auto rack = model()->getRack(parent_.currentRack());
-            if (rack != nullptr) {
-                rack->saveSettings();
-            }
-            parent_.changeMode(TT_PARAMETER);
-            break;
-        }
-        default:
-            break;
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -802,49 +768,49 @@ unsigned TTPresetMenu::getSize() {
 
 std::string TTPresetMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case PMI_SAVE:
-            return "Save Preset";
-        case PMI_NEW:
-            return "New Preset";
-        case PMI_SEP:
-            return "--------------------";
-        default:
-            return presets_[idx - PMI_LAST];
+    case PMI_SAVE:
+        return "Save Preset";
+    case PMI_NEW:
+        return "New Preset";
+    case PMI_SEP:
+        return "--------------------";
+    default:
+        return presets_[idx - PMI_LAST];
     }
 }
 
 
 void TTPresetMenu::clicked(unsigned idx) {
     switch (idx) {
-        case PMI_SAVE: {
-            auto rack = model()->getRack(parent_.currentRack());
-            if (rack != nullptr) {
-                rack->savePreset(rack->currentPreset());
-            }
-            parent_.changeMode(TT_PARAMETER);
-            break;
+    case PMI_SAVE: {
+        auto rack = model()->getRack(parent_.currentRack());
+        if (rack != nullptr) {
+            rack->savePreset(rack->currentPreset());
         }
-        case PMI_NEW: {
-            auto rack = model()->getRack(parent_.currentRack());
-            if (rack != nullptr) {
-                std::string newPreset = "new-" + std::to_string(presets_.size());
-                rack->savePreset(newPreset);
-            }
+        parent_.changeMode(TT_MAINMENU);
+        break;
+    }
+    case PMI_NEW: {
+        auto rack = model()->getRack(parent_.currentRack());
+        if (rack != nullptr) {
+            std::string newPreset = "new-" + std::to_string(presets_.size());
+            rack->savePreset(newPreset);
+        }
+        parent_.changeMode(TT_MAINMENU);
+        break;
+    }
+    case PMI_SEP: {
+        break;
+    }
+    default: {
+        auto rack = model()->getRack(parent_.currentRack());
+        if (rack != nullptr) {
+            std::string newPreset = presets_[idx - PMI_LAST];
             parent_.changeMode(TT_MAINMENU);
-            break;
+            rack->loadPreset(newPreset);
         }
-        case PMI_SEP: {
-            break;
-        }
-        default: {
-            auto rack = model()->getRack(parent_.currentRack());
-            if (rack != nullptr) {
-                std::string newPreset = presets_[idx - PMI_LAST];
-                parent_.changeMode(TT_PARAMETER);
-                rack->loadPreset(newPreset);
-            }
-            break;
-        }
+        break;
+    }
     }
 }
 
@@ -860,16 +826,16 @@ void TTModuleMenu::populateMenu(const std::string& catSel) {
     std::set<std::string> cats;
     unsigned catlen = cat_.length();
 
-    if(catlen) {
+    if (catlen) {
         items_.push_back("..");
         idx++;
     }
 
     for (const auto &modtype : res) {
-        if(cat_.length()) {
-            size_t pos=modtype.find(cat_);
-            if(pos==0) {
-               std::string mod=modtype.substr(catlen,modtype.length()-catlen);
+        if (cat_.length()) {
+            size_t pos = modtype.find(cat_);
+            if (pos == 0) {
+                std::string mod = modtype.substr(catlen, modtype.length() - catlen);
                 items_.push_back(mod);
                 if (module->type() == modtype ) {
                     cur_ = idx;
@@ -879,8 +845,8 @@ void TTModuleMenu::populateMenu(const std::string& catSel) {
             } // else filtered
         } else {
             // top level, so get categories
-            size_t pos=modtype.find("/");
-            if(pos==std::string::npos) {
+            size_t pos = modtype.find("/");
+            if (pos == std::string::npos) {
                 items_.push_back(modtype);
                 if (modtype == module->type()) {
                     cur_ = idx;
@@ -888,21 +854,21 @@ void TTModuleMenu::populateMenu(const std::string& catSel) {
                 }
                 idx++;
             } else {
-                cats.insert(modtype.substr(0,pos+1));
+                cats.insert(modtype.substr(0, pos + 1));
             }
         }
     }
 
 
-    size_t pos =std::string::npos;
+    size_t pos = std::string::npos;
     std::string modcat;
     pos = module->type().find("/");
-    if(pos!=std::string::npos) {
-        modcat=module->type().substr(0,pos+1);
+    if (pos != std::string::npos) {
+        modcat = module->type().substr(0, pos + 1);
     }
 
 
-    for(auto s: cats) {
+    for (auto s : cats) {
         items_.push_back(s);
         if (catSel.length() && s == catSel) {
             cur_ = idx;
@@ -919,12 +885,12 @@ void TTModuleMenu::activate() {
     if (module == nullptr) return;
     unsigned idx = 0;
     auto res = rack->getResources("module");
-    cat_="";
+    cat_ = "";
 
-    size_t pos =std::string::npos;
+    size_t pos = std::string::npos;
     pos = module->type().find("/");
-    if(pos!=std::string::npos) {
-        cat_=module->type().substr(0,pos+1);
+    if (pos != std::string::npos) {
+        cat_ = module->type().substr(0, pos + 1);
     }
 
     populateMenu(cat_);
@@ -943,14 +909,14 @@ void TTModuleMenu::clicked(unsigned idx) {
             display();
             return;
         } else {
-            if(cat_.length()) {
+            if (cat_.length()) {
                 // module dir
                 Kontrol::EntityId modType = cat_ + modtype;
                 auto rack = model()->getRack(parent_.currentRack());
                 auto module = model()->getModule(rack, parent_.currentModule());
                 if (modType != module->type()) {
                     //FIXME, workaround since changing the module needs to tell params to change page
-                    parent_.changeMode(TT_PARAMETER);
+                    parent_.changeMode(TT_MAINMENU);
                     model()->loadModule(Kontrol::CS_LOCAL, rack->id(), module->id(), modType);
                 }
             } else {
@@ -961,7 +927,7 @@ void TTModuleMenu::clicked(unsigned idx) {
             }
         }
     }
-    parent_.changeMode(TT_PARAMETER);
+    parent_.changeMode(TT_MAINMENU);
 }
 
 
@@ -986,7 +952,7 @@ void TToduleSelectMenu::activate() {
 
 
 void TToduleSelectMenu::clicked(unsigned idx) {
-    parent_.changeMode(TT_PARAMETER);
+    parent_.changeMode(TT_MAINMENU);
     if (idx < getSize()) {
         unsigned moduleIdx = idx;
         auto rack = parent_.model()->getRack(parent_.currentRack());
@@ -1023,7 +989,7 @@ void TerminalTedium::stop() {
 
 bool TerminalTedium::init() {
     // add modes before KD init
-    addMode(TT_PARAMETER, std::make_shared<TTParamMode>(*this));
+    paramDisplay_ = std::make_shared<TTParamMode>(*this)
     addMode(TT_MAINMENU, std::make_shared<TTMainMenu>(*this));
     addMode(TT_PRESETMENU, std::make_shared<TTPresetMenu>(*this));
     addMode(TT_MODULEMENU, std::make_shared<TTModuleMenu>(*this));
@@ -1032,29 +998,17 @@ bool TerminalTedium::init() {
     if (KontrolDevice::init()) {
         device_.start();
         writer_thread_ = std::thread(terminaltedium_write_thread_func, this);
-        running_=true;
+        running_ = true;
+        paramDisplay_->activate();
 
 
-        changeMode(TT_PARAMETER);
+        changeMode(TT_MAINMENU);
         return true;
     }
     return false;
 }
 
 
-void TerminalTedium::displayPopup(const std::string &text, bool dblline) {
-#if 0
-    if (dblline) {
-        device_.clearRect(0, 0, 2, 12, 118,38);
-        // device_.drawRect(0, 1, 2, 12, 118,38);
-    } else {
-        device_.clearRect(0, 0, 4, 14, 114,34);
-    }
-    // device_.drawRect(0, 1, 4, 14, 114,34);
-
-    device_.drawText(0, 1, 10,24, text);
-#endif 
-}
 
 
 std::string TerminalTedium::asDisplayString(const Kontrol::Parameter &param, unsigned width) const {
@@ -1072,31 +1026,145 @@ std::string TerminalTedium::asDisplayString(const Kontrol::Parameter &param, uns
 
 void TerminalTedium::displayParamLine(unsigned line, const Kontrol::Parameter &param) {
     std::string disp = asDisplayString(param, SCREEN_WIDTH);
-    displayLine(line, disp.c_str());
+    displayLine(PARAM_DISPLAY, line, disp.c_str());
 }
 
-void TerminalTedium::clearDisplay() {
-    TTMsg msg(TTMsg::DISPLAY_CLEAR,0);
+
+void TerminalTedium::displayTitle(const std::string &module, const std::string &page) {
+    if (module.size() == 0 || page.size() == 0) return;
+    std::string title = module + " > " + page;
+    displayLine(PARAM_DISPLAY,title);
+}
+
+
+void TerminalTedium::clearDisplay(unsigned display) {
+    TTMsg msg(TTMsg::DISPLAY_CLEAR, display);
     messageQueue_.enqueue(msg);
 }
 
 
-
-void TerminalTedium::displayLine(unsigned line, const std::string& str) {
-    TTMsg msg(TTMsg::DISPLAY_LINE, 0, line,str.c_str(),str.size() );
+void TerminalTedium::displayLine(unsigned display, unsigned line, const std::string& str) {
+    TTMsg msg(TTMsg::DISPLAY_LINE, display, line, str.c_str(), str.size() );
     messageQueue_.enqueue(msg);
 }
 
-void TerminalTedium::invertLine(unsigned line) {
-    // device_.invertText(0,line);
-}
-
-void TerminalTedium::flipDisplay() {
+void TerminalTedium::flipDisplay(unsigned /*display*/) {
     TTMsg msg(TTMsg::RENDER);
     messageQueue_.enqueue(msg);
 }
 
+void TerminalTedium::invertLine(unsigned display,unsigned line) {
+    ;
+}
 
+
+
+
+void TerminalTedium::changePot(unsigned pot, float value) {
+    // we dont go to the mode
+    // Kontrol::Device::rack(src, rack);
+    paramDisplay_->changePot(pot,value);
+}
+
+void TerminalTedium::changeEncoder(unsigned encoder, float value) {
+    // if we press up/down, we also now ignore encoder down long hold
+    if(encoderMenu_) {
+        encoderLongHold_=false;
+        KontrolDevice::changeEncoder(encoder,value);
+    } else {
+        encoderLongHold_=false;
+        paramDisplay_->changeEncoder(encoder,value);
+    }
+}
+
+static constexpr unsigned ENCODER_HOLD_MS=1000;
+
+void TerminalTedium::encoderButton(unsigned encoder, bool value) {
+    if(value) {
+        // encoder pressed down transition 
+        // dont do anything yet other than record time!
+        encoderDown_=std::chrono::system_clock::now();
+        encoderLongHold_ = true;
+    } else {
+        if(encoderLongHold_) {
+            std::chrono::system_clock::time_point now=std::chrono::system_clock::now();
+            int dur = std::chrono::duration_cast<std::chrono::milliseconds>(now - encoderDown_).count();
+            if(dur > ENCODER_HOLD_MS) {
+                // long press = switch mode
+                encoderMenu_= ! encoderMenu_;
+                encoderDown_= now;
+                encoderLongHold_ = false;
+                // dont pass on to submodes
+                return; 
+            } else {
+                // = shot press, so end long hold
+                encoderLongHold_ = false;
+                encoderDown_= now;
+            }
+        }
+    }
+    // pass thru encoder up/down except if long hold
+    if(encoderMenu_) {
+        KontrolDevice::encoderButton(encoder,value);
+    } else {
+        paramDisplay_->encoderButton(encoder,value);
+    }
+}
+
+
+
+// send messages to both current mode, and paramdisplay
+void TerminalTedium::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
+    Kontrol::Device::rack(src, rack);
+    paramDisplay_->rack(src, rack);
+}
+
+void TerminalTedium::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+    KontrolDevice::module(src, rack, module);
+    paramDisplay_->module(src, rack, module);
+}
+
+void TerminalTedium::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                      const Kontrol::Module &module, const Kontrol::Page &page) {
+    KontrolDevice::page(src, rack, module, page);
+    paramDisplay_->page(src, rack, module, page);
+}
+
+void TerminalTedium::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                       const Kontrol::Module &module, const Kontrol::Parameter &param) {
+    KontrolDevice::param(src, rack, module, param);
+    paramDisplay_->param(src, rack, module, param);
+}
+
+void TerminalTedium::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                         const Kontrol::Module &module, const Kontrol::Parameter &param) {
+    KontrolDevice::changed(src, rack, module, param);
+    paramDisplay_->changed(src, rack, module, param);
+}
+
+void TerminalTedium::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                          const std::string &res, const std::string &value) {
+    KontrolDevice::esource(src, rack, res, value);
+    paramDisplay_->resource(src, rack, res, value);
+
+}
+
+void TerminalTedium::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
+    KontrolDevice::deleteRack(src, rack);
+    paramDisplay_->deleteRack(src, rack);
+}
+
+void TerminalTedium::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                              const Kontrol::Module &module) {
+    KontrolDevice::activeModule(src, rack, module);
+    paramDisplay_->activeModule(src, rack, module);
+}
+
+void TerminalTedium::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                            const Kontrol::EntityId &modId, const std::string &modType) {
+    KontrolDevice::loadModule(src, rack, modId, modType);
+    paramDisplay_->loadModule(src, rack, modId, modType);
+}
 
 
 //================
@@ -1111,38 +1179,38 @@ void *terminaltedium_write_thread_func(void *aObj) {
 
 void TerminalTedium::writePoll() {
     static char lines [2][6][40];
-    static bool dirty [2][6]; 
-    bool render=false;
-    for(int d=0;d<2;d++){
-        for(int i=0;i<6;i++) { 
-            dirty[d][i]=false;
-            lines[d][i][0]=0;
+    static bool dirty [2][6];
+    bool render = false;
+    for (int d = 0; d < 2; d++) {
+        for (int i = 0; i < 6; i++) {
+            dirty[d][i] = false;
+            lines[d][i][0] = 0;
         }
     }
     while (running_) {
         TTMsg msg;
-    
+
         if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(TT_WRITE_POLL_WAIT_TIMEOUT))) {
             // store lines to be displayed, and render only when queue is empty
-            do { 
-                switch(msg.type_) {
+            do {
+                switch (msg.type_) {
                 case TTMsg::RENDER: {
-                    render=true;
+                    render = true;
                     break;
-                } 
+                }
                 case TTMsg::DISPLAY_CLEAR: {
                     // do display clear immediately, otherwise we dont know order!
                     device_.displayClear(msg.display_);
-                    for(int i=0;i<6;i++) { 
-                        dirty[msg.display_][i]=false;
-                        lines[msg.display_][i][0]=0;
+                    for (int i = 0; i < 6; i++) {
+                        dirty[msg.display_][i] = false;
+                        lines[msg.display_][i][0] = 0;
                     }
                     break;
                 }
                 case TTMsg::DISPLAY_LINE: {
-                    if(msg.display_<2 && msg.line_<6) {
+                    if (msg.display_ < 2 && msg.line_ < 6) {
                         strncpy(lines[msg.display_][msg.line_], msg.buffer_, msg.size_);
-                        dirty[msg.display_][msg.line_]=true;
+                        dirty[msg.display_][msg.line_] = true;
                     }
                     break;
                 }
@@ -1150,21 +1218,21 @@ void TerminalTedium::writePoll() {
                     ;
                 }
                 } // switch
-            } while(messageQueue_.try_dequeue(msg)); 
+            } while (messageQueue_.try_dequeue(msg));
 
 
-            if(render) {
-                for(int d=0;d<2;d++) {
-                    for(int i=0;i<6;i++) {
-                        if(dirty[i] && lines[d][i][0]>0) {
+            if (render) {
+                for (int d = 0; d < 2; d++) {
+                    for (int i = 0; i < 6; i++) {
+                        if (dirty[i] && lines[d][i][0] > 0) {
                             device_.displayText(d, 1, i, 0, lines[d][i]);
-                            dirty[d][i]=false;
-                            lines[d][i][0]=0;
+                            dirty[d][i] = false;
+                            lines[d][i][0] = 0;
                         }
                     }
                 }
                 device_.displayPaint();
-                render=false;
+                render = false;
             }
         } // if wait
     } // running
