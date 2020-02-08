@@ -6,7 +6,7 @@
 #include <cstring>
 #include <string>
 #include <thread>
-#include <crono>
+#include <chrono>
 #include <readerwriterqueue.h>
 
 #include <TTuiDevice.h>
@@ -31,8 +31,6 @@ public:
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override;
     void activeModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &) override;
     void loadModule(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::EntityId &, const std::string &) override;
-    void savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
-    void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
 
 
     void displayParamLine(unsigned line, const Kontrol::Parameter &p);

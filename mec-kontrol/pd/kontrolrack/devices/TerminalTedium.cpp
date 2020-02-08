@@ -221,7 +221,7 @@ public:
 
 void TTBaseMode::displayPopup(const std::string &text, unsigned time, bool dblline) {
     popupTime_ = time;
-    parent_.displayPopup(text, dblline);
+    //parent_.displayPopup(text, dblline);
 }
 
 void TTBaseMode::poll() {
@@ -395,6 +395,7 @@ void TTParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 
                 try {
                     page = pages[pageIdx_];
+                    assert(page!=nullptr);
                     pageId_ = page->id();
                     display();
                 } catch (std::out_of_range) {
@@ -443,17 +444,32 @@ void TTParamMode::changeEncoder(unsigned enc, float value) {
 
     if(encoderDown_) {
         // if encoder is down, then we switch modules
-        unsigned moduleIdx = key - 1;
         auto rack = parent_.model()->getRack(parent_.currentRack());
         auto modules = parent_.getModules(rack);
-        if (moduleIdx < modules.size()) {
-            auto module = modules[moduleIdx];
-            auto moduleId = module->id();
-            if (parent_.currentModule() != moduleId) {
-                parent_.currentModule(moduleId);
-                parent_.flipDisplay();
+        int moduleIdx=0;
+        auto cmoduleId = parent_.currentModule();
+        
+        for(auto m : modules) {
+            if(m->id()==cmoduleId){
+                moduleIdx=-1;
+                break;
             }
+            moduleIdx++;
         }
+        
+        if(moduleIdx == -1 || (moduleIdx + 1) >= modules.size()) {
+            moduleIdx = 0;
+        } else {
+            moduleIdx++;
+        }
+
+        auto module = modules[moduleIdx];
+        auto moduleId = module->id();
+        if (cmoduleId != moduleId) {
+            parent_.currentModule(moduleId);
+            parent_.flipDisplay(PARAM_DISPLAY);
+        }
+
     } else {
         // encoder up, so we swich pages
 
@@ -618,10 +634,10 @@ void TTMenuMode::changeEncoder(unsigned, float value) {
             display();
         } else {
             line = cur_ - top_ + 1;
-            if (line <= TERMINALTEDIUM_NUM_TEXTLINES) parent_.invertLine(line);
+            if (line <= TERMINALTEDIUM_NUM_TEXTLINES) parent_.invertLine(MENU_DISPLAY,line);
             cur_ = cur;
             line = cur_ - top_ + 1;
-            if (line <= TERMINALTEDIUM_NUM_TEXTLINES) parent_.invertLine(line);
+            if (line <= TERMINALTEDIUM_NUM_TEXTLINES) parent_.invertLine(MENU_DISPLAY,line);
             parent_.flipDisplay(MENU_DISPLAY);
         }
     }
@@ -989,7 +1005,7 @@ void TerminalTedium::stop() {
 
 bool TerminalTedium::init() {
     // add modes before KD init
-    paramDisplay_ = std::make_shared<TTParamMode>(*this)
+    paramDisplay_ = std::make_shared<TTParamMode>(*this);
     addMode(TT_MAINMENU, std::make_shared<TTMainMenu>(*this));
     addMode(TT_PRESETMENU, std::make_shared<TTPresetMenu>(*this));
     addMode(TT_MODULEMENU, std::make_shared<TTModuleMenu>(*this));
@@ -999,6 +1015,7 @@ bool TerminalTedium::init() {
         device_.start();
         writer_thread_ = std::thread(terminaltedium_write_thread_func, this);
         running_ = true;
+        paramDisplay_->init();
         paramDisplay_->activate();
 
 
@@ -1033,7 +1050,7 @@ void TerminalTedium::displayParamLine(unsigned line, const Kontrol::Parameter &p
 void TerminalTedium::displayTitle(const std::string &module, const std::string &page) {
     if (module.size() == 0 || page.size() == 0) return;
     std::string title = module + " > " + page;
-    displayLine(PARAM_DISPLAY,title);
+    displayLine(PARAM_DISPLAY,0,title);
 }
 
 
@@ -1115,7 +1132,7 @@ void TerminalTedium::encoderButton(unsigned encoder, bool value) {
 
 // send messages to both current mode, and paramdisplay
 void TerminalTedium::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
-    Kontrol::Device::rack(src, rack);
+    KontrolDevice::rack(src, rack);
     paramDisplay_->rack(src, rack);
 }
 
@@ -1144,7 +1161,7 @@ void TerminalTedium::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rac
 
 void TerminalTedium::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                           const std::string &res, const std::string &value) {
-    KontrolDevice::esource(src, rack, res, value);
+    KontrolDevice::resource(src, rack, res, value);
     paramDisplay_->resource(src, rack, res, value);
 
 }
