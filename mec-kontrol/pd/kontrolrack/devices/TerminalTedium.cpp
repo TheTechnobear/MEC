@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cstring>
+#include <pthread.h>
+#include <unistd.h>
 
 #include "../../m_pd.h"
 
@@ -15,10 +17,12 @@ static const unsigned MENU_TIMEOUT = 350;
 
 static const unsigned TT_WRITE_POLL_WAIT_TIMEOUT = 1000;
 
+static constexpr unsigned TT_THREAD_PRIO=99;
+static constexpr unsigned TT_THREAD_SLEEP=100;
 
 
-static const unsigned PARAM_DISPLAY=0;
-static const unsigned MENU_DISPLAY=1;
+static const unsigned MENU_DISPLAY=0;
+static const unsigned PARAM_DISPLAY=1;
 
 // TODO
 // check POT = 4096?
@@ -447,10 +451,19 @@ void TTParamMode::changeEncoder(unsigned enc, float value) {
         }
         
 
-        if(moduleIdx == -1 || (moduleIdx + 1) >= modules.size()) {
-            moduleIdx = 0;
+        if(value) {
+            if(moduleIdx == -1 || (moduleIdx + 1) >= modules.size()) {
+                moduleIdx = 0;
+            } else {
+                moduleIdx++;
+            }
         } else {
-            moduleIdx++;
+            if(moduleIdx -1 < 0) {
+                moduleIdx = modules.size() - 1;
+                if(moduleIdx<0) moduleIdx=0;
+            } else {
+                moduleIdx--;
+            }
         }
 
 
@@ -1027,7 +1040,20 @@ bool TerminalTedium::init() {
 
     if (KontrolDevice::init()) {
         device_.start();
+
         writer_thread_ = std::thread(terminaltedium_write_thread_func, this);
+        int policy;
+        struct sched_param param;
+        pthread_getschedparam(writer_thread_.native_handle(), &policy, &param);
+        param.sched_priority = TT_THREAD_PRIO;
+        if(pthread_setschedparam(writer_thread_.native_handle(), SCHED_FIFO, &param)) {
+            fprintf(stderr,"cannot set priority %d\n", errno);
+            fprintf(stderr,"cannot set priority %d, %d\n", sched_get_priority_min(SCHED_FIFO) , sched_get_priority_max(SCHED_FIFO) );
+        } else {
+            fprintf(stderr,"TT thread prio %d\n", TT_THREAD_PRIO);
+        }
+
+
         running_ = true;
         encoderMenu_=false;
         paramDisplay_->init();
@@ -1240,6 +1266,10 @@ void TerminalTedium::writePoll() {
             clr[d][i] = 1;
         }
     }
+    device_.drawBitmap(MENU_DISPLAY,0, 0, "./orac.pbm");
+    device_.drawBitmap(PARAM_DISPLAY,0, 0, "./orac.pbm");
+    device_.displayPaint();
+    sleep(1);
     while (running_) {
         TTMsg msg;
 
@@ -1297,6 +1327,7 @@ void TerminalTedium::writePoll() {
                 render = false;
             }
         } // if wait
+        usleep(TT_THREAD_SLEEP);
     } // running
 }
 
