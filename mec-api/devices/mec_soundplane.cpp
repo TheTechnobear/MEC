@@ -41,7 +41,9 @@ public:
     }
 
 
-    void onInit() override  {;}
+    void onInit() override  {
+        LOG_0("Soundplane initialised");
+    }
     void onFrame() override {;}
     void onDeinit()override {;}
     void onError(unsigned err, const char *errStr) override {;}

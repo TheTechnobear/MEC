@@ -116,12 +116,18 @@ class MecOSCCallback : public MecCmdCallback {
 public:
     MecOSCCallback(mec::Preferences &p)
             : prefs_(p),
-              transmitSocket_(IpEndpointName(p.getString("host", "127.0.0.1").c_str(), p.getInt("port", 3123))),
+              transmitSocket_(),
               valid_(true),
               touchOffset_(p.getInt("touch offset",1)),
               xOffset_(p.getDouble("x offset",0.5f)),
               yOffset_(p.getDouble("y offset",0.5f))
               {
+        try {
+            transmitSocket_.Connect((IpEndpointName(p.getString("host", "127.0.0.1").c_str(), p.getInt("port", 3123))));
+        } catch(const std::runtime_error& ) {
+            valid_ = false;
+            LOG_0("OSC connect failed");
+        }
         if (valid_) {
             LOG_0("mecapi_proc enabling for osc");
         }
@@ -131,6 +137,7 @@ public:
 
     void touchOn(int touchId, float note, float x, float y, float z) {
         std::string topic = "/t3d/tch" + std::to_string(touchId+touchOffset_);
+        std::cout << topic << " - " << " touch: " << touchId << " note: " << note << " x: " << x << " y: " << y << " z: " << z << std::endl;
         sendMsg(topic, touchId, note, x+xOffset_, y +yOffset_, z);
     }
 
@@ -162,13 +169,16 @@ public:
            << osc::EndMessage
            << osc::EndBundle;
         transmitSocket_.Send(op.Data(), op.Size());
+        if(errno!=0) { 
+            LOG_0("send errno!=0 " << errno);
+        }
     }
 
 private:
     static constexpr unsigned OUTPUT_BUFFER_SIZE=1024;
 
     mec::Preferences prefs_;
-    UdpTransmitSocket transmitSocket_;
+    UdpSocket transmitSocket_;
     char buffer_[OUTPUT_BUFFER_SIZE];
     bool valid_;
     unsigned touchOffset_;
