@@ -376,9 +376,9 @@ void Nui::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool di
     unsigned y1 = (row + 1) * 20;
     unsigned y2 = y1 + LINE_H;
     unsigned clr = selected ? 15 : 0;
-    device_->clearRect(5, x, y1 , 62 + (col * 2), LINE_H);
+    device_->clearRect(5, x, y1-LINE_H , 62 + (col * 2), LINE_H);
     device_->drawText(clr, x + 1, y1 - 1, dName.c_str());
-    device_->clearRect(0, x, y2, 62 + (col * 2), LINE_H);
+    device_->clearRect(0, x, y2-LINE_H, 62 + (col * 2), LINE_H);
     device_->drawText(15, x + 1, y2 - 1, value);
     device_->drawText(15, x + 1 + 40, y2 - 1, unit);
 }
