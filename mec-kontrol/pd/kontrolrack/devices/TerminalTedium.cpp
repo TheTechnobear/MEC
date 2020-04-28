@@ -1266,8 +1266,8 @@ void TerminalTedium::writePoll() {
             clr[d][i] = 1;
         }
     }
-    device_.drawBitmap(MENU_DISPLAY,0, 0, "./orac.pbm");
-    device_.drawBitmap(PARAM_DISPLAY,0, 0, "./orac.pbm");
+    device_.gBitmap(MENU_DISPLAY,0, 0, "./orac.pbm");
+    device_.gBitmap(PARAM_DISPLAY,0, 0, "./orac.pbm");
     device_.displayPaint();
     sleep(1);
     while (running_) {
@@ -1317,8 +1317,8 @@ void TerminalTedium::writePoll() {
                 for (int d = 0; d < 2; d++) {
                     for (int i = 0; i < 6; i++) {
                         if (dirty[d][i] && lines[d][i][0] > 0) {
-                            device_.clearText(d, !clr[d][i],i);
-                            device_.displayText(d, clr[d][i], i, 0, lines[d][i]);
+                            device_.clearLine(d, !clr[d][i],i);
+                            device_.textLine(d, clr[d][i], i, 0, lines[d][i]);
                             dirty[d][i] = false;
                         }
                     }
