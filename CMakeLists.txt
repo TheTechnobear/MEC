@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 2.8.11)
 
 project(mec)
 
+
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
+  if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+  endif()
+endif()
+
+
 set(PROJECT_NAME MEC)
 set(MEC_VERSION_MAJOR 0)
 set(MEC_VERSION_MINOR 1)
@@ -9,19 +17,37 @@ set(MEC_VERSION_UPDATE 1)
 set(MEC_VERSION "${MEC_VERSION_MAJOR}.${MEC_VERSION_MINOR}.${MEC_VERSION_UPDATE}")
 set(CMAKE_OSX_ARCHITECTURES "x86_64")
 
+if(NUI) 
+	set(DISABLE_NUI 0)
+else(NUI)
+	set(DISABLE_NUI 1)
+endif(NUI)
+
+
+if(TTUI) 
+    set(DISABLE_TTUI 0)
+else(TTUI)
+    set(DISABLE_TTUI 1)
+endif(TTUI)
+
 if(WIN32)
     message("windows support limited")
     set(DISABLE_LIBUSB 1)
     set(DISABLE_EIGENHARP 1)
     set(DISABLE_SOUNDPLANELITE 1)
     set(DISABLE_PUSH2 1)
+    set(DISABLE_NUI 1)
+    set(DISABLE_TTUI 1)
 endif()
 
 if (APPLE)
     set(EXECUTABLE_NAME MicroExpression)
+    set(DISABLE_NUI 1)
+    set(DISABLE_TTUI 1)
 elseif (UNIX)
     set(EXECUTABLE_NAME microexpression)
 endif (APPLE)
+
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -84,6 +110,17 @@ add_subdirectory(external/rtmidi rtmidi)
 add_subdirectory(external/moodycamel)
 add_subdirectory(external/SoundplaneLite/splite)
 add_subdirectory(external/EigenLite/eigenapi)
+
+if(NOT DISABLE_NUI) 
+    message("NUI  enabled")
+    add_subdirectory(external/NuiLite/nuilite)
+endif()
+
+if(NOT DISABLE_TTUI) 
+    message("TTUI  enabled")
+    add_subdirectory(external/ArduiPi_OLED arduiPi_OLED)
+    add_subdirectory(external/TTuiLite/ttuilite)
+endif()
 
 
 add_subdirectory(mec-utils)

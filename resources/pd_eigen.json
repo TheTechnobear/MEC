@@ -1,0 +1,61 @@
+{
+    "mec"  :  {
+        "eigenharp" : {
+            "voices" : 4,
+            "pico" : {
+                "mapping": {
+                    "calculated": {
+                        "keys in col": 9,
+                        "row multiplier": 1,
+                        "col multipler": 5,
+                        "note offset": 48
+                    }
+                },
+                "leds" : {
+                    "green" : [1],
+                    "_orange" : [ 1 ],
+                    "_red" : [ 1 ]
+                }
+            },
+            "tau" : {
+                "mapping" : {
+                    "calculated-wrong": {
+                        "keys in col": 16,
+                        "row multiplier": 1,
+                        "col multipler": 4,
+                        "note offset": 20
+                    }
+                }
+            },
+            "alpha" : {
+                "mapping" : {
+                    "calculated": {
+                        "keys in col": 24,
+                        "row multiplier": 3,
+                        "col multipler": -1,
+                        "note offset": 26
+                    }
+                },
+                "leds" : {
+                    "green" : [ 48, 52, 56,60, 64, 68 , 26, 74, 34, 82, 42, 90],
+                    "_orange" : [ 1 ],
+                    "red" : [ 30, 78, 38, 86, 46, 94 ]
+                }
+            }
+        }
+    },
+
+    "mec-app"  :  {
+        "outputs" : {
+            "midi" : {
+                "virtual" : 0,
+                "voices" : 4,
+                "pitchbend range" : 48.0,
+                "device" : "Pure Data:0"
+            },
+            "_console" : {
+                "throttle" : 0
+            }
+        }
+    }
+}

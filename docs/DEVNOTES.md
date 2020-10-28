@@ -5,7 +5,6 @@ More detailed information on status, known issues, priorities is contained in to
 mec-api - a framework for integrating expressive devices
 mec-app - standalone app, built on mec-api
 mec-vst - VST/AU, built on mec-api
-mec-app - bela app, built on mec-api
 mec-max - max external, built on mec-api
 mec-kontrol - patch and parameter system, also with pd support
 

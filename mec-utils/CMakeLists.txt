@@ -6,7 +6,7 @@ set(MECUTILS_SRC
         mec_log.h
         mec_prefs.cpp
         mec_prefs.h
-        )
+        mec_utils.cpp mec_utils.h)
 
 
 add_library(mec-utils SHARED ${MECUTILS_SRC})

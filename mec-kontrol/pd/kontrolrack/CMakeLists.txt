@@ -3,6 +3,16 @@
 project(KontrolRack)
 
 
+if (NOT DISABLE_TTUI)
+    set(TTUI_SRC
+        devices/TerminalTedium.cpp
+        devices/TerminalTedium.h
+       )
+    set(TTUILITE_LIB ttuilite)
+else()
+    add_definitions(-DDISABLE_TTUI=1)
+endif()
+
 set(KONTROL_HOST_SRC
         KontrolRack.cpp
         KontrolRack.h
@@ -18,6 +28,7 @@ set(KONTROL_HOST_SRC
         devices/MidiControl.h
         devices/Bela.cpp
         devices/Bela.h
+        ${TTUI_SRC}
         )
 
 if (${WIN32})
@@ -33,7 +44,7 @@ include_directories(
 
 add_library(KontrolRack SHARED ${KONTROL_HOST_SRC})
 
-target_link_libraries(KontrolRack mec-kontrol-api oscpack)
+target_link_libraries(KontrolRack mec-kontrol-api ${TTUILITE_LIB} oscpack)
 
 ### setup for pure data
 

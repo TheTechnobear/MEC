@@ -3,6 +3,7 @@
 #include "mec_log.h"
 #include "../mec_surfacemapper.h"
 #include "../mec_voice.h"
+#include <unistd.h>
 
 
 #include <set>
@@ -12,12 +13,16 @@ namespace mec {
 ////////////////////////////////////////////////
 class EigenharpHandler : public EigenApi::Callback {
 public:
-    EigenharpHandler(Preferences &p, ICallback &cb)
-            : prefs_(p),
+    EigenharpHandler(EigenApi::Eigenharp* api, Preferences &p, ICallback &cb)
+            : api_(api),
+              prefs_(p),
               callback_(cb),
               valid_(true),
-              voices_(static_cast<unsigned>(p.getInt("voices", 15)),
-                      static_cast<unsigned>(p.getInt("velocity count", 5))),
+              voices_(static_cast<unsigned>(p.getInt("voices", Voices::NUM_VOICES)),
+                      static_cast<unsigned>(p.getInt("velocity count", Voices::V_COUNT)),
+                      static_cast<float>(p.getDouble("velocity curve", Voices::V_CURVE_AMT )),
+                      static_cast<float>(p.getDouble("velocity scale", Voices::V_SCALE_AMT ))
+                      ),
               pitchbendRange_((float) p.getDouble("pitchbend range", 2.0)),
               stealVoices_(p.getBool("steal voices", true)),
               throttle_(p.getInt("throttle", 0) == 0
@@ -51,11 +56,27 @@ public:
         LOG_1(" r: " << rows << " c: " << cols);
         LOG_1(" s: " << ribbons << " p: " << pedals);
 
-        if (prefs_.exists("mapping")) {
-            Preferences map(prefs_.getSubTree("mapping"));
-            if (map.exists(dk)) {
-                Preferences devmap(map.getSubTree(dk));
-                mapper_.load(devmap);
+        if(prefs_.exists(dk)) {
+            Preferences device_prefs(prefs_.getSubTree(dk));
+
+            if (device_prefs.exists("leds")) {
+                Preferences leds(device_prefs.getSubTree("leds"));
+                if (leds.exists("green")) {
+                    Preferences::Array a(leds.getArray("green"));
+                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),1); }
+                }
+                if (leds.exists("orange")) {
+                    Preferences::Array a(leds.getArray("orange"));
+                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),3); }
+                }
+                if (leds.exists("red")) {
+                    Preferences::Array a(leds.getArray("red"));
+                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),2); }
+                }
+            }
+            if (device_prefs.exists("mapping")) {
+                Preferences map(device_prefs.getSubTree("mapping"));
+                mapper_.load(map);
             }
         }
     }
@@ -75,25 +96,35 @@ public:
             LOG_3(" r: " << r << " y: " << y << " p: " << p);
             LOG_3(" mn: " << mn << " mx: " << mx << " my: " << my << " mz: " << mz);
 
+            if (inactiveKeys_.find(key) != inactiveKeys_.end()) {
+                // this key has been stolen, must be released to reactivate it
+                return;
+            }
+
             if (!voice) {
-                if (stolenKeys_.find(key) != stolenKeys_.end()) {
-                    // this key has been stolen, must be released to reactivate it
-                    return;
-                }
 
                 voice = voices_.startVoice(key);
 
                 if (!voice && stealVoices_) {
-                    LOG_2("voice steal required for " << key);
+                    // LOG_1("voice steal required for " << key);
                     // no available voices, steal?
                     Voices::Voice *stolen = voices_.oldestActiveVoice();
-                    callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
-                    stolenKeys_.insert((unsigned) stolen->id_);
-                    voices_.stopVoice(stolen);
-                    voice = voices_.startVoice(key);
-                    // if(voice) { LOG_1("voice steal found for " << key  "stolen from " << stolen->id_)); }
+                    if(stolen) {
+                        if(stolen->state_ == Voices::Voice::ACTIVE) {
+                            // LOG_1("voice stolen found for " << key  << " stolen from (active) " << stolen->id_);
+                            callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
+                        } else {
+                            // LOG_1("voice stolen found for " << key  << " stolen from (inactive) " << stolen->id_);
+                        }
+                        inactiveKeys_.insert((unsigned) stolen->id_);
+                        voices_.stopVoice(stolen);
+                        voice = voices_.startVoice(key);
+                        // if(voice) { LOG_1("voice steal found for " << key << "stolen from " << stolen->id_); }
+                   } else {
+                     LOG_1("unable to steal voice " << key);
+                   }
                 }
-            }
+            } 
 
             if (voice) {
                 if (voice->state_ == Voices::Voice::PENDING) {
@@ -116,17 +147,33 @@ public:
                 voice->x_ = mx;
                 voice->y_ = my;
                 voice->z_ = mz;
+            } else {
+                // else no voice available
+                // LOG_2("mark inactive key " << key);
+                inactiveKeys_.insert(key);
             }
-            // else no voice available
 
         } else {
-
-            if (voice) {
-                LOG_2("stop voice for " << key << " ch " << voice->i_);
-                callback_.touchOff(voice->i_, mn, mx, my, mz);
-                voices_.stopVoice(voice);
+            if (inactiveKeys_.find(key) == inactiveKeys_.end()) {
+                if (voice) {
+                    if(voice->state_ == Voices::Voice::ACTIVE) {
+                        LOG_2("stop voice for " << key << " ch " << voice->i_);
+                        callback_.touchOff(voice->i_, mn, mx, my, mz);
+                        voices_.stopVoice(voice);
+                    }
+                    else if(voice->state_ == Voices::Voice::PENDING) {
+                        // dont send touchoff, as touchOn not sent
+                        voices_.stopVoice(voice);
+                    } else {
+                        LOG_1("voice already inactive" << key << " ch " << voice->i_);
+                    }
+                } else {
+                    LOG_1("trying to stop voice, but not found" << key);
+                }
+            } else {
+                // LOG_2("remove inactive key " << key);
+                inactiveKeys_.erase(key);
             }
-            stolenKeys_.erase(key);
         }
     }
 
@@ -153,7 +200,8 @@ private:
     float note(unsigned key, float mx) {
         return mapper_.noteFromKey(key) + ((mx > 0.0 ? mx * mx : -mx * mx) * pitchbendRange_);
     }
-
+    
+    EigenApi::Eigenharp* api_;
     Preferences prefs_;
     ICallback &callback_;
     SurfaceMapper mapper_;
@@ -162,7 +210,7 @@ private:
     float pitchbendRange_;
     bool stealVoices_;
     unsigned long long throttle_;
-    std::set<unsigned> stolenKeys_;
+    std::set<unsigned> inactiveKeys_;
 };
 
 
@@ -183,21 +231,19 @@ bool Eigenharp::init(void *arg) {
         deinit();
     }
     active_ = false;
-    std::string fwDir = prefs.getString("firmware dir", "./resources/");
+    std::string fwDir = prefs.getString("firmware dir", "./");
     minPollTime_ = prefs.getInt("min poll time", 100);
+    LOG_0("Eigenharp firmware dir : " << fwDir);
     eigenD_.reset(new EigenApi::Eigenharp(fwDir.c_str()));
-    EigenharpHandler *pCb = new EigenharpHandler(prefs, callback_);
+    eigenD_->setPollTime(minPollTime_);
+    EigenharpHandler *pCb = new EigenharpHandler(eigenD_.get(), prefs, callback_);
     if (pCb->isValid()) {
         eigenD_->addCallback(pCb);
-        if (eigenD_->create()) {
-            if (eigenD_->start()) {
-                active_ = true;
-                LOG_1("Eigenharp::init - started");
-            } else {
-                LOG_2("Eigenharp::init - failed to start");
-            }
+        if (eigenD_->start()) {
+            active_ = true;
+            LOG_1("Eigenharp::init - started");
         } else {
-            LOG_2("Eigenharp::init - create failed");
+            LOG_2("Eigenharp::init - failed to start");
         }
     } else {
         LOG_2("Eigenharp::init - invalid callback");
@@ -207,14 +253,14 @@ bool Eigenharp::init(void *arg) {
 }
 
 bool Eigenharp::process() {
-    const int sleepTime = 0;
-    if (active_) eigenD_->poll(sleepTime, minPollTime_);
+    if (active_) eigenD_->process();
     return true;
 }
 
 void Eigenharp::deinit() {
+    LOG_1("Eigenharp:deinit");
     if (!eigenD_) return;
-    eigenD_->destroy();
+    eigenD_->stop();
     eigenD_.reset();
     active_ = false;
 }

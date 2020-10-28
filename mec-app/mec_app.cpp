@@ -21,6 +21,7 @@ inline void sleep(unsigned int seconds) { Sleep(seconds * 1000); }
 
 #include "mec_app.h"
 #include <mec_prefs.h>
+#include <mec_utils.h>
 
 #ifndef __COBALT__
 
@@ -132,11 +133,18 @@ int main(int ac, char **av) {
     std::thread mec_thread;
     if (prefs.exists("mec") && prefs.exists("mec-app")) {
         LOG_1("mec api initialise ");
+
 #ifdef __COBALT__
         pthread_t ph = mec_thread.native_handle();
         pthread_create(&ph, 0,mecapi_proc,prefs.getTree());
 #else
+        mec::Preferences app_prefs(prefs.getSubTree("mec-app"));
         mec_thread = std::thread(mecapi_proc, prefs.getTree());
+        bool rt=app_prefs.getBool("realtime",false);
+        if(rt) {
+            LOG_0("realtime mec thread");
+            makeThreadRealtime(mec_thread);
+        }
 #endif
         usleep(1000);
     }

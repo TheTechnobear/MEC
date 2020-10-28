@@ -7,3 +7,12 @@
 [submodule "external/EigenLite"]
 	path = external/EigenLite
 	url = https://github.com/thetechnobear/EigenLite
+[submodule "external/NuiLite"]
+	path = external/NuiLite
+	url = https://github.com/thetechnobear/NuiLite
+[submodule "external/TTuiLite"]
+	path = external/TTuiLite
+	url = https://github.com/TheTechnobear/TTuiLite.git
+[submodule "external/ArduiPi_OLED"]
+	path = external/ArduiPi_OLED
+	url = https://github.com/TheTechnobear/ArduiPi_OLED.git

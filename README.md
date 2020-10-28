@@ -12,7 +12,6 @@ Building on this core a number of integation 'applications' are provided.
 
 - mec-app,  a standalone console application. (main priority)
 - mec-vst,  a VST/AU which sends 'touches' from mec to VST/AU it hosts.
-- mec-bela, a project for the Bela platform (see http://bela.io)  
 - mec-max,  an 'external' for MAX/Msp  (requires Cycling74 Max/MSP)
 
 ## Current Platforms
@@ -52,7 +51,6 @@ Id like to thank the following open source projects for helping make this possib
 - cJson (https://github.com/DaveGamble/cJSON)
 - portAudio (http://www.portaudio.com)
 - libusb (http://libusb.info)
-- bela (http://bela.io)
 
 Id like to extend a special heartfelt thank you to **John Lambert/EigenLabs** and **Randy Jones/Madrona Labs**. 
 They both made creative/fantastic instruments that I love to play... but also but also had the foresight to open source  their software (used to control them) - thus allowing projects such as these.  It would have been easier for them to guard their 'intellectual property', and I'm very gratefully to them they did not choose this route. 

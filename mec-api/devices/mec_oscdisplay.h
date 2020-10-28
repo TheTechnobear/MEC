@@ -92,6 +92,11 @@ public:
 
     void currentModule(const Kontrol::EntityId &modId);
 
+
+    Kontrol::EntityId currentPage() { return currentPageId_; }
+    void currentPage(const Kontrol::EntityId &id) { currentPageId_ = id;}
+
+
     void midiLearn(bool b);
     bool midiLearn() { return midiLearnActive_;}
     void modulationLearn(bool b);
@@ -107,6 +112,7 @@ private:
     bool listen(unsigned port);
     bool connect(const std::string& host, unsigned port);
 
+    void sendOscString(const std::string& topic, std::string value);
 
     void navPrev();
     void navNext();
@@ -149,6 +155,7 @@ private:
 
     Kontrol::EntityId currentRackId_;
     Kontrol::EntityId currentModuleId_;
+    Kontrol::EntityId currentPageId_;
 
     std::shared_ptr<OscDisplayParamMode> paramDisplay_;
 

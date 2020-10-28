@@ -30,7 +30,6 @@ private:
 
     ICallback &callback_;
     bool active_;
-    MsgQueue queue_;
     unsigned listenPort_;
 
     std::shared_ptr<Kontrol::KontrolModel> model_;

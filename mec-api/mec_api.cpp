@@ -14,8 +14,11 @@
 #if !DISABLE_PUSH2
 #   include "devices/mec_push2.h"
 #endif
-#if !DISABLE_SIMPLEOSC
+#if !DISABLE_OSCDISPLAY
 #   include "devices/mec_oscdisplay.h"
+#endif
+#if !DISABLE_NUI
+#   include "devices/mec_nui.h"
 #endif
 
 #include "devices/mec_mididevice.h"
@@ -337,7 +340,7 @@ void MecApi_Impl::initDevices() {
 #endif
 
 
-#if !DISABLE_OSCDISPLAY_SRC
+#if !DISABLE_OSCDISPLAY
     if (prefs_->exists("oscdisplay")) {
         LOG_1("oscdisplay initialise ");
         std::shared_ptr<OscDisplay> device = std::make_shared<OscDisplay>();
@@ -352,6 +355,26 @@ void MecApi_Impl::initDevices() {
             }
         } else {
             LOG_1("oscdisplay init failed ");
+            device->deinit();
+        }
+    }
+#endif
+
+
+#if !DISABLE_NUI
+    if (prefs_->exists("nui")) {
+        LOG_1("nui initialise ");
+        std::shared_ptr<Nui> device = std::make_shared<Nui>();
+        Kontrol::KontrolModel::model()->addCallback("nui", device);
+        if (device->init(prefs_->getSubTree("nui"))) {
+            if (device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("nui init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("nui init failed ");
             device->deinit();
         }
     }

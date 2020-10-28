@@ -1,0 +1,26 @@
+{
+    "mec"  :  {
+        "midi" : {
+            "input device" : "IAC Driver Bus 1",
+            "mpe" : true,
+            "pitchbend range" : 48.0,
+            "output  device" : "Axoloti Core",
+            "virtual output" : false
+        }
+    },
+
+    "mec-app"  :  {
+        "outputs" : {
+            "midi" : {
+                "virtual" : 0,
+                "voices" : 15,
+                "pitchbend range" : 48.0,
+                "mpe" : true,
+                "device" : "IAC Driver Bus 2"
+            },
+            "console" : {
+                "throttle" : 0
+            }
+        }
+    }
+}

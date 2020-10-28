@@ -24,16 +24,18 @@ public:
     virtual void mec_control(int cmd, void* other); //ignores
 
 private:
+    static constexpr unsigned MAX_VOICE=16;
 
     struct VoiceData {
         unsigned    startNote_;
         unsigned    note_;      //0
-        int         pitchbend_; //1
-        int         timbre_;    //2
+        unsigned    pitchbend_; //1
+        unsigned    timbre_;    //2
         unsigned    pressure_;  //3
+        bool        active_;
     };
 
-    VoiceData voices_[16];
+    VoiceData voices_[MAX_VOICE];
 };
 
 }

@@ -28,9 +28,10 @@ public:
 ////////////////////////////////////////////////
 class SoundplaneHandler : public ::SPLiteCallback {
 public:
-    SoundplaneHandler(Preferences &p, MsgQueue &q)
+    SoundplaneHandler(Preferences &p, 
+		    ICallback& cb)
             : prefs_(p),
-              queue_(q),
+              callback_(cb),
               valid_(true),
               voices_(static_cast<unsigned>(p.getInt("voices", 15))),
               stealVoices_(p.getBool("steal voices", true)) {
@@ -40,7 +41,9 @@ public:
     }
 
 
-    void onInit() override  {;}
+    void onInit() override  {
+        LOG_0("Soundplane initialised");
+    }
     void onFrame() override {;}
     void onDeinit()override {;}
     void onError(unsigned err, const char *errStr) override {;}
@@ -48,25 +51,35 @@ public:
     void touchOn(unsigned voice, float x, float y, float z) override {
         unsigned ix = unsigned(x);
         unsigned iy = unsigned(y);
-        unsigned fn = (ix + y * 4) + (x -ix);
+        float fn = (ix + (iy * 4)) + (x -ix - 0.5f);
+        float fx = (x-float(ix)-0.5f) * 2.0f;
+        float fy = (y-float(iy)-0.5f) * 2.0f;
+        float fz = z;
+        //fprintf(stderr,"on %d %f %f %f, %f - %f %f %f \n", voice, x, y, z, fn, fx,fy,fz);
 
-        touch(true, voice, fn, x-ix, y-iy, z );
+        touch(true, voice, fn, fx,fy,fz);
     }
     void touchContinue(unsigned voice, float x,float y, float z) override {
         unsigned ix = unsigned(x);
         unsigned iy = unsigned(y);
-        unsigned fn = (ix + y * 4) + (x -ix);
+        float fn = (ix + (iy * 4)) + (x -ix + 0.5f);
+        float fx = (x-float(ix)-0.5f) * 2.0f;
+        float fy = (y-float(iy)-0.5f) * 2.0f;
+        float fz = z;
+        //fprintf(stderr,"cont %d %f %f %f, %f - %f %f %f \n", voice, x, y, z, fn, fx,fy,fz);
 
-        touch(true, voice, fn, x-ix, y-iy, z );
-
+        touch(true, voice, fn, fx,fy,fz);
     }
 
     void touchOff(unsigned voice, float x,float y, float z) override {
         unsigned ix = unsigned(x);
         unsigned iy = unsigned(y);
-        unsigned fn = (ix + y * 4) + (x -ix);
-
-        touch(false, voice, fn, x-ix, y-iy, z );
+        float fn = (ix + (iy * 4)) + (x -ix + 0.5f);
+        float fx = (x-float(ix)-0.5f) * 2.0f;
+        float fy = (y-float(iy)-0.5f) * 2.0f;
+        float fz = 0.0f; //z;
+        //fprintf(stderr,"off %d %f %f %f, %f - %f %f %f \n", voice, x, y, z, fn, fx,fy,fz);
+        touch(false, voice, fn, fx,fy,fz);
     }
 
     bool isValid() { return valid_; }
@@ -83,17 +96,10 @@ public:
         float fn = n;
         float mn = note(fn);
         float mx = clamp(x, -1.0f, 1.0f);
-        float my = clamp((y - 0.5f) * 2.0f, -1.0f, 1.0f);
-        float mz = clamp(z, 0.0f, 1.0f);
+        float my = clamp(y, -1.0f, 1.0f);
+        float mz = clamp(z,  0.0f, 1.0f);
         unsigned long long t = 0;
 
-        MecMsg msg;
-        msg.type_ = MecMsg::TOUCH_OFF;
-        msg.data_.touch_.touchId_ = -1;
-        msg.data_.touch_.note_ = mn;
-        msg.data_.touch_.x_ = mx;
-        msg.data_.touch_.y_ = my;
-        msg.data_.touch_.z_ = mz;
         if (a) {
             // LOG_1("SoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
             // LOG_1(" touch: " <<  touch);
@@ -107,30 +113,19 @@ public:
                 }
 
                 voice = voices_.startVoice(touch);
-                // LOG_2(std::cout << "start voice for " << key << " ch " << voice->i_ << std::endl;)
+                //LOG_1("start voice for " << touch << " ch " << voice->i_);
 
                 if (!voice && stealVoices_) {
                     // no available voices, steal?
                     Voices::Voice *stolen = voices_.oldestActiveVoice();
-
-                    MecMsg stolenMsg;
-                    stolenMsg.type_ = MecMsg::TOUCH_OFF;
-                    stolenMsg.data_.touch_.touchId_ = stolen->i_;
-                    stolenMsg.data_.touch_.note_ = stolen->note_;
-                    stolenMsg.data_.touch_.x_ = stolen->x_;
-                    stolenMsg.data_.touch_.y_ = stolen->y_;
-                    stolenMsg.data_.touch_.z_ = 0.0f;
-                    stolenTouches_.insert((unsigned) stolen->id_);
-                    queue_.addToQueue(stolenMsg);
+                    callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
                     voices_.stopVoice(stolen);
 
                     voice = voices_.startVoice(touch);
                 }
 
                 if (voice) {
-                    msg.type_ = MecMsg::TOUCH_ON;
-                    msg.data_.touch_.touchId_ = voice->i_;
-                    queue_.addToQueue(msg);
+                    callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
                     voice->note_ = mn;
                     voice->x_ = mx;
                     voice->y_ = my;
@@ -138,9 +133,7 @@ public:
                     voice->t_ = t;
                 }
             } else {
-                msg.type_ = MecMsg::TOUCH_CONTINUE;
-                msg.data_.touch_.touchId_ = voice->i_;
-                queue_.addToQueue(msg);
+        		callback_.touchContinue(voice->i_, mn, mx, my, mz);
                 voice->note_ = mn;
                 voice->x_ = mx;
                 voice->y_ = my;
@@ -150,32 +143,24 @@ public:
 
         } else {
             if (voice) {
-                // LOG_2("stop voice for " << touch << " ch " << voice->i_ );
-                msg.type_ = MecMsg::TOUCH_OFF;
-                msg.data_.touch_.touchId_ = voice->i_;
-                msg.data_.touch_.z_ = 0.0;
-                queue_.addToQueue(msg);
+                //LOG_1("stop voice for " << touch << " ch " << voice->i_ );
+                //msg.type_ = MecMsg::TOUCH_OFF;
+                //msg.data_.touch_.touchId_ = voice->i_;
+                //msg.data_.touch_.z_ = 0.0;
+                //queue_.addToQueue(msg);
+                callback_.touchOff(voice->i_, mn, mx, my, mz);
                 voices_.stopVoice(voice);
             }
             stolenTouches_.erase(touch);
         }
     }
-
-//    virtual void control(const char *dev, unsigned long long t, int id, float val) {
-//        MecMsg msg;
-//        msg.type_ = MecMsg::CONTROL;
-//        msg.data_.control_.controlId_ = id;
-//        msg.data_.control_.value_ = clamp(val, -1.0f, 1.0f);
-//        queue_.addToQueue(msg);
-//    }
-
 private:
     inline float clamp(float v, float mn, float mx) { return (std::max(std::min(v, mx), mn)); }
 
     float note(float n) { return n; }
 
     Preferences prefs_;
-    MsgQueue &queue_;
+    ICallback &callback_;
     Voices voices_;
     bool valid_;
     bool stealVoices_;
@@ -194,6 +179,9 @@ Soundplane::~Soundplane() {
 
 bool Soundplane::init(void *arg) {
     Preferences prefs(arg);
+    //prefs.print();
+    unsigned maxtouch = static_cast<unsigned>(prefs.getInt("voices", 15));
+    LOG_1("max voices : " << maxtouch);
 
     if (active_) {
         deinit();
@@ -201,21 +189,21 @@ bool Soundplane::init(void *arg) {
     active_ = false;
 
     device_ = std::unique_ptr<SPLiteDevice>(new SPLiteDevice());
-    device_->maxTouches(4);
 
 
     std::shared_ptr<::SPLiteCallback> callback
-        = std::shared_ptr<::SPLiteCallback>(new SoundplaneHandler(prefs, queue_));
+        = std::shared_ptr<::SPLiteCallback>(new SoundplaneHandler(prefs, callback_));
     device_->addCallback(callback);
 
     device_->start();
+    device_->maxTouches(maxtouch);
     active_ = true;
 
     return active_;
 }
 
 bool Soundplane::process() {
-    return queue_.process(callback_);
+    return device_->process();
 }
 
 void Soundplane::deinit() {
