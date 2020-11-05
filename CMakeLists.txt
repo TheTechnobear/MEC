@@ -23,6 +23,12 @@ else(NUI)
 	set(DISABLE_NUI 1)
 endif(NUI)
 
+if(ZERORAC)
+    set(DISABLE_TTUI 0)
+    set(USE_ZERORAC 1)
+else(ZERORAC)
+    set(USE_ZERORAC 0)
+endif(ZERORAC)
 
 if(TTUI) 
     set(DISABLE_TTUI 0)

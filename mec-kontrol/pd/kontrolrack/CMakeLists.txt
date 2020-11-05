@@ -4,6 +4,12 @@ project(KontrolRack)
 
 
 if (NOT DISABLE_TTUI)
+
+    if (USE_ZERORAC)
+        message("Enabling zerOrac")
+        add_definitions(-DZERORAC=1)
+    endif()
+
     set(TTUI_SRC
         devices/TerminalTedium.cpp
         devices/TerminalTedium.h

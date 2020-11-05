@@ -1014,7 +1014,13 @@ void TToduleSelectMenu::clicked(unsigned idx) {
 
 // TerminalTedium implmentation
 
-TerminalTedium::TerminalTedium() : messageQueue_(TTMsg::MAX_N_TT_MSGS) {
+#ifdef ZERORAC
+#define TTTYPE TTuiLite::TT_zerOrac
+#else
+#define TTTYPE TTuiLite::TT_Normal
+#endif
+
+TerminalTedium::TerminalTedium() : device_(TTTYPE), messageQueue_(TTMsg::MAX_N_TT_MSGS) {
 }
 
 TerminalTedium::~TerminalTedium() {
