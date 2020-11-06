@@ -10,6 +10,8 @@
 
 namespace mec {
 
+
+
 ////////////////////////////////////////////////
 class EigenharpHandler : public EigenApi::Callback {
 public:
@@ -35,6 +37,14 @@ public:
     }
 
     bool isValid() { return valid_; }
+
+    static constexpr unsigned COURSE_OFFSET=120;
+
+    void setLED(const char *dev, int key, int colour) {
+        unsigned c = key / COURSE_OFFSET;
+        unsigned k = key % COURSE_OFFSET;
+        api_->setLED(dev, c , k, colour);
+    }
 
     virtual void device(const char *dev, DeviceType dt, int rows, int cols, int ribbons, int pedals) {
         const char *dk;
@@ -63,15 +73,15 @@ public:
                 Preferences leds(device_prefs.getSubTree("leds"));
                 if (leds.exists("green")) {
                     Preferences::Array a(leds.getArray("green"));
-                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),1); }
+                    for(int i=0;i<a.getSize();i++){ setLED(dev,a.getInt(i),1); }
                 }
                 if (leds.exists("orange")) {
                     Preferences::Array a(leds.getArray("orange"));
-                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),3); }
+                    for(int i=0;i<a.getSize();i++){ setLED(dev,a.getInt(i),3); }
                 }
                 if (leds.exists("red")) {
                     Preferences::Array a(leds.getArray("red"));
-                    for(int i=0;i<a.getSize();i++){ api_->setLED(dev, 0, a.getInt(i),2); }
+                    for(int i=0;i<a.getSize();i++){ setLED(dev,a.getInt(i),2); }
                 }
             }
             if (device_prefs.exists("mapping")) {
@@ -88,7 +98,7 @@ public:
         float mx = bipolar(r);
         float my = bipolar(y);
         float mz = unipolar(p);
-        float mn = note(key, mx) + (120 * course);
+        float mn = note(key, mx) + (COURSE_OFFSET * course);
         if (a) {
 
             LOG_3("EigenharpHandler key device d: " << dev << " a: " << a);
