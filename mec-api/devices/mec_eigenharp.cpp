@@ -88,7 +88,7 @@ public:
         float mx = bipolar(r);
         float my = bipolar(y);
         float mz = unipolar(p);
-        float mn = note(key, mx) + (1024 * course);
+        float mn = note(key, mx) + (120 * course);
         if (a) {
 
             LOG_3("EigenharpHandler key device d: " << dev << " a: " << a);
