@@ -44,6 +44,7 @@ if(WIN32)
     set(DISABLE_PUSH2 1)
     set(DISABLE_NUI 1)
     set(DISABLE_TTUI 1)
+    set(DISABLE_ELECTRAONE 1)
 endif()
 
 if (APPLE)
@@ -160,6 +161,13 @@ if(NOT DISABLE_TTUI)
     add_subdirectory(external/TTuiLite/ttuilite)
 endif()
 
+
+if(NOT DISABLE_ELECTRAONE) 
+    message("ElectraOne  enabled")
+    set(JSON_BuildTests OFF CACHE INTERNAL "")
+    add_subdirectory(external/nlohmann_json)
+    add_subdirectory(external/ElectraLite/electra)
+endif()
 
 add_subdirectory(mec-utils)
 add_subdirectory(mec-kontrol)

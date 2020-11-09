@@ -21,6 +21,10 @@
 #   include "devices/mec_nui.h"
 #endif
 
+#if !DISABLE_ELECTRAONE
+#   include "devices/mec_electraone.h"
+#endif
+
 #include "devices/mec_mididevice.h"
 #include "devices/mec_osct3d.h"
 #include "devices/mec_kontroldevice.h"
@@ -381,6 +385,24 @@ void MecApi_Impl::initDevices() {
 #endif
 
 
+#if !DISABLE_ELECTRAONE
+    if (prefs_->exists("electraone")) {
+        LOG_1("electraone initialise ");
+        std::shared_ptr<ElectraOne> device = std::make_shared<ElectraOne>();
+        Kontrol::KontrolModel::model()->addCallback("electraone", device);
+        if (device->init(prefs_->getSubTree("electraone"))) {
+            if (device->isActive()) {
+                devices_.push_back(device);
+            } else {
+                LOG_1("electraone init inactive ");
+                device->deinit();
+            }
+        } else {
+            LOG_1("electraone init failed ");
+            device->deinit();
+        }
+    }
+#endif
 
     if (prefs_->exists("midi")) {
         LOG_1("midi initialise ");

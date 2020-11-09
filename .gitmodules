@@ -16,3 +16,9 @@
 [submodule "external/ArduiPi_OLED"]
 	path = external/ArduiPi_OLED
 	url = https://github.com/TheTechnobear/ArduiPi_OLED.git
+[submodule "external/ElectraLite"]
+	path = external/ElectraLite
+	url = https://github.com/thetechnobear/ElectraLite
+[submodule "external/nlohmann_json"]
+	path = external/nlohmann_json
+	url = https://github.com/nlohmann/json.git

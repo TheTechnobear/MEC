@@ -50,6 +50,28 @@ else()
     add_definitions(-DDISABLE_PUSH2=1)
 endif()
 
+
+if (NOT DISABLE_ELECTRAONE)
+    include_directories ("${PROJECT_SOURCE_DIR}/../external/nlohmann_json/single_include/nlohmann")
+    set(ELECTRAONE_SRC
+            devices/mec_electraone.cpp
+            devices/mec_electraone.h
+            devices/electraone/e1_basemode.cpp
+            devices/electraone/e1_basemode.h
+            devices/electraone/e1_menu.cpp
+            devices/electraone/e1_menu.h
+            devices/electraone/e1_param.cpp
+            devices/electraone/e1_param.h
+            )
+
+    # add_subdirectory(devices/electraone)
+    set(ELECTRALITE_LIB electralite nlohmann_json::nlohmann_json)
+
+    # include_directories("devices/electraone")
+else()
+    add_definitions(-DDISABLE_ELECTRAONE=1)
+endif()
+
 if (NOT DISABLE_OSCDISPLAY)
     set(OSCDISPLAY_SRC
             devices/mec_oscdisplay.cpp
@@ -110,7 +132,8 @@ set(MECAPI_SRC
         ${EIGENHARP_SRC}
         ${PUSH2_SRC}
         ${OSCDISPLAY_SRC}
-	${NUI_SRC}
+    	${NUI_SRC}
+        ${ELECTRAONE_SRC}
         )
 
 include_directories(
@@ -121,7 +144,7 @@ include_directories(
 
 add_library(mec-api SHARED ${MECAPI_SRC})
 
-set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB} ${NUILITE_LIB})
+set(MEC_DEVICE_LIBS ${PUSH2_LIB} ${EIGENHARP_LIB} ${SOUNDPLANELITE_LIB} ${NUILITE_LIB} ${ELECTRALITE_LIB})
 
 target_link_libraries(mec-api mec-utils ${MEC_DEVICE_LIBS}  mec-kontrol-api cjson oscpack rtmidi portaudio moodycamel)
 set_target_properties(mec-api PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
