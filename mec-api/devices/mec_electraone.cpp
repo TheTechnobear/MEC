@@ -8,13 +8,14 @@
 
 #include "electraone/e1_basemode.h"
 #include "electraone/e1_menu.h"
-#include "electraone/e1_param_1.h"
-#include "electraone/e1_param_2.h"
+#include "electraone/e1_param.h"
 
 namespace mec {
 
-const unsigned SCREEN_HEIGHT = 64;
-const unsigned SCREEN_WIDTH = 128;
+
+const unsigned SCREEN_HEIGHT = 600;
+const unsigned SCREEN_WIDTH = 1024;
+const unsigned NUM_ENCODERS = 12;
 
 static const unsigned E1_NUM_TEXTLINES = 5;
 //static const unsigned E1_NUM_TEXTCHARS = (128 / 4); = 32
@@ -42,9 +43,9 @@ bool ElectraOne::init(void *arg) {
     static const auto POLL_FREQ = 1;
     static const auto POLL_SLEEP = 1000;
     menuTimeout_ = prefs.getInt("menu timeout", MENU_TIMEOUT);
-    std::string res = prefs.getString("resource path", "/home/we/norns/resources");
-    std::string splash = prefs.getString("splash", "./oracsplash4.png");
-    device_ = std::make_shared<ElectraOneLite::ElectraOneDevice>(res.c_str());
+    static const char* E1_Midi_Device_Ctrl  = "Electra Controller Electra CTRL";
+    std::string electramidi   = prefs.getString("midi device", E1_Midi_Device_Ctrl);
+    device_ = std::make_shared<ElectraLite::ElectraDevice>();
     pollFreq_ = prefs.getInt("poll freq",POLL_FREQ);
     pollSleep_ = prefs.getInt("poll sleep",POLL_SLEEP);
     pollCount_ = 0;
@@ -52,7 +53,7 @@ bool ElectraOne::init(void *arg) {
 
     unsigned parammode = prefs.getInt("param display", 0);
 
-    std::shared_ptr<ElectraOneLite::ElectraOneCallback> cb = std::make_shared<ElectraOneDeviceCallback>(*this);
+    std::shared_ptr<ElectraLite::ElectraCallback> cb = std::make_shared<ElectraOneDeviceCallback>(*this);
     device_->addCallback(cb);
     device_->start();
 
@@ -65,13 +66,7 @@ bool ElectraOne::init(void *arg) {
 
     active_ = true;
     if (active_) {
-        if (parammode == 1 || device_->numEncoders() == 3) {
-            addMode(NM_PARAMETER, std::make_shared<ElectraOneParamMode2>(*this));
-
-        } else {
-            addMode(NM_PARAMETER, std::make_shared<ElectraOneParamMode1>(*this));
-        }
-
+        addMode(NM_PARAMETER, std::make_shared<ElectraOneParamMode>(*this));
         addMode(NM_MAINMENU, std::make_shared<ElectraOneMainMenu>(*this));
         addMode(NM_PRESETMENU, std::make_shared<ElectraOnePresetMenu>(*this));
         addMode(NM_MODULEMENU, std::make_shared<ElectraOneModuleMenu>(*this));
@@ -79,7 +74,6 @@ bool ElectraOne::init(void *arg) {
 
         changeMode(NM_PARAMETER);
     }
-    // device_->drawPNG(0, 0, splash.c_str());
     // device_->displayText(15, 0, 1, "Connecting...");
     return active_;
 }
@@ -316,7 +310,7 @@ void ElectraOne::displayPopup(const std::string &text, bool) {
 
 void ElectraOne::clearDisplay() {
     if (!device_) return;
-    device_->displayClear();
+//    device_->displayClear();
 }
 
 void ElectraOne::clearParamNum(unsigned num) {
@@ -385,13 +379,13 @@ void ElectraOne::displayParamNum(unsigned num, const Kontrol::Parameter &param, 
 
 void ElectraOne::displayLine(unsigned line, const char *disp) {
     if (!device_) return;
-    device_->clearText(0, line);
-    device_->displayText(15, line, 0, disp);
+//    device_->clearText(0, line);
+//    device_->displayText(15, line, 0, disp);
 }
 
 void ElectraOne::invertLine(unsigned line) {
     if (!device_) return;
-    device_->invertText(line);
+//    device_->invertText(line);
 }
 
 void ElectraOne::displayTitle(const std::string &module, const std::string &page) {

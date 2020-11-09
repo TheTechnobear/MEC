@@ -160,17 +160,26 @@ private:
 
 };
 
-class ElectraOneDeviceCallback : public ElectraOneLite::ElectraOneCallback {
+class ElectraOneDeviceCallback : public ElectraLite::ElectraCallback {
 public:
     ElectraOneDeviceCallback(ElectraOne &p) : parent_(p) { ; }
 
-    void onButton(unsigned id, unsigned value) override {
-        parent_.onButton(id, value);
-    }
+    virtual ~ElectraOneDeviceCallback() = default;
+    
+    // virtual void onInit()   {;}
+    // virtual void onDeinit() {;}
+    // virtual void onError(unsigned err, const char *errStr) {;}
+    // virtual void onInfo(const std::string& json) {;}
+    // virtual void onPreset(const std::string& json) {;}
+    // virtual void onConfig(const std::string& json) {;}
 
-    void onEncoder(unsigned id, int value) override {
-        parent_.onEncoder(id, value);
-    }
+    // void onButton(unsigned id, unsigned value) override {
+    //     parent_.onButton(id, value);
+    // }
+
+    // void onEncoder(unsigned id, int value) override {
+    //     parent_.onEncoder(id, value);
+    // }
 
 private:
     ElectraOne &parent_;

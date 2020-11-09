@@ -4,10 +4,13 @@
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/ArduiPi_OLED" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/EigenLite" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/ElectraLite" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/ElectraLite/external/nlohmann_json" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/NuiLite" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/SoundplaneLite" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/TTuiLite" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/TTuiLite/external/ArduiPi_OLED" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/nlohmann_json" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/mec-max/source/max-api" vcs="Git" />
   </component>
 </project>
