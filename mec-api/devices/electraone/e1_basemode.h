@@ -3,13 +3,15 @@
 
 #include "../mec_electraone.h"
 
+#include <ElectraSchema.h>
+
 namespace mec {
 
 static constexpr unsigned NUI_NUM_BUTTONS = 3;
 
 class ElectraOneBaseMode : public ElectraOneMode {
 public:
-    explicit ElectraOneBaseMode(ElectraOne &p) : parent_(p), popupTime_(-1) { ; }
+    explicit ElectraOneBaseMode(ElectraOne &p);
 
 
     // Kontrol
@@ -45,11 +47,24 @@ public:
 
 protected:
     ElectraOne &parent_;
-
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
 
+    void initPreset();
+    void createParam(unsigned pageid,unsigned id, const std::string& name, int val, int min, int max);
+    void createDevice(unsigned id, const std::string& name, unsigned ch, unsigned port);
+    void createPage(unsigned id,const std::string& name);
+    void createGroup(unsigned id,const std::string& name);
+    void clearPages();
+    void createButton(unsigned id, unsigned row,unsigned col, const std::string& name);
+
+
+    void createKey(unsigned id, const std::string& name, unsigned x,unsigned y);
+    void createKeyboard();
+
     int popupTime_;
-    bool buttonState_[NUI_NUM_BUTTONS] = {false, false, false};
+    bool buttonState_[3]={false,false,false};
+
+    ElectraOnePreset::Preset preset_;
 };
 
 

@@ -10,7 +10,7 @@
 // #include <thread>
 
 #include <ElectraDevice.h>
-
+#include <ElectraSchema.h>
 
 namespace mec {
 
@@ -78,13 +78,7 @@ public:
 
     void changePot(unsigned pot, float value);
 
-    void displayPopup(const std::string &text, bool);
-    void displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local, bool selected);
-    void clearParamNum(unsigned num);
-    void displayLine(unsigned line, const char *);
-    void invertLine(unsigned line);
-    void clearDisplay();
-    void displayTitle(const std::string &module, const std::string &page);
+    void send(ElectraOnePreset::Preset& preset);
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return Kontrol::KontrolModel::model(); }
 
@@ -101,7 +95,6 @@ public:
 
     void currentPage(const Kontrol::EntityId &id) { currentPageId_ = id; }
 
-    // from fates device
     void onButton(unsigned id, unsigned value);
     void onEncoder(unsigned id, int value);
 
@@ -136,11 +129,11 @@ private:
     void stop() override;
 
 
-    static const unsigned int OUTPUT_BUFFER_SIZE = 1024;
-
 
     std::shared_ptr<ElectraLite::ElectraDevice> device_;
     bool active_;
+
+    std::string lastMessageSent_;
 
     Kontrol::EntityId currentRackId_;
     Kontrol::EntityId currentModuleId_;
@@ -166,21 +159,26 @@ public:
 
     virtual ~ElectraOneDeviceCallback() = default;
     
-    // virtual void onInit()   {;}
-    // virtual void onDeinit() {;}
-    // virtual void onError(unsigned err, const char *errStr) {;}
-    // virtual void onInfo(const std::string& json) {;}
-    // virtual void onPreset(const std::string& json) {;}
-    // virtual void onConfig(const std::string& json) {;}
+     void onInit() override {;}
+     void onDeinit() override {;}
+     void onError(unsigned err, const char *errStr) override {;}
+     void onInfo(const std::string& json) override {;}
+     void onPreset(const std::string& json) override {;}
+     void onConfig(const std::string& json) override {;}
 
-    // void onButton(unsigned id, unsigned value) override {
-    //     parent_.onButton(id, value);
-    // }
+    void noteOn(unsigned int ch, unsigned int n, unsigned int v) override {
+        int b = n - 60;
+        if(b>=0 && b<=3) parent_.onButton(b,v);
+    }
 
-    // void onEncoder(unsigned id, int value) override {
-    //     parent_.onEncoder(id, value);
-    // }
+    void noteOff(unsigned int ch, unsigned int n, unsigned int v) override {
+        int b = n - 60;
+        if(b>=0 && b<=3) parent_.onButton(b,0);
+    }
 
+    void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
+         if(cc<12) parent_.onEncoder(cc,v);
+    }
 private:
     ElectraOne &parent_;
 };

@@ -19,21 +19,21 @@ void ElectraOneMenuMode::poll() {
 }
 
 void ElectraOneMenuMode::display() {
-    parent_.clearDisplay();
-    for (unsigned i = top_; i < top_ + NUI_NUM_TEXTLINES; i++) {
-        displayItem(i);
-    }
+//    parent_.clearDisplay();
+//    for (unsigned i = top_; i < top_ + NUI_NUM_TEXTLINES; i++) {
+//        displayItem(i);
+//    }
 }
 
 void ElectraOneMenuMode::displayItem(unsigned i) {
-    if (i < getSize()) {
-        std::string item = getItemText(i);
-        unsigned line = i - top_ + 1;
-        parent_.displayLine(line, item.c_str());
-        if (i == cur_) {
-            parent_.invertLine(line);
-        }
-    }
+//    if (i < getSize()) {
+//        std::string item = getItemText(i);
+//        unsigned line = i - top_ + 1;
+//        parent_.displayLine(line, item.c_str());
+//        if (i == cur_) {
+//            parent_.invertLine(line);
+//        }
+//    }
 }
 
 void ElectraOneMenuMode::onButton(unsigned id, unsigned value) {
@@ -86,10 +86,10 @@ void ElectraOneMenuMode::navPrev() {
             display();
         } else {
             line = cur_ - top_ + 1;
-            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
+//            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
             cur_ = cur;
             line = cur_ - top_ + 1;
-            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
+//            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
         }
     }
     popupTime_ = parent_.menuTimeout();
@@ -112,10 +112,10 @@ void ElectraOneMenuMode::navNext() {
             display();
         } else {
             line = cur_ - top_ + 1;
-            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
+//            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
             cur_ = cur;
             line = cur_ - top_ + 1;
-            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
+//            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
         }
     }
     popupTime_ = parent_.menuTimeout();

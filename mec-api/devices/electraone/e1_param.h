@@ -43,7 +43,7 @@ public:
 
 protected:
     virtual void setCurrentPage(unsigned pageIdx, bool UI);
-    virtual void displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local);
+    virtual void displayParamNum(unsigned pageid,unsigned num, const Kontrol::Parameter &p, bool local);
 
     void changeParam(unsigned idx, int relValue);
     void display();

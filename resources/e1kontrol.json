@@ -1,0 +1,30 @@
+{
+    "mec"  :  {
+        "electraone"  :  {
+            "input device" : "Electra Controller Electra CTRL",
+            "output device" : "Electra Controller Electra CTRL",
+            "_output device" : "Electra Controller Electra Port 1",
+            "_output device" : "Electra Controller Electra Port 2"
+        },
+
+        "kontrol"  :  {
+            "listen port" : 6000
+        }
+    },
+
+    "mec-app"  :  {
+        "outputs" : {
+            "midi" : {
+                "virtual" : 0,
+                "voices" : 15,
+                "mpe":false,
+                "device" : "IAC Driver IAC Bus 1",
+                "_device" : "Pure Data:Pure Data Midi-In 1 128:0",
+                "pitchbend range" : 48.0
+            },
+            "_console" : {
+                "throttle" : 0
+            }
+        }
+    }
+}

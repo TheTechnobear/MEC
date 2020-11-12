@@ -1,53 +1,72 @@
 #include "e1_param.h"
 
-//#include <iostream>
+#include <iostream>
+
 namespace mec {
 
 
-const unsigned SCREEN_HEIGHT = 600;
-const unsigned SCREEN_WIDTH = 1024;
+//const unsigned SCREEN_HEIGHT = 600;
+//const unsigned SCREEN_WIDTH = 1024;
 const unsigned NUM_ENCODERS = 12;
-
-const unsigned encNum(unsigned page, unsigned param) {
-    unsigned pg = page % 3; // 3 pages per screen
-    unsigned row = param / 2;
-    unsigned col = param % 2;
-    return (row * (NUM_ENCODERS/ 2)) + (pg * 2) + col;
-}
-
-static const unsigned E1_NUM_PARAMS = 4;
-
-
-static unsigned param1EncoderMap[] = {0, 2, 3, 1};
+//
+//const unsigned encNum(unsigned page, unsigned param) {
+//    unsigned pg = page % 3; // 3 pages per screen
+//    unsigned row = param / 2;
+//    unsigned col = param % 2;
+//    return (row * (NUM_ENCODERS/ 2)) + (pg * 2) + col;
+//}
 
 
 void ElectraOneParamMode::display() {
-    parent_.clearDisplay();
+//    std::cerr << "ElectraOneParamMode::display() - begin" << std::endl;
+    clearPages();
+    createDevice(1, "Orac", 1, 1);
+
+    createButton(100,0,0,"Prev Page");
+    createButton(101,0,1,"Next Page");
+    createButton(102,0,4,"Prev Module");
+    createButton(103,0,5,"Next Module");
+
+    createKeyboard();
+
+    //    parent_.clearDisplay();
     auto rack = parent_.model()->getRack(parent_.currentRack());
     auto module = parent_.model()->getModule(rack, parent_.currentModule());
-    auto page = parent_.model()->getPage(module, pageId_);
-//    auto pages = parent_.model()->getPages(module);
-    auto params = parent_.model()->getParams(module, page);
 
     std::string md = "";
     std::string pd = "";
     if (module) md = module->id() + " : " + module->displayName();
-    if (page) pd = page->displayName();
-    parent_.displayTitle(md, pd);
 
+    createPage(1, md);
+    auto pages = parent_.model()->getPages(module);
 
-    unsigned int j = 0;
-    for (auto param : params) {
-        if (param != nullptr) {
-            displayParamNum(j, *param, true);
+    for (auto pg = 0; pg < 3; pg++) {
+        if (pageIdx_ + pg < pages.size()) {
+            auto page = pages[pageIdx_ + pg];
+            if (page) {
+                auto params = parent_.model()->getParams(module, page);
+                if (page) pd = page->displayName();
+
+                // create group for page
+                createGroup(pg, pd);
+                unsigned int j = 0;
+                for (auto param : params) {
+                    if (param != nullptr) {
+                        //            std::cerr << "ElectraOneParamMode::display() " << param->displayName() <<  std::endl;
+                        displayParamNum(pg, j, *param, true);
+                    }
+                    j++;
+                    if (j == 4) break;
+                }
+                for (; j < 4; j++) {
+                    //        parent_.clearParamNum(j);
+                }
+            }
         }
-        j++;
-        if (j == E1_NUM_PARAMS) break;
     }
 
-    for (; j < E1_NUM_PARAMS; j++) {
-        parent_.clearParamNum(j);
-    }
+//    std::cerr << "ElectraOneParamMode::display() - end " <<  std::endl;
+    parent_.send(preset_);
 }
 
 
@@ -76,8 +95,9 @@ void ElectraOneParamMode::onButton(unsigned id, unsigned value) {
     }
 }
 
-void ElectraOneParamMode::displayParamNum(unsigned num, const Kontrol::Parameter &p, bool local) {
-    parent_.displayParamNum(num, p, local, false);
+void ElectraOneParamMode::displayParamNum(unsigned pageid, unsigned num, const Kontrol::Parameter &p, bool local) {
+    createParam(pageid, num, p.displayName(), p.current().floatValue(),
+                p.calcMinimum().floatValue(), p.calcMaximum().floatValue());
 }
 
 void ElectraOneParamMode::changeParam(unsigned idx, int relValue) {
@@ -122,8 +142,8 @@ void ElectraOneParamMode::onEncoder(unsigned idx, int v) {
         }
     } else {
         if (idx >= sizeof(idx)) return;
-        auto paramIdx = param1EncoderMap[idx];
-        changeParam(paramIdx, v);
+//        auto paramIdx = param1EncoderMap[idx];
+//        changeParam(paramIdx, v);
     }
 }
 
@@ -148,11 +168,11 @@ void ElectraOneParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
                 } catch (std::out_of_range) { ;
                 }
             } else {
-                parent_.clearDisplay();
+//                parent_.clearDisplay();
                 std::string md = "";
                 std::string pd = "";
                 if (module) md = module->id() + " : " + module->displayName();
-                parent_.displayTitle(md, "none");
+//                parent_.displayTitle(md, "none");
             }
         }
 
@@ -161,7 +181,8 @@ void ElectraOneParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 }
 
 
-void ElectraOneParamMode::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
+void ElectraOneParamMode::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
+                                       const Kontrol::Module &module) {
     if (rack.id() == parent_.currentRack()) {
         if (src != Kontrol::CS_LOCAL && module.id() != parent_.currentModule()) {
             parent_.currentModule(module.id());
@@ -173,7 +194,7 @@ void ElectraOneParamMode::activeModule(Kontrol::ChangeSource src, const Kontrol:
 
 
 void ElectraOneParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module,
-                            const Kontrol::Parameter &param) {
+                                  const Kontrol::Parameter &param) {
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
 
     auto prack = parent_.model()->getRack(parent_.currentRack());
@@ -184,13 +205,14 @@ void ElectraOneParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack
 
 
     unsigned sz = params.size();
-    sz = sz < E1_NUM_PARAMS ? sz : E1_NUM_PARAMS;
+    sz = sz < NUM_ENCODERS;
     for (unsigned int i = 0; i < sz; i++) {
         try {
             auto &p = params.at(i);
             if (p->id() == param.id()) {
                 p->change(param.current(), src == Kontrol::CS_PRESET);
-                displayParamNum(i, param, src != Kontrol::CS_LOCAL);
+                unsigned pgid =0; //TODO !!!!
+                displayParamNum(pgid,i, param, src != Kontrol::CS_LOCAL);
                 return;
             }
         } catch (std::out_of_range) {
@@ -200,7 +222,7 @@ void ElectraOneParamMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack
 }
 
 void ElectraOneParamMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
-                           const Kontrol::Module &module) {
+                                 const Kontrol::Module &module) {
     if (moduleType_ != module.type()) {
         pageIdx_ = -1;
     }
@@ -208,13 +230,13 @@ void ElectraOneParamMode::module(Kontrol::ChangeSource source, const Kontrol::Ra
 }
 
 void ElectraOneParamMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
-                         const Kontrol::Page &page) {
+                               const Kontrol::Page &page) {
     if (pageIdx_ < 0) setCurrentPage(0, false);
 }
 
 
 void ElectraOneParamMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
-                               const Kontrol::EntityId &moduleId, const std::string &modType) {
+                                     const Kontrol::EntityId &moduleId, const std::string &modType) {
     if (parent_.currentModule() == moduleId) {
         if (moduleType_ != modType) {
             pageIdx_ = -1;

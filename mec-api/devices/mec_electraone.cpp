@@ -51,18 +51,15 @@ bool ElectraOne::init(void *arg) {
     pollCount_ = 0;
     if (!device_) return false;
 
-    unsigned parammode = prefs.getInt("param display", 0);
-
     std::shared_ptr<ElectraLite::ElectraCallback> cb = std::make_shared<ElectraOneDeviceCallback>(*this);
     device_->addCallback(cb);
-    device_->start();
-
     if (active_) {
         LOG_2("ElectraOne::init - already active deinit");
         deinit();
     }
     active_ = false;
 
+    device_->start();
 
     active_ = true;
     if (active_) {
@@ -301,102 +298,31 @@ void ElectraOne::modulationLearn(bool b) {
 }
 
 
-//--- display functions
-
-void ElectraOne::displayPopup(const std::string &text, bool) {
-    // not used currently
-}
-
-
-void ElectraOne::clearDisplay() {
-    if (!device_) return;
-//    device_->displayClear();
-}
-
-void ElectraOne::clearParamNum(unsigned num) {
-    if (!device_) return;
-
-    unsigned row, col;
-    switch (num) {
-        case 0 :
-            row = 0, col = 0;
-            break;
-        case 1 :
-            row = 0, col = 1;
-            break;
-        case 2 :
-            row = 1, col = 0;
-            break;
-        case 3 :
-            row = 1, col = 1;
-            break;
-        default :
-            return;
+static void removeNullsFromJson(nlohmann::json & json) {
+    if (!json.is_object() && !json.is_array())  return;
+    std::vector<nlohmann::json::object_t::key_type> keys;
+    for (auto &it : json.items()) {
+        if (it.value().is_null())
+            keys.push_back(it.key());
+        else
+            removeNullsFromJson(it.value());
     }
-    // unsigned x = col * 64;
-    // unsigned y1 = (row + 1) * 20;
-    // unsigned y2 = y1 + LINE_H;
-    // device_->clearRect(0, x, y1 , 62 + (col * 2), LINE_H);
-    // device_->clearRect(0, x, y2 , 62 + (col * 2), LINE_H);
-
+    for (auto key : keys) json.erase(key);
 }
 
-
-void ElectraOne::displayParamNum(unsigned num, const Kontrol::Parameter &param, bool dispCtrl, bool selected) {
-    if (!device_) return;
-    const std::string &dName = param.displayName();
-    std::string value = param.displayValue();
-    std::string unit = param.displayUnit();
-
-    unsigned row, col;
-    switch (num) {
-        case 0 :
-            row = 0, col = 0;
-            break;
-        case 1 :
-            row = 0, col = 1;
-            break;
-        case 2 :
-            row = 1, col = 0;
-            break;
-        case 3 :
-            row = 1, col = 1;
-            break;
-        default :
-            return;
+void ElectraOne::send(ElectraOnePreset::Preset& preset) {
+    nlohmann::json j;
+    nlohmann::to_json(j, preset);
+    removeNullsFromJson(j);
+    std::cout << j.dump(4) << std::endl;
+    if(device_) {
+        std::string msg=j.dump();
+        if(msg!=lastMessageSent_) {
+            device_->uploadPreset(j.dump());
+        }
+        lastMessageSent_ = msg;
     }
-
-    // unsigned x = col * 64;
-    // unsigned y1 = (row + 1) * 20;
-    // unsigned y2 = y1 + LINE_H;
-    // unsigned clr = selected ? 15 : 0;
-    // device_->clearRect(5, x, y1-LINE_H , 62 + (col * 2), LINE_H);
-    // device_->drawText(clr, x + 1, y1 - 1, dName.c_str());
-    // device_->clearRect(0, x, y2-LINE_H, 62 + (col * 2), LINE_H);
-    // device_->drawText(15, x + 1, y2 - 1, value);
-    // device_->drawText(15, x + 1 + 40, y2 - 1, unit);
 }
-
-void ElectraOne::displayLine(unsigned line, const char *disp) {
-    if (!device_) return;
-//    device_->clearText(0, line);
-//    device_->displayText(15, line, 0, disp);
-}
-
-void ElectraOne::invertLine(unsigned line) {
-    if (!device_) return;
-//    device_->invertText(line);
-}
-
-void ElectraOne::displayTitle(const std::string &module, const std::string &page) {
-    if (!device_) return;
-    if (module.size() == 0 || page.size() == 0) return;
-    std::string title = module + " > " + page;
-
-    // device_->clearRect(1, 0, 0, 128, LINE_H);
-    // device_->drawText(15, 0, 8, title.c_str());
-}
-
 
 void ElectraOne::currentModule(const Kontrol::EntityId &modId) {
     currentModuleId_ = modId;
