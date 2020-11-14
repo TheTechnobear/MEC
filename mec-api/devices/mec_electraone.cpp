@@ -314,11 +314,26 @@ void ElectraOne::send(ElectraOnePreset::Preset& preset) {
     nlohmann::json j;
     nlohmann::to_json(j, preset);
     removeNullsFromJson(j);
-    std::cout << j.dump(4) << std::endl;
+
+    nlohmann::ordered_json oj;
+    static const std::string presetName="name";
+    auto i= j.find(presetName);
+    if(i!=j.end()) {
+        oj[i.key()] = i.value();
+    }
+
+    for(auto& i : j.items()) {
+        if(i.key()!=presetName) {
+            oj[i.key()] = i.value();
+        }
+    }
+
     if(device_) {
         std::string msg=j.dump();
         if(msg!=lastMessageSent_) {
-            device_->uploadPreset(j.dump());
+//            std::cout << oj.dump() << std::endl;
+            std::cout << oj.dump(4) << std::endl;
+            device_->uploadPreset(oj.dump());
         }
         lastMessageSent_ = msg;
     }

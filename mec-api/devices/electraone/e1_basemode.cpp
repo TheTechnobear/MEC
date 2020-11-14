@@ -113,11 +113,11 @@ void ElectraOneBaseMode::createButton(unsigned id, unsigned r,unsigned c, const 
     e.page_id = 1;
 
 
-    e.inputs = std::make_shared<std::vector<ElectraOnePreset::Input>>();
-    ElectraOnePreset::Input inp;
-    inp.pot_id =e.id;
-    inp.value_id = ElectraOnePreset::ValueId::Value;
-    e.inputs->push_back(inp);
+//    e.inputs = std::make_shared<std::vector<ElectraOnePreset::Input>>();
+//    ElectraOnePreset::Input inp;
+//    inp.pot_id =e.id;
+//    inp.value_id = ElectraOnePreset::ValueId::Value;
+//    e.inputs->push_back(inp);
 
     ElectraOnePreset::Value val;
     val.id = std::make_shared<ElectraOnePreset::ValueId>(ElectraOnePreset::ValueId::Value);
@@ -223,11 +223,11 @@ void ElectraOneBaseMode::createKey(unsigned id, const std::string& name, unsigne
     e.page_id = 1;
 
 
-    e.inputs = std::make_shared<std::vector<ElectraOnePreset::Input>>();
-    ElectraOnePreset::Input inp;
-    inp.pot_id =e.id;
-    inp.value_id = ElectraOnePreset::ValueId::Value;
-    e.inputs->push_back(inp);
+//    e.inputs = std::make_shared<std::vector<ElectraOnePreset::Input>>();
+//    ElectraOnePreset::Input inp;
+//    inp.pot_id =e.id;
+//    inp.value_id = ElectraOnePreset::ValueId::Value;
+//    e.inputs->push_back(inp);
 
     ElectraOnePreset::Value val;
     val.id = std::make_shared<ElectraOnePreset::ValueId>(ElectraOnePreset::ValueId::Value);
@@ -255,18 +255,31 @@ void ElectraOneBaseMode::createKey(unsigned id, const std::string& name, unsigne
 }
 
 void ElectraOneBaseMode::createKeyboard() {
+    createKey(50,"Aux",0,450);
+
     unsigned xi=0;
     unsigned xs=75;
-    unsigned xo=100;
-    unsigned y=400;
+    unsigned xo=200;
+    unsigned y=450;
+
     createKey(60,"C",xi*xs+xo,y);xi++;
     createKey(62,"D",xi*xs+xo,y);xi++;
     createKey(64,"E",xi*xs+xo,y);xi++;
     createKey(65,"F",xi*xs+xo,y);xi++;
     createKey(67,"G",xi*xs+xo,y);xi++;
-//    createKey(69,"A",xi*xs+xo,y);xi++;
-//    createKey(71,"B",xi*xs+xo,y);xi++;
-//    createKey(72,"C",xi*xs+xo,y);xi++;
+    createKey(69,"A",xi*xs+xo,y);xi++;
+    createKey(71,"B",xi*xs+xo,y);xi++;
+    createKey(72,"C",xi*xs+xo,y);xi++;
+
+    xo=xo+(xs/2);
+    y= 340;
+    xi=0;
+    createKey(61,"C#",xi*xs+xo,y);xi++;
+    createKey(63,"D#",xi*xs+xo,y);xi++;
+    xi++;
+    createKey(66,"F#",xi*xs+xo,y);xi++;
+    createKey(68,"G#",xi*xs+xo,y);xi++;
+    createKey(70,"A#",xi*xs+xo,y);xi++;
 }
 
 void ElectraOneBaseMode::clearPages() {
