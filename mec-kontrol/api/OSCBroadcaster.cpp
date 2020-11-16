@@ -156,6 +156,12 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
                     if (rackId != r->id()) {
                         std::cerr << " publishing meta data to " << rackId << " for " << r->id() << std::endl;
                         rack(CS_LOCAL, *r);
+                        for (const auto &resType:r->getResourceTypes()) {
+                            for (const auto &res : r->getResources(resType)) {
+                                resource(CS_LOCAL, *r, resType, res);
+                            }
+                        }
+                        loadPreset(CS_LOCAL, *r, r->currentPreset());
                         for (const auto &m : r->getModules()) {
                             module(CS_LOCAL, *r, *m);
                             for (const auto &p :  m->getParams()) {
