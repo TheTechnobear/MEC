@@ -7,8 +7,6 @@
 
 namespace mec {
 
-static constexpr unsigned NUI_NUM_BUTTONS = 3;
-
 class ElectraOneBaseMode : public ElectraOneMode {
 public:
     explicit ElectraOneBaseMode(ElectraOne &p);
@@ -34,7 +32,7 @@ public:
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
     // ElectraOneDevice
-    void onButton(unsigned id, unsigned value) override { buttonState_[id] = value; }
+    void onButton(unsigned id, unsigned value) override { ; }
 
     void onEncoder(unsigned id, int value) override { ; }
 
@@ -46,24 +44,44 @@ public:
     void activate() override { ; }
 
 protected:
+
+    enum {
+        E1_BTN_FIRST_MODULE = 80,
+        E1_BTN_AUX = 100,
+        E1_BTN_PREV_MODULE = 101,
+        E1_BTN_NEXT_MODULE = 102,
+        E1_BTN_NEW_PRESET,
+        E1_BTN_LOAD_PRESET,
+        E1_BTN_SAVE_PRESET,
+        E1_BTN_SAVE,
+        E1_BTN_LOAD_MODULE,
+        E1_BTN_MIDI_LEARN,
+        E1_BTN_MOD_LEARN,
+        E1_CTL_PRESET_LIST,
+        E1_CTL_MOD_LIST
+    };
+
     ElectraOne &parent_;
+
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
 
     void initPreset();
-    void createParam(unsigned pageid,unsigned id, const std::string& name, int val, int min, int max);
-    void createDevice(unsigned id, const std::string& name, unsigned ch, unsigned port);
-    void createPage(unsigned id,const std::string& name);
-    void createGroup(unsigned id,const std::string& name);
+    void createParam(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos, unsigned pid,
+                     const std::string &name, int val, int min, int max);
+    void createDevice(unsigned id, const std::string &name, unsigned ch, unsigned port);
+    void createPage(unsigned id, const std::string &name);
+    void createGroup(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, const std::string &name);
     void clearPages();
-    void createButton(unsigned id, unsigned row,unsigned col, const std::string& name);
+    void createButton(unsigned id, unsigned pageid, unsigned row, unsigned col, const std::string &name);
+    void createList(unsigned id, unsigned pageid, unsigned row, unsigned col, unsigned pid,const std::string &name,
+                    std::set<std::string> &list);
 
 
-    void createKey(unsigned id, const std::string& name, unsigned x,unsigned y);
-    void createKeyboard();
+//    void createKey(unsigned id, unsigned pageid,const std::string& name, unsigned x,unsigned y);
+//    void createKeyboard(unsigned pageid);
 
-    int popupTime_;
-    bool buttonState_[3]={false,false,false};
-
+    unsigned lastId_ = 1;
+    unsigned lastOverlayId_=1;
     ElectraOnePreset::Preset preset_;
 };
 

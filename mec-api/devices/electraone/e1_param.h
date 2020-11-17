@@ -38,12 +38,10 @@ public:
     void onButton(unsigned id, unsigned value) override;
     void onEncoder(unsigned id, int value) override;
 
-    void nextPage();
-    void prevPage();
-
 protected:
     virtual void setCurrentPage(unsigned pageIdx, bool UI);
-    virtual void displayParamNum(unsigned pageid,unsigned num, const Kontrol::Parameter &p, bool local);
+    virtual void displayParamNum(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos,
+                                 unsigned pid,const Kontrol::Parameter &p, bool local);
 
     void changeParam(unsigned idx, int relValue);
     void display();

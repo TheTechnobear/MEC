@@ -2,129 +2,29 @@
 
 namespace mec {
 
-static const unsigned NUI_NUM_TEXTLINES = 5;
-
 //---- ElectraOneMenuMode
 void ElectraOneMenuMode::activate() {
     display();
-    popupTime_ = parent_.menuTimeout();
 }
 
 void ElectraOneMenuMode::poll() {
     ElectraOneBaseMode::poll();
-    if (popupTime_ == 0) {
-        parent_.changeMode(NM_PARAMETER);
-        popupTime_ = -1;
-    }
 }
 
 void ElectraOneMenuMode::display() {
-//    parent_.clearDisplay();
-//    for (unsigned i = top_; i < top_ + NUI_NUM_TEXTLINES; i++) {
-//        displayItem(i);
-//    }
 }
 
-void ElectraOneMenuMode::displayItem(unsigned i) {
-//    if (i < getSize()) {
-//        std::string item = getItemText(i);
-//        unsigned line = i - top_ + 1;
-//        parent_.displayLine(line, item.c_str());
-//        if (i == cur_) {
-//            parent_.invertLine(line);
-//        }
-//    }
-}
+
 
 void ElectraOneMenuMode::onButton(unsigned id, unsigned value) {
     ElectraOneBaseMode::onButton(id, value);
-    switch (id) {
-        case 0 : {
-            if (!value) {
-                // on release of button
-                parent_.changeMode(NM_PARAMETER);
-            }
-            break;
-        }
-        case 1 : {
-            break;
-        }
-        case 2 : {
-            if (!value) {
-                navActivate();
-            }
-            break;
-        }
-        default:;
-    }
 }
 
 void ElectraOneMenuMode::onEncoder(unsigned id, int value) {
-    if (id == 0) {
-        if (value > 0) {
-            navNext();
-        } else {
-            navPrev();
-        }
-    }
-
+    ElectraOneBaseMode::onEncoder(id, value);
 }
 
 
-void ElectraOneMenuMode::navPrev() {
-    unsigned cur = cur_;
-    if (cur_ > 0) {
-        cur--;
-        unsigned int line = 0;
-        if (cur < top_) {
-            top_ = cur;
-            cur_ = cur;
-            display();
-        } else if (cur >= top_ + NUI_NUM_TEXTLINES) {
-            top_ = cur - (NUI_NUM_TEXTLINES - 1);
-            cur_ = cur;
-            display();
-        } else {
-            line = cur_ - top_ + 1;
-//            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
-            cur_ = cur;
-            line = cur_ - top_ + 1;
-//            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
-        }
-    }
-    popupTime_ = parent_.menuTimeout();
-}
-
-
-void ElectraOneMenuMode::navNext() {
-    unsigned cur = cur_;
-    cur++;
-    cur = std::min(cur, getSize() - 1);
-    if (cur != cur_) {
-        unsigned int line = 0;
-        if (cur < top_) {
-            top_ = cur;
-            cur_ = cur;
-            display();
-        } else if (cur >= top_ + NUI_NUM_TEXTLINES) {
-            top_ = cur - (NUI_NUM_TEXTLINES - 1);
-            cur_ = cur;
-            display();
-        } else {
-            line = cur_ - top_ + 1;
-//            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
-            cur_ = cur;
-            line = cur_ - top_ + 1;
-//            if (line <= NUI_NUM_TEXTLINES) parent_.invertLine(line);
-        }
-    }
-    popupTime_ = parent_.menuTimeout();
-}
-
-
-void ElectraOneMenuMode::navActivate() {
-    clicked(cur_);
-}
 
 void ElectraOneMenuMode::savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
     display();
@@ -149,12 +49,12 @@ void ElectraOneMenuMode::modulationLearn(Kontrol::ChangeSource src, bool b) {
 
 /// main menu
 enum OscMainMenuItms {
-    NUI_MMI_MODULE,
-    NUI_MMI_PRESET,
-    NUI_MMI_MIDILEARN,
-    NUI_MMI_MODLEARN,
-    NUI_MMI_SAVE,
-    NUI_MMI_SIZE
+    E1_MMI_MODULE,
+    E1_MMI_PRESET,
+    E1_MMI_MIDILEARN,
+    E1_MMI_MODLEARN,
+    E1_MMI_SAVE,
+    E1_MMI_SIZE
 };
 
 bool ElectraOneMainMenu::init() {
@@ -163,12 +63,12 @@ bool ElectraOneMainMenu::init() {
 
 
 unsigned ElectraOneMainMenu::getSize() {
-    return (unsigned) NUI_MMI_SIZE;
+    return (unsigned) E1_MMI_SIZE;
 }
 
 std::string ElectraOneMainMenu::getItemText(unsigned idx) {
     switch (idx) {
-        case NUI_MMI_MODULE: {
+        case E1_MMI_MODULE: {
             auto rack = model()->getRack(parent_.currentRack());
             auto module = model()->getModule(rack, parent_.currentModule());
             if (module == nullptr)
@@ -176,22 +76,22 @@ std::string ElectraOneMainMenu::getItemText(unsigned idx) {
             else
                 return parent_.currentModule() + ":" + module->displayName();
         }
-        case NUI_MMI_PRESET: {
+        case E1_MMI_PRESET: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 return rack->currentPreset();
             }
             return "No Preset";
         }
-        case NUI_MMI_SAVE:
+        case E1_MMI_SAVE:
             return "Save";
-        case NUI_MMI_MIDILEARN: {
+        case E1_MMI_MIDILEARN: {
             if (parent_.midiLearn()) {
                 return "Midi Learn        [X]";
             }
             return "Midi Learn        [ ]";
         }
-        case NUI_MMI_MODLEARN: {
+        case E1_MMI_MODLEARN: {
             if (parent_.modulationLearn()) {
                 return "Mod Learn         [X]";
             }
@@ -206,34 +106,34 @@ std::string ElectraOneMainMenu::getItemText(unsigned idx) {
 
 void ElectraOneMainMenu::clicked(unsigned idx) {
     switch (idx) {
-        case NUI_MMI_MODULE: {
-            parent_.changeMode(NM_MODULEMENU);
+        case E1_MMI_MODULE: {
+            parent_.changeMode(E1_MODULEMENU);
             break;
         }
-        case NUI_MMI_PRESET: {
-            parent_.changeMode(NM_PRESETMENU);
+        case E1_MMI_PRESET: {
+            parent_.changeMode(E1_PRESETMENU);
             break;
         }
-        case NUI_MMI_MIDILEARN: {
+        case E1_MMI_MIDILEARN: {
             parent_.midiLearn(!parent_.midiLearn());
-            displayItem(NUI_MMI_MIDILEARN);
-            displayItem(NUI_MMI_MODLEARN);
-            // parent_.changeMode(NM_PARAMETER);
+//            displayItem(E1_MMI_MIDILEARN);
+//            displayItem(E1_MMI_MODLEARN);
+            // parent_.changeMode(E1_PARAMETER);
             break;
         }
-        case NUI_MMI_MODLEARN: {
+        case E1_MMI_MODLEARN: {
             parent_.modulationLearn(!parent_.modulationLearn());
-            displayItem(NUI_MMI_MIDILEARN);
-            displayItem(NUI_MMI_MODLEARN);
-            // parent_.changeMode(NM_PARAMETER);
+//            displayItem(E1_MMI_MIDILEARN);
+//            displayItem(E1_MMI_MODLEARN);
+            // parent_.changeMode(E1_PARAMETER);
             break;
         }
-        case NUI_MMI_SAVE: {
+        case E1_MMI_SAVE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 model()->saveSettings(Kontrol::CS_LOCAL, rack->id());
             }
-            parent_.changeMode(NM_PARAMETER);
+            parent_.changeMode(E1_PARAMETER);
             break;
         }
         default:
@@ -247,10 +147,10 @@ void ElectraOneMainMenu::activeModule(Kontrol::ChangeSource, const Kontrol::Rack
 
 // preset menu
 enum OscPresetMenuItms {
-    NUI_PMI_SAVE,
-    NUI_PMI_NEW,
-    NUI_PMI_SEP,
-    NUI_PMI_LAST
+    E1_PMI_SAVE,
+    E1_PMI_NEW,
+    E1_PMI_SEP,
+    E1_PMI_LAST
 };
 
 
@@ -266,10 +166,10 @@ void ElectraOnePresetMenu::activate() {
     auto res = rack->getResources("preset");
     for (auto preset : res) {
         presets_.push_back(preset);
-        if (preset == rack->currentPreset()) {
-            cur_ = idx + 3;
-            top_ = idx + 3;
-        }
+//        if (preset == rack->currentPreset()) {
+//            cur_ = idx + 3;
+//            top_ = idx + 3;
+//        }
         idx++;
     }
     ElectraOneMenuMode::activate();
@@ -277,50 +177,51 @@ void ElectraOnePresetMenu::activate() {
 
 
 unsigned ElectraOnePresetMenu::getSize() {
-    return (unsigned) NUI_PMI_LAST + presets_.size();
+    return (unsigned) E1_PMI_LAST + presets_.size();
 }
 
 std::string ElectraOnePresetMenu::getItemText(unsigned idx) {
-    switch (idx) {
-        case NUI_PMI_SAVE:
-            return "Save Preset";
-        case NUI_PMI_NEW:
-            return "New Preset";
-        case NUI_PMI_SEP:
-            return "--------------------";
-        default:
-            return presets_[idx - NUI_PMI_LAST];
-    }
+//    switch (idx) {
+//        case E1_PMI_SAVE:
+//            return "Save Preset";
+//        case E1_PMI_NEW:
+//            return "New Preset";
+//        case E1_PMI_SEP:
+//            return "--------------------";
+//        default:
+//            return presets_[idx - E1_PMI_LAST];
+//    }
+    return "";
 }
 
 
 void ElectraOnePresetMenu::clicked(unsigned idx) {
     switch (idx) {
-        case NUI_PMI_SAVE: {
+        case E1_PMI_SAVE: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 rack->savePreset(rack->currentPreset());
             }
-            parent_.changeMode(NM_PARAMETER);
+            parent_.changeMode(E1_PARAMETER);
             break;
         }
-        case NUI_PMI_NEW: {
+        case E1_PMI_NEW: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
                 std::string newPreset = "new-" + std::to_string(presets_.size());
                 model()->savePreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
-            parent_.changeMode(NM_PARAMETER);
+            parent_.changeMode(E1_PARAMETER);
             break;
         }
-        case NUI_PMI_SEP: {
+        case E1_PMI_SEP: {
             break;
         }
         default: {
             auto rack = model()->getRack(parent_.currentRack());
             if (rack != nullptr) {
-                std::string newPreset = presets_[idx - NUI_PMI_LAST];
-                parent_.changeMode(NM_PARAMETER);
+                std::string newPreset = presets_[idx - E1_PMI_LAST];
+                parent_.changeMode(E1_PARAMETER);
                 model()->loadPreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
             }
             break;
@@ -336,61 +237,61 @@ void ElectraOneModuleMenu::populateMenu(const std::string &catSel) {
     unsigned idx = 0;
     auto res = rack->getResources("module");
     items_.clear();
-    cur_ = 0;
-    top_ = 0;
-    std::set<std::string> cats;
-    unsigned catlen = cat_.length();
-
-    if (catlen) {
-        items_.push_back("..");
-        idx++;
-    }
-
-    for (const auto &modtype : res) {
-        if (cat_.length()) {
-            size_t pos = modtype.find(cat_);
-            if (pos == 0) {
-                std::string mod = modtype.substr(catlen, modtype.length() - catlen);
-                items_.push_back(mod);
-                if (module->type() == modtype) {
-                    cur_ = idx;
-                    top_ = idx;
-                }
-                idx++;
-            } // else filtered
-        } else {
-            // top level, so get categories
-            size_t pos = modtype.find("/");
-            if (pos == std::string::npos) {
-                items_.push_back(modtype);
-                if (modtype == module->type()) {
-                    cur_ = idx;
-                    top_ = idx;
-                }
-                idx++;
-            } else {
-                cats.insert(modtype.substr(0, pos + 1));
-            }
-        }
-    }
-
-
-    size_t pos = std::string::npos;
-    std::string modcat;
-    pos = module->type().find("/");
-    if (pos != std::string::npos) {
-        modcat = module->type().substr(0, pos + 1);
-    }
-
-
-    for (auto s: cats) {
-        items_.push_back(s);
-        if (catSel.length() && s == catSel) {
-            cur_ = idx;
-            top_ = idx;
-        }
-        idx++;
-    }
+//    cur_ = 0;
+//    top_ = 0;
+//    std::set<std::string> cats;
+//    unsigned catlen = cat_.length();
+//
+//    if (catlen) {
+//        items_.push_back("..");
+//        idx++;
+//    }
+//
+//    for (const auto &modtype : res) {
+//        if (cat_.length()) {
+//            size_t pos = modtype.find(cat_);
+//            if (pos == 0) {
+//                std::string mod = modtype.substr(catlen, modtype.length() - catlen);
+//                items_.push_back(mod);
+//                if (module->type() == modtype) {
+//                    cur_ = idx;
+//                    top_ = idx;
+//                }
+//                idx++;
+//            } // else filtered
+//        } else {
+//            // top level, so get categories
+//            size_t pos = modtype.find("/");
+//            if (pos == std::string::npos) {
+//                items_.push_back(modtype);
+//                if (modtype == module->type()) {
+//                    cur_ = idx;
+//                    top_ = idx;
+//                }
+//                idx++;
+//            } else {
+//                cats.insert(modtype.substr(0, pos + 1));
+//            }
+//        }
+//    }
+//
+//
+//    size_t pos = std::string::npos;
+//    std::string modcat;
+//    pos = module->type().find("/");
+//    if (pos != std::string::npos) {
+//        modcat = module->type().substr(0, pos + 1);
+//    }
+//
+//
+//    for (auto s: cats) {
+//        items_.push_back(s);
+//        if (catSel.length() && s == catSel) {
+//            cur_ = idx;
+//            top_ = idx;
+//        }
+//        idx++;
+//    }
 }
 
 
@@ -440,7 +341,7 @@ void ElectraOneModuleMenu::clicked(unsigned idx) {
             }
         }
     }
-    parent_.changeMode(NM_PARAMETER);
+    parent_.changeMode(E1_PARAMETER);
 }
 
 
@@ -450,21 +351,21 @@ void ElectraOneModuleSelectMenu::activate() {
     if (cmodule == nullptr) return;
     unsigned idx = 0;
     items_.clear();
-    for (auto module : rack->getModules()) {
-        std::string desc = module->id() + ":" + module->displayName();
-        items_.push_back(desc);
-        if (module->id() == cmodule->id()) {
-            cur_ = idx;
-            top_ = idx;
-        }
-        idx++;
-    }
+//    for (auto module : rack->getModules()) {
+//        std::string desc = module->id() + ":" + module->displayName();
+//        items_.push_back(desc);
+//        if (module->id() == cmodule->id()) {
+//            cur_ = idx;
+//            top_ = idx;
+//        }
+//        idx++;
+//    }
     ElectraOneFixedMenuMode::activate();
 }
 
 
 void ElectraOneModuleSelectMenu::clicked(unsigned idx) {
-    parent_.changeMode(NM_MAINMENU);
+    parent_.changeMode(E1_MAINMENU);
     if (idx < getSize()) {
         unsigned moduleIdx = idx;
         auto rack = parent_.model()->getRack(parent_.currentRack());

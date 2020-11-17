@@ -7,7 +7,7 @@ namespace mec {
 
 class ElectraOneMenuMode : public ElectraOneBaseMode {
 public:
-    explicit ElectraOneMenuMode(ElectraOne &p) : ElectraOneBaseMode(p), cur_(0), top_(0) { ; }
+    explicit ElectraOneMenuMode(ElectraOne &p) : ElectraOneBaseMode(p) { ; }
 
     virtual unsigned getSize() = 0;
     virtual std::string getItemText(unsigned idx) = 0;
@@ -17,9 +17,6 @@ public:
 
     void poll() override;
     void activate() override;
-    virtual void navPrev();
-    virtual void navNext();
-    virtual void navActivate();
 
     void onButton(unsigned id, unsigned value) override;
     void onEncoder(unsigned id, int value) override;
@@ -30,9 +27,6 @@ public:
     void modulationLearn(Kontrol::ChangeSource src, bool b) override;
 protected:
     void display();
-    void displayItem(unsigned idx);
-    unsigned cur_;
-    unsigned top_;
 };
 
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../mec_device.h"
+#include "mec_mididevice.h"
 
 #include <KontrolModel.h>
 
@@ -9,7 +10,10 @@
 // #include <readerwriterqueue.h>
 // #include <thread>
 
+#include <iostream>
+
 #include <ElectraDevice.h>
+#include <MidiDevice.h>
 #include <ElectraSchema.h>
 
 namespace mec {
@@ -21,11 +25,11 @@ class ElectraOneListener;
 
 
 enum ElectraOneModes {
-    NM_PARAMETER,
-    NM_MAINMENU,
-    NM_PRESETMENU,
-    NM_MODULEMENU,
-    NM_MODULESELECTMENU
+    E1_PARAMETER,
+    E1_MAINMENU,
+    E1_PRESETMENU,
+    E1_MODULEMENU,
+    E1_MODULESELECTMENU
 };
 
 class ElectraOneMode : public Kontrol::KontrolCallback {
@@ -43,6 +47,7 @@ public:
     virtual void onEncoder(unsigned id, int value) = 0;
 };
 
+class ElectraOneMidiCallback;
 
 class ElectraOne : public Device, public Kontrol::KontrolCallback {
 public:
@@ -78,7 +83,7 @@ public:
 
     void changePot(unsigned pot, float value);
 
-    void send(ElectraOnePreset::Preset& preset);
+    void send(ElectraOnePreset::Preset &preset);
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return Kontrol::KontrolModel::model(); }
 
@@ -106,8 +111,6 @@ public:
 
     bool modulationLearn() { return modulationLearnActive_; }
 
-    unsigned menuTimeout() { return menuTimeout_; }
-
     void nextModule();
     void prevModule();
 private:
@@ -129,8 +132,9 @@ private:
     void stop() override;
 
 
-
     std::shared_ptr<ElectraLite::ElectraDevice> device_;
+    std::shared_ptr<ElectraLite::MidiDevice> mididevice_;// temp?
+    std::shared_ptr<ElectraLite::MidiCallback> midiCB_;
     bool active_;
 
     std::string lastMessageSent_;
@@ -145,40 +149,76 @@ private:
     ElectraOneModes currentMode_;
     std::map<ElectraOneModes, std::shared_ptr<ElectraOneMode>> modes_;
     std::vector<std::string> moduleOrder_;
-    unsigned menuTimeout_;
 
     unsigned pollCount_;
     unsigned pollFreq_;
     unsigned pollSleep_;
 
+
+
 };
+
+class ElectraOneMidiCallback : public ElectraLite::MidiCallback {
+public:
+    ElectraOneMidiCallback(ElectraOne &p) : parent_(p) { ; }
+    virtual ~ElectraOneMidiCallback() = default;
+
+    void noteOn(unsigned int ch, unsigned int n, unsigned int v) override {
+//        std::cerr << "noteOn" << ch << " " << n << " " << v << std::endl;
+        parent_.onButton(n, v);
+    }
+
+    void noteOff(unsigned int ch, unsigned int n, unsigned int v) override {
+//        std::cerr << "noteOff" << ch << " " << n << " " << v << std::endl;
+        parent_.onButton(n, 0);
+    }
+
+    void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
+//        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
+        parent_.onEncoder(cc, v);
+    }
+
+//    void pitchbend(unsigned ch, int v) override { ; } // +/- 8192
+//    void ch_pressure(unsigned ch, unsigned v) override { ; }
+private:
+    ElectraOne &parent_;
+};
+
 
 class ElectraOneDeviceCallback : public ElectraLite::ElectraCallback {
 public:
     ElectraOneDeviceCallback(ElectraOne &p) : parent_(p) { ; }
 
     virtual ~ElectraOneDeviceCallback() = default;
-    
-     void onInit() override {;}
-     void onDeinit() override {;}
-     void onError(unsigned err, const char *errStr) override {;}
-     void onInfo(const std::string& json) override {;}
-     void onPreset(const std::string& json) override {;}
-     void onConfig(const std::string& json) override {;}
+
+    void onInit() override { ; }
+
+    void onDeinit() override { ; }
+
+    void onError(unsigned err, const char *errStr) override { ; }
+
+    void onInfo(const std::string &json) override { ; }
+
+    void onPreset(const std::string &json) override { ; }
+
+    void onConfig(const std::string &json) override { ; }
 
     void noteOn(unsigned int ch, unsigned int n, unsigned int v) override {
-        int b = n - 60;
-        if(b>=0 && b<=3) parent_.onButton(b,v);
+//        std::cerr << "noteOn" << ch << " " << n << " " << v << std::endl;
+        parent_.onButton(n, v);
     }
 
     void noteOff(unsigned int ch, unsigned int n, unsigned int v) override {
-        int b = n - 60;
-        if(b>=0 && b<=3) parent_.onButton(b,0);
+//        std::cerr << "noteOff" << ch << " " << n << " " << v << std::endl;
+        parent_.onButton(n, 0);
     }
 
     void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
-         if(cc<12) parent_.onEncoder(cc,v);
+//        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
+        parent_.onEncoder(cc, v);
     }
+
+
 private:
     ElectraOne &parent_;
 };

@@ -21,7 +21,7 @@ static const unsigned E1_NUM_TEXTLINES = 5;
 //static const unsigned E1_NUM_TEXTCHARS = (128 / 4); = 32
 static const unsigned E1_NUM_TEXTCHARS = 30;
 
-static const unsigned LINE_H=10;
+static const unsigned LINE_H = 10;
 
 ElectraOne::ElectraOne() :
         active_(false),
@@ -42,17 +42,24 @@ bool ElectraOne::init(void *arg) {
     static const auto MENU_TIMEOUT = 2000;
     static const auto POLL_FREQ = 1;
     static const auto POLL_SLEEP = 1000;
-    menuTimeout_ = prefs.getInt("menu timeout", MENU_TIMEOUT);
-    static const char* E1_Midi_Device_Ctrl  = "Electra Controller Electra CTRL";
-    std::string electramidi   = prefs.getString("midi device", E1_Midi_Device_Ctrl);
+    static const char *E1_Midi_Device_Ctrl = "Electra Controller Electra CTRL";
+    static const char *E1_Midi_Device_P1 = "Electra Controller Electra Port 1";
+    std::string electramidi = prefs.getString("midi device", E1_Midi_Device_Ctrl);
+    std::string electramidip1 = prefs.getString("midi device p1", E1_Midi_Device_P1);
+
     device_ = std::make_shared<ElectraLite::ElectraDevice>();
-    pollFreq_ = prefs.getInt("poll freq",POLL_FREQ);
-    pollSleep_ = prefs.getInt("poll sleep",POLL_SLEEP);
+    mididevice_ = std::make_shared<ElectraLite::MidiDevice>();
+    mididevice_->init(electramidip1.c_str(), electramidip1.c_str());
+
+    pollFreq_ = prefs.getInt("poll freq", POLL_FREQ);
+    pollSleep_ = prefs.getInt("poll sleep", POLL_SLEEP);
     pollCount_ = 0;
     if (!device_) return false;
 
     std::shared_ptr<ElectraLite::ElectraCallback> cb = std::make_shared<ElectraOneDeviceCallback>(*this);
     device_->addCallback(cb);
+    midiCB_ = std::make_shared<ElectraOneMidiCallback>(*this);
+
     if (active_) {
         LOG_2("ElectraOne::init - already active deinit");
         deinit();
@@ -63,13 +70,13 @@ bool ElectraOne::init(void *arg) {
 
     active_ = true;
     if (active_) {
-        addMode(NM_PARAMETER, std::make_shared<ElectraOneParamMode>(*this));
-        addMode(NM_MAINMENU, std::make_shared<ElectraOneMainMenu>(*this));
-        addMode(NM_PRESETMENU, std::make_shared<ElectraOnePresetMenu>(*this));
-        addMode(NM_MODULEMENU, std::make_shared<ElectraOneModuleMenu>(*this));
-//        addMode(NM_MODULESELECTMENU, std::make_shared<ElectraOneModuleSelectMenu>(*this));
+        addMode(E1_PARAMETER, std::make_shared<ElectraOneParamMode>(*this));
+        addMode(E1_MAINMENU, std::make_shared<ElectraOneMainMenu>(*this));
+        addMode(E1_PRESETMENU, std::make_shared<ElectraOnePresetMenu>(*this));
+        addMode(E1_MODULEMENU, std::make_shared<ElectraOneModuleMenu>(*this));
+//        addMode(E1_MODULESELECTMENU, std::make_shared<ElectraOneModuleSelectMenu>(*this));
 
-        changeMode(NM_PARAMETER);
+        changeMode(E1_PARAMETER);
     }
     // device_->displayText(15, 0, 1, "Connecting...");
     return active_;
@@ -89,12 +96,17 @@ bool ElectraOne::isActive() {
 // Kontrol::KontrolCallback
 bool ElectraOne::process() {
     pollCount_++;
-    if ( ( pollCount_ % pollFreq_) == 0) {
+    if ((pollCount_ % pollFreq_) == 0) {
+        if (mididevice_ && mididevice_->isActive()) {
+            mididevice_->processIn(*midiCB_);
+            mididevice_->processOut();
+        }
+
         modes_[currentMode_]->poll();
         if (device_) device_->process();
     }
 
-    if(pollSleep_) {
+    if (pollSleep_) {
         usleep(pollSleep_);
     }
     return true;
@@ -150,22 +162,22 @@ void ElectraOne::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, co
 }
 
 void ElectraOne::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-               const Kontrol::Module &module, const Kontrol::Page &page) {
+                      const Kontrol::Module &module, const Kontrol::Page &page) {
     modes_[currentMode_]->page(src, rack, module, page);
 }
 
 void ElectraOne::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                const Kontrol::Module &module, const Kontrol::Parameter &param) {
+                       const Kontrol::Module &module, const Kontrol::Parameter &param) {
     modes_[currentMode_]->param(src, rack, module, param);
 }
 
 void ElectraOne::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                  const Kontrol::Module &module, const Kontrol::Parameter &param) {
+                         const Kontrol::Module &module, const Kontrol::Parameter &param) {
     modes_[currentMode_]->changed(src, rack, module, param);
 }
 
 void ElectraOne::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                   const std::string &res, const std::string &value) {
+                          const std::string &res, const std::string &value) {
     modes_[currentMode_]->resource(src, rack, res, value);
 
     if (res == "moduleorder") {
@@ -194,12 +206,12 @@ void ElectraOne::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack
 }
 
 void ElectraOne::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                       const Kontrol::Module &module) {
+                              const Kontrol::Module &module) {
     modes_[currentMode_]->activeModule(src, rack, module);
 }
 
 void ElectraOne::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                     const Kontrol::EntityId &modId, const std::string &modType) {
+                            const Kontrol::EntityId &modId, const std::string &modType) {
     modes_[currentMode_]->loadModule(src, rack, modId, modType);
 }
 
@@ -280,6 +292,7 @@ void ElectraOne::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &r
 
 
 void ElectraOne::onButton(unsigned id, unsigned value) {
+//    std::cerr << "ElectraOne::onButton " << id << " " << value << std::endl;
     modes_[currentMode_]->onButton(id, value);
 
 }
@@ -298,8 +311,8 @@ void ElectraOne::modulationLearn(bool b) {
 }
 
 
-static void removeNullsFromJson(nlohmann::json & json) {
-    if (!json.is_object() && !json.is_array())  return;
+static void removeNullsFromJson(nlohmann::json &json) {
+    if (!json.is_object() && !json.is_array()) return;
     std::vector<nlohmann::json::object_t::key_type> keys;
     for (auto &it : json.items()) {
         if (it.value().is_null())
@@ -310,29 +323,29 @@ static void removeNullsFromJson(nlohmann::json & json) {
     for (auto key : keys) json.erase(key);
 }
 
-void ElectraOne::send(ElectraOnePreset::Preset& preset) {
+void ElectraOne::send(ElectraOnePreset::Preset &preset) {
     nlohmann::json j;
     nlohmann::to_json(j, preset);
     removeNullsFromJson(j);
 
     nlohmann::ordered_json oj;
-    static const std::string presetName="name";
-    auto i= j.find(presetName);
-    if(i!=j.end()) {
+    static const std::string presetName = "name";
+    auto i = j.find(presetName);
+    if (i != j.end()) {
         oj[i.key()] = i.value();
     }
 
-    for(auto& i : j.items()) {
-        if(i.key()!=presetName) {
+    for (auto &i : j.items()) {
+        if (i.key() != presetName) {
             oj[i.key()] = i.value();
         }
     }
 
-    if(device_) {
-        std::string msg=j.dump();
-        if(msg!=lastMessageSent_) {
-//            std::cout << oj.dump() << std::endl;
-            std::cout << oj.dump(4) << std::endl;
+    if (device_) {
+        std::string msg = j.dump();
+        if (msg != lastMessageSent_) {
+            std::cout << oj.dump() << std::endl;
+//            std::cout << oj.dump(4) << std::endl;
             device_->uploadPreset(oj.dump());
         }
         lastMessageSent_ = msg;
