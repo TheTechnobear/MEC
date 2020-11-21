@@ -388,7 +388,7 @@ void MecApi_Impl::initDevices() {
 #if !DISABLE_ELECTRAONE
     if (prefs_->exists("electraone")) {
         LOG_1("electraone initialise ");
-        std::shared_ptr<ElectraOne> device = std::make_shared<ElectraOne>();
+        std::shared_ptr<ElectraOne> device = std::make_shared<ElectraOne>(*this);
         Kontrol::KontrolModel::model()->addCallback("electraone", device);
         if (device->init(prefs_->getSubTree("electraone"))) {
             if (device->isActive()) {

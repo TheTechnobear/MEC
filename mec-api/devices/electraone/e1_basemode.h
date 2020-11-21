@@ -50,15 +50,15 @@ protected:
         E1_BTN_AUX = 100,
         E1_BTN_PREV_MODULE = 101,
         E1_BTN_NEXT_MODULE = 102,
-        E1_BTN_NEW_PRESET,
-        E1_BTN_LOAD_PRESET,
-        E1_BTN_SAVE_PRESET,
-        E1_BTN_SAVE,
-        E1_BTN_LOAD_MODULE,
-        E1_BTN_MIDI_LEARN,
-        E1_BTN_MOD_LEARN,
-        E1_CTL_PRESET_LIST,
-        E1_CTL_MOD_LIST
+        E1_BTN_NEW_PRESET = 103,
+        E1_BTN_LOAD_PRESET = 104,
+        E1_BTN_SAVE_PRESET = 105,
+        E1_BTN_SAVE = 106,
+        E1_BTN_LOAD_MODULE = 107,
+        E1_BTN_MIDI_LEARN = 108,
+        E1_BTN_MOD_LEARN = 109,
+        E1_CTL_PRESET_LIST = 110,
+        E1_CTL_MOD_LIST = 111
     };
 
     ElectraOne &parent_;
@@ -66,14 +66,15 @@ protected:
     std::shared_ptr<Kontrol::KontrolModel> model() { return parent_.model(); }
 
     void initPreset();
-    void createParam(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos, unsigned pid,
-                     const std::string &name, int val, int min, int max);
+    unsigned createParam(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos, unsigned pid,
+                         const std::string &name, int val, int min, int max);
     void createDevice(unsigned id, const std::string &name, unsigned ch, unsigned port);
     void createPage(unsigned id, const std::string &name);
     void createGroup(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, const std::string &name);
     void clearPages();
-    void createButton(unsigned id, unsigned pageid, unsigned row, unsigned col, const std::string &name);
-    void createList(unsigned id, unsigned pageid, unsigned row, unsigned col, unsigned pid, const std::string &name,
+    void createButton(unsigned id, unsigned pageid, unsigned ctrlsetid, unsigned row, unsigned col, const std::string &name);
+    void createList(unsigned id, unsigned pageid, unsigned ctrlsetid,
+                    unsigned row, unsigned col, unsigned pid, const std::string &name,
                     std::set<std::string> &list, const std::string &select);
 
 

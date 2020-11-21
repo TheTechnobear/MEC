@@ -58,10 +58,8 @@ if (NOT DISABLE_ELECTRAONE)
             devices/mec_electraone.h
             devices/electraone/e1_basemode.cpp
             devices/electraone/e1_basemode.h
-            devices/electraone/e1_menu.cpp
-            devices/electraone/e1_menu.h
-            devices/electraone/e1_param.cpp
-            devices/electraone/e1_param.h
+            devices/electraone/e1_main.cpp
+            devices/electraone/e1_main.h
             )
 
     # add_subdirectory(devices/electraone)

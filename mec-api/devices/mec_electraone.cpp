@@ -7,23 +7,13 @@
 #include <mec_log.h>
 
 #include "electraone/e1_basemode.h"
-#include "electraone/e1_menu.h"
-#include "electraone/e1_param.h"
+#include "electraone/e1_main.h"
 
 namespace mec {
 
 
-const unsigned SCREEN_HEIGHT = 600;
-const unsigned SCREEN_WIDTH = 1024;
-const unsigned NUM_ENCODERS = 12;
-
-static const unsigned E1_NUM_TEXTLINES = 5;
-//static const unsigned E1_NUM_TEXTCHARS = (128 / 4); = 32
-static const unsigned E1_NUM_TEXTCHARS = 30;
-
-static const unsigned LINE_H = 10;
-
-ElectraOne::ElectraOne() :
+ElectraOne::ElectraOne(ICallback& cb) :
+        callback_(cb),
         active_(false),
         modulationLearnActive_(false),
         midiLearnActive_(false) {
@@ -39,7 +29,6 @@ ElectraOne::~ElectraOne() {
 bool ElectraOne::init(void *arg) {
     Preferences prefs(arg);
 
-    static const auto MENU_TIMEOUT = 2000;
     static const auto POLL_FREQ = 1;
     static const auto POLL_SLEEP = 1000;
     static const char *E1_Midi_Device_Ctrl = "Electra Controller Electra CTRL";
@@ -70,15 +59,9 @@ bool ElectraOne::init(void *arg) {
 
     active_ = true;
     if (active_) {
-        addMode(E1_PARAMETER, std::make_shared<ElectraOneParamMode>(*this));
-        addMode(E1_MAINMENU, std::make_shared<ElectraOneMainMenu>(*this));
-        addMode(E1_PRESETMENU, std::make_shared<ElectraOnePresetMenu>(*this));
-        addMode(E1_MODULEMENU, std::make_shared<ElectraOneModuleMenu>(*this));
-//        addMode(E1_MODULESELECTMENU, std::make_shared<ElectraOneModuleSelectMenu>(*this));
-
-        changeMode(E1_PARAMETER);
+        addMode(E1_MAIN, std::make_shared<ElectraOneMainMode>(*this));
+        changeMode(E1_MAIN);
     }
-    // device_->displayText(15, 0, 1, "Connecting...");
     return active_;
 }
 
@@ -115,26 +98,6 @@ bool ElectraOne::process() {
 void ElectraOne::stop() {
     deinit();
 }
-
-//bool ElectraOne::connect(const std::string &hostname, unsigned port) {
-//    clearDisplay();
-//
-//    // send out current module and page
-//    auto rack = model()->getRack(currentRack());
-//    auto module = model()->getModule(rack, currentModule());
-//    auto page = model()->getPage(module, currentPage());
-//    std::string md = "";
-//    std::string pd = "";
-//    if (module) md = module->id() + " : " +module->displayName();
-//    if (page) pd = page->displayName();
-//    displayTitle(md, pd);
-//
-//    changeMode(ElectraOneModes::NM_PARAMETER);
-//    modes_[currentMode_]->activate();
-//
-//
-//    return true;
-//}
 
 
 //--modes and forwarding
@@ -352,10 +315,23 @@ void ElectraOne::send(ElectraOnePreset::Preset &preset) {
     }
 }
 
+
 void ElectraOne::currentModule(const Kontrol::EntityId &modId) {
     currentModuleId_ = modId;
     model()->activeModule(Kontrol::CS_LOCAL, currentRackId_, currentModuleId_);
 }
 
+
+void ElectraOne::outputCC(unsigned cc,unsigned v) {
+//    callback_.control(cc,v);
+}
+
+void ElectraOne::outputNoteOn(unsigned n,unsigned v) {
+//    if(v==0) outputNoteOff(n,100);
+//    callback_.touchOn(0,n,0,0,v);
+}
+void ElectraOne::outputNoteOff(unsigned n,unsigned v) {
+//    callback_.touchOff(0,n,0,0,v);
+}
 
 }

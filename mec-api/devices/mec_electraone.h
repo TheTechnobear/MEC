@@ -25,7 +25,7 @@ class ElectraOneListener;
 
 
 enum ElectraOneModes {
-    E1_PARAMETER,
+    E1_MAIN,
     E1_MAINMENU,
     E1_PRESETMENU,
     E1_MODULEMENU,
@@ -51,7 +51,7 @@ class ElectraOneMidiCallback;
 
 class ElectraOne : public Device, public Kontrol::KontrolCallback {
 public:
-    ElectraOne();
+    ElectraOne(ICallback& cb);
     virtual ~ElectraOne();
 
     //mec::Device
@@ -113,8 +113,12 @@ public:
 
     void nextModule();
     void prevModule();
-private:
 
+    void outputCC(unsigned cc,unsigned v);
+    void outputNoteOn(unsigned n,unsigned v);
+    void outputNoteOff(unsigned n,unsigned v);
+
+private:
     void navPrev();
     void navNext();
     void navActivate();
@@ -126,11 +130,7 @@ private:
 
     std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack> &rack);
 
-//    bool connect(const std::string& host, unsigned port);
-
-
     void stop() override;
-
 
     std::shared_ptr<ElectraLite::ElectraDevice> device_;
     std::shared_ptr<ElectraLite::MidiDevice> mididevice_;// temp?
@@ -154,8 +154,7 @@ private:
     unsigned pollFreq_;
     unsigned pollSleep_;
 
-
-
+    ICallback& callback_;
 };
 
 class ElectraOneMidiCallback : public ElectraLite::MidiCallback {
@@ -174,7 +173,7 @@ public:
     }
 
     void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
-//        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
+        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
         parent_.onEncoder(cc, v);
     }
 
@@ -214,7 +213,7 @@ public:
     }
 
     void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
-//        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
+        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
         parent_.onEncoder(cc, v);
     }
 

@@ -2,12 +2,14 @@
 
 namespace mec {
 
+//const unsigned SCREEN_HEIGHT = 600;
+//const unsigned SCREEN_WIDTH = 1024;
 
 ElectraOneBaseMode::ElectraOneBaseMode(ElectraOne &p) : parent_(p) {
     initPreset();
 }
 
-void ElectraOneBaseMode::createParam(unsigned pageid, unsigned ctrlsetid,
+unsigned ElectraOneBaseMode::createParam(unsigned pageid, unsigned ctrlsetid,
                                      unsigned kpageid, unsigned pos,
                                      unsigned pid,
                                      const std::string &name,
@@ -71,10 +73,12 @@ void ElectraOneBaseMode::createParam(unsigned pageid, unsigned ctrlsetid,
     }
     if (iter == p.controls->end()) p.controls->push_back(e);
     else *iter = e;
+
+    return e.id;
 }
 
 
-void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned r, unsigned c, const std::string &name) {
+void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned ctrlsetid, unsigned r, unsigned c, const std::string &name) {
     unsigned row = r;
     unsigned col = c;
     unsigned x = 0 + (170 * col);
@@ -95,7 +99,7 @@ void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned r, 
 
     e.color = std::make_shared<ElectraOnePreset::Color>(
             ElectraLite::ElectraDevice::getColour(ElectraLite::ElectraDevice::E_WHITE));
-    e.control_set_id = 1;
+    e.control_set_id = ctrlsetid;
 
 
     ElectraOnePreset::Value val;
@@ -124,7 +128,7 @@ void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned r, 
 }
 
 
-void ElectraOneBaseMode::createList(unsigned id, unsigned pageid,
+void ElectraOneBaseMode::createList(unsigned id, unsigned pageid,unsigned ctrlsetid,
                                     unsigned r, unsigned c,
                                     unsigned pid,
                                     const std::string &name,
@@ -170,7 +174,7 @@ void ElectraOneBaseMode::createList(unsigned id, unsigned pageid,
 
     e.color = std::make_shared<ElectraOnePreset::Color>(
             ElectraLite::ElectraDevice::getColour(ElectraLite::ElectraDevice::E_WHITE));
-    e.control_set_id = 1;
+    e.control_set_id = ctrlsetid;
 
 
     e.inputs = std::make_shared<std::vector<ElectraOnePreset::Input>>();

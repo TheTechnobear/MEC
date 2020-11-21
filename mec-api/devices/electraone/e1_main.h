@@ -7,9 +7,9 @@
 namespace mec {
 
 
-class ElectraOneParamMode : public ElectraOneBaseMode {
+class ElectraOneMainMode : public ElectraOneBaseMode {
 public:
-    explicit ElectraOneParamMode(ElectraOne &p) : ElectraOneBaseMode(p), pageIdx_(-1) { ; }
+    explicit ElectraOneMainMode(ElectraOne &p) : ElectraOneBaseMode(p), pageIdx_(-1) { ; }
 
     bool init() override { return true; };
     void activate() override;
@@ -49,6 +49,8 @@ protected:
     std::string moduleType_;
     int pageIdx_ = -1;
     Kontrol::EntityId pageId_;
+    unsigned selectedPresetIdx_ = 0;
+    unsigned selectedModuleIdx_ = 0;
 };
 
 } //mec
