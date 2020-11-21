@@ -16,7 +16,7 @@ void ElectraOneBaseMode::createParam(unsigned pageid, unsigned ctrlsetid,
                                      int max) {
     unsigned row = ((ctrlsetid - 1) * 2) + (pos / 2);
     unsigned col = ((kpageid - 1) * 2) + pos % 2;
-    unsigned potid = ((pos/2) * 6) + col + 1;
+    unsigned potid = ((pos / 2) * 6) + col + 1;
 
     unsigned x = 0 + (170 * col);
     unsigned y = 40 + (88 * row);
@@ -125,31 +125,32 @@ void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned r, 
 
 
 void ElectraOneBaseMode::createList(unsigned id, unsigned pageid,
-                                    unsigned r,unsigned c,
+                                    unsigned r, unsigned c,
                                     unsigned pid,
-                                    const std::string& name,
-                                    std::set<std::string>& list) {
+                                    const std::string &name,
+                                    std::set<std::string> &list,
+                                    const std::string &select) {
 
     unsigned row = r;
     unsigned col = c;
     unsigned x = 0 + (170 * col);
     unsigned y = 40 + (88 * row);
-//    unsigned w = 146;
     unsigned w = 250;
     unsigned h = 56;
 
-    if(preset_.overlays== nullptr) {
-        preset_.overlays = std::make_shared < std::vector<ElectraOnePreset::Overlay>>();
+    if (preset_.overlays == nullptr) {
+        preset_.overlays = std::make_shared<std::vector<ElectraOnePreset::Overlay>>();
     }
 
     ElectraOnePreset::Overlay overlay;
     overlay.id = lastOverlayId_;
-    unsigned oidx=0;
-    for(auto li : list) {
+    unsigned oidx = 0;
+    unsigned selectedIdx = 0;
+    for (auto li : list) {
         ElectraOnePreset::OverlayItem item;
         item.value = oidx;
         item.label = li;
-        std::replace( item.label.begin(), item.label.end(), '_', ' ');
+        if (item.label == select) selectedIdx = oidx;
         oidx++;
         overlay.items.push_back(item);
     }
@@ -174,15 +175,15 @@ void ElectraOneBaseMode::createList(unsigned id, unsigned pageid,
 
     e.inputs = std::make_shared<std::vector<ElectraOnePreset::Input>>();
     ElectraOnePreset::Input inp;
-    inp.pot_id =pid;
+    inp.pot_id = pid;
     inp.value_id = ElectraOnePreset::ValueId::Value;
     e.inputs->push_back(inp);
 
     ElectraOnePreset::Value val;
     val.id = std::make_shared<ElectraOnePreset::ValueId>(ElectraOnePreset::ValueId::Value);
     val.min = std::make_shared<int64_t>(0);
-    val.max = std::make_shared<int64_t>(127);
-    val.default_value = std::make_shared<int64_t>(0);
+    val.max = std::make_shared<int64_t>(list.size());
+    val.default_value = std::make_shared<int64_t>(selectedIdx);
 
     val.overlay_id = std::make_shared<int64_t>(lastOverlayId_); // null
     auto &m = val.message;
@@ -195,6 +196,7 @@ void ElectraOneBaseMode::createList(unsigned id, unsigned pageid,
     m.max = std::make_shared<int64_t>(list.size());
     e.values.push_back(val);
 
+
     auto &p = preset_;
     auto iter = p.controls->begin();
     for (; iter != p.controls->end(); iter++) {
@@ -205,7 +207,6 @@ void ElectraOneBaseMode::createList(unsigned id, unsigned pageid,
 
     lastOverlayId_++;
 }
-
 
 
 void ElectraOneBaseMode::createDevice(unsigned id, const std::string &name, unsigned ch, unsigned port) {
@@ -271,7 +272,7 @@ void ElectraOneBaseMode::clearPages() {
     p.pages = std::make_shared<std::vector<ElectraOnePreset::Page>>();
     p.groups = std::make_shared<std::vector<ElectraOnePreset::Group>>();
     p.devices = std::make_shared<std::vector<ElectraOnePreset::Device>>();
-    p.overlays = std::make_shared < std::vector<ElectraOnePreset::Overlay>>();
+    p.overlays = std::make_shared<std::vector<ElectraOnePreset::Overlay>>();
     p.controls = std::make_shared<std::vector<ElectraOnePreset::Control>>();
     lastId_ = 1;
     lastOverlayId_ = 1;

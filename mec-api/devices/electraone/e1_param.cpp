@@ -27,7 +27,9 @@ void ElectraOneParamMode::display() {
             kpageid = 1;
             ctrlsetid++;
             if (ctrlsetid > 2) {
-                createButton(E1_BTN_PREV_MODULE, pageid, 5, 4, "Prev Module");
+                createButton(E1_BTN_MIDI_LEARN, pageid, 4, 0, "Midi Learn");
+                createButton(E1_BTN_MOD_LEARN, pageid, 5, 0, "Mod Learn");
+                createButton(E1_BTN_PREV_MODULE, pageid, 4, 5, "Prev Module");
                 createButton(E1_BTN_NEXT_MODULE, pageid, 5, 5, "Next Module");
                 ctrlsetid = 1;
                 pageid++;
@@ -50,23 +52,26 @@ void ElectraOneParamMode::display() {
             }
         }
     }
-
-    createButton(E1_BTN_MIDI_LEARN, pageid, 5, 0, "Midi Learn");
-    createButton(E1_BTN_MOD_LEARN, pageid, 5, 1, "Mod Learn");
-    createButton(E1_BTN_LOAD_MODULE, pageid, 5, 2, "Mod Learn");
-    createButton(E1_BTN_PREV_MODULE, pageid, 5, 4, "Prev Module");
+    createButton(E1_BTN_MIDI_LEARN, pageid, 4, 0, "Midi Learn");
+    createButton(E1_BTN_MOD_LEARN, pageid, 5, 0, "Mod Learn");
+    createButton(E1_BTN_PREV_MODULE, pageid, 4, 5, "Prev Module");
     createButton(E1_BTN_NEXT_MODULE, pageid, 5, 5, "Next Module");
+
+    auto modlist = rack->getResources("module");
+    createList(E1_CTL_MOD_LIST, 1, 5, 1, 2, "Modules", modlist, module->type());
+    createButton(E1_BTN_LOAD_MODULE, 1, 5, 3, "Load");
 
     // module selection page
     pageid++;
     createPage(pageid, "Modules");
-    unsigned mid=0, row=0,col=0;
-    for(auto module : parent_.model()->getModules(rack)) {
-        createButton(E1_BTN_FIRST_MODULE+mid,pageid,row, col,module->id());
+    unsigned mid = 0, row = 0, col = 0;
+    for (auto module : parent_.model()->getModules(rack)) {
+        std::string label = module->id() + " : " + module->displayName();
+        createButton(E1_BTN_FIRST_MODULE + mid, pageid, row, col, label);
         col++;
-        if(col>5) {
+        if (col > 5) {
             row++;
-            col=0;
+            col = 0;
         }
         mid++;
     }
@@ -75,14 +80,12 @@ void ElectraOneParamMode::display() {
     createPage(pageid, "Preset");
     createButton(E1_BTN_NEW_PRESET, pageid, 0, 0, "Create Preset");
     createButton(E1_BTN_SAVE_PRESET, pageid, 1, 0, "Save Preset");
-    createButton(E1_BTN_LOAD_PRESET, pageid, 3, 0, "Load Preset");
     createButton(E1_BTN_SAVE, pageid, 5, 0, "Save Default");
 
     auto plist = rack->getResources("preset");
-    createList(E1_CTL_PRESET_LIST, pageid,3,3,1, "Presets", plist);
+    createList(E1_CTL_PRESET_LIST, pageid, 0, 2, 1, "Presets", plist, rack->currentPreset());
+    createButton(E1_BTN_LOAD_PRESET, pageid, 1, 2, "Load Preset");
 
-    auto modlist = rack->getResources("module");
-    createList(E1_CTL_MOD_LIST, pageid,4,3, 2, "Modules", modlist);
 
 
 //    rack->savePreset(rack->currentPreset());
@@ -148,9 +151,9 @@ void ElectraOneParamMode::onButton(unsigned id, unsigned value) {
             }
             default: {
                 auto rack = parent_.model()->getRack(parent_.currentRack());
-                auto modules =parent_.model()->getModules(rack);
-                int mnum = id-E1_BTN_FIRST_MODULE;
-                if (mnum >= 0  && mnum < modules.size() ) {
+                auto modules = parent_.model()->getModules(rack);
+                int mnum = id - E1_BTN_FIRST_MODULE;
+                if (mnum >= 0 && mnum < modules.size()) {
                     parent_.currentModule(modules[mnum]->id());
                 }
             }

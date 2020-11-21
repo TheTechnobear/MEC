@@ -73,15 +73,15 @@ protected:
     void createGroup(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, const std::string &name);
     void clearPages();
     void createButton(unsigned id, unsigned pageid, unsigned row, unsigned col, const std::string &name);
-    void createList(unsigned id, unsigned pageid, unsigned row, unsigned col, unsigned pid,const std::string &name,
-                    std::set<std::string> &list);
+    void createList(unsigned id, unsigned pageid, unsigned row, unsigned col, unsigned pid, const std::string &name,
+                    std::set<std::string> &list, const std::string &select);
 
 
 //    void createKey(unsigned id, unsigned pageid,const std::string& name, unsigned x,unsigned y);
 //    void createKeyboard(unsigned pageid);
 
     unsigned lastId_ = 1;
-    unsigned lastOverlayId_=1;
+    unsigned lastOverlayId_ = 1;
     ElectraOnePreset::Preset preset_;
 };
 
