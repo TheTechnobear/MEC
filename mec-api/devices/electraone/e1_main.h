@@ -6,6 +6,13 @@
 
 namespace mec {
 
+struct ParameterID {
+    ParameterID(unsigned ei, const Kontrol::EntityId &r, const Kontrol::EntityId &m, const Kontrol::EntityId &p);
+    unsigned eId_;
+    const Kontrol::EntityId rack_;
+    const Kontrol::EntityId module_;
+    const Kontrol::EntityId parameter_;
+};
 
 class ElectraOneMainMode : public ElectraOneBaseMode {
 public:
@@ -40,7 +47,7 @@ public:
 
 protected:
     virtual void setCurrentPage(unsigned pageIdx, bool UI);
-    virtual void displayParamNum(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos,
+    virtual unsigned displayParamNum(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos,
                                  unsigned pid,const Kontrol::Parameter &p, bool local);
 
     void changeParam(unsigned idx, int relValue);
@@ -51,6 +58,9 @@ protected:
     Kontrol::EntityId pageId_;
     unsigned selectedPresetIdx_ = 0;
     unsigned selectedModuleIdx_ = 0;
-};
+
+    std::unordered_map<unsigned, std::shared_ptr<ParameterID>> paramMap_;
+
+}; //ElectraOneMainMode
 
 } //mec

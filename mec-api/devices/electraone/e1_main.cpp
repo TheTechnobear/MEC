@@ -9,6 +9,7 @@ void ElectraOneMainMode::display() {
     clearPages();
 
     createDevice(1, "Orac", 1, 1);
+    paramMap_.clear();
 
     auto rack = parent_.model()->getRack(parent_.currentRack());
     if (!rack) return;
@@ -46,7 +47,8 @@ void ElectraOneMainMode::display() {
         for (auto param : parent_.model()->getParams(module, page)) {
             if (param != nullptr) {
                 //            std::cerr << "ElectraOneMainMode::display() " << param->displayName() <<  std::endl;
-                displayParamNum(pageid, ctrlsetid, kpageid, pos, pid, *param, true);
+                unsigned id = displayParamNum(pageid, ctrlsetid, kpageid, pos, pid, *param, true);
+                paramMap_[pid] = std::make_shared<ParameterID>(id, rack->id(), module->id(), param->id());
                 pos++;
                 pid++;
             }
@@ -98,17 +100,11 @@ void ElectraOneMainMode::activate() {
 }
 
 
-void ElectraOneMainMode::displayParamNum(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos,
-                                         unsigned pid, const Kontrol::Parameter &p, bool local) {
-    unsigned id = createParam(pageid, ctrlsetid, kpageid, pos, pid,
-                p.displayName(), p.current().floatValue(),
-                p.calcMinimum().floatValue(), p.calcMaximum().floatValue());
-
-    // TODO
-    // store id = midi cc , associated with parameter,
-    // this is then used for:
-    // a) incoming callbacks - to update controls on displays
-    // b) when cc (onencoder) comes in to map to parameter to update
+unsigned ElectraOneMainMode::displayParamNum(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos,
+                                             unsigned pid, const Kontrol::Parameter &p, bool local) {
+    return createParam(pageid, ctrlsetid, kpageid, pos, pid,
+                       p.displayName(), p.current().floatValue(),
+                       p.calcMinimum().floatValue(), p.calcMaximum().floatValue());
 }
 
 void ElectraOneMainMode::changeParam(unsigned idx, int relValue) {
@@ -226,11 +222,19 @@ void ElectraOneMainMode::onEncoder(unsigned idx, int v) {
             break;
         }
         default : {
-            // TODO
-            // determine parameter from CC...
-//            Kontrol::EntityId id;
-//            auto param = module->getParam(id);
-//            param->change(param->calcMidi(v),false);
+            auto rack = parent_.model()->getRack(parent_.currentRack());
+            auto module = parent_.model()->getModule(rack, parent_.currentModule());
+
+            // check we have the param, also that we have not changed modules in the meantime (unlikely)
+            if (module && paramMap_.find(idx) != paramMap_.end()) {
+                auto paramId = paramMap_[idx];
+                if (paramId->rack_ == rack->id() && paramId->module_ == module->id()) {
+                    auto param = module->getParam(paramId->parameter_);
+                    if (param) {
+                        param->change(param->calcMidi(v), false);
+                    }
+                }
+            }
         }
     }
 }
@@ -281,28 +285,17 @@ void ElectraOneMainMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack 
                                  const Kontrol::Parameter &param) {
     if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
 
-    auto prack = parent_.model()->getRack(parent_.currentRack());
-    auto pmodule = parent_.model()->getModule(prack, parent_.currentModule());
-    auto page = parent_.model()->getPage(pmodule, pageId_);
-//    auto pages = parent_.model()->getPages(pmodule);
-    auto params = parent_.model()->getParams(pmodule, page);
+    for (auto eParam : paramMap_) {
+        auto eP = eParam.second;
+        if (eP->rack_ == rack.id()
+            && eP->module_ == module.id()
+            && eP->parameter_ == param.id()) {
+            unsigned pid=eP->eId_;
+//                p->change(param.current(), src == Kontrol::CS_PRESET); //?
+//            unsigned id = displayParamNum(pageid, ctrlsetid, kpageid, pos, pid, *param, true);
 
-    //TODO
-//    unsigned sz = params.size();
-//    sz = sz < NUM_ENCODERS;
-//    for (unsigned int i = 0; i < sz; i++) {
-//        try {
-//            auto &p = params.at(i);
-//            if (p->id() == param.id()) {
-//                p->change(param.current(), src == Kontrol::CS_PRESET);
-//                unsigned pgid =0; //TODO !!!!
-//                displayParamNum(pgid,i, param, src != Kontrol::CS_LOCAL);
-//                return;
-//            }
-//        } catch (std::out_of_range) {
-//            return;
-//        }
-//    } // for
+        }
+    }
 }
 
 void ElectraOneMainMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
@@ -335,4 +328,11 @@ void ElectraOneMainMode::loadPreset(Kontrol::ChangeSource source, const Kontrol:
 }
 
 
+ParameterID::ParameterID(unsigned eId,
+                         const Kontrol::EntityId &r,
+                         const Kontrol::EntityId &m,
+                         const Kontrol::EntityId &p)
+        : eId_(eId), rack_(r), module_(m), parameter_(p) {
+    ;
+}
 } // mec
