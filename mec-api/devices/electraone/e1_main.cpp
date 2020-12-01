@@ -28,8 +28,8 @@ void ElectraOneMainMode::display() {
             kpageid = 1;
             ctrlsetid++;
             if (ctrlsetid > 2) {
-                createButton(E1_BTN_MIDI_LEARN, pageid, 1, 4, 0, "Midi Learn");
-                createButton(E1_BTN_MOD_LEARN, pageid, 1, 5, 0, "Mod Learn");
+                createButton(E1_BTN_MIDI_LEARN, pageid, 1, 4, 0, "Midi Learn", true, parent_.midiLearn());
+                createButton(E1_BTN_MOD_LEARN, pageid, 1, 5, 0, "Mod Learn", true, parent_.modulationLearn());
                 createButton(E1_BTN_PREV_MODULE, pageid, 1, 4, 5, "Prev Module");
                 createButton(E1_BTN_NEXT_MODULE, pageid, 1, 5, 5, "Next Module");
                 ctrlsetid = 1;
@@ -54,13 +54,13 @@ void ElectraOneMainMode::display() {
             }
         }
     }
-    createButton(E1_BTN_MIDI_LEARN, pageid, 1, 4, 0, "Midi Learn");
-    createButton(E1_BTN_MOD_LEARN, pageid, 1, 5, 0, "Mod Learn");
+    createButton(E1_BTN_MIDI_LEARN, pageid, 1, 4, 0, "Midi Learn", true, parent_.midiLearn());
+    createButton(E1_BTN_MOD_LEARN, pageid, 1, 5, 0, "Mod Learn", true, parent_.modulationLearn());
     createButton(E1_BTN_PREV_MODULE, pageid, 1, 4, 5, "Prev Module");
     createButton(E1_BTN_NEXT_MODULE, pageid, 1, 5, 5, "Next Module");
 
     auto modlist = rack->getResources("module");
-    createList(E1_CTL_MOD_LIST, 1, 3, 5, 1, 1, "Modules", modlist, module->type());
+    createList(E1_CTL_MOD_LIST, 1, 3, 5, 1, 2, "Modules", modlist, module->type());
     createButton(E1_BTN_LOAD_MODULE, 1, 3, 5, 3, "Load");
 
     // module selection page
@@ -82,12 +82,11 @@ void ElectraOneMainMode::display() {
     createPage(pageid, "Preset");
     createButton(E1_BTN_NEW_PRESET, pageid, 1, 0, 0, "Create Preset");
     createButton(E1_BTN_SAVE_PRESET, pageid, 1, 1, 0, "Save Preset");
-    createButton(E1_BTN_SAVE, pageid, 1, 5, 0, "Save Default");
+    createButton(E1_BTN_SAVE, pageid, 1, 0, 2, "Save Default");
 
     auto plist = rack->getResources("preset");
-    createList(E1_CTL_PRESET_LIST, pageid, 1,
-               0, 2, 1, "Presets", plist, rack->currentPreset());
-    createButton(E1_BTN_LOAD_PRESET, pageid, 1, 1, 2, "Load Preset");
+    createList(E1_CTL_PRESET_LIST, pageid, 1, 5, 0, 1, "Presets", plist, rack->currentPreset());
+    createButton(E1_BTN_LOAD_PRESET, pageid, 1, 5, 2, "Load Preset");
 
 //    std::cerr << "ElectraOneMainMode::display() - end " <<  std::endl;
     parent_.send(preset_);
@@ -138,68 +137,74 @@ void ElectraOneMainMode::onButton(unsigned id, unsigned value) {
     auto module = parent_.model()->getModule(rack, parent_.currentModule());
     if (!module) return;
 
-    if (!value) {
-        switch (id) {
-            case E1_BTN_PREV_MODULE : {
-                parent_.prevModule();
-                break;
-            }
-            case E1_BTN_NEXT_MODULE : {
-                parent_.nextModule();
-                break;
-            }
-            case E1_BTN_NEW_PRESET : {
-                auto presets = rack->getResources("preset");
-                std::string newPreset = "new-" + std::to_string(presets.size());
-                model()->savePreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
-                break;
-            }
-            case E1_BTN_LOAD_PRESET : {
-                auto presets = rack->getResources("preset");
-                unsigned idx = 0;
-                for (auto preset : presets) {
-                    if (selectedPresetIdx_ == idx) {
-                        model()->loadPreset(Kontrol::CS_LOCAL, rack->id(), preset);
-                        break;
-                    }
-                    idx++;
+    switch (id) {
+        case E1_BTN_PREV_MODULE : {
+            if (value) return;
+            parent_.prevModule();
+            break;
+        }
+        case E1_BTN_NEXT_MODULE : {
+            if (value) return;
+            parent_.nextModule();
+            break;
+        }
+        case E1_BTN_NEW_PRESET : {
+            if (value) return;
+            auto presets = rack->getResources("preset");
+            std::string newPreset = "new-" + std::to_string(presets.size());
+            model()->savePreset(Kontrol::CS_LOCAL, rack->id(), newPreset);
+            break;
+        }
+        case E1_BTN_LOAD_PRESET : {
+            if (value) return;
+            auto presets = rack->getResources("preset");
+            unsigned idx = 0;
+            for (auto preset : presets) {
+                if (selectedPresetIdx_ == idx) {
+                    model()->loadPreset(Kontrol::CS_LOCAL, rack->id(), preset);
+                    break;
                 }
-                break;
+                idx++;
             }
-            case E1_BTN_SAVE_PRESET : {
-                rack->savePreset(rack->currentPreset());
-                break;
-            }
-            case E1_BTN_SAVE : {
-                break;
-            }
-            case E1_BTN_LOAD_MODULE : {
-                auto modules = rack->getResources("module");
-                unsigned idx = 0;
-                for (auto modtype : modules) {
-                    if (selectedModuleIdx_ == idx) {
-                        model()->loadModule(Kontrol::CS_LOCAL, rack->id(), module->id(), modtype);
-                        break;
-                    }
-                    idx++;
+            break;
+        }
+        case E1_BTN_SAVE_PRESET : {
+            if (value) return;
+            rack->savePreset(rack->currentPreset());
+            break;
+        }
+        case E1_BTN_SAVE : {
+            break;
+        }
+        case E1_BTN_LOAD_MODULE : {
+            if (value) return;
+            auto modules = rack->getResources("module");
+            unsigned idx = 0;
+            for (auto modtype : modules) {
+                if (selectedModuleIdx_ == idx) {
+                    model()->loadModule(Kontrol::CS_LOCAL, rack->id(), module->id(), modtype);
+                    break;
                 }
-                break;
+                idx++;
             }
-            case E1_BTN_MIDI_LEARN : {
-                parent_.midiLearn(!parent_.midiLearn());
-                break;
-            }
-            case E1_BTN_MOD_LEARN : {
-                parent_.modulationLearn(!parent_.modulationLearn());
-                break;
-            }
-            default: {
-                auto rack = parent_.model()->getRack(parent_.currentRack());
-                auto modules = parent_.model()->getModules(rack);
-                int mnum = id - E1_BTN_FIRST_MODULE;
-                if (mnum >= 0 && mnum < modules.size()) {
-                    parent_.currentModule(modules[mnum]->id());
-                }
+            break;
+        }
+        case E1_BTN_MIDI_LEARN : {
+            parent_.midiLearn(value > 0);
+            display();
+            break;
+        }
+        case E1_BTN_MOD_LEARN : {
+            parent_.modulationLearn(value > 0);
+            display();
+            break;
+        }
+        default: {
+            auto rack = parent_.model()->getRack(parent_.currentRack());
+            auto modules = parent_.model()->getModules(rack);
+            int mnum = id - E1_BTN_FIRST_MODULE;
+            if (mnum >= 0 && mnum < modules.size()) {
+                parent_.currentModule(modules[mnum]->id());
             }
         }
     }
@@ -231,40 +236,13 @@ void ElectraOneMainMode::onEncoder(unsigned idx, int v) {
                 if (paramId->rack_ == rack->id() && paramId->module_ == module->id()) {
                     auto param = module->getParam(paramId->parameter_);
                     if (param) {
-                        param->change(param->calcMidi(v), false);
+//                        std::cerr << "ElectraOneMainMode::onEncoder()"  << module->id()  << " : "  << param->id()  << " = "  << param->calcMidi(v).floatValue() << std::endl;
+                        Kontrol::ParamValue calc = param->calcMidi(v);
+                        model()->changeParam(Kontrol::CS_LOCAL, rack->id(), module->id(), param->id(), calc);
                     }
                 }
             }
         }
-    }
-}
-
-
-void ElectraOneMainMode::setCurrentPage(unsigned pageIdx, bool UI) {
-    try {
-        auto rack = parent_.model()->getRack(parent_.currentRack());
-        auto module = parent_.model()->getModule(rack, parent_.currentModule());
-        //auto page = parent_.model()->getPage(module, pageId_);
-        auto pages = parent_.model()->getPages(module);
-//        auto params = parent_.model()->getParams(module,page);
-
-        if (pageIdx_ != pageIdx) {
-            pageIdx_ = pageIdx;
-            if (pageIdx < pages.size()) {
-                pageIdx_ = pageIdx;
-                try {
-                    auto page = pages[pageIdx_];
-                    pageId_ = page->id();
-                    parent_.currentPage(pageId_);
-                    display();
-                } catch (std::out_of_range) { ;
-                }
-            } else {
-                display();
-            }
-        }
-
-    } catch (std::out_of_range) { ;
     }
 }
 
@@ -275,8 +253,9 @@ void ElectraOneMainMode::activeModule(Kontrol::ChangeSource src, const Kontrol::
         if (src != Kontrol::CS_LOCAL && module.id() != parent_.currentModule()) {
             parent_.currentModule(module.id());
         }
-        pageIdx_ = -1;
-        setCurrentPage(0, false);
+        if (rackPublishing_ == 0) {
+            display();
+        }
     }
 }
 
@@ -290,7 +269,7 @@ void ElectraOneMainMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack 
         if (eP->rack_ == rack.id()
             && eP->module_ == module.id()
             && eP->parameter_ == param.id()) {
-            unsigned pid=eP->eId_;
+            unsigned pid = eP->eId_;
 //                p->change(param.current(), src == Kontrol::CS_PRESET); //?
 //            unsigned id = displayParamNum(pageid, ctrlsetid, kpageid, pos, pid, *param, true);
 
@@ -300,31 +279,40 @@ void ElectraOneMainMode::changed(Kontrol::ChangeSource src, const Kontrol::Rack 
 
 void ElectraOneMainMode::module(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
                                 const Kontrol::Module &module) {
-    if (moduleType_ != module.type()) {
-        pageIdx_ = -1;
-    }
     moduleType_ = module.type();
 }
 
 void ElectraOneMainMode::page(Kontrol::ChangeSource source, const Kontrol::Rack &rack, const Kontrol::Module &module,
                               const Kontrol::Page &page) {
-    if (pageIdx_ < 0) setCurrentPage(0, false);
+
+    if (rack.id() != parent_.currentRack() || module.id() != parent_.currentModule()) return;
+    if (rackPublishing_ == 0) {
+        display();
+    }
+}
+
+
+void ElectraOneMainMode::publishStart(Kontrol::ChangeSource, unsigned numRacks) {
+    rackPublishing_ = numRacks;
+}
+
+void ElectraOneMainMode::publishRackFinished(Kontrol::ChangeSource, const Kontrol::Rack &) {
+    if (rackPublishing_ > 0) rackPublishing_--;
+    if (rackPublishing_ == 0) {
+        display();
+    }
 }
 
 
 void ElectraOneMainMode::loadModule(Kontrol::ChangeSource source, const Kontrol::Rack &rack,
                                     const Kontrol::EntityId &moduleId, const std::string &modType) {
     if (parent_.currentModule() == moduleId) {
-        if (moduleType_ != modType) {
-            pageIdx_ = -1;
-            moduleType_ = modType;
-        }
+        moduleType_ = modType;
     }
 }
 
 void ElectraOneMainMode::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
-    pageIdx_ = -1;
-    setCurrentPage(0, false);
+    display();
 }
 
 

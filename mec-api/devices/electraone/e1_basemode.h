@@ -31,6 +31,11 @@ public:
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
 
+
+    void publishStart(Kontrol::ChangeSource, unsigned numRacks)  override { ; }
+    void publishRackFinished(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
+
+
     // ElectraOneDevice
     void onButton(unsigned id, unsigned value) override { ; }
 
@@ -72,7 +77,7 @@ protected:
     void createPage(unsigned id, const std::string &name);
     void createGroup(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, const std::string &name);
     void clearPages();
-    void createButton(unsigned id, unsigned pageid, unsigned ctrlsetid, unsigned row, unsigned col, const std::string &name);
+    void createButton(unsigned id, unsigned pageid, unsigned ctrlsetid, unsigned row, unsigned col, const std::string &name, bool toggle=false, bool tstate=false);
     void createList(unsigned id, unsigned pageid, unsigned ctrlsetid,
                     unsigned row, unsigned col, unsigned pid, const std::string &name,
                     std::set<std::string> &list, const std::string &select);

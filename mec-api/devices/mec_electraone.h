@@ -81,6 +81,11 @@ public:
     void midiLearn(Kontrol::ChangeSource src, bool b) override;
     void modulationLearn(Kontrol::ChangeSource src, bool b) override;
 
+    void publishStart(Kontrol::ChangeSource, unsigned numRacks) override;
+    void publishRackFinished(Kontrol::ChangeSource, const Kontrol::Rack &) override;
+
+
+
     void changePot(unsigned pot, float value);
 
     void send(ElectraOnePreset::Preset &preset);
@@ -173,7 +178,7 @@ public:
     }
 
     void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
-        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
+//        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
         parent_.onEncoder(cc, v);
     }
 
@@ -213,7 +218,7 @@ public:
     }
 
     void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
-        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
+//        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
         parent_.onEncoder(cc, v);
     }
 

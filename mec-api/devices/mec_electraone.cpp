@@ -12,7 +12,7 @@
 namespace mec {
 
 
-ElectraOne::ElectraOne(ICallback& cb) :
+ElectraOne::ElectraOne(ICallback &cb) :
         callback_(cb),
         active_(false),
         modulationLearnActive_(false),
@@ -178,6 +178,16 @@ void ElectraOne::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack
     modes_[currentMode_]->loadModule(src, rack, modId, modType);
 }
 
+
+void ElectraOne::publishStart(Kontrol::ChangeSource src, unsigned numRacks) {
+    modes_[currentMode_]->publishStart(src, numRacks);
+}
+
+void ElectraOne::publishRackFinished(Kontrol::ChangeSource src, const Kontrol::Rack &r) {
+    modes_[currentMode_]->publishRackFinished(src, r);
+}
+
+
 std::vector<std::shared_ptr<Kontrol::Module>> ElectraOne::getModules(const std::shared_ptr<Kontrol::Rack> &pRack) {
     std::vector<std::shared_ptr<Kontrol::Module>> ret;
     auto modulelist = model()->getModules(pRack);
@@ -322,15 +332,16 @@ void ElectraOne::currentModule(const Kontrol::EntityId &modId) {
 }
 
 
-void ElectraOne::outputCC(unsigned cc,unsigned v) {
+void ElectraOne::outputCC(unsigned cc, unsigned v) {
 //    callback_.control(cc,v);
 }
 
-void ElectraOne::outputNoteOn(unsigned n,unsigned v) {
+void ElectraOne::outputNoteOn(unsigned n, unsigned v) {
 //    if(v==0) outputNoteOff(n,100);
 //    callback_.touchOn(0,n,0,0,v);
 }
-void ElectraOne::outputNoteOff(unsigned n,unsigned v) {
+
+void ElectraOne::outputNoteOff(unsigned n, unsigned v) {
 //    callback_.touchOff(0,n,0,0,v);
 }
 

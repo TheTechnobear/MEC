@@ -62,8 +62,8 @@ unsigned ElectraOneBaseMode::createParam(unsigned pageid, unsigned ctrlsetid,
     m.parameter_number = std::make_shared<int64_t>(pid);
 //    m.off_value = std::make_shared<int64_t>(0);
 //    m.on_value = std::make_shared<int64_t>(127);
-    m.min = std::make_shared<int64_t>(min);
-    m.max = std::make_shared<int64_t>(max);
+    m.min = std::make_shared<int64_t>(0);
+    m.max = std::make_shared<int64_t>(127);
     e.values.push_back(val);
 
     auto &p = preset_;
@@ -78,7 +78,8 @@ unsigned ElectraOneBaseMode::createParam(unsigned pageid, unsigned ctrlsetid,
 }
 
 
-void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned ctrlsetid, unsigned r, unsigned c, const std::string &name) {
+void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned ctrlsetid,
+                                      unsigned r, unsigned c, const std::string &name, bool toggle, bool tstate) {
     unsigned row = r;
     unsigned col = c;
     unsigned x = 0 + (170 * col);
@@ -91,7 +92,11 @@ void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned ctr
     e.name = std::make_shared<std::string>(name);
     e.page_id = pageid;
     e.type = ElectraOnePreset::ControlType::Pad;
-    e.mode = std::make_shared<ElectraOnePreset::PadMode>(ElectraOnePreset::PadMode::Momentary);
+    if(toggle) {
+        e.mode = std::make_shared<ElectraOnePreset::PadMode>(ElectraOnePreset::PadMode::Toggle);
+    } else {
+        e.mode = std::make_shared<ElectraOnePreset::PadMode>(ElectraOnePreset::PadMode::Momentary);
+    }
     e.bounds.push_back(x);
     e.bounds.push_back(y);
     e.bounds.push_back(w);
@@ -106,7 +111,7 @@ void ElectraOneBaseMode::createButton(unsigned id, unsigned pageid, unsigned ctr
     val.id = std::make_shared<ElectraOnePreset::ValueId>(ElectraOnePreset::ValueId::Value);
     val.min = std::make_shared<int64_t>(0);
     val.max = std::make_shared<int64_t>(127);
-    val.default_value = std::make_shared<int64_t>(0);
+    val.default_value = std::make_shared<int64_t>(tstate ? 127 : 0 );
     // val.overlay_id = std::make_shared<int64_t>(0); // null
     auto &m = val.message;
     m.device_id = 1;

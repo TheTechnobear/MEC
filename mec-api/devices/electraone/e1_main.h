@@ -16,7 +16,7 @@ struct ParameterID {
 
 class ElectraOneMainMode : public ElectraOneBaseMode {
 public:
-    explicit ElectraOneMainMode(ElectraOne &p) : ElectraOneBaseMode(p), pageIdx_(-1) { ; }
+    explicit ElectraOneMainMode(ElectraOne &p) : ElectraOneBaseMode(p){ ; }
 
     bool init() override { return true; };
     void activate() override;
@@ -32,6 +32,9 @@ public:
     void param(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &,
                const Kontrol::Parameter &) override { ; }
 
+    void publishStart(Kontrol::ChangeSource, unsigned numRacks)  override;
+    void publishRackFinished(Kontrol::ChangeSource, const Kontrol::Rack &) override;
+
     void resource(Kontrol::ChangeSource, const Kontrol::Rack &, const std::string &, const std::string &) override { ; }
 
     void deleteRack(Kontrol::ChangeSource, const Kontrol::Rack &) override { ; }
@@ -46,7 +49,6 @@ public:
     void onEncoder(unsigned id, int value) override;
 
 protected:
-    virtual void setCurrentPage(unsigned pageIdx, bool UI);
     virtual unsigned displayParamNum(unsigned pageid, unsigned ctrlsetid, unsigned kpageid, unsigned pos,
                                  unsigned pid,const Kontrol::Parameter &p, bool local);
 
@@ -54,10 +56,9 @@ protected:
     void display();
 
     std::string moduleType_;
-    int pageIdx_ = -1;
-    Kontrol::EntityId pageId_;
     unsigned selectedPresetIdx_ = 0;
     unsigned selectedModuleIdx_ = 0;
+    unsigned rackPublishing_ = 0;
 
     std::unordered_map<unsigned, std::shared_ptr<ParameterID>> paramMap_;
 
