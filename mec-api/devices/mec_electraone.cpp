@@ -36,7 +36,7 @@ bool ElectraOne::init(void *arg) {
     std::string electramidi = prefs.getString("midi device", E1_Midi_Device_Ctrl);
     std::string electramidip1 = prefs.getString("midi device p1", E1_Midi_Device_P1);
 
-    device_ = std::make_shared<ElectraLite::ElectraDevice>();
+    device_ = std::make_shared<ElectraLite::ElectraDevice>(electramidi);
     mididevice_ = std::make_shared<ElectraLite::MidiDevice>();
     mididevice_->init(electramidip1.c_str(), electramidip1.c_str());
 
