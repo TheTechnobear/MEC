@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.8.11)
-
 project(mec)
-
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
   if (NOT CMAKE_BUILD_TYPE)
@@ -15,7 +13,6 @@ set(MEC_VERSION_MAJOR 0)
 set(MEC_VERSION_MINOR 1)
 set(MEC_VERSION_UPDATE 1)
 set(MEC_VERSION "${MEC_VERSION_MAJOR}.${MEC_VERSION_MINOR}.${MEC_VERSION_UPDATE}")
-set(CMAKE_OSX_ARCHITECTURES "x86_64")
 
 if(NUI) 
 	set(DISABLE_NUI 0)
@@ -36,7 +33,23 @@ else(TTUI)
     set(DISABLE_TTUI 1)
 endif(TTUI)
 
-if(WIN32)
+
+
+add_subdirectory(juce)
+add_subdirectory(technobear)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin") 
+    set(EXECUTABLE_NAME MicroExpression)
+    set(DISABLE_NUI 1)
+    set(DISABLE_TTUI 1)
+
+    if(NOT CMAKE_OSX_ARCHITECTURES) 
+        set(CMAKE_OSX_ARCHITECTURES "x86_64")
+    endif()
+
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(EXECUTABLE_NAME microexpression)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message("windows support limited")
     set(DISABLE_LIBUSB 1)
     set(DISABLE_EIGENHARP 1)
@@ -47,19 +60,12 @@ if(WIN32)
     set(DISABLE_ELECTRAONE 1)
 endif()
 
-if (APPLE)
-    set(EXECUTABLE_NAME MicroExpression)
-    set(DISABLE_NUI 1)
-    set(DISABLE_TTUI 1)
-elseif (UNIX)
-    set(EXECUTABLE_NAME microexpression)
-endif (APPLE)
+
 
 
 set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -funroll-loops -fomit-frame-pointer")
-
 
 if (SALT) 
   set(BELA on)
@@ -76,8 +82,8 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 if (NOT DEFINED CPU_OPTIMIZATION_FLAGS)
-    if (APPLE)
-    elseif (UNIX)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin") 
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
             if (BELA)
                 message(STATUS "BELA optimized")
@@ -125,12 +131,13 @@ endif ()
 if (NOT DISABLE_RPATH_OVERRIDE)
   ## setup rpath for linux and macos
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-  if (NOT APPLE)
-    set(CMAKE_INSTALL_RPATH "$ORIGIN/:$ORIGIN/../lib")
-  else()
+
+  if(CMAKE_SYSTEM_NAME STREQUAL "Darwin") 
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
     set(CMAKE_INSTALL_RPATH "@executable_path/../lib;@loader_path")
     set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR TRUE)
+  else()
+    set(CMAKE_INSTALL_RPATH "$ORIGIN/:$ORIGIN/../lib")
   endif()
 endif()
 
