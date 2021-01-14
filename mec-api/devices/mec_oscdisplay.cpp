@@ -268,13 +268,13 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
             std::string md = "";
             std::string pd = "";
             if (module) md = module->id() + " : " +module->displayName();
-            if (page) pd = page->displayName();
-            parent_.displayTitle(md, pd);
 
             if (pageIdx < pages.size()) {
                 pageIdx_ = pageIdx;
                 try {
                     page = pages[pageIdx_];
+                    pd = page->displayName();
+                    parent_.displayTitle(md, pd);
                     pageId_ = page->id();
                     parent_.currentPage(pageId_);
                     display();
@@ -284,6 +284,8 @@ void OscDisplayParamMode::setCurrentPage(unsigned pageIdx, bool UI) {
 //                for (int j=0; j < OSC_NUM_PARAMS; j++) {
 //                    parent_.clearParamNum(j + 1);
 //                }
+                if (page) pd = page->displayName();
+                parent_.displayTitle(md, pd);
             }
         }
 
