@@ -14,6 +14,7 @@
 
 #include <ElectraDevice.h>
 #include <MidiDevice.h>
+#include <RtMidiDevice.h>
 #include <ElectraSchema.h>
 
 namespace mec {

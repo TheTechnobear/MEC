@@ -37,7 +37,7 @@ bool ElectraOne::init(void *arg) {
     std::string electramidip1 = prefs.getString("midi device p1", E1_Midi_Device_P1);
 
     device_ = std::make_shared<ElectraLite::ElectraDevice>(electramidi);
-    mididevice_ = std::make_shared<ElectraLite::MidiDevice>();
+    mididevice_ = std::make_shared<ElectraLite::RtMidiDevice>();
     mididevice_->init(electramidip1.c_str(), electramidip1.c_str());
 
     pollFreq_ = prefs.getInt("poll freq", POLL_FREQ);
