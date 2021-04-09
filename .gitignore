@@ -2,7 +2,7 @@
 *.swp
 *.lock
 profile
-**/build/*
+**/build*/*
 build
 
 **/*.sublime-workspace

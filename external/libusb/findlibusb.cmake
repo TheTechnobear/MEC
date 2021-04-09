@@ -52,6 +52,7 @@ else (LIBUSB_1_LIBRARIES AND LIBUSB_1_INCLUDE_DIRS)
             /usr/include
             /usr/local/include
             /opt/local/include
+            /opt/homebrew/include
             /sw/include
             PATH_SUFFIXES
             libusb-1.0
@@ -64,6 +65,7 @@ else (LIBUSB_1_LIBRARIES AND LIBUSB_1_INCLUDE_DIRS)
             /usr/lib
             /usr/local/lib
             /opt/local/lib
+            /opt/homebrew/lib
             /sw/lib
             )
 

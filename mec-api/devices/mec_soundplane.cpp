@@ -34,7 +34,8 @@ public:
               callback_(cb),
               valid_(true),
               voices_(static_cast<unsigned>(p.getInt("voices", 15))),
-              stealVoices_(p.getBool("steal voices", true)) {
+              stealVoices_(p.getBool("steal voices", true)),
+              noteOffset_(p.getInt("note offset", 37)) {
         if (valid_) {
             LOG_0("SoundplaneHandler enabling for mecapi");
         }
@@ -125,7 +126,8 @@ public:
                 }
 
                 if (voice) {
-                    callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
+                    // callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
+                    callback_.touchOn(voice->i_, mn, mx, my, mz); 
                     voice->note_ = mn;
                     voice->x_ = mx;
                     voice->y_ = my;
@@ -157,7 +159,7 @@ public:
 private:
     inline float clamp(float v, float mn, float mx) { return (std::max(std::min(v, mx), mn)); }
 
-    float note(float n) { return n; }
+    float note(float n) { return n+noteOffset_; }
 
     Preferences prefs_;
     ICallback &callback_;
@@ -165,6 +167,7 @@ private:
     bool valid_;
     bool stealVoices_;
     std::set<unsigned> stolenTouches_;
+    int noteOffset_;
 };
 
 

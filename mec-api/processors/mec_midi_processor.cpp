@@ -1,7 +1,7 @@
 
 #include "mec_midi_processor.h"
 
-//#include "mec_log.h"
+// #include "mec_log.h"
 
 namespace mec {
 
@@ -60,7 +60,7 @@ bool Midi_Processor::noteOn(unsigned ch, unsigned note, unsigned vel) {
 
 
 bool Midi_Processor::noteOff(unsigned ch, unsigned note, unsigned vel) {
-    // LOG_1( "midi  note off ch " << ch << " note " << note  << " vel " << vel )
+    // LOG_1( "midi  note off ch " << ch << " note " << note  << " vel " << vel );
     MidiMsg msg(static_cast<char>(0x80 + ch), static_cast<char>(note), static_cast<char>(vel));
     process(msg);
     return true;
