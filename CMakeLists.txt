@@ -35,9 +35,6 @@ endif(TTUI)
 
 
 
-add_subdirectory(juce)
-add_subdirectory(technobear)
-
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin") 
     set(EXECUTABLE_NAME MicroExpression)
     set(DISABLE_NUI 1)

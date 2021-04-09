@@ -1,8 +1,9 @@
 {
     "mec"  :  {
         "electraone"  :  {
-            "midi device" : "Electra Controller Electra CTRL",
-            "midi device p1" : "Electra Controller Electra Port 1"
+            "midi device" : "20:2",
+            "_midi device" : "Electra Controller:Electra Controller MIDI 3 20:2",
+            "midi device p1" : "20:0"
         },
 
         "kontrol"  :  {
@@ -16,7 +17,7 @@
                 "virtual" : 0,
                 "voices" : 15,
                 "mpe":false,
-                "device" : "IAC Driver Bus 1",
+                "device" : "Pure Data:Pure Data Midi-In 1 129:0",
                 "_device" : "Pure Data:Pure Data Midi-In 1 128:0",
                 "pitchbend range" : 48.0
             },
