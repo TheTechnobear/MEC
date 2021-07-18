@@ -5,6 +5,7 @@
     <mapping directory="$PROJECT_DIR$/external/ArduiPi_OLED" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/EigenLite" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/ElectraLite" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/ElectraLite/external/libremidi" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/ElectraLite/external/nlohmann_json" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/NuiLite" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/SoundplaneLite" vcs="Git" />
