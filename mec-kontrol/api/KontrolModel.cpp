@@ -82,9 +82,9 @@ std::shared_ptr<Rack> KontrolModel::getLocalRack() const {
 }
 
 std::shared_ptr<Rack> KontrolModel::getRack(const EntityId &rackId) const {
-    try {
+    if(racks_.find(rackId)!=racks_.end()) {
         return racks_.at(rackId);
-    } catch (const std::out_of_range &) {
+    } else {
         return nullptr;
     }
 }

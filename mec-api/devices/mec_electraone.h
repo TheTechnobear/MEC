@@ -12,47 +12,57 @@
 
 #include <iostream>
 
-#include <ElectraDevice.h>
+#include <ElectraMidi.h>
 #include <MidiDevice.h>
-#include <RtMidiDevice.h>
-#include <ElectraSchema.h>
 
 namespace mec {
 
-
-class ElectraOneParamMode;
-
-class ElectraOneListener;
-
-
-enum ElectraOneModes {
-    E1_MAIN,
-    E1_MAINMENU,
-    E1_PRESETMENU,
-    E1_MODULEMENU,
-    E1_MODULESELECTMENU
-};
-
-class ElectraOneMode : public Kontrol::KontrolCallback {
+class SysExStream {
 public:
-    ElectraOneMode() { ; }
+    SysExStream(unsigned max_sz) : max_sz_(max_sz), size_(0), buf_(new unsigned char[max_sz]) { ; }
 
-    virtual ~ElectraOneMode() { ; }
+    ~SysExStream() {
+        delete[] buf_;
+        buf_ = nullptr;
+    }
 
-    virtual bool init() = 0;
-    virtual void poll() = 0;
-    virtual void activate() = 0;
+    SysExStream &operator<<(unsigned b) {
+        if (size_ < max_sz_ - 1) {
+            buf_[size_++] = b;
+        }
+        return *this;
+    }
 
-    // fates device
-    virtual void onButton(unsigned id, unsigned value) = 0;
-    virtual void onEncoder(unsigned id, int value) = 0;
+    SysExStream(SysExStream &) = delete;
+    SysExStream &operator=(SysExStream &) = delete;
+
+    void begin() {
+        size_ = 0;
+        *this << 0xF0;
+    }
+
+    void end() {
+        *this << 0xF7;
+    }
+
+    bool isValid() {
+        return buf_[size_ - 1] == 0xF7;
+    }
+
+    unsigned size() { return size_; }
+
+    unsigned char *buffer() { return buf_; }
+
+private:
+    unsigned max_sz_ = 0;
+    unsigned char *buf_;
+    unsigned size_ = 0;
 };
 
-class ElectraOneMidiCallback;
 
 class ElectraOne : public Device, public Kontrol::KontrolCallback {
 public:
-    ElectraOne(ICallback& cb);
+    ElectraOne(ICallback &cb);
     virtual ~ElectraOne();
 
     //mec::Device
@@ -77,156 +87,52 @@ public:
                     const std::string &) override;
     void savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
     void loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) override;
-    void addMode(ElectraOneModes mode, std::shared_ptr<ElectraOneMode>);
-    void changeMode(ElectraOneModes);
+
     void midiLearn(Kontrol::ChangeSource src, bool b) override;
     void modulationLearn(Kontrol::ChangeSource src, bool b) override;
 
     void publishStart(Kontrol::ChangeSource, unsigned numRacks) override;
     void publishRackFinished(Kontrol::ChangeSource, const Kontrol::Rack &) override;
 
-
-
-    void changePot(unsigned pot, float value);
-
-    void send(ElectraOnePreset::Preset &preset);
-
     std::shared_ptr<Kontrol::KontrolModel> model() { return Kontrol::KontrolModel::model(); }
 
-    Kontrol::EntityId currentRack() { return currentRackId_; }
-
-    void currentRack(const Kontrol::EntityId &p) { currentRackId_ = p; }
-
-    Kontrol::EntityId currentModule() { return currentModuleId_; }
-
-    void currentModule(const Kontrol::EntityId &modId);
-
-
-    Kontrol::EntityId currentPage() { return currentPageId_; }
-
-    void currentPage(const Kontrol::EntityId &id) { currentPageId_ = id; }
-
-    void onButton(unsigned id, unsigned value);
-    void onEncoder(unsigned id, int value);
-
-    void midiLearn(bool b);
-
-    bool midiLearn() { return midiLearnActive_; }
-
-    void modulationLearn(bool b);
-
-    bool modulationLearn() { return modulationLearnActive_; }
-
-    void nextModule();
-    void prevModule();
-
-    void outputCC(unsigned cc,unsigned v);
-    void outputNoteOn(unsigned n,unsigned v);
-    void outputNoteOff(unsigned n,unsigned v);
 
 private:
-    void navPrev();
-    void navNext();
-    void navActivate();
-
-    void nextPage();
-    void prevPage();
-
-    friend class ElectraOneListener;
-
-    std::vector<std::shared_ptr<Kontrol::Module>> getModules(const std::shared_ptr<Kontrol::Rack> &rack);
+    bool send(SysExStream &sysex);
 
     void stop() override;
 
-    std::shared_ptr<ElectraLite::ElectraDevice> device_;
-    std::shared_ptr<ElectraLite::MidiDevice> mididevice_;// temp?
-    std::shared_ptr<ElectraLite::MidiCallback> midiCB_;
+    bool broadcastChange(Kontrol::ChangeSource src);
+    unsigned stringToken(const char *);
+
+    void addSysExHeader(SysExStream &sysex, unsigned msgtype);
+    void addSysExString(SysExStream &sysex, const char* str);
+    void addSysExUnsigned(SysExStream &sysex, unsigned v);
+
+    void resetTokenCache();
+    unsigned createStringToken(const char *tkn);
+
+    std::shared_ptr<ElectraLite::MidiDevice> device_;
+    std::shared_ptr<ElectraLite::MidiCallback> midiCallback_;
     bool active_;
 
-    std::string lastMessageSent_;
 
-    Kontrol::EntityId currentRackId_;
-    Kontrol::EntityId currentModuleId_;
-    Kontrol::EntityId currentPageId_;
+    static constexpr int OUTPUT_MAX_SZ = 100;
+    SysExStream sysExStream_;
 
-    bool midiLearnActive_;
-    bool modulationLearnActive_;
+    SysExStream stringStream_;
 
-    ElectraOneModes currentMode_;
-    std::map<ElectraOneModes, std::shared_ptr<ElectraOneMode>> modes_;
-    std::vector<std::string> moduleOrder_;
 
     unsigned pollCount_;
     unsigned pollFreq_;
     unsigned pollSleep_;
 
-    ICallback& callback_;
-};
+    unsigned lastToken_ = 0;
+    std::map<std::string, unsigned> strToToken_;
+    std::map<unsigned, std::string> tokenToString_;
 
-class ElectraOneMidiCallback : public ElectraLite::MidiCallback {
-public:
-    ElectraOneMidiCallback(ElectraOne &p) : parent_(p) { ; }
-    virtual ~ElectraOneMidiCallback() = default;
-
-    void noteOn(unsigned int ch, unsigned int n, unsigned int v) override {
-//        std::cerr << "noteOn" << ch << " " << n << " " << v << std::endl;
-        parent_.onButton(n, v);
-    }
-
-    void noteOff(unsigned int ch, unsigned int n, unsigned int v) override {
-//        std::cerr << "noteOff" << ch << " " << n << " " << v << std::endl;
-        parent_.onButton(n, 0);
-    }
-
-    void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
-//        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
-        parent_.onEncoder(cc, v);
-    }
-
-//    void pitchbend(unsigned ch, int v) override { ; } // +/- 8192
-//    void ch_pressure(unsigned ch, unsigned v) override { ; }
-private:
-    ElectraOne &parent_;
-};
-
-
-class ElectraOneDeviceCallback : public ElectraLite::ElectraCallback {
-public:
-    ElectraOneDeviceCallback(ElectraOne &p) : parent_(p) { ; }
-
-    virtual ~ElectraOneDeviceCallback() = default;
-
-    void onInit() override { ; }
-
-    void onDeinit() override { ; }
-
-    void onError(unsigned err, const char *errStr) override { ; }
-
-    void onInfo(const std::string &json) override { ; }
-
-    void onPreset(const std::string &json) override { ; }
-
-    void onConfig(const std::string &json) override { ; }
-
-    void noteOn(unsigned int ch, unsigned int n, unsigned int v) override {
-//        std::cerr << "noteOn" << ch << " " << n << " " << v << std::endl;
-        parent_.onButton(n, v);
-    }
-
-    void noteOff(unsigned int ch, unsigned int n, unsigned int v) override {
-//        std::cerr << "noteOff" << ch << " " << n << " " << v << std::endl;
-        parent_.onButton(n, 0);
-    }
-
-    void cc(unsigned int ch, unsigned int cc, unsigned int v) override {
-//        std::cerr << "cc" << ch << " " << cc << " " << v << std::endl;
-        parent_.onEncoder(cc, v);
-    }
-
-
-private:
-    ElectraOne &parent_;
-};
+    ICallback &callback_;
+};;
 
 
 }

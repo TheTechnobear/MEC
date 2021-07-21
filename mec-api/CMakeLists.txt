@@ -56,10 +56,6 @@ if (NOT DISABLE_ELECTRAONE)
     set(ELECTRAONE_SRC
             devices/mec_electraone.cpp
             devices/mec_electraone.h
-            devices/electraone/e1_basemode.cpp
-            devices/electraone/e1_basemode.h
-            devices/electraone/e1_main.cpp
-            devices/electraone/e1_main.h
             )
 
     # add_subdirectory(devices/electraone)
