@@ -106,8 +106,10 @@ private:
     unsigned stringToken(const char *);
 
     void addSysExHeader(SysExStream &sysex, unsigned msgtype);
+    void addSysExToken(SysExStream &sysex, const char* str);
     void addSysExString(SysExStream &sysex, const char* str);
     void addSysExUnsigned(SysExStream &sysex, unsigned v);
+    void addSysExFloat(SysExStream &sysex, float v);
 
     void resetTokenCache();
     unsigned createStringToken(const char *tkn);
@@ -117,7 +119,7 @@ private:
     bool active_;
 
 
-    static constexpr int OUTPUT_MAX_SZ = 100;
+    static constexpr int OUTPUT_MAX_SZ = 128;
     SysExStream sysExStream_;
 
     SysExStream stringStream_;

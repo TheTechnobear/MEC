@@ -158,8 +158,17 @@ unsigned ElectraOne::stringToken(const char *str) {
 
 enum SysExMsgs {
     E1_STRING_TKN,
-    E1_RACK_MSG
+    E1_START_PUB,
+    E1_RACK_END,
+    E1_RACK_MSG,
+    E1_MODULE_MSG,
+    E1_PAGE_MSG,
+    E1_PARAM_MSG,
+    E1_CHANGED_MSG,
+    E1_RESOURCE_MSG,
+    E1_SYSEX_MAX
 };
+
 
 void ElectraOne::resetTokenCache() {
     lastToken_ = 0;
@@ -202,25 +211,49 @@ void ElectraOne::addSysExHeader(SysExStream &sysex, unsigned msgtype) {
 }
 
 
-void ElectraOne::addSysExString(SysExStream &sysex, const char* str) {
-    auto tkn=stringToken(str);
+void ElectraOne::addSysExToken(SysExStream &sysex, const char *str) {
+    auto tkn = stringToken(str);
     unsigned ntMSB = (tkn >> 7) & 0b01111111;
     unsigned ntLSB = tkn & 0b01111111;
     sysex << ntMSB;
     sysex << ntLSB;
 }
 
+void ElectraOne::addSysExString(SysExStream &sysex, const char *str) {
+    const char *cstr = str;
+    unsigned x = 0;
+    while (cstr[x]) {
+        sysex << ((unsigned) (cstr[x++]) & 0b01111111);
+    }
+    sysex << 0;
+}
+
+
 void ElectraOne::addSysExUnsigned(SysExStream &sysex, unsigned v) {
-    unsigned vMSB = (v>> 7) & 0b01111111;
+    unsigned vMSB = (v >> 7) & 0b01111111;
     unsigned vLSB = v & 0b01111111;
     sysex << vMSB;
     sysex << vLSB;
 }
 
+void ElectraOne::addSysExFloat(SysExStream &sysex, float v) {
+    assert(sizeof(float) == 4);
+    assert(sizeof(unsigned) == 4);
+    unsigned uval = *static_cast<unsigned *>(static_cast<void *>(&v));
+    unsigned tmp=uval;
+
+    for (unsigned i = 0; i < 5; i++) {
+        unsigned bit7 = uval & 0b01111111;
+        sysex << bit7;
+        uval = uval >> 7;
+    }
+//    LOG_0("addSysExFloat " << tmp << " " << v);
+}
+
 bool ElectraOne::send(SysExStream &sysex) {
     if (sysex.isValid()) {
-        unsigned char* buf=new unsigned char[sysex.size()];
-        memcpy(buf,sysex.buffer(),sysex.size());
+        unsigned char *buf = new unsigned char[sysex.size()];
+        memcpy(buf, sysex.buffer(), sysex.size());
         // mididevice takes ownership of these bytes!
         return device_->sendBytes(buf, sysex.size());
     }
@@ -232,36 +265,133 @@ bool ElectraOne::send(SysExStream &sysex) {
 void ElectraOne::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
-
-    SysExStream& sysex=sysExStream_;
-
+    SysExStream &sysex = sysExStream_;
     sysex.begin();
+
     addSysExHeader(sysex, E1_RACK_MSG);
-    addSysExString(sysex,rack.id().c_str());
-    addSysExString(sysex,rack.host().c_str());
-    addSysExUnsigned(sysex,rack.port());
+    addSysExToken(sysex, rack.id().c_str());
+    addSysExString(sysex, rack.host().c_str());
+    addSysExUnsigned(sysex, rack.port());
+
+    sysex.end();
+    send(sysex);
+    LOG_0("Published RACK : " << rack.id());
+}
+
+void ElectraOne::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &m) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+    SysExStream &sysex = sysExStream_;
+    sysex.begin();
+
+    addSysExHeader(sysex, E1_MODULE_MSG);
+    addSysExToken(sysex, rack.id().c_str());
+    addSysExToken(sysex, m.id().c_str());
+    addSysExString(sysex, m.displayName().c_str());
+    addSysExString(sysex, m.type().c_str());
+
     sysex.end();
     send(sysex);
 }
 
-void ElectraOne::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &module) {
-}
-
 void ElectraOne::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                      const Kontrol::Module &module, const Kontrol::Page &page) {
+                      const Kontrol::Module &module, const Kontrol::Page &p) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+    SysExStream &sysex = sysExStream_;
+    sysex.begin();
+
+    addSysExHeader(sysex, E1_PAGE_MSG);
+    addSysExToken(sysex, rack.id().c_str());
+    addSysExToken(sysex, module.id().c_str());
+    addSysExToken(sysex, p.id().c_str());
+    addSysExString(sysex, p.displayName().c_str());
+
+    for (const std::string &paramId : p.paramIds()) {
+        addSysExString(sysex,  paramId.c_str());
+    }
+
+    sysex.end();
+    send(sysex);
 }
 
 void ElectraOne::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                       const Kontrol::Module &module, const Kontrol::Parameter &param) {
+                       const Kontrol::Module &module, const Kontrol::Parameter &p) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+    SysExStream &sysex = sysExStream_;
+    sysex.begin();
+
+    addSysExHeader(sysex, E1_PARAM_MSG);
+    addSysExToken(sysex, rack.id().c_str());
+    addSysExToken(sysex, module.id().c_str());
+
+    std::vector<Kontrol::ParamValue> values;
+    p.createArgs(values);
+    for (auto &v : values) {
+        switch (v.type()) {
+            case Kontrol::ParamValue::T_Float: {
+                addSysExUnsigned(sysex, v.type());
+                addSysExFloat(sysex, v.floatValue());
+                break;
+            }
+            case Kontrol::ParamValue::T_String:
+            default: {
+                addSysExUnsigned(sysex, Kontrol::ParamValue::T_String);
+                addSysExString(sysex, v.stringValue().c_str());
+            }
+        }
+    }
+
+    sysex.end();
+    send(sysex);
 }
 
 void ElectraOne::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                         const Kontrol::Module &module, const Kontrol::Parameter &param) {
+                         const Kontrol::Module &module, const Kontrol::Parameter &p) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+    SysExStream &sysex = sysExStream_;
+    sysex.begin();
+
+    addSysExHeader(sysex, E1_CHANGED_MSG);
+    addSysExToken(sysex, rack.id().c_str());
+    addSysExToken(sysex, module.id().c_str());
+
+    addSysExToken(sysex, p.id().c_str());
+
+    auto v = p.current();
+    switch (v.type()) {
+        case Kontrol::ParamValue::T_Float: {
+            addSysExUnsigned(sysex, v.type());
+            addSysExFloat(sysex, v.floatValue());
+            break;
+        }
+        case Kontrol::ParamValue::T_String:
+        default: {
+            addSysExUnsigned(sysex, Kontrol::ParamValue::T_String);
+            addSysExString(sysex, v.stringValue().c_str());
+        }
+    }
+
+    sysex.end();
+    send(sysex);
 }
 
 void ElectraOne::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
-                          const std::string &res, const std::string &value) {
+                          const std::string &type, const std::string &res) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+    SysExStream &sysex = sysExStream_;
+    sysex.begin();
 
+    addSysExHeader(sysex, E1_RESOURCE_MSG);
+    addSysExToken(sysex, rack.id().c_str());
+    addSysExToken(sysex, type.c_str());
+    addSysExString(sysex, res.c_str());
+
+    sysex.end();
+    send(sysex);
 }
 
 void ElectraOne::deleteRack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
@@ -278,9 +408,30 @@ void ElectraOne::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack
 
 void ElectraOne::publishStart(Kontrol::ChangeSource src, unsigned numRacks) {
     resetTokenCache();
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    SysExStream &sysex = sysExStream_;
+
+    sysex.begin();
+    addSysExHeader(sysex, E1_START_PUB);
+    addSysExUnsigned(sysex, numRacks);
+    sysex.end();
+    send(sysex);
+
 }
 
 void ElectraOne::publishRackFinished(Kontrol::ChangeSource src, const Kontrol::Rack &r) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    SysExStream &sysex = sysExStream_;
+
+    sysex.begin();
+    addSysExHeader(sysex, E1_RACK_END);
+    addSysExToken(sysex, r.id().c_str());
+    sysex.end();
+    send(sysex);
 }
 
 void ElectraOne::midiLearn(Kontrol::ChangeSource src, bool b) {
