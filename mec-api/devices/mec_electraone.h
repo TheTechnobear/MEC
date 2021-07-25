@@ -15,49 +15,10 @@
 #include <ElectraMidi.h>
 #include <MidiDevice.h>
 
+#include "electraone/SysExStream.h"
+
+
 namespace mec {
-
-class SysExStream {
-public:
-    SysExStream(unsigned max_sz) : max_sz_(max_sz), size_(0), buf_(new unsigned char[max_sz]) { ; }
-
-    ~SysExStream() {
-        delete[] buf_;
-        buf_ = nullptr;
-    }
-
-    SysExStream &operator<<(unsigned b) {
-        if (size_ < max_sz_ - 1) {
-            buf_[size_++] = b;
-        }
-        return *this;
-    }
-
-    SysExStream(SysExStream &) = delete;
-    SysExStream &operator=(SysExStream &) = delete;
-
-    void begin() {
-        size_ = 0;
-        *this << 0xF0;
-    }
-
-    void end() {
-        *this << 0xF7;
-    }
-
-    bool isValid() {
-        return buf_[size_ - 1] == 0xF7;
-    }
-
-    unsigned size() { return size_; }
-
-    unsigned char *buffer() { return buf_; }
-
-private:
-    unsigned max_sz_ = 0;
-    unsigned char *buf_;
-    unsigned size_ = 0;
-};
 
 
 class ElectraOne : public Device, public Kontrol::KontrolCallback {
@@ -96,20 +57,18 @@ public:
 
     std::shared_ptr<Kontrol::KontrolModel> model() { return Kontrol::KontrolModel::model(); }
 
+    bool handleE1SysEx(Kontrol::ChangeSource src, SysExInputStream &sysex,
+                       std::shared_ptr<Kontrol::KontrolModel> model);
 
 private:
-    bool send(SysExStream &sysex);
+    bool send(SysExOutputStream &sysex);
+
 
     void stop() override;
 
     bool broadcastChange(Kontrol::ChangeSource src);
     unsigned stringToken(const char *);
-
-    void addSysExHeader(SysExStream &sysex, unsigned msgtype);
-    void addSysExToken(SysExStream &sysex, const char* str);
-    void addSysExString(SysExStream &sysex, const char* str);
-    void addSysExUnsigned(SysExStream &sysex, unsigned v);
-    void addSysExFloat(SysExStream &sysex, float v);
+    const std::string &tokenString(unsigned);
 
     void resetTokenCache();
     unsigned createStringToken(const char *tkn);
@@ -120,10 +79,8 @@ private:
 
 
     static constexpr int OUTPUT_MAX_SZ = 128;
-    SysExStream sysExStream_;
-
-    SysExStream stringStream_;
-
+    SysExOutputStream sysExOutStream_;
+    SysExOutputStream stringOutStream_;
 
     unsigned pollCount_;
     unsigned pollFreq_;
