@@ -62,7 +62,6 @@ void ElectraMidiCallback::process(const ElectraLite::MidiMsg &msg) {
 }
 
 void ElectraMidiCallback::sysex(const unsigned char *data, unsigned sz) {
-    LOG_0("ElectraMidiCallback::sysex - recv " << sz);
     Kontrol::ChangeSource src = Kontrol::ChangeSource(Kontrol::ChangeSource::SrcType::REMOTE, "E1");
     SysExInputStream sysex(data, sz);
     bool ok = parent_->handleE1SysEx(src, sysex, model_);
