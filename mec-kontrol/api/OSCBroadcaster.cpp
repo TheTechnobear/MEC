@@ -144,7 +144,7 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
 #endif
         if (!master_) {
             if (!wasActive) {
-		// std::cerr << " !master : publishing meta data, from " << host  << ":" << port << std::endl;
+                // std::cerr << " !master : publishing meta data, from " << host  << ":" << port << std::endl;
                 KontrolModel::model()->publishMetaData();
             }
         } else {
@@ -264,8 +264,7 @@ void OSCBroadcaster::unassignModulation(ChangeSource src, const Rack &rack, cons
 
 }
 
-void OSCBroadcaster::publishStart(ChangeSource src, unsigned numRacks)
-{
+void OSCBroadcaster::publishStart(ChangeSource src, unsigned numRacks) {
     if (numRacks == 0)
         return;
     if (!broadcastChange(src))
@@ -277,15 +276,14 @@ void OSCBroadcaster::publishStart(ChangeSource src, unsigned numRacks)
 
     ops << osc::BeginBundleImmediate
         << osc::BeginMessage("/Kontrol/publishStart")
-        << (int32_t)numRacks
+        << (int32_t) numRacks
         << osc::EndMessage
         << osc::EndBundle;
 
     send(ops.Data(), ops.Size());
 }
 
-void OSCBroadcaster::publishRackFinished(ChangeSource src, const Rack &rack)
-{
+void OSCBroadcaster::publishRackFinished(ChangeSource src, const Rack &rack) {
     if (!broadcastChange(src))
         return;
     if (!isActive())
@@ -452,9 +450,10 @@ void OSCBroadcaster::param(ChangeSource src, const Rack &rack, const Module &mod
             case ParamValue::T_Float: {
                 ops << v.floatValue();
                 break;
-                case ParamValue::T_String:
-                default:
-                    ops << v.stringValue().c_str();
+            }
+            case ParamValue::T_String:
+            default: {
+                ops << v.stringValue().c_str();
             }
         }
     }

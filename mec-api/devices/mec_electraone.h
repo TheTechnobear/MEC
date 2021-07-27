@@ -5,11 +5,6 @@
 
 #include <KontrolModel.h>
 
-// #include <ip/UdpSocket.h>
-// #include <string>
-// #include <readerwriterqueue.h>
-// #include <thread>
-
 #include <iostream>
 
 #include <ElectraMidi.h>

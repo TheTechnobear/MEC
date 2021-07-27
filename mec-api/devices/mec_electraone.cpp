@@ -1,7 +1,6 @@
 #include "mec_electraone.h"
 
 #include <algorithm>
-#include <unordered_set>
 #include <unistd.h>
 
 #include <mec_log.h>
@@ -43,17 +42,28 @@ private:
 };
 
 void ElectraMidiCallback::process(const ElectraLite::MidiMsg &msg) {
-    unsigned b=0;
+    unsigned b = 0;
     unsigned status = msg.byte(b++);
     if (status == 0xF0) {
         bool notmine = false;
         notmine |= (msg.byte(b++) != E1_Manufacturer[0]);
         notmine |= (msg.byte(b++) != E1_Manufacturer[1]);
         notmine |= (msg.byte(b++) != E1_Manufacturer[2]);
-        if(!notmine) {
-            unsigned msgid=msg.byte(b++);
-            if(msgid==TB_SYSEX_MSG) {
+        if (!notmine) {
+            unsigned msgid = msg.byte(b++);
+            if (msgid == TB_SYSEX_MSG) {
                 sysex(msg.data(), msg.size());
+            } else if (msgid == 0x7f) {
+                unsigned type = msg.byte(b++);
+                // report E1 logs
+                if (type == 0x00) { // log
+                    std::stringbuf buf;
+                    unsigned char c;
+                    while ((c = msg.byte(b++)) != 0xF7) {
+                        buf.sputc(c);
+                    }
+                    LOG_0("E1 Log >> " << buf.str());
+                }
             }
         }
     } else {
@@ -150,7 +160,7 @@ void ElectraOne::stop() {
 bool ElectraOne::broadcastChange(Kontrol::ChangeSource src) {
     //TODO, see oscbroadcaster
     Kontrol::ChangeSource e1src = Kontrol::ChangeSource(Kontrol::ChangeSource::SrcType::REMOTE, "E1");
-    return !(src==e1src);
+    return !(src == e1src);
     return true;
 }
 
@@ -305,7 +315,7 @@ void ElectraOne::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
     sysex.addHeader(E1_CHANGED_MSG);
     sysex.addUnsigned(stringToken(rack.id().c_str()));
     sysex.addUnsigned(stringToken(module.id().c_str()));
-    sysex.addUnsigned(stringToken(p.id().c_str()));
+    sysex.addString(p.id().c_str());
 
     auto v = p.current();
     switch (v.type()) {
