@@ -499,7 +499,7 @@ bool ElectraOne::handleE1SysEx(Kontrol::ChangeSource src, SysExInputStream &syse
         case E1_CHANGED_MSG: {
             Kontrol::EntityId rackId = tokenString(sysex.readUnsigned());
             Kontrol::EntityId moduleId = tokenString(sysex.readUnsigned());
-            Kontrol::EntityId paramId = tokenString(sysex.readUnsigned());
+            Kontrol::EntityId paramId = sysex.readString();
 
             if (!sysex.atEnd()) {
                 auto type = (Kontrol::ParamValue::Type) sysex.readUnsigned();
