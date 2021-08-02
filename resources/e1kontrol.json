@@ -5,7 +5,9 @@
             "_midi device" : "20:2",
             "_midi device" : "Electra Controller:Electra Controller MIDI 3 20:2",
             "_midi device p1" : "20:0",
-            "_midi device p1" : "Electra Controller Electra Port 1"
+            "_midi device p1" : "Electra Controller Electra Port 1",
+            "poll sleep" : 1000,
+            "poll freq" : 1
         },
 
         "kontrol"  :  {

@@ -135,13 +135,11 @@ bool ElectraOne::isActive() {
 
 // Kontrol::KontrolCallback
 bool ElectraOne::process() {
-    unsigned count = 0;
     pollCount_++;
     if ((pollCount_ % pollFreq_) == 0) {
         if (device_ && active_) {
             device_->processIn(*midiCallback_);
-            device_->processOut();
-            count++;
+            device_->processOut(10);
         }
     }
 
