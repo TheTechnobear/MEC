@@ -358,6 +358,18 @@ void ElectraOne::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &ra
 
 void ElectraOne::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                             const Kontrol::EntityId &modId, const std::string &modType) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    auto &sysex = sysExOutStream_;
+    sysex.begin();
+
+    sysex.addHeader(E1_LOAD_MODULE_MSG);
+    sysex.addUnsigned(stringToken(rack.id().c_str()));
+    sysex.addUnsigned(stringToken(modId.c_str()));
+    sysex.addString(modType.c_str());
+    sysex.end();
+    send(sysex);
 }
 
 
@@ -395,10 +407,21 @@ void ElectraOne::midiLearn(Kontrol::ChangeSource src, bool b) {
 void ElectraOne::modulationLearn(Kontrol::ChangeSource src, bool b) {
 }
 
-void ElectraOne::savePreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void ElectraOne::savePreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack, std::string preset) {
 }
 
-void ElectraOne::loadPreset(Kontrol::ChangeSource source, const Kontrol::Rack &rack, std::string preset) {
+void ElectraOne::loadPreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack, std::string preset) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    auto &sysex = sysExOutStream_;
+    sysex.begin();
+
+    sysex.addHeader(E1_LOAD_PRESET_MSG);
+    sysex.addUnsigned(stringToken(rack.id().c_str()));
+    sysex.addString(preset.c_str());
+    sysex.end();
+    send(sysex);
 }
 
 
@@ -531,6 +554,19 @@ bool ElectraOne::handleE1SysEx(Kontrol::ChangeSource src, SysExInputStream &syse
             // logMessage("E1_RESOURCE_MSG %s %s %s", rackId.c_str(),
             // resType.c_str(),resValue.c_str());
             model->createResource(src, rackId, resType, resValue);
+            break;
+        }
+        case E1_LOAD_MODULE_MSG : {
+            Kontrol::EntityId rackId = tokenString(sysex.readUnsigned());
+            Kontrol::EntityId modId = tokenString(sysex.readUnsigned());
+            std::string modType = sysex.readString();
+            model->loadModule(src, rackId,modId,modType);
+            break;
+        }
+        case E1_LOAD_PRESET_MSG : {
+            Kontrol::EntityId rackId = tokenString(sysex.readUnsigned());
+            std::string preset = sysex.readString();
+            model->loadPreset(src, rackId, preset);
             break;
         }
 

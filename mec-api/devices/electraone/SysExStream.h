@@ -18,6 +18,8 @@ enum SysExMsgs {
     E1_PARAM_MSG,
     E1_CHANGED_MSG,
     E1_RESOURCE_MSG,
+    E1_LOAD_MODULE_MSG,
+    E1_LOAD_PRESET_MSG,
     E1_SYSEX_MAX
 };
 
