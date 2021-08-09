@@ -19,9 +19,14 @@ enum SysExMsgs {
     E1_CHANGED_MSG,
     E1_RESOURCE_MSG,
     E1_LOAD_MODULE_MSG,
+    E1_SAVE_PRESET_MSG,
     E1_LOAD_PRESET_MSG,
+    E1_SAVE_SETTINGS_MSG,
+    E1_MIDI_LEARN_MSG,
+    E1_MOD_LEARN_MSG,
     E1_SYSEX_MAX
 };
+
 
 
 class SysExOutputStream {

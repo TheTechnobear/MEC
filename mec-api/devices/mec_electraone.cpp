@@ -402,12 +402,43 @@ void ElectraOne::publishRackFinished(Kontrol::ChangeSource src, const Kontrol::R
 }
 
 void ElectraOne::midiLearn(Kontrol::ChangeSource src, bool b) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    auto &sysex = sysExOutStream_;
+    sysex.begin();
+
+    sysex.addHeader(E1_MIDI_LEARN_MSG);
+    sysex.addUnsigned(b);
+    sysex.end();
+    send(sysex);
 }
 
 void ElectraOne::modulationLearn(Kontrol::ChangeSource src, bool b) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+    auto &sysex = sysExOutStream_;
+
+    sysex.begin();
+
+    sysex.addHeader(E1_MOD_LEARN_MSG);
+    sysex.addUnsigned(b);
+    sysex.end();
+    send(sysex);
 }
 
 void ElectraOne::savePreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack, std::string preset) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    auto &sysex = sysExOutStream_;
+    sysex.begin();
+
+    sysex.addHeader(E1_SAVE_PRESET_MSG);
+    sysex.addUnsigned(stringToken(rack.id().c_str()));
+    sysex.addString(preset.c_str());
+    sysex.end();
+    send(sysex);
 }
 
 void ElectraOne::loadPreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack, std::string preset) {
@@ -422,6 +453,20 @@ void ElectraOne::loadPreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack
     sysex.addString(preset.c_str());
     sysex.end();
     send(sysex);
+}
+
+void ElectraOne::saveSettings(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+
+    auto &sysex = sysExOutStream_;
+    sysex.begin();
+
+    sysex.addHeader(E1_SAVE_SETTINGS_MSG);
+    sysex.addUnsigned(stringToken(rack.id().c_str()));
+    sysex.end();
+    send(sysex);
+
 }
 
 
@@ -560,13 +605,34 @@ bool ElectraOne::handleE1SysEx(Kontrol::ChangeSource src, SysExInputStream &syse
             Kontrol::EntityId rackId = tokenString(sysex.readUnsigned());
             Kontrol::EntityId modId = tokenString(sysex.readUnsigned());
             std::string modType = sysex.readString();
-            model->loadModule(src, rackId,modId,modType);
+            model->loadModule(src, rackId, modId, modType);
+            break;
+        }
+        case E1_SAVE_PRESET_MSG : {
+            Kontrol::EntityId rackId = tokenString(sysex.readUnsigned());
+            std::string preset = sysex.readString();
+            model->savePreset(src, rackId, preset);
             break;
         }
         case E1_LOAD_PRESET_MSG : {
             Kontrol::EntityId rackId = tokenString(sysex.readUnsigned());
             std::string preset = sysex.readString();
             model->loadPreset(src, rackId, preset);
+            break;
+        }
+        case E1_SAVE_SETTINGS_MSG : {
+            Kontrol::EntityId rackId = tokenString(sysex.readUnsigned());
+            model->saveSettings(src, rackId);
+            break;
+        }
+        case E1_MIDI_LEARN_MSG : {
+            bool b = sysex.readUnsigned() > 0;
+            model->midiLearn(src,b);
+            break;
+        }
+        case E1_MOD_LEARN_MSG : {
+            bool b = sysex.readUnsigned() > 0;
+            model->modulationLearn(src,b);
             break;
         }
 

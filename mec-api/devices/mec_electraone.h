@@ -50,6 +50,15 @@ public:
     void publishStart(Kontrol::ChangeSource, unsigned numRacks) override;
     void publishRackFinished(Kontrol::ChangeSource, const Kontrol::Rack &) override;
 
+    void saveSettings(Kontrol::ChangeSource, const Kontrol::Rack &) override;
+
+//    void ping(Kontrol::ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) override {  }
+//    void assignMidiCC(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &, unsigned midiCC)  override {  }
+//    void unassignMidiCC(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &, unsigned midiCC)  override {  }
+//    void assignModulation(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &, unsigned bus)  override  {  }
+//    void unassignModulation(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &, unsigned bus) override  {  }
+
+
     std::shared_ptr<Kontrol::KontrolModel> model() { return Kontrol::KontrolModel::model(); }
 
     bool handleE1SysEx(Kontrol::ChangeSource src, SysExInputStream &sysex,
