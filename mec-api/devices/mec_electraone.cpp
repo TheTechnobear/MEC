@@ -108,21 +108,30 @@ bool ElectraOne::init(void *arg) {
     Preferences prefs(arg);
 
     static const auto POLL_FREQ = 1;
+    static const auto POLL_RETRY_FREQ = 5000;
     static const auto POLL_SLEEP = 1000;
+
     static const char *E1_Midi_Device_Ctrl = "Electra Controller Electra CTRL";
-    std::string electramidi = prefs.getString("midi device", E1_Midi_Device_Ctrl);
+    midiDevStr_ = prefs.getString("midi device", E1_Midi_Device_Ctrl);
     unsigned inQueueSize = prefs.getInt("in queue size", ElectraLite::MidiDevice::MAX_QUEUE_SIZE);
     unsigned outQueueSize = prefs.getInt("out queue size", ElectraLite::MidiDevice::MAX_QUEUE_SIZE);
 
-    device_ = std::make_shared<ElectraLite::RtMidiDevice>(inQueueSize,outQueueSize);
-    active_ = device_->init(electramidi.c_str(), electramidi.c_str());
+    device_ = std::make_shared<ElectraLite::RtMidiDevice>(inQueueSize, outQueueSize);
+    active_ = device_->init(midiDevStr_.c_str(), midiDevStr_.c_str());
     midiCallback_ = std::make_shared<ElectraMidiCallback>(this);
 
+    pollRetryFreq_ = prefs.getInt("poll retry", POLL_RETRY_FREQ);
     pollFreq_ = prefs.getInt("poll freq", POLL_FREQ);
     pollSleep_ = prefs.getInt("poll sleep", POLL_SLEEP);
     pollCount_ = 0;
 
-    return active_;
+    if (active_) {
+        LOG_0("ElectraOne midi : " << midiDevStr_ << " - connected");
+    } else {
+        LOG_0("ElectraOne midi : " << midiDevStr_ << " - not connected, will retry");
+    }
+
+    return true;
 }
 
 void ElectraOne::deinit() {
@@ -132,19 +141,75 @@ void ElectraOne::deinit() {
 }
 
 bool ElectraOne::isActive() {
-    return active_;
+    return device_ != nullptr;
+//    return active_;
 }
 
 // Kontrol::KontrolCallback
 bool ElectraOne::process() {
     pollCount_++;
-    if ((pollCount_ % pollFreq_) == 0) {
-        if (device_ && active_) {
-            device_->processIn(*midiCallback_);
-            device_->processOut(10);
+
+    if (active_) {
+        if ((pollCount_ % pollFreq_) == 0) {
+            if (device_ && active_) {
+                device_->processIn(*midiCallback_);
+                device_->processOut(10);
+            }
+        }
+    } else {
+        if ((pollCount_ % pollRetryFreq_) == 0) {
+            LOG_0("ElectraOne midi: " << midiDevStr_ << " - retrying");
+            active_ = device_->init(midiDevStr_.c_str(), midiDevStr_.c_str());
+            if (active_) {
+                // reconnecting !!
+                LOG_0("ElectraOne midi : " << midiDevStr_ << " - connected");
+
+                auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1",6001);
+//                Kontrol::EntityId rackId = Kontrol::Rack::createId(host_, port_);
+                publishStart(src, model()->getRacks().size());
+                for (const auto &r: model()->getRacks()) {
+                    LOG_0("publishing meta data to " << midiDevStr_ << " for " << r->id());
+                    rack(src, *r);
+
+
+                    for (const auto &resType:r->getResourceTypes()) {
+                        for (const auto &res : r->getResources(resType)) {
+                            resource(src, *r, resType, res);
+                        }
+                    }
+
+                    loadPreset(src, *r, r->currentPreset());
+
+                    for (const auto &m : r->getModules()) {
+                        module(src, *r, *m);
+                        for (const auto &p :  m->getParams()) {
+                            param(src, *r, *m, *p);
+                        }
+                        for (const auto &p : m->getPages()) {
+                            if (p != nullptr) {
+                                page(src, *r, *m, *p);
+                            }
+                        }
+                        for (const auto &p :  m->getParams()) {
+                            changed(src, *r, *m, *p);
+                        }
+                        for (const auto &midiMap : m->getMidiMapping()) {
+                            for (const auto &j : midiMap.second) {
+                                auto parameter = m->getParam(j);
+                                if (parameter) {
+                                    assignMidiCC(src, *r, *m, *parameter, midiMap.first);
+                                }
+                            }
+                        }
+                    } //module
+                    publishRackFinished(src, *r);
+                } // rack
+
+            } else {
+                LOG_0("ElectraOne midi: " << midiDevStr_ << " - not connected, will retry");
+            }
         }
     }
-
 
     if (pollSleep_) {
         usleep(pollSleep_);
@@ -209,6 +274,8 @@ unsigned ElectraOne::createStringToken(const char *cstr) {
 }
 
 bool ElectraOne::send(SysExOutputStream &sysex) {
+    if (!active_) return false;
+
     if (sysex.isValid()) {
         unsigned char *buf = new unsigned char[sysex.size()];
         memcpy(buf, sysex.buffer(), sysex.size());
@@ -629,12 +696,12 @@ bool ElectraOne::handleE1SysEx(Kontrol::ChangeSource src, SysExInputStream &syse
         }
         case E1_MIDI_LEARN_MSG : {
             bool b = sysex.readUnsigned() > 0;
-            model->midiLearn(src,b);
+            model->midiLearn(src, b);
             break;
         }
         case E1_MOD_LEARN_MSG : {
             bool b = sysex.readUnsigned() > 0;
-            model->modulationLearn(src,b);
+            model->modulationLearn(src, b);
             break;
         }
 

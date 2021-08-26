@@ -9,7 +9,8 @@
             "in queue size" :  512,
             "out queue size" :  1024,
             "poll sleep" : 1000,
-            "poll freq" : 1
+            "poll freq" : 1,
+            "poll retry" : 5000
         },
 
         "kontrol"  :  {

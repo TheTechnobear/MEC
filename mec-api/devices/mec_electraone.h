@@ -88,11 +88,14 @@ private:
 
     unsigned pollCount_;
     unsigned pollFreq_;
+    unsigned pollRetryFreq_;
     unsigned pollSleep_;
 
     unsigned lastToken_ = 0;
     std::map<std::string, unsigned> strToToken_;
     std::map<unsigned, std::string> tokenToString_;
+
+    std::string midiDevStr_;
 
     ICallback &callback_;
 };;
