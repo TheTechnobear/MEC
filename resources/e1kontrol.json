@@ -6,6 +6,8 @@
             "_midi device" : "Electra Controller:Electra Controller MIDI 3 20:2",
             "_midi device p1" : "20:0",
             "_midi device p1" : "Electra Controller Electra Port 1",
+            "in queue size" :  512,
+            "out queue size" :  1024,
             "poll sleep" : 1000,
             "poll freq" : 1
         },

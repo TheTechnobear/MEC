@@ -111,8 +111,10 @@ bool ElectraOne::init(void *arg) {
     static const auto POLL_SLEEP = 1000;
     static const char *E1_Midi_Device_Ctrl = "Electra Controller Electra CTRL";
     std::string electramidi = prefs.getString("midi device", E1_Midi_Device_Ctrl);
+    unsigned inQueueSize = prefs.getInt("in queue size", ElectraLite::MidiDevice::MAX_QUEUE_SIZE);
+    unsigned outQueueSize = prefs.getInt("out queue size", ElectraLite::MidiDevice::MAX_QUEUE_SIZE);
 
-    device_ = std::make_shared<ElectraLite::RtMidiDevice>();
+    device_ = std::make_shared<ElectraLite::RtMidiDevice>(inQueueSize,outQueueSize);
     active_ = device_->init(electramidi.c_str(), electramidi.c_str());
     midiCallback_ = std::make_shared<ElectraMidiCallback>(this);
 
