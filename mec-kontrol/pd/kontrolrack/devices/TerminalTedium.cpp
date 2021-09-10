@@ -21,8 +21,8 @@ static constexpr unsigned TT_THREAD_PRIO=99;
 static constexpr unsigned TT_THREAD_SLEEP=100;
 
 
-static const unsigned MENU_DISPLAY=0;
-static const unsigned PARAM_DISPLAY=1;
+static const unsigned PARAM_DISPLAY=0;
+static const unsigned MENU_DISPLAY=1;
 
 // TODO
 // check POT = 4096?
