@@ -159,14 +159,12 @@ bool ElectraOne::isActive() {
 bool ElectraOne::process() {
     pollCount_++;
 
-    if (isActive()) {
+    if (isActive() && active_) {
         if ((pollCount_ % pollFreq_) == 0) {
             if (!connected_) {
-                if ((pollCount_ % pollRetryFreq_) == 0) {
-                    LOG_0("ElectraOne midi: " << midiDevStr_ << " - waking up?");
-                    auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1", 6001);
-                    publishStart(src, model()->getRacks().size());
-                }
+                LOG_0("ElectraOne midi: " << midiDevStr_ << " - waking up?");
+                auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1", 6001);
+                publishStart(src, model()->getRacks().size());
             }
 
             if (device_ && active_) {
@@ -181,10 +179,9 @@ bool ElectraOne::process() {
             if (active_) {
                 // reconnecting !!
                 LOG_0("ElectraOne midi : " << midiDevStr_ << " - active");
-                connected_ = true;
-                auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1", 6001);
-                publishStart(src, model()->getRacks().size());
-//                reconnect();
+////                connected_ = true;
+//                auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1", 6001);
+//                publishStart(src, model()->getRacks().size());
             } else {
                 LOG_0("ElectraOne midi: " << midiDevStr_ << " - not active, will retry");
             }
@@ -585,6 +582,7 @@ void ElectraOne::ping(Kontrol::ChangeSource src, const std::string &, unsigned, 
 #endif
     if (!(dur <= timeOut)) {
         connected_ = false;
+        active_ = false;
         std::cerr << "Electra ONE inactive : connect state " << connected_ << " dur " << dur.count() << std::endl;
     }
 }
