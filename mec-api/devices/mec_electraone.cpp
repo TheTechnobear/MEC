@@ -110,6 +110,7 @@ bool ElectraOne::init(void *arg) {
     static const auto POLL_FREQ = 1;
     static const auto POLL_RETRY_FREQ = 5000;
     static const auto POLL_SLEEP = 1000;
+    static const auto OUT_MSGS = 10;
 
     static const char *E1_Midi_Device_Ctrl = "Electra Controller Electra CTRL";
     midiDevStr_ = prefs.getString("midi device", E1_Midi_Device_Ctrl);
@@ -120,12 +121,21 @@ bool ElectraOne::init(void *arg) {
     active_ = device_->init(midiDevStr_.c_str(), midiDevStr_.c_str());
     midiCallback_ = std::make_shared<ElectraMidiCallback>(this);
 
+
     pollRetryFreq_ = prefs.getInt("poll retry", POLL_RETRY_FREQ);
     pollFreq_ = prefs.getInt("poll freq", POLL_FREQ);
     pollSleep_ = prefs.getInt("poll sleep", POLL_SLEEP);
     pollCount_ = 0;
 
+    maxOutMsgs_ = prefs.getInt("out msgs", OUT_MSGS);
+
     if (active_) {
+#ifdef __COBALT__
+        clock_gettime(CLOCK_REALTIME, &lastPing);
+#else
+        lastPing_ = std::chrono::steady_clock::now();
+#endif
+        connected_ = true;
         LOG_0("ElectraOne midi : " << midiDevStr_ << " - connected");
     } else {
         LOG_0("ElectraOne midi : " << midiDevStr_ << " - not connected, will retry");
@@ -149,11 +159,19 @@ bool ElectraOne::isActive() {
 bool ElectraOne::process() {
     pollCount_++;
 
-    if (active_) {
+    if (isActive()) {
         if ((pollCount_ % pollFreq_) == 0) {
+            if (!connected_) {
+                if ((pollCount_ % pollRetryFreq_) == 0) {
+                    LOG_0("ElectraOne midi: " << midiDevStr_ << " - waking up?");
+                    auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1", 6001);
+                    publishStart(src, model()->getRacks().size());
+                }
+            }
+
             if (device_ && active_) {
                 device_->processIn(*midiCallback_);
-                device_->processOut(10);
+                device_->processOut(maxOutMsgs_);
             }
         }
     } else {
@@ -162,51 +180,13 @@ bool ElectraOne::process() {
             active_ = device_->init(midiDevStr_.c_str(), midiDevStr_.c_str());
             if (active_) {
                 // reconnecting !!
-                LOG_0("ElectraOne midi : " << midiDevStr_ << " - connected");
-
-                auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1",6001);
-//                Kontrol::EntityId rackId = Kontrol::Rack::createId(host_, port_);
+                LOG_0("ElectraOne midi : " << midiDevStr_ << " - active");
+                connected_ = true;
+                auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1", 6001);
                 publishStart(src, model()->getRacks().size());
-                for (const auto &r: model()->getRacks()) {
-                    LOG_0("publishing meta data to " << midiDevStr_ << " for " << r->id());
-                    rack(src, *r);
-
-
-                    for (const auto &resType:r->getResourceTypes()) {
-                        for (const auto &res : r->getResources(resType)) {
-                            resource(src, *r, resType, res);
-                        }
-                    }
-
-                    loadPreset(src, *r, r->currentPreset());
-
-                    for (const auto &m : r->getModules()) {
-                        module(src, *r, *m);
-                        for (const auto &p :  m->getParams()) {
-                            param(src, *r, *m, *p);
-                        }
-                        for (const auto &p : m->getPages()) {
-                            if (p != nullptr) {
-                                page(src, *r, *m, *p);
-                            }
-                        }
-                        for (const auto &p :  m->getParams()) {
-                            changed(src, *r, *m, *p);
-                        }
-                        for (const auto &midiMap : m->getMidiMapping()) {
-                            for (const auto &j : midiMap.second) {
-                                auto parameter = m->getParam(j);
-                                if (parameter) {
-                                    assignMidiCC(src, *r, *m, *parameter, midiMap.first);
-                                }
-                            }
-                        }
-                    } //module
-                    publishRackFinished(src, *r);
-                } // rack
-
+//                reconnect();
             } else {
-                LOG_0("ElectraOne midi: " << midiDevStr_ << " - not connected, will retry");
+                LOG_0("ElectraOne midi: " << midiDevStr_ << " - not active, will retry");
             }
         }
     }
@@ -215,6 +195,50 @@ bool ElectraOne::process() {
         usleep(pollSleep_);
     }
     return true;
+}
+
+
+void ElectraOne::reconnect() {
+    auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1", 6001);
+//                Kontrol::EntityId rackId = Kontrol::Rack::createId(host_, port_);
+//    publishStart(src, model()->getRacks().size());
+    for (const auto &r: model()->getRacks()) {
+        LOG_0("publishing meta data to " << midiDevStr_ << " for " << r->id());
+        rack(src, *r);
+
+
+        for (const auto &resType:r->getResourceTypes()) {
+            for (const auto &res : r->getResources(resType)) {
+                resource(src, *r, resType, res);
+            }
+        }
+
+        loadPreset(src, *r, r->currentPreset());
+
+        for (const auto &m : r->getModules()) {
+            module(src, *r, *m);
+            for (const auto &p :  m->getParams()) {
+                param(src, *r, *m, *p);
+            }
+            for (const auto &p : m->getPages()) {
+                if (p != nullptr) {
+                    page(src, *r, *m, *p);
+                }
+            }
+            for (const auto &p :  m->getParams()) {
+                changed(src, *r, *m, *p);
+            }
+            for (const auto &midiMap : m->getMidiMapping()) {
+                for (const auto &j : midiMap.second) {
+                    auto parameter = m->getParam(j);
+                    if (parameter) {
+                        assignMidiCC(src, *r, *m, *parameter, midiMap.first);
+                    }
+                }
+            }
+        } //module
+        publishRackFinished(src, *r);
+    } // rack
 }
 
 void ElectraOne::stop() {
@@ -226,7 +250,6 @@ bool ElectraOne::broadcastChange(Kontrol::ChangeSource src) {
     //TODO, see oscbroadcaster
     Kontrol::ChangeSource e1src = Kontrol::ChangeSource(Kontrol::ChangeSource::SrcType::REMOTE, "E1");
     return !(src == e1src);
-    return true;
 }
 
 unsigned ElectraOne::stringToken(const char *str) {
@@ -305,7 +328,7 @@ void ElectraOne::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
 
 void ElectraOne::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, const Kontrol::Module &m) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
     auto &sysex = sysExOutStream_;
     sysex.begin();
 
@@ -322,7 +345,7 @@ void ElectraOne::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, co
 void ElectraOne::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                       const Kontrol::Module &module, const Kontrol::Page &p) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
     auto &sysex = sysExOutStream_;
     sysex.begin();
 
@@ -343,7 +366,7 @@ void ElectraOne::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
 void ElectraOne::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                        const Kontrol::Module &module, const Kontrol::Parameter &p) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
     auto &sysex = sysExOutStream_;
     sysex.begin();
 
@@ -375,7 +398,7 @@ void ElectraOne::param(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
 void ElectraOne::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                          const Kontrol::Module &module, const Kontrol::Parameter &p) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
     auto &sysex = sysExOutStream_;
     sysex.begin();
 
@@ -405,7 +428,7 @@ void ElectraOne::changed(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
 void ElectraOne::resource(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                           const std::string &type, const std::string &res) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
     auto &sysex = sysExOutStream_;
     sysex.begin();
 
@@ -428,7 +451,7 @@ void ElectraOne::activeModule(Kontrol::ChangeSource src, const Kontrol::Rack &ra
 void ElectraOne::loadModule(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
                             const Kontrol::EntityId &modId, const std::string &modType) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
 
     auto &sysex = sysExOutStream_;
     sysex.begin();
@@ -459,7 +482,7 @@ void ElectraOne::publishStart(Kontrol::ChangeSource src, unsigned numRacks) {
 
 void ElectraOne::publishRackFinished(Kontrol::ChangeSource src, const Kontrol::Rack &r) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
 
     auto &sysex = sysExOutStream_;
 
@@ -472,7 +495,7 @@ void ElectraOne::publishRackFinished(Kontrol::ChangeSource src, const Kontrol::R
 
 void ElectraOne::midiLearn(Kontrol::ChangeSource src, bool b) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
 
     auto &sysex = sysExOutStream_;
     sysex.begin();
@@ -485,7 +508,7 @@ void ElectraOne::midiLearn(Kontrol::ChangeSource src, bool b) {
 
 void ElectraOne::modulationLearn(Kontrol::ChangeSource src, bool b) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
     auto &sysex = sysExOutStream_;
 
     sysex.begin();
@@ -498,7 +521,7 @@ void ElectraOne::modulationLearn(Kontrol::ChangeSource src, bool b) {
 
 void ElectraOne::savePreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack, std::string preset) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
 
     auto &sysex = sysExOutStream_;
     sysex.begin();
@@ -512,7 +535,7 @@ void ElectraOne::savePreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack
 
 void ElectraOne::loadPreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack, std::string preset) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
 
     auto &sysex = sysExOutStream_;
     sysex.begin();
@@ -526,7 +549,7 @@ void ElectraOne::loadPreset(Kontrol::ChangeSource src, const Kontrol::Rack &rack
 
 void ElectraOne::saveSettings(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
 
     auto &sysex = sysExOutStream_;
     sysex.begin();
@@ -536,6 +559,34 @@ void ElectraOne::saveSettings(Kontrol::ChangeSource src, const Kontrol::Rack &ra
     sysex.end();
     send(sysex);
 
+}
+
+void ElectraOne::ping(Kontrol::ChangeSource src, const std::string &, unsigned, unsigned keepAlive) {
+    if (!broadcastChange(src)) return;
+    if (!isActive()) return;
+    auto &sysex = sysExOutStream_;
+    keepAliveTime_ = keepAlive;
+    sysex.begin();
+    sysex.addHeader(E1_PING_MSG);
+    sysex.end();
+    send(sysex);
+
+#ifdef __COBALT__
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    int timeOut = keepAliveTime_ * 2 ;
+    int dur = now.tv_sec - lastPing_.tv_sec;
+    //std::cerr << "isActive " << dur << " <= " << timeOut  << " e= " << bool(dur <= timeOut) << std::endl;
+    //std::cerr << "isActive time " << now.tv_sec <<  " > " << lastPing_.tv_sec  << std::endl;
+#else
+    static std::chrono::seconds timeOut(keepAliveTime_ * 2); // twice normal ping time
+    auto now = std::chrono::steady_clock::now();
+    auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - lastPing_);
+#endif
+    if (!(dur <= timeOut)) {
+        connected_ = false;
+        std::cerr << "Electra ONE inactive : connect state " << connected_ << " dur " << dur.count() << std::endl;
+    }
 }
 
 
@@ -702,6 +753,19 @@ bool ElectraOne::handleE1SysEx(Kontrol::ChangeSource src, SysExInputStream &syse
         case E1_MOD_LEARN_MSG : {
             bool b = sysex.readUnsigned() > 0;
             model->modulationLearn(src, b);
+            break;
+        }
+        case E1_PING_MSG : {
+#ifdef __COBALT__
+            clock_gettime(CLOCK_REALTIME, &lastPing);
+#else
+            lastPing_ = std::chrono::steady_clock::now();
+#endif
+            if (!connected_) {
+                connected_ = true;
+                std::cerr << "Electra ONE is back !! " << std::endl;
+                reconnect();
+            }
             break;
         }
 

@@ -24,16 +24,13 @@ enum SysExMsgs {
     E1_SAVE_SETTINGS_MSG,
     E1_MIDI_LEARN_MSG,
     E1_MOD_LEARN_MSG,
+    E1_PING_MSG,
     E1_SYSEX_MAX
 };
 
-
-
 class SysExOutputStream {
 public:
-    SysExOutputStream(unsigned max_sz) : size_(0), buf_(new unsigned char[max_sz]), max_sz_(max_sz) {
-        ;
-    }
+    explicit SysExOutputStream(unsigned max_sz) : size_(0), buf_(new unsigned char[max_sz]), max_sz_(max_sz) { ; }
 
     ~SysExOutputStream() {
         delete[] buf_;
@@ -63,10 +60,9 @@ public:
         return buf_[size_ - 1] == 0xF7;
     }
 
-    unsigned size() { return size_; }
+    unsigned size() const { return size_; }
 
     unsigned char *buffer() { return buf_; }
-
 
     void addHeader(unsigned msgtype) {
         *this << E1_Manufacturer[0];
@@ -75,7 +71,6 @@ public:
         *this << TB_SYSEX_MSG;
         *this << msgtype;
     }
-
 
     void addString(const char *str) {
         const char *cstr = str;
@@ -86,7 +81,6 @@ public:
         *this << 0;
     }
 
-
     void addUnsigned(unsigned v) {
         unsigned vMSB = (v >> 7) & 0b01111111;
         unsigned vLSB = v & 0b01111111;
@@ -95,8 +89,8 @@ public:
     }
 
     void addFloat(float v) {
-        assert(sizeof(float) == 4);
-        assert(sizeof(unsigned) == 4);
+//        assert(sizeof(float) == 4);
+//        assert(sizeof(unsigned) == 4);
         unsigned uval = *static_cast<unsigned *>(static_cast<void *>(&v));
 //        unsigned tmp=uval;
 
@@ -117,17 +111,17 @@ private:
 
 class SysExInputStream {
 public:
-    SysExInputStream(const unsigned char *buf, unsigned sz) : buf_(buf), size_(sz), pos_(0) { ; }
+    explicit SysExInputStream(const unsigned char *buf, unsigned sz) : buf_(buf), size_(sz), pos_(0) { ; }
 
     SysExInputStream(SysExOutputStream &) = delete;
     SysExInputStream &operator=(SysExInputStream &) = delete;
 
     bool isValid() {
-        return peek(0) == 0xF0 && peek(size_-1)==0xF7;
+        return peek(0) == 0xF0 && peek(size_ - 1) == 0xF7;
     }
 
     bool atEnd() {
-        return (pos_>=size_) || (peek(pos_)==0xF7);
+        return (pos_ >= size_) || (peek(pos_) == 0xF7);
     }
 
     bool readHeader() {
@@ -179,8 +173,7 @@ public:
         return v;
     }
 
-    unsigned pos() { return pos_;}
-
+    unsigned pos() { return pos_; }
 private:
     unsigned char peek(unsigned pos) {
         if (pos < size_) {
@@ -190,10 +183,9 @@ private:
         return 0;
     }
 
-
-    const unsigned char *buf_;
-    unsigned size_ = 0;
     unsigned pos_ = 0;
+    unsigned size_ = 0;
+    const unsigned char *buf_;
 };
 
 } // namespace

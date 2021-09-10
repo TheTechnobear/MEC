@@ -11,7 +11,7 @@
 #include <MidiDevice.h>
 
 #include "electraone/SysExStream.h"
-
+#include <chrono>
 
 namespace mec {
 
@@ -52,7 +52,7 @@ public:
 
     void saveSettings(Kontrol::ChangeSource, const Kontrol::Rack &) override;
 
-//    void ping(Kontrol::ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) override {  }
+    void ping(Kontrol::ChangeSource src, const std::string &host, unsigned port, unsigned keepAlive) override;
 //    void assignMidiCC(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &, unsigned midiCC)  override {  }
 //    void unassignMidiCC(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &, unsigned midiCC)  override {  }
 //    void assignModulation(Kontrol::ChangeSource, const Kontrol::Rack &, const Kontrol::Module &, const Kontrol::Parameter &, unsigned bus)  override  {  }
@@ -90,6 +90,7 @@ private:
     unsigned pollFreq_;
     unsigned pollRetryFreq_;
     unsigned pollSleep_;
+    unsigned maxOutMsgs_;
 
     unsigned lastToken_ = 0;
     std::map<std::string, unsigned> strToToken_;
@@ -97,6 +98,17 @@ private:
 
     std::string midiDevStr_;
 
+    unsigned keepAliveTime_ = 0;
+
+    bool connected_ = false;
+    void reconnect();
+    bool isConnected() { return active_ && connected_;}
+
+#ifdef __COBALT__
+    struct timespec lastPing_;
+#else
+    std::chrono::steady_clock::time_point lastPing_;
+#endif
     ICallback &callback_;
 };;
 
