@@ -103,7 +103,7 @@ public:
                 const char *displayName = (arg++)->AsString();
                 const char *type = (arg++)->AsString();
 
-//                 std::cout << "received module " << moduleId << std::endl;
+                LOG_0("OSC RECV module " << moduleId);
                 receiver_.createModule(changedSrc, rackId, moduleId, displayName, type);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/rack") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
@@ -111,7 +111,7 @@ public:
                 const char *host = (arg++)->AsString();
                 unsigned port = (unsigned) (arg++)->AsInt32();
 
-                // std::cout << "received rack " << rackId << std::endl;
+                LOG_0("OSC RECV rack " << rackId);
                 receiver_.createRack(changedSrc, rackId, host, port);
             } else if (std::strcmp(m.AddressPattern(), "/Kontrol/ping") == 0) {
                 osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();

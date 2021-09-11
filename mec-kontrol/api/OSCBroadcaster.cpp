@@ -108,7 +108,9 @@ void OSCBroadcaster::send(const char *data, unsigned size) {
     OscMsg msg;
     msg.size_ = (size > OscMsg::MAX_OSC_MESSAGE_SIZE ? OscMsg::MAX_OSC_MESSAGE_SIZE : size);
     memcpy(msg.buffer_, data, (size_t) msg.size_);
-    messageQueue_.enqueue(msg);
+    if(!messageQueue_.enqueue(msg)) {
+        LOG_0("OSCBroadcaster::send FAILED");
+    }
 }
 
 void OSCBroadcaster::sendPing(unsigned port) {
@@ -374,6 +376,7 @@ void OSCBroadcaster::rack(ChangeSource src, const Rack &p) {
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
+    LOG_0("OSC SEND rack " << p.id());
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
     ops << osc::BeginBundleImmediate
@@ -393,7 +396,7 @@ void OSCBroadcaster::module(ChangeSource src, const Rack &rack, const Module &m)
     if (!broadcastChange(src)) return;
     if (!isActive()) return;
 
-//    LOG_0("OSCBroadcaster::module " << m.id());
+    LOG_0("OSC SEND rack " << m.id());
 
     osc::OutboundPacketStream ops(buffer_, OUTPUT_BUFFER_SIZE);
 
