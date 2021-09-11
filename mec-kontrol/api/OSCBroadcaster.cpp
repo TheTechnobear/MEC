@@ -145,6 +145,7 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
         if (!master_) {
             if (!wasActive) {
                 // std::cerr << " !master : publishing meta data, from " << host  << ":" << port << std::endl;
+                LOG_0("OSCBroadcaster::ping (!master) : model publishMetaData");
                 KontrolModel::model()->publishMetaData();
             }
         } else {
@@ -154,7 +155,8 @@ void OSCBroadcaster::ping(ChangeSource src, const std::string &host, unsigned po
                 publishStart(CS_LOCAL, KontrolModel::model()->getRacks().size());
                 for (const auto &r:KontrolModel::model()->getRacks()) {
                     if (rackId != r->id()) {
-                        std::cerr << " publishing meta data to " << rackId << " for " << r->id() << std::endl;
+                        LOG_0("OSCBroadcaster::ping (master) publish meta data to " << rackId << " for " << r->id());
+                       //                        std::cerr << " publishing meta data to " << rackId << " for " << r->id() << std::endl;
                         rack(CS_LOCAL, *r);
                         for (const auto &m : r->getModules()) {
                             module(CS_LOCAL, *r, *m);

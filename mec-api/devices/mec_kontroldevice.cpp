@@ -102,10 +102,10 @@ void KontrolDevice::newClient(
     auto client = std::make_shared<Kontrol::OSCBroadcaster>(src, keepalive, true);
     if (client->connect(host, port)) {
         LOG_0("KontrolDevice::new client " << client->host() << " : " << client->port() << " KA = " << keepalive);
+        model_->addCallback(id, client);
 //        client->sendPing(listenPort_);
         client->ping(src, host, port, keepalive);
         clients_.push_back((client));
-        model_->addCallback(id, client);
     }
 }
 
