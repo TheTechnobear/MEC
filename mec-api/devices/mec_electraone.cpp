@@ -199,6 +199,7 @@ void ElectraOne::reconnect() {
     auto src = Kontrol::ChangeSource::createRemoteSource("127.0.0.1", 6001);
 //                Kontrol::EntityId rackId = Kontrol::Rack::createId(host_, port_);
 //    publishStart(src, model()->getRacks().size());
+    LOG_0("reconnect  " << midiDevStr_ );
     for (const auto &r: model()->getRacks()) {
         LOG_0("publishing meta data to " << midiDevStr_ << " for " << r->id());
         rack(src, *r);
@@ -309,7 +310,7 @@ bool ElectraOne::send(SysExOutputStream &sysex) {
 
 void ElectraOne::rack(Kontrol::ChangeSource src, const Kontrol::Rack &rack) {
     if (!broadcastChange(src)) return;
-    if (!isActive()) return;
+    if (!isConnected()) return;
     auto &sysex = sysExOutStream_;
     sysex.begin();
 
@@ -337,6 +338,7 @@ void ElectraOne::module(Kontrol::ChangeSource src, const Kontrol::Rack &rack, co
 
     sysex.end();
     send(sysex);
+    LOG_0("Published module : " << m.id());
 }
 
 void ElectraOne::page(Kontrol::ChangeSource src, const Kontrol::Rack &rack,
