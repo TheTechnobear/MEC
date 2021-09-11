@@ -62,10 +62,15 @@ void OSCBroadcaster::stop() {
 
 
 void OSCBroadcaster::writePoll() {
+    int counter = 1;
     while (running_) {
         OscMsg msg;
         if (messageQueue_.wait_dequeue_timed(msg, std::chrono::milliseconds(POLL_TIMEOUT_MS))) {
             socket_->Send(msg.buffer_, (size_t) msg.size_);
+            if(counter==0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            counter = (counter + 1) % 50;
         }
     }
 }
