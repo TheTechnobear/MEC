@@ -5,6 +5,9 @@ One of the inital motivations (that still exists) is to allow controllers like t
 
 the deeper motivation is to allow these 'controllers' to become more 'instrument' like, so you can just pickup and play without thinking about software configurations etc.
 
+I also use this projects for the basis of many other open source projects I develop including Orac , a virtual modular for SoCs including rPI and Organelle. see https://github.com/TheTechnobear/Orac
+
+
 ## Architecture
 The core of the project is the mec-api this provides the main functionality which can be utilised by any software. (written in C++ and provided as shared lirbaries).
 
