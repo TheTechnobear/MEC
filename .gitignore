@@ -34,7 +34,7 @@ Podfile.lock
 **/*.pd_darwin
 **/*.dll
 **/*.o
-**/*.so
-**/*.dylib
+build/**/*.so
+build/**/*.dylib
 
 
