@@ -313,49 +313,52 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
         if (rawvalue != std::numeric_limits<float>::max()) {
             float value = rawvalue / MAX_POT_VALUE;
             calc = param->calcFloat(value);
+            if (rawvalue != pots_->rawValue[pot]) {
+                pots_->locked_[pot] = Pots::K_UNLOCKED;
+            }
             //std::cerr << "changePot " << pot << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
         }
 
         pots_->rawValue[pot] = rawvalue;
 
 
-        if (pots_->locked_[pot] != Pots::K_UNLOCKED) {
-            //if pot is locked, determined if we can unlock it
-            if (calc == param->current()) {
-                pots_->locked_[pot] = Pots::K_UNLOCKED;
-                //std::cerr << "unlock condition met == " << pot << std::endl;
-            } else if (pots_->locked_[pot] == Pots::K_GT) {
-                if (calc > param->current()) {
-                    pots_->locked_[pot] = Pots::K_UNLOCKED;
-                    //std::cerr << "unlock condition met gt " << pot << std::endl;
-                }
-            } else if (pots_->locked_[pot] == Pots::K_LT) {
-                if (calc < param->current()) {
-                    pots_->locked_[pot] = Pots::K_UNLOCKED;
-                    //std::cerr << "unlock condition met lt " << pot << std::endl;
-                }
-            } else if (pots_->locked_[pot] == Pots::K_LOCKED) {
-                //std::cerr << "pot locked " << pot << " pv " << param->current().floatValue() << " cv " << calc.floatValue() << std::endl;
-                // initial locked, determine unlock condition
-                if (calc == param->current()) {
-                    // pot value at current value, unlock it
-                    pots_->locked_[pot] = Pots::K_UNLOCKED;
-                    //std::cerr << "set unlock condition == " << pot << std::endl;
-                } else if (rawvalue == std::numeric_limits<float>::max()) {
-                    // stay locked , we need a real value ;)
-                    // init state
-                    //std::cerr << "cannot set unlock condition " << pot << std::endl;
-                } else if (calc > param->current()) {
-                    // pot starts greater than param, so wait for it to go less than
-                    pots_->locked_[pot] = Pots::K_LT;
-                    //std::cerr << "set unlock condition lt " << pot << std::endl;
-                } else {
-                    // pot starts less than param, so wait for it to go greater than
-                    pots_->locked_[pot] = Pots::K_GT;
-                    //std::cerr << "set unlock condition gt " << pot << std::endl;
-                }
-            }
-        }
+        // if (pots_->locked_[pot] != Pots::K_UNLOCKED) {
+        //     //if pot is locked, determined if we can unlock it
+        //     if (calc == param->current()) {
+        //         pots_->locked_[pot] = Pots::K_UNLOCKED;
+        //         //std::cerr << "unlock condition met == " << pot << std::endl;
+        //     } else if (pots_->locked_[pot] == Pots::K_GT) {
+        //         if (calc > param->current()) {
+        //             pots_->locked_[pot] = Pots::K_UNLOCKED;
+        //             //std::cerr << "unlock condition met gt " << pot << std::endl;
+        //         }
+        //     } else if (pots_->locked_[pot] == Pots::K_LT) {
+        //         if (calc < param->current()) {
+        //             pots_->locked_[pot] = Pots::K_UNLOCKED;
+        //             //std::cerr << "unlock condition met lt " << pot << std::endl;
+        //         }
+        //     } else if (pots_->locked_[pot] == Pots::K_LOCKED) {
+        //         //std::cerr << "pot locked " << pot << " pv " << param->current().floatValue() << " cv " << calc.floatValue() << std::endl;
+        //         // initial locked, determine unlock condition
+        //         if (calc == param->current()) {
+        //             // pot value at current value, unlock it
+        //             pots_->locked_[pot] = Pots::K_UNLOCKED;
+        //             //std::cerr << "set unlock condition == " << pot << std::endl;
+        //         } else if (rawvalue == std::numeric_limits<float>::max()) {
+        //             // stay locked , we need a real value ;)
+        //             // init state
+        //             //std::cerr << "cannot set unlock condition " << pot << std::endl;
+        //         } else if (calc > param->current()) {
+        //             // pot starts greater than param, so wait for it to go less than
+        //             pots_->locked_[pot] = Pots::K_LT;
+        //             //std::cerr << "set unlock condition lt " << pot << std::endl;
+        //         } else {
+        //             // pot starts less than param, so wait for it to go greater than
+        //             pots_->locked_[pot] = Pots::K_GT;
+        //             //std::cerr << "set unlock condition gt " << pot << std::endl;
+        //         }
+        //     }
+        // }
 
         if (pots_->locked_[pot] == Pots::K_UNLOCKED) {
             model()->changeParam(Kontrol::CS_LOCAL, parent_.currentRack(), parent_.currentModule(), paramId, calc);
