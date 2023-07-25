@@ -66,6 +66,7 @@ public:
 
     void midiLearn(bool b);
     void modulationLearn(bool b);
+    void instantParam(bool b);
 
     virtual void midiCC(unsigned num, unsigned value);
     virtual void modulate(const std::string& src, unsigned bus, float value);
@@ -81,6 +82,8 @@ public:
 
     bool midiLearn() { return midiLearnActive_; }
     bool modulationLearn() { return modulationLearnActive_; }
+    bool instantParamSetting() { return instantParamSetting_; }
+
 
     Kontrol::EntityId currentRack() { return currentRackId_; }
 
@@ -105,6 +108,7 @@ private:
     bool midiLearnActive_;
     bool modulationLearnActive_;
     bool enableMenu_;
+    bool instantParamSetting_ = false;
     std::vector<std::string> moduleOrder_;
 
     Kontrol::EntityId modParamId_;

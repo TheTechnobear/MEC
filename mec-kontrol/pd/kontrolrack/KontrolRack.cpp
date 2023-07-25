@@ -1035,7 +1035,7 @@ void KontrolRack_selectmodule(t_KontrolRack* x, t_floatarg module) {
 }
 
 void KontrolRack_instantParam(t_KontrolRack* x, t_floatarg setting) {
-    post("instantParam method");
+    x->device_->instantParam(setting);
 }
 
 //-----------------------

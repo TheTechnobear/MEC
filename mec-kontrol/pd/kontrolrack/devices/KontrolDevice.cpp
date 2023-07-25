@@ -221,6 +221,10 @@ void KontrolDevice::midiLearn(Kontrol::ChangeSource src, bool b) {
     midiLearnActive_ = b;
 }
 
+void KontrolDevice::instantParam(bool b) {
+    instantParamSetting_ = b;
+}
+
 void KontrolDevice::modulationLearn(Kontrol::ChangeSource src, bool b) {
     modParamId_ = "";
     modModuleId_ = "";
