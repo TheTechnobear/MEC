@@ -376,7 +376,7 @@ EXTERN void KontrolRack_setup(void) {
                     A_GIMME, A_NULL);
 
     class_addmethod(KontrolRack_class,
-                    (t_method) KontrolRack_instantParam, gensym("instantParamBool"),
+                    (t_method) KontrolRack_instantParam, gensym("instantParamsBool"),
                     A_FLOAT, A_NULL);
 
     class_addmethod(KontrolRack_class,
