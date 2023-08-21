@@ -211,7 +211,7 @@ void Parameter_Float::createArgs(std::vector<ParamValue> &args) const {
 
 std::string Parameter_Float::displayValue() const {
     char numbuf[11];
-    sprintf(numbuf, "%.1f", current_.floatValue());
+    snprintf(numbuf,11, "%.1f", current_.floatValue());
     return std::string(numbuf);
 }
 
@@ -375,7 +375,7 @@ void Parameter_Int::createArgs(std::vector<ParamValue> &args) const {
 
 std::string Parameter_Int::displayValue() const {
     char numbuf[11];
-    sprintf(numbuf, "%d", (int) current_.floatValue());
+    snprintf(numbuf, 11,"%d", (int) current_.floatValue());
     return std::string(numbuf);
 }
 
@@ -447,13 +447,13 @@ std::string Parameter_Pan::displayValue() const {
     char buf[11];
     float c = current_.floatValue();
     if(c==0.5f) {
-        sprintf(buf, "C");
+        snprintf(buf,11, "C");
     } else if (c>0.5f) {
         int i = int(((c - 0.5f) * 2.0f ) * 100.0f);
-        sprintf(buf, "%-3dR", i);
+        snprintf(buf, 11,"%-3dR", i);
     } else {
         int i = int(((0.5 - c) * 2.0f ) * 100.0f);
-        sprintf(buf, "L%3d ", i);
+        snprintf(buf, 11,"L%3d ", i);
     }
     return std::string(buf);
 }

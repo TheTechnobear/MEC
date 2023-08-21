@@ -289,7 +289,7 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
             // a page with no parameters is a custom page
             // and recieves pot events
             char msg[7];
-            sprintf(msg, "knob%d",pot+1);
+            snprintf(msg, 7, "knob%d",pot+1);
             pots_->locked_[pot] = Pots::K_UNLOCKED;
             if(pots_->rawValue[pot]!=rawvalue) {
                 float value = rawvalue / MAX_POT_VALUE;
