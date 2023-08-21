@@ -33,6 +33,7 @@ else(TTUI)
     set(DISABLE_TTUI 1)
 endif(TTUI)
 
+set(DISABLE_PUSH2 1)
 
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin") 
