@@ -138,3 +138,15 @@ DISABLE_OSCDISPLAY
 TTUI
 ZERORAC
 NUI
+
+
+
+# github actions
+these are now enabled for macOs builds only
+the action is only invoked when tagged, not very checkin to reduce gh load.
+
+
+todo
+- ubutnu/linux build requires us getting libusb from somewhere!
+- windows still not present
+
