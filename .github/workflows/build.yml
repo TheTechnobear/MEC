@@ -1,4 +1,4 @@
-name: Build Eigenlabs
+name: Build MEC
 permissions:
   contents: write
 
@@ -26,10 +26,13 @@ jobs:
         cpp_compiler: [clang++]       
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: 'true'
 
     - name: Set reusable strings
-      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+    # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
       shell: bash
       run: |
@@ -49,11 +52,11 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        path: dist/*
-        name: ${{runner.os}}
+    # - name: Upload artifacts
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     path: dist/*
+    #     name: ${{runner.os}}
 
   build-mac:
     name: mac
@@ -66,7 +69,10 @@ jobs:
         cpp_compiler: [clang++]       
         platform: [x86_64, arm64]
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: 'true'
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -90,11 +96,11 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} 
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        path: dist/*
-        name: mac-${{ matrix.platform }}
+    # - name: Upload artifacts
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     path: dist/*
+    #     name: mac-${{ matrix.platform }}
 
   publish:
     name: Publish release
