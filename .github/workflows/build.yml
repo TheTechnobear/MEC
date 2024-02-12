@@ -2,7 +2,10 @@ name: Build MEC
 permissions:
   contents: write
 
-on: [push]
+on:
+  push:
+    tags:
+    - '*'
 
 jobs:
   # Ubuntu - would need libusb 
