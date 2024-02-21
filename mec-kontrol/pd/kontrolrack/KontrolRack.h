@@ -84,6 +84,7 @@ void KontrolRack_selectmodule(t_KontrolRack* x, t_floatarg value);
 void KontrolRack_loadresources(t_KontrolRack *x);
 
 void KontrolRack_setmoduleorder(t_KontrolRack *x,t_symbol* s, int argc, t_atom *argv);
+void KontrolRack_instantParam(t_KontrolRack *x, t_floatarg setting);
 
 }
 

@@ -376,6 +376,10 @@ EXTERN void KontrolRack_setup(void) {
                     A_GIMME, A_NULL);
 
     class_addmethod(KontrolRack_class,
+                    (t_method) KontrolRack_instantParam, gensym("instantParamsBool"),
+                    A_FLOAT, A_NULL);
+
+    class_addmethod(KontrolRack_class,
                     (t_method) KontrolRack_test, gensym("test"),
                     A_DEFFLOAT, A_NULL);
 
@@ -1030,6 +1034,9 @@ void KontrolRack_selectmodule(t_KontrolRack* x, t_floatarg module) {
     if (x->device_) x->device_->selectModule((unsigned) module);
 }
 
+void KontrolRack_instantParam(t_KontrolRack* x, t_floatarg setting) {
+    x->device_->instantParam(setting);
+}
 
 //-----------------------
 void PdCallback::rack(Kontrol::ChangeSource src, const Kontrol::Rack & rack)  {

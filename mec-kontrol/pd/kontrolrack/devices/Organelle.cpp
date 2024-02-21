@@ -313,13 +313,16 @@ void OParamMode::changePot(unsigned pot, float rawvalue) {
         if (rawvalue != std::numeric_limits<float>::max()) {
             float value = rawvalue / MAX_POT_VALUE;
             calc = param->calcFloat(value);
+            if (rawvalue != pots_->rawValue[pot] && parent_.instantParamSetting()) {
+                pots_->locked_[pot] = Pots::K_UNLOCKED;
+            }
             //std::cerr << "changePot " << pot << " " << value << " cv " << calc.floatValue() << " pv " << param->current().floatValue() << std::endl;
         }
 
         pots_->rawValue[pot] = rawvalue;
 
 
-        if (pots_->locked_[pot] != Pots::K_UNLOCKED) {
+        if (pots_->locked_[pot] != Pots::K_UNLOCKED && parent_.instantParamSetting() == false) {
             //if pot is locked, determined if we can unlock it
             if (calc == param->current()) {
                 pots_->locked_[pot] = Pots::K_UNLOCKED;
