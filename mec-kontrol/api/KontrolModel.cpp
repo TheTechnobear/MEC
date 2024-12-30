@@ -1,5 +1,6 @@
 #include "KontrolModel.h"
 #include <mec_prefs.h>
+#include <stdexcept>
 
 namespace Kontrol {
 
