@@ -88,10 +88,6 @@ public:
 ////////////////////////////////////////////////
 class SoundplaneHandler : public ::SPLiteCallback {
 public:
-    // these are used to adjust velocity, they are highly dependent on hardware, to get the right feel, experiment!
-    static constexpr float V_COUNT = 4; // samples to use for velocity , lets try 2-N,  (was 4)
-    static constexpr float V_SCALE_AMT = 4.0f; // scale, to help V_COUNT pressures, quickly = max vel.  (was 4.0)
-    static constexpr float V_CURVE_AMT = 4.0f; // a pow scaling, 1.0 = linear, < 1.0 = more sensitive,  > 1.0 = less sensitive (more firm pressure)  (was 4.0)
 
     SoundplaneHandler(Preferences &p, 
 		    ICallback& cb)
