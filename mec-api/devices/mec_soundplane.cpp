@@ -4,10 +4,69 @@
 #include "mec_log.h"
 #include "../mec_voice.h"
 #include <set>
-// #include "../mec-utils/mec_log.h"
+
+
+#ifdef __WINDOWS__
+static __int64 __ticks_per_second = 0LL;
+
+unsigned long long microtime()
+{
+    LARGE_INTEGER ticks;
+    __int64 quot, rem;
+
+    if(!__ticks_per_second)
+    {
+        LARGE_INTEGER l;
+        QueryPerformanceFrequency(&l);
+        __ticks_per_second = l.QuadPart;
+    }
+
+    QueryPerformanceCounter(&ticks);
+
+    quot = ticks.QuadPart/__ticks_per_second;
+    rem = ticks.QuadPart%__ticks_per_second;
+
+    return (quot*1000000)+((rem*1000000)/__ticks_per_second);
+}
+#endif
+
+
+#if defined(__LINUX__)
+
+#include <time.h>
+#include <sys/time.h>
+unsigned long long microtime()
+{
+    struct timeval tv;
+    unsigned long long now;
+
+    gettimeofday(&tv,0);
+    now = 1000000ULL * (unsigned long long)(tv.tv_sec);
+    now += (unsigned long long)tv.tv_usec;
+
+    return now;
+}
+
+#endif
+
+#if defined(__APPLE__)
+
+#include <CoreAudio/HostTime.h>
+#include <time.h>
+
+unsigned long long microtime()
+{
+    return AudioConvertHostTimeToNanos(AudioGetCurrentHostTime())/1000LL;
+}
+
+#endif
+
+
+
 
 namespace mec {
 
+   
 class SPLiteCallback {
 public:
     virtual ~SPLiteCallback() = default;
@@ -39,13 +98,16 @@ public:
             : prefs_(p),
               callback_(cb),
               valid_(true),
-              voices_(
-                static_cast<unsigned>(p.getInt("voices", 15)),
-                static_cast<unsigned>(p.getInt("vel_count", V_COUNT)),
-                static_cast<float>(p.getDouble("vel_curve", V_CURVE_AMT)),
-                static_cast<float>(p.getDouble("vel_scale", V_SCALE_AMT))
-              ),
-              stealVoices_(p.getBool("steal voices", true)) {
+              voices_(static_cast<unsigned>(p.getInt("voices", Voices::NUM_VOICES)),
+                      static_cast<unsigned>(p.getInt("velocity count", Voices::V_COUNT)),
+                      static_cast<float>(p.getDouble("velocity curve", Voices::V_CURVE_AMT )),
+                      static_cast<float>(p.getDouble("velocity scale", Voices::V_SCALE_AMT ))
+                      ),
+              stealVoices_(p.getBool("steal voices", true)),
+              throttle_(p.getInt("throttle", 0) == 0
+                        ? 0 : 1000000ULL /
+                              p.getInt("throttle",
+                                       0)) {
         if (valid_) {
             LOG_0("SoundplaneHandler enabling for mecapi");
         }
@@ -102,70 +164,104 @@ public:
     void touch(bool a, int itouch, float n, float x, float y, float z) {
         static const unsigned int NOTE_CH_OFFSET = 1;
 
-        unsigned touch = (unsigned) itouch;
-        Voices::Voice *voice = voices_.voiceId(touch);
+        unsigned key = (unsigned) itouch;
+        Voices::Voice *voice = voices_.voiceId(key);
         float fn = n;
         float mn = note(fn);
         float mx = clamp(x, -1.0f, 1.0f);
         float my = clamp(y, -1.0f, 1.0f);
         float mz = clamp(z,  0.0f, 1.0f);
         unsigned long long t = 0;
-
+        if(throttle_ > 0) {
+            t = microtime();
+        }
         if (a) {
-            // LOG_1("SoundplaneHandler  touch device d: "   << dev      << " a: "   << a)
-            // LOG_1(" touch: " <<  touch);
-            // LOG_1(" note: " <<  n  << " mn: "   << mn << " fn: " << fn);
-            // LOG_1(" x: " << x      << " y: "   << y    << " z: "   << z);
-            // LOG_1(" mx: " << mx    << " my: "  << my   << " mz: "  << mz);
-            if (!voice) {
-                if (stolenTouches_.find(touch) != stolenTouches_.end()) {
-                    // this key has been stolen, must be released to reactivate it
-                    return;
-                }
 
-                voice = voices_.startVoice(touch);
-                //LOG_1("start voice for " << touch << " ch " << voice->i_);
+            LOG_3("SoundplaneHandler key device d: " << dev << " a: " << a);
+            LOG_3(" c: " << course << " k: " << key);
+            LOG_3(" r: " << r << " y: " << y << " p: " << p);
+            LOG_3(" mn: " << mn << " mx: " << mx << " my: " << my << " mz: " << mz);
+
+            if (inactiveKeys_.find(key) != inactiveKeys_.end()) {
+                // this key has been stolen, must be released to reactivate it
+                return;
+            }
+
+            if (!voice) {
+
+                voice = voices_.startVoice(key);
 
                 if (!voice && stealVoices_) {
+                    // LOG_1("voice steal required for " << key);
                     // no available voices, steal?
                     Voices::Voice *stolen = voices_.oldestActiveVoice();
-                    callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
-                    voices_.stopVoice(stolen);
+                    if(stolen) {
+                        if(stolen->state_ == Voices::Voice::ACTIVE) {
+                            // LOG_1("voice stolen found for " << key  << " stolen from (active) " << stolen->id_);
+                            callback_.touchOff(stolen->i_, stolen->note_, stolen->x_, stolen->y_, 0.0f);
+                        } else {
+                            // LOG_1("voice stolen found for " << key  << " stolen from (inactive) " << stolen->id_);
+                        }
+                        inactiveKeys_.insert((unsigned) stolen->id_);
+                        voices_.stopVoice(stolen);
+                        voice = voices_.startVoice(key);
+                        // if(voice) { LOG_1("voice steal found for " << key << "stolen from " << stolen->id_); }
+                   } else {
+                     LOG_1("unable to steal voice " << key);
+                   }
+                }
+            } 
 
-                    voice = voices_.startVoice(touch);
+            if (voice) {
+                if (voice->state_ == Voices::Voice::PENDING) {
+                    voices_.addPressure(voice, mz);
+                    if (voice->state_ == Voices::Voice::ACTIVE) {
+                        LOG_2("start voice for " << key << " ch " << voice->i_);
+                        callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
+                        voice->t_ = t;
+                    }
+                    // dont send to callbacks until we have the minimum pressures for velocity
+                } else {
+                    if (throttle_ == 0 || (t - voice->t_) >= throttle_) {
+                        LOG_2("continue voice for " << key << " ch " << voice->i_);
+                        callback_.touchContinue(voice->i_, mn, mx, my, mz);
+                        voice->t_ = t;
+                    }
                 }
 
-                if (voice) {
-                    // LOG_1("calculated velocity" << touch << " ch " << voice->i_ << " vel " << voice->v_);
-                    callback_.touchOn(voice->i_, mn, mx, my, voice->v_); //v_ = calculated velocity
-                    // callback_.touchOn(voice->i_, mn, mx, my, mz); //use z after velCount samples, ignore velocity
-                    voice->note_ = mn;
-                    voice->x_ = mx;
-                    voice->y_ = my;
-                    voice->z_ = mz;
-                    voice->t_ = t;
-                }
-            } else {
-        		callback_.touchContinue(voice->i_, mn, mx, my, mz);
                 voice->note_ = mn;
                 voice->x_ = mx;
                 voice->y_ = my;
                 voice->z_ = mz;
-                voice->t_ = t;
+            } else {
+                // else no voice available
+                // LOG_2("mark inactive key " << key);
+                inactiveKeys_.insert(key);
             }
 
         } else {
-            if (voice) {
-                //LOG_1("stop voice for " << touch << " ch " << voice->i_ );
-                //msg.type_ = MecMsg::TOUCH_OFF;
-                //msg.data_.touch_.touchId_ = voice->i_;
-                //msg.data_.touch_.z_ = 0.0;
-                //queue_.addToQueue(msg);
-                callback_.touchOff(voice->i_, mn, mx, my, mz);
-                voices_.stopVoice(voice);
+            if (inactiveKeys_.find(key) == inactiveKeys_.end()) {
+                if (voice) {
+                    if(voice->state_ == Voices::Voice::ACTIVE) {
+                        LOG_2("stop voice for " << key << " ch " << voice->i_);
+                        callback_.touchOff(voice->i_, mn, mx, my, mz);
+                        voices_.stopVoice(voice);
+                    }
+                    else if(voice->state_ == Voices::Voice::PENDING) {
+                        // dont send touchoff, as touchOn not sent
+                        voices_.stopVoice(voice);
+                    } else {
+                        LOG_1("voice already inactive" << key << " ch " << voice->i_);
+                    }
+                } else {
+                    LOG_1("trying to stop voice, but not found" << key);
+                }
+            } else {
+                // LOG_2("remove inactive key " << key);
+                inactiveKeys_.erase(key);
             }
-            stolenTouches_.erase(touch);
         }
+
     }
 private:
     inline float clamp(float v, float mn, float mx) { return (std::max(std::min(v, mx), mn)); }
@@ -177,7 +273,8 @@ private:
     Voices voices_;
     bool valid_;
     bool stealVoices_;
-    std::set<unsigned> stolenTouches_;
+    unsigned long long throttle_;
+    std::set<unsigned> inactiveKeys_;
 };
 
 
